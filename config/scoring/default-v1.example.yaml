@@ -1,0 +1,22 @@
+schema_version: 1
+profile_id: default-v1
+status: hypothesis
+weights:
+  internal_history: 0.20
+  paid_competition: 0.20
+  search_and_media: 0.20
+  employability: 0.15
+  syllabus_fit: 0.15
+  pricing: 0.10
+gates:
+  minimum_coverage: 0.80
+  minimum_confidence: 0.75
+thresholds:
+  approved: 75
+  approved_with_adjustments: 60
+required_pillars:
+  - internal_history
+  - search_and_media
+notes:
+  - Baseline sujeito a backtest e shadow mode.
+  - Não usar em produção antes do gate da Fase 05.

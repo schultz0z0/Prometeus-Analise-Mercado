@@ -1,0 +1,25 @@
+schema_version: 1
+institution:
+  id: ens
+  display_name: Escola de Negócios e Seguros
+  locale: pt-BR
+  timezone: America/Sao_Paulo
+  currency: BRL
+branding:
+  product_name: Inteligência de Produtos Educacionais
+features:
+  paid_competition: true
+  social_listening: true
+  job_market: true
+  pricing: true
+adapters:
+  institutional: ens
+profiles:
+  scoring: default-v1
+  retention: ens-pending-approval
+webhooks:
+  events:
+    - analysis.waiting_for_input
+    - analysis.requires_review
+    - analysis.completed
+    - analysis.failed
