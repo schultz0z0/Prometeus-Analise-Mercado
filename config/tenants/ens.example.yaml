@@ -8,6 +8,7 @@ institution:
 branding:
   product_name: Prometeus
   product_descriptor: Inteligência para Produtos Educacionais
+  product_vendor: Agência Prometeus
 features:
   paid_competition: true
   social_listening: true

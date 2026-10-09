@@ -7,6 +7,8 @@
 
 O produto passa a se chamar **Prometeus**, com o descritor **Inteligência para Produtos Educacionais**.
 
+A empresa desenvolvedora e mantenedora é a **Agência Prometeus**.
+
 ## Aplicação
 
 - Nome público canônico: `Prometeus`.
@@ -19,6 +21,6 @@ O produto passa a se chamar **Prometeus**, com o descritor **Inteligência para 
 
 Dar identidade própria ao produto sem limitar sua atuação a cursos específicos, mantendo possibilidade de expansão para todo o portfólio educacional.
 
-## Risco pendente
+## Status da marca
 
-Busca de marca, domínio e análise jurídica ainda não foram realizadas.
+O responsável informou que a marca já pertence à Agência Prometeus. Não existe pendência de marca associada a esta decisão.

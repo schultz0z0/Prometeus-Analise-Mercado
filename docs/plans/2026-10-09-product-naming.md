@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Tornar Prometeus o nome canônico reconhecido pela documentação, configuração e agentes de desenvolvimento.
+**Goal:** Tornar Prometeus o nome canônico reconhecido pela documentação, configuração e agentes de desenvolvimento, atribuído à Agência Prometeus.
 
 **Architecture:** A identidade fica centralizada em `docs/product/brand-and-naming.md` e referenciada pelos documentos de entrada. O namespace técnico Python permanece estável até a Fase 01, enquanto nomes públicos, configuração e telemetria usam `prometeus`.
 

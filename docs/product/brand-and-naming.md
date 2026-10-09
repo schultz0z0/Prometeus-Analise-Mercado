@@ -12,6 +12,10 @@
 
 > **Prometeus — Inteligência para Produtos Educacionais**
 
+## Empresa desenvolvedora
+
+O Prometeus é desenvolvido e mantido pela **Agência Prometeus**. A empresa é a responsável pelo código-base, evolução técnica, documentação e operação acordada com cada instituição.
+
 ## Identidade para agentes de IA
 
 Codex, Claude Code, LLMs integradas e demais agentes que trabalham neste repositório devem reconhecer **Prometeus** como o nome do produto.
@@ -31,11 +35,11 @@ Prometeus é a identidade canônica do código-base e da documentação. Cada in
 
 Exemplos permitidos:
 
-- `Prometeus by ENS` quando a marca-base for visível;
 - nome integralmente definido pela instituição quando o contrato exigir white-label;
-- `Powered by Prometeus` quando aprovado comercialmente.
+- `Prometeus — uma solução da Agência Prometeus` quando a autoria estiver visível;
+- `Powered by Agência Prometeus` quando aprovado comercialmente.
 
-Mesmo quando oculto na interface white-label, o nome canônico permanece nos metadados técnicos internos, documentação, auditoria e versionamento, salvo exigência contratual específica.
+Mesmo quando oculto na interface white-label, o nome canônico e a empresa desenvolvedora permanecem nos metadados técnicos internos, documentação, auditoria e versionamento, salvo exigência contratual específica.
 
 ## Nome técnico
 
@@ -45,6 +49,6 @@ O pacote Python planejado permanece `course_market_intelligence` por ser descrit
 
 O nome remete a antecipação, conhecimento e capacidade de transformar informação em ação. No produto, isso representa iluminar decisões de portfólio educacional antes que a instituição comprometa recursos no lançamento.
 
-## Limite jurídico
+## Status da marca
 
-Esta decisão de produto não representa busca ou aprovação de marca no INPI, disponibilidade de domínio ou análise de conflito comercial. Essa validação deve ocorrer antes do lançamento público.
+O responsável pelo produto informou que a marca já pertence à **Agência Prometeus**. Validação ou registro de marca não constitui pendência nem gate deste projeto.

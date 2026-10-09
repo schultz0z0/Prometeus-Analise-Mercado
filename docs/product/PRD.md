@@ -3,6 +3,7 @@
 **Versão:** 5.0.0-draft  
 **Data:** 2026-10-09  
 **Status:** aprovado para validação técnica e planejamento; implementação ainda não iniciada  
+**Empresa desenvolvedora e mantenedora:** Agência Prometeus  
 **Primeira instituição:** ENS — Escola de Negócios e Seguros
 
 ## 1. Resumo executivo

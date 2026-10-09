@@ -4,6 +4,8 @@
 
 Prometeus é um serviço headless de inteligência para avaliar a viabilidade de novos produtos educacionais. O produto combina dados históricos da instituição, sinais externos de mercado, decisões tipadas do JEV, cálculo determinístico de score e síntese por LLM generativa.
 
+Produto desenvolvido e mantido pela **Agência Prometeus**.
+
 O primeiro deployment será dedicado à ENS (Escola de Negócios e Seguros). O mesmo código-base poderá ser configurado e implantado separadamente para outras instituições.
 
 ## Estado atual
