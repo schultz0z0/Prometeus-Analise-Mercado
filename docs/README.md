@@ -5,6 +5,7 @@ Esta pasta é a fonte canônica do produto. O PRD original na raiz é mantido co
 ## Produto
 
 - [PRD canônico](product/PRD.md)
+- [Nome e identidade](product/brand-and-naming.md)
 - [Visão e escopo](product/vision-and-scope.md)
 - [Personas e Jobs to Be Done](product/personas-and-jtbd.md)
 - [Casos de uso](product/use-cases.md)

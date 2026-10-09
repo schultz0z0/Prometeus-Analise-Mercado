@@ -1,6 +1,6 @@
 # Pacote da aplicação
 
-Estrutura planejada. A implementação ainda não começou.
+Este é o namespace técnico planejado do **Prometeus — Inteligência para Produtos Educacionais**. Estrutura planejada; a implementação ainda não começou.
 
 - `domain/`: regras puras e contratos.
 - `application/`: casos de uso e orquestração.

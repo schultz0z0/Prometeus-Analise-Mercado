@@ -1,6 +1,8 @@
-# Course Market Intelligence
+# Prometeus
 
-Serviço headless de inteligência para avaliar a viabilidade de novos produtos educacionais. O produto combina dados históricos da instituição, sinais externos de mercado, decisões tipadas do JEV, cálculo determinístico de score e síntese por LLM generativa.
+**Inteligência para Produtos Educacionais**
+
+Prometeus é um serviço headless de inteligência para avaliar a viabilidade de novos produtos educacionais. O produto combina dados históricos da instituição, sinais externos de mercado, decisões tipadas do JEV, cálculo determinístico de score e síntese por LLM generativa.
 
 O primeiro deployment será dedicado à ENS (Escola de Negócios e Seguros). O mesmo código-base poderá ser configurado e implantado separadamente para outras instituições.
 
@@ -12,11 +14,12 @@ O projeto está na fase de documentação e validação. Ainda não existe imple
 
 1. [Índice da documentação](docs/README.md)
 2. [PRD canônico](docs/product/PRD.md)
-3. [Visão de arquitetura](docs/architecture/system-overview.md)
-4. [Workflow do agente](docs/agent/workflow.md)
-5. [Modelo de scoring](docs/scoring/scoring-model.md)
-6. [Roadmap](docs/roadmap/roadmap.md)
-7. [Planos de implementação](docs/implementation/README.md)
+3. [Nome e identidade do produto](docs/product/brand-and-naming.md)
+4. [Visão de arquitetura](docs/architecture/system-overview.md)
+5. [Workflow do agente](docs/agent/workflow.md)
+6. [Modelo de scoring](docs/scoring/scoring-model.md)
+7. [Roadmap](docs/roadmap/roadmap.md)
+8. [Planos de implementação](docs/implementation/README.md)
 
 ## Princípios
 

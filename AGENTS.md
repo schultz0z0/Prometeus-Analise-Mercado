@@ -1,5 +1,7 @@
 # Instruções para agentes de desenvolvimento
 
+O nome canônico do produto é **Prometeus**. Seu descritor é **Inteligência para Produtos Educacionais**. Consulte `docs/product/brand-and-naming.md` antes de criar textos, metadados ou identificadores públicos.
+
 Antes de alterar código ou documentação:
 
 1. Leia `docs/README.md` e o documento do módulo afetado.

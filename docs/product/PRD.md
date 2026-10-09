@@ -1,4 +1,4 @@
-# PRD — Course Market Intelligence
+# PRD — Prometeus
 
 **Versão:** 5.0.0-draft  
 **Data:** 2026-10-09  
@@ -7,7 +7,7 @@
 
 ## 1. Resumo executivo
 
-Course Market Intelligence é um serviço headless que transforma propostas acadêmicas em dossiês auditáveis de viabilidade. O produto combina histórico institucional, pesquisa de mercado, sinais de concorrência, demanda de busca, empregabilidade, social listening e análise curricular.
+**Prometeus — Inteligência para Produtos Educacionais** é um serviço headless que transforma propostas acadêmicas em dossiês auditáveis de viabilidade. O produto combina histórico institucional, pesquisa de mercado, sinais de concorrência, demanda de busca, empregabilidade, social listening e análise curricular.
 
 O JEV executa julgamentos semânticos delimitados e tipados. Código convencional calcula scores, aplica regras e controla estados. Uma LLM generativa converte o dossiê estruturado em parecer executivo, recomendações curriculares, posicionamento e materiais de apoio comercial.
 

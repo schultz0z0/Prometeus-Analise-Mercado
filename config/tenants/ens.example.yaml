@@ -6,7 +6,8 @@ institution:
   timezone: America/Sao_Paulo
   currency: BRL
 branding:
-  product_name: Inteligência de Produtos Educacionais
+  product_name: Prometeus
+  product_descriptor: Inteligência para Produtos Educacionais
 features:
   paid_competition: true
   social_listening: true

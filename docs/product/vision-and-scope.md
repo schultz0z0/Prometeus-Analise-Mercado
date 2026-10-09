@@ -1,5 +1,9 @@
 # Visão e escopo
 
+## Identidade
+
+O nome canônico do produto é **Prometeus**, acompanhado do descritor **Inteligência para Produtos Educacionais**. As regras completas estão em [brand-and-naming.md](brand-and-naming.md).
+
 ## Visão
 
 Ser a camada de inteligência de produtos educacionais que conecta intenção acadêmica, desempenho institucional e mercado real antes que uma instituição comprometa orçamento de produção e aquisição.

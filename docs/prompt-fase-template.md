@@ -19,7 +19,7 @@ Copie todo o bloco abaixo e envie ao Codex a partir da raiz deste projeto.
 ```text
 FASE_ALVO={{FASE}}
 
-Você é responsável por executar, homologar e registrar exatamente uma fase do projeto Course Market Intelligence.
+Você é responsável por executar, homologar e registrar exatamente uma fase do projeto Prometeus — Inteligência para Produtos Educacionais.
 
 OBJETIVO DESTA EXECUÇÃO
 
