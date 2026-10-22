@@ -1,0 +1,24 @@
+schema_version: 1
+profile_id: tech-bootcamp-v1
+status: hypothesis
+weights:
+  internal_history: 0.15
+  paid_competition: 0.15
+  search_and_media: 0.25
+  employability: 0.25
+  syllabus_fit: 0.10
+  pricing: 0.10
+gates:
+  minimum_coverage: 0.80
+  minimum_confidence: 0.70
+thresholds:
+  approved: 78
+  approved_with_adjustments: 65
+  boundary_review_margin: 3
+required_pillars:
+  - internal_history
+  - search_and_media
+  - employability
+notes:
+  - Perfil de pontuação calibrado para cursos de computação, IA aplicada e bootcamps tecnológicos (Infnet).
+  - Maior ênfase em empregabilidade (0.25) e buscas/tendências (0.25).

@@ -1,0 +1,28 @@
+schema_version: 1
+institution:
+  id: infnet
+  display_name: Instituto Infnet de Tecnologia
+  locale: pt-BR
+  timezone: America/Sao_Paulo
+  currency: BRL
+branding:
+  product_name: Infnet Market Insights
+  product_descriptor: Inteligência de Portfólio de Cursos Tecnológicos
+  product_vendor: Agência Prometeus
+features:
+  paid_competition: true
+  social_listening: true
+  job_market: true
+  pricing: true
+adapters:
+  institutional: infnet
+profiles:
+  scoring: tech-bootcamp-v1
+  retention: standard-academic
+webhooks:
+  events:
+    - analysis.waiting_for_input
+    - analysis.blocked
+    - analysis.requires_review
+    - analysis.completed
+    - analysis.failed
