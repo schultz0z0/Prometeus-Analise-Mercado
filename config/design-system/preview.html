@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prometeus UI — Design System & Componentes Canônicos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
+  <style>
+    /* Estilos específicos do Showcase / Sandbox */
+    .showcase-wrapper {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 32px 24px 80px 24px;
+    }
+
+    .top-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      background: rgba(10, 15, 28, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--prometeus-border-card);
+      border-radius: var(--prometeus-radius-lg);
+      margin-bottom: 32px;
+    }
+
+    .brand-cluster {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo-img {
+      height: 38px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .system-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(6, 82, 197, 0.15);
+      border: 1px solid rgba(6, 82, 197, 0.4);
+      border-radius: var(--prometeus-radius-full);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--prometeus-accent-ice);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .system-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--prometeus-text-secondary);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--prometeus-status-approved);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--prometeus-status-approved);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.6; transform: scale(0.95); }
+      50% { opacity: 1; transform: scale(1.15); }
+      100% { opacity: 0.6; transform: scale(0.95); }
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin: 40px 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--prometeus-text-primary);
+    }
+
+    .section-title::before {
+      content: "";
+      display: inline-block;
+      width: 4px;
+      height: 18px;
+      background: var(--prometeus-primary);
+      border-radius: 2px;
+    }
+
+    .stepper-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 16px 4px;
+      scrollbar-width: thin;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--prometeus-border-subtle);
+      border-radius: var(--prometeus-radius-md);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--prometeus-text-secondary);
+      white-space: nowrap;
+      transition: all var(--prometeus-transition-fast);
+      cursor: pointer;
+    }
+
+    .step-item.completed {
+      border-color: var(--prometeus-status-approved-border);
+      background: var(--prometeus-status-approved-bg);
+      color: var(--prometeus-status-approved);
+    }
+
+    .step-item.active {
+      border-color: var(--prometeus-border-focus);
+      background: rgba(6, 82, 197, 0.2);
+      color: #ffffff;
+      box-shadow: 0 0 16px rgba(6, 82, 197, 0.35);
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 980px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Gauge Component */
+    .gauge-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 12px 0;
+    }
+
+    .gauge-svg {
+      width: 220px;
+      height: 220px;
+      transform: rotate(-90deg);
+    }
+
+    .gauge-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.06);
+      stroke-width: 14;
+    }
+
+    .gauge-progress {
+      fill: none;
+      stroke: url(#gauge-gradient);
+      stroke-width: 14;
+      stroke-linecap: round;
+      stroke-dasharray: 565.48;
+      stroke-dashoffset: 76.9; /* 86.4% */
+      transition: stroke-dashoffset 1s ease-out;
+    }
+
+    .gauge-score-display {
+      margin-top: -140px;
+      margin-bottom: 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .gauge-number {
+      font-family: var(--prometeus-font-mono);
+      font-size: 46px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1;
+    }
+
+    .gauge-scale {
+      font-size: 13px;
+      color: var(--prometeus-text-muted);
+      margin-top: 4px;
+    }
+
+    .kpi-row {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid var(--prometeus-border-subtle);
+    }
+
+    .kpi-col {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--prometeus-text-muted);
+    }
+
+    .kpi-value {
+      font-family: var(--prometeus-font-mono);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--prometeus-text-primary);
+      margin-top: 4px;
+    }
+
+    /* Radar Section */
+    .radar-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .radar-svg {
+      width: 100%;
+      max-width: 480px;
+      height: auto;
+    }
+
+    /* Evidence Drawer (Off-canvas) */
+    .drawer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--prometeus-surface-overlay);
+      backdrop-filter: var(--prometeus-blur-overlay);
+      z-index: var(--prometeus-z-drawer);
+      display: none;
+      opacity: 0;
+      transition: opacity var(--prometeus-transition-moderate);
+    }
+
+    .drawer-overlay.open {
+      display: block;
+      opacity: 1;
+    }
+
+    .drawer-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 540px;
+      max-width: 100vw;
+      height: 100vh;
+      background: var(--prometeus-surface-elevated);
+      border-left: 1px solid var(--prometeus-border-card);
+      box-shadow: var(--prometeus-shadow-elevated);
+      z-index: calc(var(--prometeus-z-drawer) + 1);
+      transform: translateX(100%);
+      transition: transform var(--prometeus-transition-moderate);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .drawer-panel.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--prometeus-border-subtle);
+    }
+
+    .drawer-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+
+    .drawer-tab {
+      padding: 6px 14px;
+      border-radius: var(--prometeus-radius-sm);
+      background: var(--prometeus-surface-glass);
+      border: 1px solid var(--prometeus-border-subtle);
+      color: var(--prometeus-text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .drawer-tab.active {
+      background: rgba(6, 82, 197, 0.2);
+      border-color: var(--prometeus-border-focus);
+      color: #ffffff;
+    }
+
+    .evidence-box {
+      background: rgba(10, 15, 28, 0.8);
+      border: 1px solid var(--prometeus-border-subtle);
+      border-radius: var(--prometeus-radius-md);
+      padding: 18px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--prometeus-text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .evidence-meta {
+      font-family: var(--prometeus-font-mono);
+      font-size: 11px;
+      color: var(--prometeus-text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* Dossiê Claim Card */
+    .claim-card {
+      background: var(--prometeus-surface-card);
+      border: 1px solid var(--prometeus-border-card);
+      border-radius: var(--prometeus-radius-lg);
+      padding: 24px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .claim-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .claim-body {
+      font-size: 15px;
+      color: var(--prometeus-text-primary);
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="showcase-wrapper">
+    <!-- Header Corporativo -->
+    <header class="top-header">
+      <div class="brand-cluster">
+        <img src="../../assets/brand/prometeus-logo-primary.png" alt="Logotipo Prometeus" class="logo-img">
+        <span class="system-badge">Design System v2.0</span>
+      </div>
+
+      <div class="prometeus-tenant-badge" role="status" aria-label="Ambiente corporativo ativo">
+        <span aria-hidden="true">🏛️</span>
+        <span class="tenant-label">Ambiente Dedicado:</span>
+        <strong>ENS — Escola de Negócios e Seguros</strong>
+      </div>
+
+      <div class="system-status">
+        <div class="pulse-dot" aria-hidden="true"></div>
+        <span>Sistema Operacional</span>
+      </div>
+    </header>
+
+    <!-- Stepper de 15 Etapas do Pipeline -->
+    <div class="section-title">Pipeline de Execução (15 Etapas Canônicas)</div>
+    <div class="stepper-container" role="progressbar" aria-label="Progresso do pipeline de análise" aria-valuenow="10" aria-valuemin="1" aria-valuemax="15">
+      <div class="step-item completed" title="Concluído">✓ 1. Contexto</div>
+      <div class="step-item completed" title="Concluído">✓ 2. Intake</div>
+      <div class="step-item completed" title="Concluído">✓ 3. Readiness</div>
+      <div class="step-item completed" title="Concluído">✓ 4. Keywords</div>
+      <div class="step-item completed" title="Concluído">✓ 5. Plano</div>
+      <div class="step-item completed" title="Concluído">✓ 6. Histórico</div>
+      <div class="step-item completed" title="Concluído">✓ 7. Concorrência</div>
+      <div class="step-item completed" title="Concluído">✓ 8. Higienização</div>
+      <div class="step-item completed" title="Concluído">✓ 9. JEV Decisões</div>
+      <div class="step-item active" aria-current="step">⟳ 10. Scoring (Ativo)</div>
+      <div class="step-item">11. Quality Gate</div>
+      <div class="step-item">12. Síntese</div>
+      <div class="step-item">13. Verificação</div>
+      <div class="step-item">14. Dossiê</div>
+      <div class="step-item">15. Entrega</div>
+    </div>
+
+    <!-- Dashboard Principal -->
+    <div class="dashboard-grid">
+      <!-- Coluna da Esquerda: Viability Score Gauge -->
+      <section class="prometeus-card" aria-labelledby="gauge-title">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h2 id="gauge-title" style="font-size:16px; font-weight:600; margin:0;">Índice de Viabilidade</h2>
+          <span class="prometeus-pill-badge" data-status="APPROVED">● APROVADO</span>
+        </div>
+
+        <div class="gauge-wrapper" role="meter" aria-valuenow="86.4" aria-valuemin="0" aria-valuemax="100" aria-label="Score de viabilidade do curso 86.4 de 100">
+          <svg class="gauge-svg" viewBox="0 0 200 200">
+            <defs>
+              <linearGradient id="gauge-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#0652C5" />
+                <stop offset="100%" stop-color="#8DB5FF" />
+              </linearGradient>
+            </defs>
+            <circle class="gauge-bg" cx="100" cy="100" r="90" />
+            <circle class="gauge-progress" cx="100" cy="100" r="90" />
+          </svg>
+
+          <div class="gauge-score-display">
+            <span class="gauge-number prometeus-stat-mono">86.4</span>
+            <span class="gauge-scale">escala de 0 a 100</span>
+          </div>
+        </div>
+
+        <p style="font-size:13px; color:var(--prometeus-text-secondary); margin:0 0 16px 0; text-align:center;">
+          Recomendação calculada por fórmula determinística em código após conformidade dos 6 pilares.
+        </p>
+
+        <div class="kpi-row">
+          <div class="kpi-col">
+            <span class="kpi-label">Coverage Index</span>
+            <span class="kpi-value prometeus-stat-mono">92.0%</span>
+          </div>
+          <div class="kpi-col" style="text-align:right;">
+            <span class="kpi-label">Confidence Index</span>
+            <span class="kpi-value prometeus-stat-mono">0.88</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Coluna da Direita: Radar de 6 Pilares e Factual Claims -->
+      <div style="display:flex; flex-direction:column; gap:24px;">
+        <!-- Radar dos 6 Pilares -->
+        <section class="prometeus-card" aria-labelledby="radar-title">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 id="radar-title" style="font-size:16px; font-weight:600; margin:0;">Decomposição dos 6 Pilares de Análise</h2>
+            <button class="prometeus-btn-secondary" id="btn-toggle-a11y" style="font-size:12px; padding:6px 12px; min-height:30px;" aria-expanded="false">
+              Alternar Visualização Tabular
+            </button>
+          </div>
+
+          <div class="radar-wrapper" id="radar-visual">
+            <svg class="radar-svg" viewBox="0 0 520 360" role="img" aria-label="Gráfico de radar comparativo dos 6 pilares">
+              <!-- Círculos de Nível -->
+              <polygon points="260,70 355,125 355,235 260,290 165,235 165,125" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+              <polygon points="260,105 325,145 325,215 260,255 195,215 195,145" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+              <polygon points="260,140 295,160 295,200 260,220 225,200 225,160" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
+
+              <!-- Linhas de Eixo -->
+              <line x1="260" y1="180" x2="260" y2="70" stroke="rgba(255,255,255,0.12)" />
+              <line x1="260" y1="180" x2="355" y2="125" stroke="rgba(255,255,255,0.12)" />
+              <line x1="260" y1="180" x2="355" y2="235" stroke="rgba(255,255,255,0.12)" />
+              <line x1="260" y1="180" x2="260" y2="290" stroke="rgba(255,255,255,0.12)" />
+              <line x1="260" y1="180" x2="165" y2="235" stroke="rgba(255,255,255,0.12)" />
+              <line x1="260" y1="180" x2="165" y2="125" stroke="rgba(255,255,255,0.12)" />
+
+              <!-- Polígono de Dados: Histórico (85), Concorrência (78), Busca (92), Empregabilidade (88), Ementa (90), Regulatório (82) -->
+              <polygon points="260,86 334,136 347,230 260,277 174,229 181,135" 
+                       fill="rgba(6, 82, 197, 0.25)" 
+                       stroke="#0652C5" 
+                       stroke-width="2.5" />
+
+              <!-- Pontos de Vértice com Hover -->
+              <circle cx="260" cy="86" r="4.5" fill="#8DB5FF" stroke="#040814" stroke-width="2" />
+              <circle cx="334" cy="136" r="4.5" fill="#8DB5FF" stroke="#040814" stroke-width="2" />
+              <circle cx="347" cy="230" r="4.5" fill="#8DB5FF" stroke="#040814" stroke-width="2" />
+              <circle cx="260" cy="277" r="4.5" fill="#8DB5FF" stroke="#040814" stroke-width="2" />
+              <circle cx="174" cy="229" r="4.5" fill="#8DB5FF" stroke="#040814" stroke-width="2" />
+              <circle cx="181" cy="135" r="4.5" fill="#8DB5FF" stroke="#040814" stroke-width="2" />
+
+              <!-- Rótulos dos Eixos -->
+              <text x="260" y="48" text-anchor="middle" fill="#FFFFFF" font-size="12" font-weight="600" font-family="Outfit">Histórico Interno (20%)</text>
+              <text x="372" y="130" text-anchor="start" fill="#94A3B8" font-size="12" font-family="Outfit">Concorrência (20%)</text>
+              <text x="372" y="240" text-anchor="start" fill="#FFFFFF" font-size="12" font-weight="600" font-family="Outfit">Busca/Demanda (20%)</text>
+              <text x="260" y="322" text-anchor="middle" fill="#94A3B8" font-size="12" font-family="Outfit">Empregabilidade (15%)</text>
+              <text x="148" y="240" text-anchor="end" fill="#FFFFFF" font-size="12" font-weight="600" font-family="Outfit">Aderência Ementa (15%)</text>
+              <text x="148" y="130" text-anchor="end" fill="#94A3B8" font-size="12" font-family="Outfit">Regulatório (10%)</text>
+            </svg>
+          </div>
+
+          <!-- Tabela A11y de Fallback -->
+          <div id="radar-table" style="display:none; margin-top:16px;">
+            <table class="prometeus-table">
+              <caption class="sr-only">Dados detalhados dos 6 pilares de avaliação de viabilidade</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Pilar</th>
+                  <th scope="col">Peso</th>
+                  <th scope="col">Pontuação</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Histórico Interno</td>
+                  <td class="prometeus-stat-mono">20%</td>
+                  <td class="prometeus-stat-mono">85.0 / 100</td>
+                  <td><span class="prometeus-pill-badge" data-status="APPROVED">Forte</span></td>
+                </tr>
+                <tr>
+                  <td>Concorrência Paga</td>
+                  <td class="prometeus-stat-mono">20%</td>
+                  <td class="prometeus-stat-mono">78.0 / 100</td>
+                  <td><span class="prometeus-pill-badge" data-status="APPROVED">Moderada</span></td>
+                </tr>
+                <tr>
+                  <td>Busca & Demanda Orgânica</td>
+                  <td class="prometeus-stat-mono">20%</td>
+                  <td class="prometeus-stat-mono">92.0 / 100</td>
+                  <td><span class="prometeus-pill-badge" data-status="APPROVED">Altíssima</span></td>
+                </tr>
+                <tr>
+                  <td>Empregabilidade CBO/CAGED</td>
+                  <td class="prometeus-stat-mono">15%</td>
+                  <td class="prometeus-stat-mono">88.0 / 100</td>
+                  <td><span class="prometeus-pill-badge" data-status="APPROVED">Aquecida</span></td>
+                </tr>
+                <tr>
+                  <td>Aderência Curricular</td>
+                  <td class="prometeus-stat-mono">15%</td>
+                  <td class="prometeus-stat-mono">90.0 / 100</td>
+                  <td><span class="prometeus-pill-badge" data-status="APPROVED">Alinhada</span></td>
+                </tr>
+                <tr>
+                  <td>Maturidade Regulatória MEC</td>
+                  <td class="prometeus-stat-mono">10%</td>
+                  <td class="prometeus-stat-mono">82.0 / 100</td>
+                  <td><span class="prometeus-pill-badge" data-status="APPROVED">Conforme</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Dossiê: Card de Afirmação Factual & Rastreabilidade -->
+        <article class="claim-card">
+          <div class="claim-header">
+            <span class="prometeus-pill-badge" style="background:rgba(52,211,153,0.15); color:#34D399; border-color:rgba(52,211,153,0.4);">
+              ● GRAU DE SUPORTE: OBSERVADO
+            </span>
+            <span style="font-family:var(--prometeus-font-mono); font-size:11px; color:var(--prometeus-text-muted);">
+              REF: EV-2026-MEC-883
+            </span>
+          </div>
+
+          <p class="claim-body">
+            "A procura por especializações em Inteligência Artificial Aplicada a Seguros apresentou um crescimento orgânico de 142% nos últimos 18 meses no território nacional, com carência crítica de profissionais certificados em regulação pela SUSEP e LGPD."
+          </p>
+
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12px; color:var(--prometeus-text-muted);">
+              Fonte: Censo da Educação Superior (INEP/MEC) + Google Trends API
+            </span>
+            <button class="prometeus-btn-primary" id="btn-open-drawer" style="padding:8px 16px; font-size:13px; min-height:36px;">
+              <span>Inspecionar Evidência</span>
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <!-- Tabela Analítica de Concorrência -->
+    <div class="section-title">Análise de Concorrência Mapeada (Meta Ads & Cursos Similares)</div>
+    <div class="prometeus-table-container">
+      <table class="prometeus-table">
+        <thead>
+          <tr>
+            <th scope="col">Instituição Concorrente</th>
+            <th scope="col">Curso Analisado</th>
+            <th scope="col">Modalidade</th>
+            <th scope="col">Mensalidade Mediana</th>
+            <th scope="col">Anúncios Ativos</th>
+            <th scope="col">Status de Concorrência</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Fundação Getulio Vargas (FGV)</strong></td>
+            <td>MBA em Data Science e Analytics</td>
+            <td>EAD Síncrono</td>
+            <td class="prometeus-stat-mono">R$ 1.250,00</td>
+            <td class="prometeus-stat-mono">14 ativos</td>
+            <td><span class="prometeus-pill-badge" data-status="APPROVED">Concorrente Direto</span></td>
+          </tr>
+          <tr>
+            <td><strong>PUC Minas Virtual</strong></td>
+            <td>Pós-Graduação em IA e Machine Learning</td>
+            <td>EAD Assíncrono</td>
+            <td class="prometeus-stat-mono">R$ 680,00</td>
+            <td class="prometeus-stat-mono">8 ativos</td>
+            <td><span class="prometeus-pill-badge" data-status="APPROVED">Concorrente Indireto</span></td>
+          </tr>
+          <tr>
+            <td><strong>FIA Business School</strong></td>
+            <td>Analytics & Big Data para Gestores</td>
+            <td>Híbrido</td>
+            <td class="prometeus-stat-mono">R$ 1.480,00</td>
+            <td class="prometeus-stat-mono">19 ativos</td>
+            <td><span class="prometeus-pill-badge" data-status="APPROVED_WITH_ADJUSTMENTS">Pressão de Preço</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Seção de Estados e Variantes (Impeccable & A11y Verification) -->
+    <div class="section-title">Estados de Interface & Robustez (Impeccable & A11y)</div>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
+      <!-- Card com Skeleton Shimmer -->
+      <div class="prometeus-card">
+        <div style="font-size:13px; font-weight:600; margin-bottom:12px; color:var(--prometeus-text-secondary);">
+          Carregamento Assíncrono (Skeleton Shimmer)
+        </div>
+        <div class="prometeus-skeleton" style="height:24px; width:70%; margin-bottom:12px;"></div>
+        <div class="prometeus-skeleton" style="height:14px; width:100%; margin-bottom:8px;"></div>
+        <div class="prometeus-skeleton" style="height:14px; width:85%; margin-bottom:18px;"></div>
+        <div class="prometeus-skeleton" style="height:36px; width:45%; border-radius:var(--prometeus-radius-md);"></div>
+      </div>
+
+      <!-- Card com Badges Semânticos ADR-0005 -->
+      <div class="prometeus-card">
+        <div style="font-size:13px; font-weight:600; margin-bottom:14px; color:var(--prometeus-text-secondary);">
+          Badges de Recomendação (ADR-0005)
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          <span class="prometeus-pill-badge" data-status="APPROVED">APPROVED</span>
+          <span class="prometeus-pill-badge" data-status="APPROVED_WITH_ADJUSTMENTS">ADJUSTMENTS</span>
+          <span class="prometeus-pill-badge" data-status="HIGH_RISK">HIGH_RISK</span>
+          <span class="prometeus-pill-badge" data-status="RUNNING">RUNNING</span>
+          <span class="prometeus-pill-badge" data-status="BLOCKED">BLOCKED</span>
+          <span class="prometeus-pill-badge" data-status="INSUFFICIENT_EVIDENCE">INSUFFICIENT</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Evidence Drawer (Off-Canvas Modal com Trap Focus) -->
+  <div class="drawer-overlay" id="drawer-overlay" aria-hidden="true"></div>
+  <aside class="drawer-panel" id="drawer-panel" role="dialog" aria-labelledby="drawer-title" aria-modal="true" aria-hidden="true">
+    <div class="drawer-header">
+      <div>
+        <span class="prometeus-pill-badge" style="background:rgba(6,82,197,0.2); color:#8DB5FF; border-color:rgba(141,181,255,0.4);">
+          AUDITORIA & RASTREABILIDADE
+        </span>
+        <h2 id="drawer-title" style="font-size:18px; margin:8px 0 0 0;">Dossiê da Evidência EV-2026-MEC-883</h2>
+      </div>
+      <button class="prometeus-btn-secondary" id="btn-close-drawer" style="padding:6px 12px; min-height:32px;" aria-label="Fechar gaveta de evidência">
+        ✕
+      </button>
+    </div>
+
+    <div class="drawer-tabs" role="tablist">
+      <button class="drawer-tab active" role="tab" aria-selected="true">MEC / INEP</button>
+      <button class="drawer-tab" role="tab" aria-selected="false">Google Trends</button>
+      <button class="drawer-tab" role="tab" aria-selected="false">Meta Ads Library</button>
+      <button class="drawer-tab" role="tab" aria-selected="false">LinkedIn / Catho</button>
+    </div>
+
+    <div class="evidence-box">
+      <strong style="color:#ffffff; display:block; margin-bottom:6px;">Registro Oficial Capturado:</strong>
+      "Ementa registrada no Sistema e-MEC sob o protocolo de autorização nº 20240918-771. Demanda de ingressantes no curso superior de tecnologia correlato registrou 3.420 matrículas ativas em 2025, com índice de ocupação de 89.4% nas capitais."
+    </div>
+
+    <div class="evidence-meta">
+      <div><strong>URL Canônica:</strong> <span style="color:#8DB5FF;">https://emec.mec.gov.br/consulta/cadastro/2026</span></div>
+      <div><strong>Data e Hora da Coleta:</strong> 2026-10-22T09:41:15Z (ISO-8601)</div>
+      <div><strong>Hash de Integridade SHA-256:</strong> e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</div>
+      <div><strong>Agente Extrator:</strong> Prometeus MEC-Scraper v1.4 (Higienizado contra injeções)</div>
+    </div>
+
+    <div style="margin-top:auto; padding-top:24px;">
+      <button class="prometeus-btn-primary" style="width:100%;" onclick="alert('Exportando evidência em formato JSON assinado digitalmente.')">
+        Exportar Evidência Auditada (JSON)
+      </button>
+    </div>
+  </aside>
+
+  <!-- Script Interativo Acessível -->
+  <script>
+    // Gerenciamento da Gaveta de Evidência (Evidence Drawer)
+    const openBtn = document.getElementById('btn-open-drawer');
+    const closeBtn = document.getElementById('btn-close-drawer');
+    const overlay = document.getElementById('drawer-overlay');
+    const panel = document.getElementById('drawer-panel');
+
+    function openDrawer() {
+      overlay.classList.add('open');
+      panel.classList.add('open');
+      overlay.setAttribute('aria-hidden', 'false');
+      panel.setAttribute('aria-hidden', 'false');
+      closeBtn.focus();
+    }
+
+    function closeDrawer() {
+      overlay.classList.remove('open');
+      panel.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+      panel.setAttribute('aria-hidden', 'true');
+      openBtn.focus();
+    }
+
+    openBtn.addEventListener('click', openDrawer);
+    closeBtn.addEventListener('click', closeDrawer);
+    overlay.addEventListener('click', closeDrawer);
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && panel.classList.contains('open')) {
+        closeDrawer();
+      }
+    });
+
+    // Toggle de Visualização Acessível do Radar (A11y Fallback Table)
+    const toggleA11yBtn = document.getElementById('btn-toggle-a11y');
+    const radarVisual = document.getElementById('radar-visual');
+    const radarTable = document.getElementById('radar-table');
+
+    toggleA11yBtn.addEventListener('click', () => {
+      const isTableVisible = radarTable.style.display !== 'none';
+      if (isTableVisible) {
+        radarTable.style.display = 'none';
+        radarVisual.style.display = 'flex';
+        toggleA11yBtn.textContent = 'Alternar Visualização Tabular';
+        toggleA11yBtn.setAttribute('aria-expanded', 'false');
+      } else {
+        radarTable.style.display = 'block';
+        radarVisual.style.display = 'none';
+        toggleA11yBtn.textContent = 'Alternar Gráfico Visual';
+        toggleA11yBtn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  </script>
+</body>
+</html>
