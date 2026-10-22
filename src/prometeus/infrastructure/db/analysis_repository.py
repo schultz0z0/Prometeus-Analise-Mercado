@@ -44,6 +44,7 @@ class AnalysisRepository:
                 status=analysis.status.value,
                 recommendation=analysis.recommendation.value if analysis.recommendation else None,
                 proposal_data=analysis.proposal_data,
+                previous_analysis_id=analysis.previous_analysis_id,
                 created_at=analysis.created_at,
                 updated_at=analysis.updated_at,
             )
@@ -186,6 +187,7 @@ class AnalysisRepository:
             recommendation=AnalysisRecommendation(model.recommendation)
             if model.recommendation
             else None,
+            previous_analysis_id=model.previous_analysis_id,
             created_at=model.created_at,
             updated_at=model.updated_at,
             audit_events=audit_events,
@@ -223,6 +225,7 @@ class AnalysisRepository:
                     proposal_data=m.proposal_data,
                     status=AnalysisStatus(m.status),
                     recommendation=rec,
+                    previous_analysis_id=m.previous_analysis_id,
                     created_at=m.created_at,
                     updated_at=m.updated_at,
                     audit_events=[

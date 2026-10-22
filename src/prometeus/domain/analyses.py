@@ -123,6 +123,7 @@ class Analysis:
     recommendation: AnalysisRecommendation | None
     created_at: datetime
     updated_at: datetime
+    previous_analysis_id: str | None = None
     audit_events: list[AuditEvent] = field(default_factory=list)
     steps: list[AnalysisStep] = field(default_factory=list)
 
@@ -134,6 +135,7 @@ class Analysis:
         correlation_id: str,
         proposal_data: dict[str, Any] | None = None,
         analysis_id: str | None = None,
+        previous_analysis_id: str | None = None,
     ) -> Analysis:
         """Cria uma nova análise no estado inicial QUEUED com recomendação nula."""
         now = datetime.now(UTC)
@@ -155,6 +157,7 @@ class Analysis:
             proposal_data=proposal_data or {},
             status=AnalysisStatus.QUEUED,
             recommendation=None,
+            previous_analysis_id=previous_analysis_id,
             created_at=now,
             updated_at=now,
             audit_events=[initial_event],

@@ -1,0 +1,440 @@
+openapi: 3.1.0
+info:
+  title: Prometeus
+  summary: Inteligência para Produtos Educacionais
+  version: 0.1.0
+paths:
+  /v1/analyses:
+    post:
+      summary: Submeter nova análise de mercado
+      operationId: create_analysis_v1_analyses_post
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Chave única de idempotência obrigatória
+          title: Idempotency-Key
+        description: Chave única de idempotência obrigatória
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAnalysisRequest'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAnalysisResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/analyses/{analysis_id}:
+    get:
+      summary: Consultar detalhes e dossiê da análise
+      operationId: get_analysis_v1_analyses__analysis_id__get
+      parameters:
+      - name: analysis_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Analysis Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Analysis V1 Analyses  Analysis Id  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/analyses/{analysis_id}/status:
+    get:
+      summary: Consultar ciclo de vida e recomendação
+      operationId: get_analysis_status_v1_analyses__analysis_id__status_get
+      parameters:
+      - name: analysis_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Analysis Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Analysis Status V1 Analyses  Analysis Id  Status
+                  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/analyses/{analysis_id}/reanalyze:
+    post:
+      summary: Submeter reanálise vinculada (RF-010)
+      operationId: reanalyze_v1_analyses__analysis_id__reanalyze_post
+      parameters:
+      - name: analysis_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Analysis Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReanalyzeRequest'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Reanalyze V1 Analyses  Analysis Id  Reanalyze Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/analyses/{analysis_id}/cancel:
+    post:
+      summary: Cancelar análise em andamento
+      operationId: cancel_analysis_v1_analyses__analysis_id__cancel_post
+      parameters:
+      - name: analysis_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Analysis Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Cancel Analysis V1 Analyses  Analysis Id  Cancel Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/analyses/{analysis_id}/dossier:
+    get:
+      summary: Obter dossiê estruturado e auditável (RF-012)
+      operationId: get_dossier_v1_analyses__analysis_id__dossier_get
+      parameters:
+      - name: analysis_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Analysis Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Dossier V1 Analyses  Analysis Id  Dossier Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/analyses/{analysis_id}/decisions:
+    post:
+      summary: Registrar decisão humana institucional (RF-009)
+      operationId: submit_human_decision_v1_analyses__analysis_id__decisions_post
+      parameters:
+      - name: analysis_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Analysis Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitDecisionRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Submit Human Decision V1 Analyses  Analysis Id  Decisions
+                  Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/analyses/{analysis_id}/outcomes:
+    post:
+      summary: Registrar desfecho real de mercado pós-lançamento (RF-013)
+      operationId: record_course_outcome_v1_analyses__analysis_id__outcomes_post
+      parameters:
+      - name: analysis_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Analysis Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordOutcomeRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Record Course Outcome V1 Analyses  Analysis Id  Outcomes
+                  Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /health/live:
+    get:
+      summary: Liveness probe
+      description: Verifica se o processo HTTP está ativo e respondendo.
+      operationId: health_live_health_live_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Health Live Health Live Get
+  /health/ready:
+    get:
+      summary: Readiness probe
+      description: Verifica prontidão do PostgreSQL e do Redis.
+      operationId: health_ready_health_ready_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+components:
+  schemas:
+    CreateAnalysisRequest:
+      properties:
+        course_name:
+          type: string
+          title: Course Name
+          description: Nome proposto para o curso
+          examples:
+          - MBA em Gestão de Riscos e Seguros
+        tenant_id:
+          type: string
+          title: Tenant Id
+          description: Identificador da instituição
+          default: ens
+          examples:
+          - ens
+        proposal_data:
+          additionalProperties: true
+          type: object
+          title: Proposal Data
+          description: Dados complementares da proposta (ementa, público, preço)
+      type: object
+      required:
+      - course_name
+      title: CreateAnalysisRequest
+      description: Corpo da requisição para submeter uma análise de viabilidade.
+    CreateAnalysisResponse:
+      properties:
+        analysis_id:
+          type: string
+          title: Analysis Id
+        status:
+          type: string
+          title: Status
+        created_at:
+          type: string
+          title: Created At
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - analysis_id
+      - status
+      - created_at
+      - message
+      title: CreateAnalysisResponse
+      description: Resposta com status 202 Accepted conforme especificação.
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    ReanalyzeRequest:
+      properties:
+        proposal_data:
+          additionalProperties: true
+          type: object
+          title: Proposal Data
+          description: Novos dados ou ajustes da proposta (ementa, preço, público)
+      type: object
+      title: ReanalyzeRequest
+      description: Corpo da requisição para reanálise vinculada (RF-010).
+    RecordOutcomeRequest:
+      properties:
+        external_course_id:
+          type: string
+          title: External Course Id
+          description: Identificador do curso no LMS/CRM
+        launch_date:
+          type: string
+          title: Launch Date
+          description: Data de início de captação (AAAA-MM-DD)
+        enrolled_count:
+          type: integer
+          minimum: 0.0
+          title: Enrolled Count
+          description: Total de alunos matriculados
+        leads_count:
+          type: integer
+          minimum: 0.0
+          title: Leads Count
+          description: Total de leads captados
+          default: 0
+        applicants_count:
+          type: integer
+          minimum: 0.0
+          title: Applicants Count
+          description: Total de inscritos
+          default: 0
+        revenue_brl:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Revenue Brl
+          description: Receita total em BRL
+        notes:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Notes
+          description: Observações de desempenho
+      type: object
+      required:
+      - external_course_id
+      - launch_date
+      - enrolled_count
+      title: RecordOutcomeRequest
+      description: Corpo da requisição de resultado pós-lançamento (RF-013).
+    SubmitDecisionRequest:
+      properties:
+        user_id:
+          type: string
+          title: User Id
+          description: ID do decisor institucional
+        user_role:
+          type: string
+          title: User Role
+          description: 'Papel do decisor (ex: director, coordinator)'
+        decision:
+          type: string
+          title: Decision
+          description: APPROVED, APPROVED_WITH_ADJUSTMENTS, REJECTED
+        rationale:
+          type: string
+          title: Rationale
+          description: Justificativa da decisão tomada
+        adjustments:
+          additionalProperties: true
+          type: object
+          title: Adjustments
+          description: Ajustes negociados
+      type: object
+      required:
+      - user_id
+      - user_role
+      - decision
+      - rationale
+      title: SubmitDecisionRequest
+      description: Corpo da requisição de decisão humana (RF-009).
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError

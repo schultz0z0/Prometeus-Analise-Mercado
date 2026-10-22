@@ -6,13 +6,14 @@ import logging
 import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from typing import Annotated, Any
 
 import redis.asyncio as aioredis
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import text
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from prometeus import __descriptor__, __product__, __version__
@@ -20,9 +21,14 @@ from prometeus.application.create_analysis import (
     CreateAnalysisCommand,
     CreateAnalysisUseCase,
 )
-from prometeus.domain.analyses import DomainError
+from prometeus.domain.analyses import Analysis, DomainError
 from prometeus.domain.configuration import AppSettings, ConfigurationError
 from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
+from prometeus.infrastructure.db.models import (
+    CourseOutcomeModel,
+    DossierModel,
+    HumanDecisionModel,
+)
 from prometeus.infrastructure.db.session import get_db_session, get_engine
 from prometeus.observability.logging import (
     correlation_id_ctx,
@@ -246,6 +252,228 @@ async def get_analysis_status(
         "status": analysis.status.value,
         "recommendation": analysis.recommendation.value if analysis.recommendation else None,
         "updated_at": analysis.updated_at.isoformat(),
+    }
+
+
+class ReanalyzeRequest(BaseModel):
+    """Corpo da requisição para reanálise vinculada (RF-010)."""
+
+    proposal_data: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Novos dados ou ajustes da proposta (ementa, preço, público)",
+    )
+
+
+@app.post(
+    "/v1/analyses/{analysis_id}/reanalyze",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Submeter reanálise vinculada (RF-010)",
+)
+async def reanalyze(
+    analysis_id: str,
+    payload: ReanalyzeRequest,
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> dict[str, Any]:
+    corr_id = correlation_id_ctx.get()
+    repo = AnalysisRepository(session)
+    previous = await repo.get_by_id(analysis_id)
+    if not previous:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Análise original não encontrada: {analysis_id}",
+        )
+
+    # Cria nova análise com herança e vínculo explícito
+    new_analysis = Analysis.create(
+        tenant_id=previous.tenant_id,
+        course_name=previous.course_name,
+        correlation_id=corr_id,
+        proposal_data={**previous.proposal_data, **payload.proposal_data},
+        previous_analysis_id=previous.id,
+    )
+    await repo.save(new_analysis)
+    await session.commit()
+
+    try:
+        run_analysis_workflow.delay(new_analysis.id, corr_id)
+    except Exception as exc:
+        logger.warning(f"Erro ao disparar tarefa Celery para reanálise {new_analysis.id}: {exc}")
+
+    return {
+        "analysis_id": new_analysis.id,
+        "previous_analysis_id": previous.id,
+        "status": new_analysis.status.value,
+        "message": f"Reanálise enfileirada com sucesso a partir de {previous.id}.",
+    }
+
+
+@app.post(
+    "/v1/analyses/{analysis_id}/cancel",
+    summary="Cancelar análise em andamento",
+)
+async def cancel_analysis(
+    analysis_id: str,
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> dict[str, Any]:
+    corr_id = correlation_id_ctx.get()
+    repo = AnalysisRepository(session)
+    analysis = await repo.get_by_id(analysis_id)
+    if not analysis:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Análise não encontrada: {analysis_id}",
+        )
+
+    if analysis.is_terminal:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Não é possível cancelar uma análise no estado terminal '{analysis.status.value}'.",
+        )
+
+    analysis.cancel(correlation_id=corr_id, reason="Cancelamento solicitado via API/Chatbot")
+    await repo.save(analysis)
+    await session.commit()
+
+    return {
+        "analysis_id": analysis.id,
+        "status": analysis.status.value,
+        "message": "Análise cancelada com sucesso.",
+    }
+
+
+@app.get(
+    "/v1/analyses/{analysis_id}/dossier",
+    summary="Obter dossiê estruturado e auditável (RF-012)",
+)
+async def get_dossier(
+    analysis_id: str,
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> dict[str, Any]:
+    stmt = select(DossierModel).where(DossierModel.analysis_id == analysis_id)
+    dossier = (await session.execute(stmt)).scalar_one_or_none()
+    if not dossier:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Dossiê ainda não gerado ou não encontrado para a análise: {analysis_id}",
+        )
+
+    return {
+        "id": dossier.id,
+        "analysis_id": dossier.analysis_id,
+        "prompt_version": dossier.prompt_version,
+        "model_name": dossier.model_name,
+        "facts_hash": dossier.facts_hash,
+        "status": dossier.status,
+        "executive_summary": dossier.executive_summary,
+        "sections": dossier.sections,
+        "claims": dossier.claims,
+        "cost_usd": dossier.cost_usd,
+        "created_at": dossier.created_at.isoformat(),
+    }
+
+
+class SubmitDecisionRequest(BaseModel):
+    """Corpo da requisição de decisão humana (RF-009)."""
+
+    user_id: str = Field(..., description="ID do decisor institucional")
+    user_role: str = Field(..., description="Papel do decisor (ex: director, coordinator)")
+    decision: str = Field(..., description="APPROVED, APPROVED_WITH_ADJUSTMENTS, REJECTED")
+    rationale: str = Field(..., description="Justificativa da decisão tomada")
+    adjustments: dict[str, Any] = Field(default_factory=dict, description="Ajustes negociados")
+
+
+@app.post(
+    "/v1/analyses/{analysis_id}/decisions",
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar decisão humana institucional (RF-009)",
+)
+async def submit_human_decision(
+    analysis_id: str,
+    payload: SubmitDecisionRequest,
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> dict[str, Any]:
+    repo = AnalysisRepository(session)
+    analysis = await repo.get_by_id(analysis_id)
+    if not analysis:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Análise não encontrada: {analysis_id}",
+        )
+
+    model = HumanDecisionModel(
+        id=f"dec_{uuid.uuid4().hex[:12]}",
+        analysis_id=analysis_id,
+        user_id=payload.user_id,
+        user_role=payload.user_role,
+        decision=payload.decision.upper(),
+        rationale=payload.rationale,
+        adjustments=payload.adjustments,
+        created_at=datetime.now(UTC),
+    )
+    session.add(model)
+    await session.commit()
+
+    return {
+        "decision_id": model.id,
+        "analysis_id": analysis_id,
+        "decision": model.decision,
+        "status": "RECORDED",
+        "created_at": model.created_at.isoformat(),
+    }
+
+
+class RecordOutcomeRequest(BaseModel):
+    """Corpo da requisição de resultado pós-lançamento (RF-013)."""
+
+    external_course_id: str = Field(..., description="Identificador do curso no LMS/CRM")
+    launch_date: str = Field(..., description="Data de início de captação (AAAA-MM-DD)")
+    enrolled_count: int = Field(..., ge=0, description="Total de alunos matriculados")
+    leads_count: int = Field(default=0, ge=0, description="Total de leads captados")
+    applicants_count: int = Field(default=0, ge=0, description="Total de inscritos")
+    revenue_brl: float | None = Field(default=None, description="Receita total em BRL")
+    notes: str | None = Field(default=None, description="Observações de desempenho")
+
+
+@app.post(
+    "/v1/analyses/{analysis_id}/outcomes",
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar desfecho real de mercado pós-lançamento (RF-013)",
+)
+async def record_course_outcome(
+    analysis_id: str,
+    payload: RecordOutcomeRequest,
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> dict[str, Any]:
+    repo = AnalysisRepository(session)
+    analysis = await repo.get_by_id(analysis_id)
+    if not analysis:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Análise não encontrada: {analysis_id}",
+        )
+
+    model = CourseOutcomeModel(
+        id=f"out_{uuid.uuid4().hex[:12]}",
+        analysis_id=analysis_id,
+        external_course_id=payload.external_course_id,
+        launch_date=payload.launch_date,
+        enrolled_count=payload.enrolled_count,
+        leads_count=payload.leads_count,
+        applicants_count=payload.applicants_count,
+        revenue_brl=payload.revenue_brl,
+        notes=payload.notes,
+        created_at=datetime.now(UTC),
+    )
+    session.add(model)
+    await session.commit()
+
+    return {
+        "outcome_id": model.id,
+        "analysis_id": analysis_id,
+        "external_course_id": model.external_course_id,
+        "enrolled_count": model.enrolled_count,
+        "status": "RECORDED",
+        "created_at": model.created_at.isoformat(),
     }
 
 

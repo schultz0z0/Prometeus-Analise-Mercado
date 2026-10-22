@@ -45,6 +45,7 @@ class AnalysisModel(Base):
     status: Mapped[str] = mapped_column(String(32), nullable=False, index=True, default="QUEUED")
     recommendation: Mapped[str | None] = mapped_column(String(32), nullable=True)
     proposal_data: Mapped[dict[str, Any]] = mapped_column(JsonType, nullable=False, default=dict)
+    previous_analysis_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
@@ -104,6 +105,24 @@ class AnalysisModel(Base):
         back_populates="analysis",
         uselist=False,
         cascade="all, delete-orphan",
+    )
+    human_decisions: Mapped[list[HumanDecisionModel]] = relationship(
+        "HumanDecisionModel",
+        back_populates="analysis",
+        cascade="all, delete-orphan",
+        order_by="HumanDecisionModel.created_at",
+    )
+    outcomes: Mapped[list[CourseOutcomeModel]] = relationship(
+        "CourseOutcomeModel",
+        back_populates="analysis",
+        cascade="all, delete-orphan",
+        order_by="CourseOutcomeModel.created_at",
+    )
+    webhook_deliveries: Mapped[list[WebhookDeliveryModel]] = relationship(
+        "WebhookDeliveryModel",
+        back_populates="analysis",
+        cascade="all, delete-orphan",
+        order_by="WebhookDeliveryModel.created_at",
     )
 
     __table_args__ = (Index("ix_analyses_tenant_created", "tenant_id", "created_at"),)
@@ -412,3 +431,93 @@ class DossierModel(Base):
     analysis: Mapped[AnalysisModel] = relationship("AnalysisModel", back_populates="dossier")
 
     __table_args__ = (UniqueConstraint("analysis_id", name="uq_dossiers_analysis_id"),)
+
+
+class HumanDecisionModel(Base):
+    """Tabela de decisões e feedback humano sobre a recomendação do Prometeus (RF-009)."""
+
+    __tablename__ = "human_decisions"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    analysis_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("analyses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    user_role: Mapped[str] = mapped_column(String(64), nullable=False)
+    decision: Mapped[str] = mapped_column(String(64), nullable=False)
+    rationale: Mapped[str] = mapped_column(Text, nullable=False)
+    adjustments: Mapped[dict[str, Any]] = mapped_column(JsonType, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+
+    analysis: Mapped[AnalysisModel] = relationship(
+        "AnalysisModel", back_populates="human_decisions"
+    )
+
+
+class CourseOutcomeModel(Base):
+    """Tabela de desfechos reais de captação pós-lançamento (RF-013)."""
+
+    __tablename__ = "course_outcomes"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    analysis_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("analyses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    external_course_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    launch_date: Mapped[str] = mapped_column(String(32), nullable=False)
+    enrolled_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    leads_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    applicants_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    revenue_brl: Mapped[float | None] = mapped_column(nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+
+    analysis: Mapped[AnalysisModel] = relationship("AnalysisModel", back_populates="outcomes")
+
+
+class WebhookDeliveryModel(Base):
+    """Tabela de rastreamento de entregas de webhooks e dead-letter."""
+
+    __tablename__ = "webhook_deliveries"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    analysis_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("analyses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    event_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    event_type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    target_url: Mapped[str] = mapped_column(String(512), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, index=True, default="PENDING")
+    attempt_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    payload: Mapped[dict[str, Any]] = mapped_column(JsonType, nullable=False, default=dict)
+    response_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    response_body: Mapped[str | None] = mapped_column(Text, nullable=True)
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+    analysis: Mapped[AnalysisModel] = relationship(
+        "AnalysisModel", back_populates="webhook_deliveries"
+    )
+
+    __table_args__ = (Index("ix_webhook_event_status", "event_id", "status"),)
