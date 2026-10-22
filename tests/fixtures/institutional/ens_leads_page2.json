@@ -1,0 +1,19 @@
+{
+  "data": [
+    {
+      "codigo_curso": "ENS-SEG-03",
+      "nome_curso": "Certificação Técnica em Regulação de Sinistros",
+      "categoria": "Certificação",
+      "modalidade": "presencial",
+      "carga_horaria": 60,
+      "periodo": "2025-1",
+      "total_leads": 420
+    }
+  ],
+  "meta": {
+    "page": 2,
+    "per_page": 2,
+    "total_pages": 2,
+    "total_records": 3
+  }
+}

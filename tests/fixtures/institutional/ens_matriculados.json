@@ -1,0 +1,25 @@
+{
+  "registros": [
+    {
+      "id_curso": "ENS-SEG-01",
+      "semestre": "2025-1",
+      "matriculas_confirmadas": 98,
+      "ticket_medio_brl": 16500.00,
+      "faturamento_brl": 1617000.00
+    },
+    {
+      "id_curso": "ENS-SEG-02",
+      "semestre": "2025-1",
+      "matriculas_confirmadas": 62,
+      "ticket_medio_brl": 9800.00,
+      "faturamento_brl": 607600.00
+    },
+    {
+      "id_curso": "ENS-SEG-03",
+      "semestre": "2025-1",
+      "matriculas_confirmadas": 45,
+      "ticket_medio_brl": 4500.00,
+      "faturamento_brl": 202500.00
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "items": [
+    {
+      "cod_curso": "ENS-SEG-01",
+      "periodo_letivo": "2025-1",
+      "qtd_inscritos": 280,
+      "status_processo": "encerrado"
+    },
+    {
+      "cod_curso": "ENS-SEG-02",
+      "periodo_letivo": "2025-1",
+      "qtd_inscritos": 170,
+      "status_processo": "encerrado"
+    },
+    {
+      "cod_curso": "ENS-SEG-03",
+      "periodo_letivo": "2025-1",
+      "qtd_inscritos": 95,
+      "status_processo": "encerrado"
+    }
+  ]
+}

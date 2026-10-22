@@ -147,3 +147,76 @@ class ConfigSnapshotModel(Base):
     analysis: Mapped[AnalysisModel] = relationship(
         "AnalysisModel", back_populates="config_snapshot"
     )
+
+
+class HistoricalCourseModel(Base):
+    """Tabela de cursos históricos persistidos por instituição (PostgreSQL)."""
+
+    __tablename__ = "historical_courses"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    external_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    category: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    modality: Mapped[str] = mapped_column(String(64), nullable=False, default="online")
+    workload_hours: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
+    tags: Mapped[list[str]] = mapped_column(JsonType, nullable=False, default=list)
+    target_audience: Mapped[list[str]] = mapped_column(JsonType, nullable=False, default=list)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+    funnel_records: Mapped[list[HistoricalFunnelModel]] = relationship(
+        "HistoricalFunnelModel",
+        back_populates="course",
+        cascade="all, delete-orphan",
+    )
+
+    __table_args__ = (
+        Index("ix_historical_courses_tenant_ext", "tenant_id", "external_id", unique=True),
+    )
+
+
+class HistoricalFunnelModel(Base):
+    """Tabela de métricas históricas de funil agregadas por curso e período."""
+
+    __tablename__ = "historical_funnel_records"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    course_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("historical_courses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    external_course_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    period: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    leads: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    applicants: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    enrolled: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    conversion_lead_to_applicant: Mapped[float] = mapped_column(nullable=False, default=0.0)
+    conversion_applicant_to_enrolled: Mapped[float] = mapped_column(nullable=False, default=0.0)
+    conversion_lead_to_enrolled: Mapped[float] = mapped_column(nullable=False, default=0.0)
+    average_ticket_brl: Mapped[float | None] = mapped_column(nullable=True)
+    total_revenue_brl: Mapped[float | None] = mapped_column(nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+
+    course: Mapped[HistoricalCourseModel] = relationship(
+        "HistoricalCourseModel", back_populates="funnel_records"
+    )
+
+    __table_args__ = (
+        Index("ix_historical_funnel_ext_period", "external_course_id", "period", unique=True),
+    )

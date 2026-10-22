@@ -1,0 +1,28 @@
+{
+  "data": [
+    {
+      "codigo_curso": "ENS-SEG-01",
+      "nome_curso": "MBA em Gestão de Seguros e Resseguros",
+      "categoria": "Pós-graduação",
+      "modalidade": "online",
+      "carga_horaria": 360,
+      "periodo": "2025-1",
+      "total_leads": 1400
+    },
+    {
+      "codigo_curso": "ENS-SEG-02",
+      "nome_curso": "Especialização em Subscrição de Riscos Cibernéticos",
+      "categoria": "Extensão",
+      "modalidade": "online",
+      "carga_horaria": 120,
+      "periodo": "2025-1",
+      "total_leads": 850
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "per_page": 2,
+    "total_pages": 2,
+    "total_records": 3
+  }
+}
