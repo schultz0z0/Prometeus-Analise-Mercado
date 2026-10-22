@@ -30,12 +30,14 @@ class WebhookDispatcher:
         timeout_seconds: float = 5.0,
         max_retries: int = 5,
         http_client: httpx.AsyncClient | None = None,
+        shadow_mode: bool = False,
     ) -> None:
         self.db = db_session
         self.secret = secret
         self.timeout_seconds = timeout_seconds
         self.max_retries = max_retries
         self._custom_client = http_client
+        self.shadow_mode = shadow_mode
 
     async def dispatch(
         self,
@@ -78,6 +80,19 @@ class WebhookDispatcher:
 
         delivery.attempt_count += 1
         delivery.updated_at = datetime.now(UTC)
+
+        if self.shadow_mode:
+            delivery.response_code = 200
+            delivery.response_body = (
+                "[SHADOW_MODE] Entrega simulada com sucesso (sem tráfego de rede externo)"
+            )
+            delivery.status = WebhookDeliveryStatus.SHADOW_DELIVERED.value
+            delivery.last_error = None
+            logger.info(
+                f"[SHADOW_MODE] Webhook {event.event_id} registrado em shadow mode para {target_url}"
+            )
+            await self.db.commit()
+            return delivery
 
         client = self._custom_client or httpx.AsyncClient(timeout=self.timeout_seconds)
         close_client = self._custom_client is None

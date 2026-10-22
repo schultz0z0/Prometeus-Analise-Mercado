@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import UTC, datetime
+from unittest.mock import patch
 
 import httpx
 import pytest
@@ -12,6 +13,12 @@ from prometeus.entrypoints.rest.app import app
 from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
 from prometeus.infrastructure.db.models import Base, DossierModel
 from prometeus.infrastructure.db.session import get_db_session
+
+
+@pytest.fixture(autouse=True)
+def mock_celery_delay():
+    with patch("prometeus.entrypoints.rest.app.run_analysis_workflow.delay") as mock_task:
+        yield mock_task
 
 
 @pytest.fixture

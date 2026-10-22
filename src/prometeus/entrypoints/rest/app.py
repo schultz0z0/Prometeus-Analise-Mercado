@@ -69,6 +69,17 @@ async def correlation_id_middleware(request: Request, call_next: Any) -> Respons
     return response
 
 
+@app.middleware("http")
+async def security_headers_middleware(request: Request, call_next: Any) -> Response:
+    response: Response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Content-Security-Policy"] = "default-src 'self'"
+    return response
+
+
 @app.exception_handler(ConfigurationError)
 async def configuration_error_handler(request: Request, exc: ConfigurationError) -> JSONResponse:
     corr_id = correlation_id_ctx.get()
@@ -144,6 +155,13 @@ async def create_analysis(
     ] = None,
     session: Annotated[AsyncSession, Depends(get_db_session)] = None,  # type: ignore[assignment]
 ) -> CreateAnalysisResponse:
+    settings = AppSettings()
+    if settings.KILL_SWITCH_ACTIVE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Kill switch operacional ativo: submissão de novas análises suspensa temporariamente para manutenção.",
+        )
+
     corr_id = correlation_id_ctx.get()
 
     if not idempotency_key or not idempotency_key.strip():
@@ -152,11 +170,15 @@ async def create_analysis(
             detail="Header 'Idempotency-Key' é obrigatório para criação de análises (RFC 7807).",
         )
 
+    proposal_data = dict(payload.proposal_data)
+    if settings.SHADOW_MODE:
+        proposal_data["_shadow_mode"] = True
+
     use_case = CreateAnalysisUseCase(session)
     command = CreateAnalysisCommand(
         tenant_id=payload.tenant_id,
         course_name=payload.course_name,
-        proposal_data=payload.proposal_data,
+        proposal_data=proposal_data,
         idempotency_key=idempotency_key.strip(),
         correlation_id=corr_id,
     )
@@ -274,6 +296,13 @@ async def reanalyze(
     payload: ReanalyzeRequest,
     session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> dict[str, Any]:
+    settings = AppSettings()
+    if settings.KILL_SWITCH_ACTIVE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Kill switch operacional ativo: reanálise suspensa temporariamente para manutenção.",
+        )
+
     corr_id = correlation_id_ctx.get()
     repo = AnalysisRepository(session)
     previous = await repo.get_by_id(analysis_id)

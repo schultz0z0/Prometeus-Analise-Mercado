@@ -152,6 +152,8 @@ class AppSettings(BaseSettings):
     SCORING_PROFILE_PATH: str = "config/scoring/default-v1.example.yaml"
 
     SERVICE_API_KEYS: str = ""
+    SHADOW_MODE: bool = False
+    KILL_SWITCH_ACTIVE: bool = False
 
 
 def validate_environment_and_models(settings: AppSettings) -> None:

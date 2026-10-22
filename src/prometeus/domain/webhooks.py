@@ -26,6 +26,7 @@ class WebhookDeliveryStatus(StrEnum):
 
     PENDING = "PENDING"
     DELIVERED = "DELIVERED"
+    SHADOW_DELIVERED = "SHADOW_DELIVERED"
     FAILED = "FAILED"
     DEAD_LETTER = "DEAD_LETTER"
 
