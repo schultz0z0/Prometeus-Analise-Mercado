@@ -99,6 +99,12 @@ class AnalysisModel(Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
+    dossier: Mapped[DossierModel | None] = relationship(
+        "DossierModel",
+        back_populates="analysis",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
     __table_args__ = (Index("ix_analyses_tenant_created", "tenant_id", "created_at"),)
 
@@ -376,3 +382,33 @@ class ScoringResultModel(Base):
     analysis: Mapped[AnalysisModel] = relationship("AnalysisModel", back_populates="scoring_result")
 
     __table_args__ = (UniqueConstraint("analysis_id", name="uq_scoring_results_analysis_id"),)
+
+
+class DossierModel(Base):
+    """Tabela de dossiês executivos e acadêmicos gerados e verificados (PostgreSQL)."""
+
+    __tablename__ = "dossiers"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    analysis_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("analyses.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    prompt_version: Mapped[str] = mapped_column(String(32), nullable=False)
+    model_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    facts_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    executive_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    sections: Mapped[list[dict[str, Any]]] = mapped_column(JsonType, nullable=False, default=list)
+    claims: Mapped[list[dict[str, Any]]] = mapped_column(JsonType, nullable=False, default=list)
+    cost_usd: Mapped[float] = mapped_column(nullable=False, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+
+    analysis: Mapped[AnalysisModel] = relationship("AnalysisModel", back_populates="dossier")
+
+    __table_args__ = (UniqueConstraint("analysis_id", name="uq_dossiers_analysis_id"),)

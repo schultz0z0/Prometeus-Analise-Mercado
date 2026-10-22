@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+from prometeus.domain.dossiers import DossierFacts, DossierOutput
+
 
 class GenerativeModelPort(ABC):
     """Porta agnóstica para modelos generativos de linguagem."""
@@ -31,4 +33,13 @@ class GenerativeModelPort(ABC):
         temperature: float = 0.2,
     ) -> str:
         """Executa geração textual livre com restrições e telemetria."""
+        pass
+
+    @abstractmethod
+    async def synthesize_dossier(
+        self,
+        facts: DossierFacts,
+        prompt_version: str = "dossier-v1",
+    ) -> DossierOutput:
+        """Sintetiza dossiê executivo estruturado a partir de fatos aprovados (TOOL-14)."""
         pass
