@@ -6,7 +6,6 @@ import re
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 LINK_RE = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
 
@@ -27,7 +26,9 @@ EXPECTED_PHASES = {f"docs/implementation/phase-{index:02d}" for index in range(1
 
 
 def validate_required() -> list[str]:
-    return [f"missing required file: {path}" for path in sorted(REQUIRED) if not (ROOT / path).exists()]
+    return [
+        f"missing required file: {path}" for path in sorted(REQUIRED) if not (ROOT / path).exists()
+    ]
 
 
 def validate_links() -> list[str]:
@@ -71,7 +72,9 @@ def validate_scoring_weights() -> list[str]:
     path = ROOT / "config" / "scoring" / "default-v1.example.yaml"
     text = path.read_text(encoding="utf-8")
     weights_block = text.split("weights:", 1)[1].split("gates:", 1)[0]
-    weights = [float(value) for value in re.findall(r":\s+(0\.\d+|1\.0+)\s*$", weights_block, re.MULTILINE)]
+    weights = [
+        float(value) for value in re.findall(r":\s+(0\.\d+|1\.0+)\s*$", weights_block, re.MULTILINE)
+    ]
     if abs(sum(weights) - 1.0) > 1e-9:
         return [f"scoring weights sum to {sum(weights):.6f}, expected 1.0"]
     return []

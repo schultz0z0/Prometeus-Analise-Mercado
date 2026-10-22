@@ -1,0 +1,84 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: prometeus-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: prometeus
+      POSTGRES_PASSWORD: prometeus
+      POSTGRES_DB: prometeus
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prometeus -d prometeus"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: prometeus-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: prometeus-api
+    restart: unless-stopped
+    command: uvicorn prometeus.entrypoints.rest.app:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://prometeus:prometeus@postgres:5432/prometeus
+      REDIS_URL: redis://redis:6379/0
+      INSTITUTION_ID: ens
+      INSTITUTION_CONFIG_PATH: config/tenants/ens.example.yaml
+      SCORING_PROFILE_PATH: config/scoring/default-v1.example.yaml
+      JEV_MODEL: jev-latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./config:/app/config
+      - ./web:/app/web
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: prometeus-worker
+    restart: unless-stopped
+    command: celery -A prometeus.workers.tasks.celery_app worker --loglevel=info
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://prometeus:prometeus@postgres:5432/prometeus
+      REDIS_URL: redis://redis:6379/0
+      INSTITUTION_ID: ens
+      INSTITUTION_CONFIG_PATH: config/tenants/ens.example.yaml
+      SCORING_PROFILE_PATH: config/scoring/default-v1.example.yaml
+      JEV_MODEL: jev-latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./config:/app/config
+
+volumes:
+  postgres_data:
