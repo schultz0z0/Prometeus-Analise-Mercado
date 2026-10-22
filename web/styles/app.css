@@ -1,0 +1,592 @@
+/* =============================================================================
+ * PROMETEUS INTELLIGENCE PLATFORM — APP STYLING
+ * Design System: Prometeus UI v2.0
+ * Modo: Operate (SaaS de Inteligência Educacional B2B)
+ * ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+ * 1. Layout & Shell Global
+ * ----------------------------------------------------------------------------- */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--prometeus-bg-canvas);
+  background-image: 
+    radial-gradient(circle at 15% 10%, rgba(6, 82, 197, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(141, 181, 255, 0.05) 0%, transparent 40%);
+  background-attachment: fixed;
+}
+
+.app-main {
+  flex: 1;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 32px 80px 32px;
+}
+
+/* Header Corporativo Prometeus */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--prometeus-z-sticky);
+  background: rgba(4, 8, 20, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--prometeus-border-subtle);
+  padding: 12px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-brand-group {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.header-logo {
+  height: 34px;
+  width: auto;
+  cursor: pointer;
+  transition: opacity var(--prometeus-transition-fast);
+}
+
+.header-logo:hover {
+  opacity: 0.9;
+}
+
+.tenant-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--prometeus-border-card);
+  border-radius: var(--prometeus-radius-full);
+  font-size: 13px;
+  color: var(--prometeus-text-secondary);
+  cursor: pointer;
+  transition: all var(--prometeus-transition-fast);
+}
+
+.tenant-selector:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--prometeus-border-strong);
+}
+
+.tenant-selector strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Navegação Principal em Tabs Modernas */
+.app-nav-bar {
+  background: rgba(10, 15, 28, 0.6);
+  border-bottom: 1px solid var(--prometeus-border-subtle);
+  padding: 0 32px;
+}
+
+.nav-tabs-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.nav-tab-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  font-family: var(--prometeus-font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--prometeus-text-secondary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all var(--prometeus-transition-fast);
+}
+
+.nav-tab-item:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.nav-tab-item.active {
+  color: var(--prometeus-accent-ice);
+  border-bottom-color: var(--prometeus-primary);
+  font-weight: 600;
+  background: rgba(6, 82, 197, 0.08);
+}
+
+.nav-tab-badge {
+  padding: 2px 7px;
+  border-radius: var(--prometeus-radius-full);
+  font-size: 11px;
+  font-family: var(--prometeus-font-mono);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--prometeus-text-secondary);
+}
+
+.nav-tab-item.active .nav-tab-badge {
+  background: var(--prometeus-primary);
+  color: #ffffff;
+}
+
+/* -----------------------------------------------------------------------------
+ * 2. Títulos, Tipografia e Seções
+ * ----------------------------------------------------------------------------- */
+.view-header {
+  margin-bottom: 28px;
+}
+
+.view-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.view-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--prometeus-text-primary);
+  margin: 0 0 6px 0;
+  letter-spacing: -0.02em;
+}
+
+.view-subtitle {
+  font-size: 14px;
+  color: var(--prometeus-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* -----------------------------------------------------------------------------
+ * 3. Formulários & Intake Wizard
+ * ----------------------------------------------------------------------------- */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.col-12 { grid-column: span 12; }
+.col-8 { grid-column: span 8; }
+.col-6 { grid-column: span 6; }
+.col-4 { grid-column: span 4; }
+.col-3 { grid-column: span 3; }
+
+@media (max-width: 900px) {
+  .col-8, .col-6, .col-4, .col-3 {
+    grid-column: span 12;
+  }
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--prometeus-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-label-required {
+  color: var(--prometeus-accent-ice);
+  margin-left: 2px;
+}
+
+.form-hint {
+  font-size: 12px;
+  color: var(--prometeus-text-muted);
+}
+
+.form-input, .form-select, .form-textarea {
+  background: rgba(10, 15, 28, 0.7);
+  border: 1px solid var(--prometeus-border-card);
+  border-radius: var(--prometeus-radius-md);
+  padding: 10px 14px;
+  color: #ffffff;
+  font-family: var(--prometeus-font-sans);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--prometeus-transition-fast), box-shadow var(--prometeus-transition-fast);
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--prometeus-border-focus);
+  box-shadow: 0 0 0 2px rgba(6, 82, 197, 0.3);
+}
+
+.form-input::placeholder, .form-textarea::placeholder {
+  color: var(--prometeus-text-muted);
+}
+
+.form-textarea {
+  min-height: 110px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* Área de Upload / Dropzone */
+.dropzone-box {
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border-radius: var(--prometeus-radius-lg);
+  padding: 28px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  transition: all var(--prometeus-transition-fast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.dropzone-box:hover, .dropzone-box.drag-over {
+  border-color: var(--prometeus-accent-ice);
+  background: rgba(6, 82, 197, 0.08);
+}
+
+.dropzone-icon {
+  font-size: 32px;
+  margin-bottom: 4px;
+}
+
+/* Radio Group Cards */
+.radio-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.radio-card {
+  border: 1px solid var(--prometeus-border-card);
+  border-radius: var(--prometeus-radius-md);
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  transition: all var(--prometeus-transition-fast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+
+.radio-card:hover {
+  border-color: var(--prometeus-border-strong);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.radio-card.selected {
+  border-color: var(--prometeus-accent-ice);
+  background: rgba(6, 82, 197, 0.15);
+  box-shadow: 0 0 12px rgba(6, 82, 197, 0.3);
+}
+
+.radio-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.radio-card-desc {
+  font-size: 11px;
+  color: var(--prometeus-text-muted);
+}
+
+/* -----------------------------------------------------------------------------
+ * 4. Painel de Execução em Tempo Real (Live Job Stream)
+ * ----------------------------------------------------------------------------- */
+.live-stream-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.engine-card {
+  background: var(--prometeus-surface-card);
+  border: 1px solid var(--prometeus-border-card);
+  border-radius: var(--prometeus-radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: var(--prometeus-blur-glass);
+}
+
+.engine-card.running {
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+}
+
+.engine-card.completed {
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+.engine-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.engine-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.engine-log-box {
+  background: rgba(4, 8, 20, 0.9);
+  border: 1px solid var(--prometeus-border-subtle);
+  border-radius: var(--prometeus-radius-sm);
+  padding: 10px 12px;
+  font-family: var(--prometeus-font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--prometeus-text-secondary);
+  height: 90px;
+  overflow-y: auto;
+}
+
+/* -----------------------------------------------------------------------------
+ * 5. Dossiê de Viabilidade & Respostas de Negócio
+ * ----------------------------------------------------------------------------- */
+.dossier-verdict-banner {
+  background: linear-gradient(135deg, rgba(26, 35, 56, 0.9) 0%, rgba(6, 82, 197, 0.2) 100%);
+  border: 1px solid var(--prometeus-border-card);
+  border-radius: var(--prometeus-radius-xl);
+  padding: 28px 32px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+  box-shadow: var(--prometeus-shadow-card);
+}
+
+.verdict-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.verdict-course-name {
+  font-size: 28px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.verdict-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--prometeus-text-secondary);
+}
+
+.business-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.business-card {
+  background: var(--prometeus-surface-card);
+  border: 1px solid var(--prometeus-border-card);
+  border-radius: var(--prometeus-radius-lg);
+  padding: 24px;
+  backdrop-filter: var(--prometeus-blur-glass);
+}
+
+.business-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--prometeus-border-subtle);
+}
+
+.business-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.metric-big-highlight {
+  font-family: var(--prometeus-font-mono);
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.1;
+  margin: 8px 0;
+}
+
+/* Simulador Financeiro / Sliders de Breakeven */
+.simulator-box {
+  background: rgba(10, 15, 28, 0.7);
+  border: 1px solid var(--prometeus-border-subtle);
+  border-radius: var(--prometeus-radius-md);
+  padding: 20px;
+  margin-top: 16px;
+}
+
+.slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.slider-input {
+  width: 100%;
+  accent-color: var(--prometeus-primary);
+  cursor: pointer;
+}
+
+/* Comparador de Ementa vs Dores */
+.curriculum-gap-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+@media (max-width: 768px) {
+  .curriculum-gap-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gap-column-pains {
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--prometeus-radius-md);
+  padding: 16px;
+}
+
+.gap-column-solutions {
+  background: rgba(52, 211, 153, 0.05);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: var(--prometeus-radius-md);
+  padding: 16px;
+}
+
+.gap-item {
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.gap-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+/* -----------------------------------------------------------------------------
+ * 6. Evidence Drawer (Off-Canvas)
+ * ----------------------------------------------------------------------------- */
+.drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--prometeus-surface-overlay);
+  backdrop-filter: var(--prometeus-blur-overlay);
+  z-index: var(--prometeus-z-drawer);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--prometeus-transition-moderate);
+}
+
+.drawer-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 580px;
+  max-width: 100vw;
+  height: 100vh;
+  background: var(--prometeus-surface-elevated);
+  border-left: 1px solid var(--prometeus-border-card);
+  box-shadow: var(--prometeus-shadow-elevated);
+  z-index: calc(var(--prometeus-z-drawer) + 1);
+  transform: translateX(100%);
+  transition: transform var(--prometeus-transition-moderate);
+  display: flex;
+  flex-direction: column;
+  padding: 32px;
+  overflow-y: auto;
+}
+
+.drawer-container.active {
+  transform: translateX(0);
+}
+
+/* -----------------------------------------------------------------------------
+ * 7. Utilitários Interativos
+ * ----------------------------------------------------------------------------- */
+.cursor-pointer { cursor: pointer; }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.mt-4 { margin-top: 16px; }
+.mt-6 { margin-top: 24px; }
+.mb-4 { margin-bottom: 16px; }
+.d-flex { display: flex; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+.align-center { align-items: center; }
+.justify-between { justify-content: space-between; }

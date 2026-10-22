@@ -1,0 +1,409 @@
+/* =============================================================================
+ * PROMETEUS DESIGN SYSTEM — PRODUCTION CSS SPECIFICATION
+ * Canônico: Manual da Marca Prometeus & Portal Oficial agenciaprometeus.com.br
+ * Alinhado a: Impeccable (Operate Mode), UI/UX Pro Max, Vercel Web Guidelines
+ * ============================================================================= */
+
+:root {
+  /* -------------------------------------------------------------------------
+   * Cores Base & Canvas
+   * ------------------------------------------------------------------------- */
+  --prometeus-bg-canvas: #040814;
+  --prometeus-bg-canvas-subtle: #070a10;
+  --prometeus-surface-card: rgba(26, 35, 56, 0.75);
+  --prometeus-surface-card-subtle: rgba(26, 35, 56, 0.40);
+  --prometeus-surface-elevated: #1a2338;
+  --prometeus-surface-glass: rgba(255, 255, 255, 0.04);
+  --prometeus-surface-glass-hover: rgba(255, 255, 255, 0.08);
+  --prometeus-surface-overlay: rgba(4, 8, 20, 0.82);
+
+  /* -------------------------------------------------------------------------
+   * Cores Oficiais da Marca Prometeus
+   * ------------------------------------------------------------------------- */
+  --prometeus-primary: #0652c5;
+  --prometeus-primary-hover: #0860e8;
+  --prometeus-primary-active: #05419e;
+  --prometeus-primary-glow: rgba(6, 82, 197, 0.45);
+  --prometeus-accent-ice: #8db5ff;
+  --prometeus-accent-sparkle: #c2d9ff;
+
+  /* -------------------------------------------------------------------------
+   * Bordas & Linhas Estruturais
+   * ------------------------------------------------------------------------- */
+  --prometeus-border-subtle: rgba(255, 255, 255, 0.08);
+  --prometeus-border-card: rgba(255, 255, 255, 0.10);
+  --prometeus-border-strong: rgba(255, 255, 255, 0.20);
+  --prometeus-border-focus: rgba(141, 181, 255, 0.60);
+
+  /* -------------------------------------------------------------------------
+   * Tipografia & Cores de Texto (WCAG AA & AAA compliant)
+   * ------------------------------------------------------------------------- */
+  --prometeus-text-primary: #ffffff;
+  --prometeus-text-secondary: #94a3b8;
+  --prometeus-text-muted: #64748b;
+  --prometeus-text-accent: #8db5ff;
+  --prometeus-text-inverse: #040814;
+
+  /* -------------------------------------------------------------------------
+   * Status Semânticos & Recomendações (ADR-0005)
+   * ------------------------------------------------------------------------- */
+  --prometeus-status-approved: #34d399;
+  --prometeus-status-approved-bg: rgba(52, 211, 153, 0.12);
+  --prometeus-status-approved-border: rgba(52, 211, 153, 0.35);
+
+  --prometeus-status-adjustments: #fbbf24;
+  --prometeus-status-adjustments-bg: rgba(245, 158, 11, 0.12);
+  --prometeus-status-adjustments-border: rgba(245, 158, 11, 0.35);
+
+  --prometeus-status-risk: #f87171;
+  --prometeus-status-risk-bg: rgba(239, 68, 68, 0.12);
+  --prometeus-status-risk-border: rgba(239, 68, 68, 0.35);
+
+  --prometeus-status-running: #38bdf8;
+  --prometeus-status-running-bg: rgba(56, 189, 248, 0.12);
+  --prometeus-status-running-border: rgba(56, 189, 248, 0.35);
+
+  --prometeus-status-blocked: #c084fc;
+  --prometeus-status-blocked-bg: rgba(168, 85, 247, 0.12);
+  --prometeus-status-blocked-border: rgba(168, 85, 247, 0.35);
+
+  --prometeus-status-insufficient: #94a3b8;
+  --prometeus-status-insufficient-bg: rgba(100, 116, 139, 0.12);
+  --prometeus-status-insufficient-border: rgba(100, 116, 139, 0.35);
+
+  /* -------------------------------------------------------------------------
+   * Tipografia - Famílias e Escala
+   * ------------------------------------------------------------------------- */
+  --prometeus-font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --prometeus-font-mono: 'Geist Mono', 'JetBrains Mono', Menlo, monospace;
+
+  /* -------------------------------------------------------------------------
+   * Espaçamentos (Density 8 - Analytical Dashboard)
+   * ------------------------------------------------------------------------- */
+  --prometeus-space-1: 4px;
+  --prometeus-space-2: 8px;
+  --prometeus-space-3: 12px;
+  --prometeus-space-4: 16px;
+  --prometeus-space-5: 20px;
+  --prometeus-space-6: 24px;
+  --prometeus-space-8: 32px;
+  --prometeus-space-10: 40px;
+  --prometeus-space-12: 48px;
+
+  /* -------------------------------------------------------------------------
+   * Raios de Borda
+   * ------------------------------------------------------------------------- */
+  --prometeus-radius-sm: 6px;
+  --prometeus-radius-md: 10px;
+  --prometeus-radius-lg: 16px;
+  --prometeus-radius-xl: 24px;
+  --prometeus-radius-full: 9999px;
+
+  /* -------------------------------------------------------------------------
+   * Elevações e Sombras
+   * ------------------------------------------------------------------------- */
+  --prometeus-shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+  --prometeus-shadow-elevated: 0 16px 48px 0 rgba(0, 0, 0, 0.48);
+  --prometeus-shadow-glow-primary: 0 0 24px var(--prometeus-primary-glow);
+  --prometeus-shadow-glow-accent: 0 0 16px rgba(141, 181, 255, 0.30);
+  --prometeus-shadow-glow-approved: 0 0 20px rgba(52, 211, 153, 0.35);
+  --prometeus-shadow-glow-risk: 0 0 20px rgba(239, 68, 68, 0.35);
+
+  /* -------------------------------------------------------------------------
+   * Desfoque Óptico (Glassmorphism)
+   * ------------------------------------------------------------------------- */
+  --prometeus-blur-glass: blur(16px);
+  --prometeus-blur-overlay: blur(24px);
+
+  /* -------------------------------------------------------------------------
+   * Motion & Timing (GSAP power1 / power2 equivalents)
+   * ------------------------------------------------------------------------- */
+  --prometeus-transition-fast: 150ms cubic-bezier(0, 0, 0.2, 1);
+  --prometeus-transition-base: 200ms cubic-bezier(0, 0, 0.2, 1);
+  --prometeus-transition-moderate: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* -------------------------------------------------------------------------
+   * Z-Index Scale
+   * ------------------------------------------------------------------------- */
+  --prometeus-z-dropdown: 10;
+  --prometeus-z-sticky: 20;
+  --prometeus-z-drawer: 30;
+  --prometeus-z-modal: 40;
+  --prometeus-z-popover: 50;
+  --prometeus-z-toast: 60;
+}
+
+/* =============================================================================
+ * REGRAS GERAIS & RESET ACESSÍVEL
+ * ============================================================================= */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--prometeus-bg-canvas);
+  color: var(--prometeus-text-primary);
+  font-family: var(--prometeus-font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Screen Reader Only Utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Foco Acessível Visível (Web Interface Guidelines) */
+:focus-visible {
+  outline: 2px solid var(--prometeus-accent-ice);
+  outline-offset: 2px;
+}
+
+/* Suporte a Movimento Reduzido */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* =============================================================================
+ * COMPONENTES DE INTERFACE & SISTEMA
+ * ============================================================================= */
+
+/* Cartão Padrão Glassmorphism */
+.prometeus-card {
+  background-color: var(--prometeus-surface-card);
+  border: 1px solid var(--prometeus-border-card);
+  border-radius: var(--prometeus-radius-lg);
+  box-shadow: var(--prometeus-shadow-card);
+  backdrop-filter: var(--prometeus-blur-glass);
+  -webkit-backdrop-filter: var(--prometeus-blur-glass);
+  padding: var(--prometeus-space-6);
+  position: relative;
+  transition: border-color var(--prometeus-transition-fast), box-shadow var(--prometeus-transition-fast);
+}
+
+.prometeus-card:hover {
+  border-color: var(--prometeus-border-strong);
+}
+
+/* Botão Primário Prometeus */
+.prometeus-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--prometeus-space-2);
+  background-color: var(--prometeus-primary);
+  color: #ffffff;
+  font-family: var(--prometeus-font-sans);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 20px;
+  min-height: 40px;
+  border-radius: var(--prometeus-radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color var(--prometeus-transition-fast), transform var(--prometeus-transition-fast), box-shadow var(--prometeus-transition-fast);
+}
+
+.prometeus-btn-primary:hover {
+  background-color: var(--prometeus-primary-hover);
+  box-shadow: var(--prometeus-shadow-glow-primary);
+  transform: translateY(-1px);
+}
+
+.prometeus-btn-primary:active {
+  background-color: var(--prometeus-primary-active);
+  transform: translateY(0);
+}
+
+.prometeus-btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Botão Secundário / Ghost */
+.prometeus-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--prometeus-space-2);
+  background-color: var(--prometeus-surface-glass);
+  color: var(--prometeus-text-primary);
+  font-family: var(--prometeus-font-sans);
+  font-weight: 500;
+  font-size: 14px;
+  padding: 10px 18px;
+  min-height: 40px;
+  border-radius: var(--prometeus-radius-md);
+  border: 1px solid var(--prometeus-border-card);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color var(--prometeus-transition-fast), border-color var(--prometeus-transition-fast);
+}
+
+.prometeus-btn-secondary:hover {
+  background-color: var(--prometeus-surface-glass-hover);
+  border-color: var(--prometeus-border-strong);
+}
+
+.prometeus-btn-secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Badge em Formato Pill (Status & Recomendações ADR-0005) */
+.prometeus-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--prometeus-radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--prometeus-border-subtle);
+  background-color: var(--prometeus-surface-glass);
+  color: var(--prometeus-text-secondary);
+}
+
+.prometeus-pill-badge[data-status="APPROVED"] {
+  background-color: var(--prometeus-status-approved-bg);
+  border-color: var(--prometeus-status-approved-border);
+  color: var(--prometeus-status-approved);
+}
+
+.prometeus-pill-badge[data-status="APPROVED_WITH_ADJUSTMENTS"] {
+  background-color: var(--prometeus-status-adjustments-bg);
+  border-color: var(--prometeus-status-adjustments-border);
+  color: var(--prometeus-status-adjustments);
+}
+
+.prometeus-pill-badge[data-status="HIGH_RISK"] {
+  background-color: var(--prometeus-status-risk-bg);
+  border-color: var(--prometeus-status-risk-border);
+  color: var(--prometeus-status-risk);
+}
+
+.prometeus-pill-badge[data-status="RUNNING"] {
+  background-color: var(--prometeus-status-running-bg);
+  border-color: var(--prometeus-status-running-border);
+  color: var(--prometeus-status-running);
+}
+
+.prometeus-pill-badge[data-status="BLOCKED"] {
+  background-color: var(--prometeus-status-blocked-bg);
+  border-color: var(--prometeus-status-blocked-border);
+  color: var(--prometeus-status-blocked);
+}
+
+.prometeus-pill-badge[data-status="INSUFFICIENT_EVIDENCE"] {
+  background-color: var(--prometeus-status-insufficient-bg);
+  border-color: var(--prometeus-status-insufficient-border);
+  color: var(--prometeus-status-insufficient);
+}
+
+/* Tenant Context Badge (White-label no Header Prometeus) */
+.prometeus-tenant-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--prometeus-space-2);
+  padding: 6px 14px;
+  border-radius: var(--prometeus-radius-full);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 13px;
+  color: var(--prometeus-text-secondary);
+}
+
+.prometeus-tenant-badge strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Skeleton Shimmer Loading (Operate Mode Impeccable) */
+.prometeus-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.10) 37%,
+    rgba(255, 255, 255, 0.04) 63%
+  );
+  background-size: 400% 100%;
+  animation: prometeus-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--prometeus-radius-sm);
+}
+
+@keyframes prometeus-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+/* Indicador de Número Monospaçado */
+.prometeus-stat-mono {
+  font-family: var(--prometeus-font-mono);
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+/* Tabela de Dados Analítica e Densa */
+.prometeus-table-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--prometeus-border-subtle);
+  border-radius: var(--prometeus-radius-md);
+  background-color: rgba(10, 15, 28, 0.6);
+}
+
+.prometeus-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.prometeus-table th {
+  background-color: rgba(26, 35, 56, 0.8);
+  color: var(--prometeus-text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--prometeus-border-card);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.prometeus-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--prometeus-border-subtle);
+  color: var(--prometeus-text-primary);
+}
+
+.prometeus-table tr:hover td {
+  background-color: rgba(255, 255, 255, 0.02);
+}
