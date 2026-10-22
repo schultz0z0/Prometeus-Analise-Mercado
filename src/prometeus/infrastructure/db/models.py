@@ -17,6 +17,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -91,6 +92,12 @@ class AnalysisModel(Base):
         back_populates="analysis",
         cascade="all, delete-orphan",
         order_by="MarketEvidenceModel.collected_at",
+    )
+    scoring_result: Mapped[ScoringResultModel | None] = relationship(
+        "ScoringResultModel",
+        back_populates="analysis",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
 
     __table_args__ = (Index("ix_analyses_tenant_created", "tenant_id", "created_at"),)
@@ -338,3 +345,34 @@ class MarketEvidenceModel(Base):
         Index("ix_market_evidences_analysis_type", "analysis_id", "evidence_type"),
         Index("ix_market_evidences_analysis_hash", "analysis_id", "content_hash"),
     )
+
+
+class ScoringResultModel(Base):
+    """Tabela de pontuação, índices de viabilidade e recomendações determinísticas."""
+
+    __tablename__ = "scoring_results"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    analysis_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("analyses.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    profile_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    viability_score: Mapped[float] = mapped_column(nullable=False)
+    coverage_score: Mapped[float] = mapped_column(nullable=False)
+    confidence_score: Mapped[float] = mapped_column(nullable=False)
+    partial_score: Mapped[float] = mapped_column(nullable=False)
+    recommendation: Mapped[str] = mapped_column(String(32), nullable=False)
+    is_experimental: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    pillar_scores: Mapped[dict[str, Any]] = mapped_column(JsonType, nullable=False, default=dict)
+    gate_details: Mapped[dict[str, Any]] = mapped_column(JsonType, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+
+    analysis: Mapped[AnalysisModel] = relationship("AnalysisModel", back_populates="scoring_result")
+
+    __table_args__ = (UniqueConstraint("analysis_id", name="uq_scoring_results_analysis_id"),)

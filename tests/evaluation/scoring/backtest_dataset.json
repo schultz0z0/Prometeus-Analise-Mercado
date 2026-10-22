@@ -1,0 +1,157 @@
+{
+  "description": "Dataset de validação e backtest temporal de lançamentos históricos de cursos (Gate D)",
+  "version": "1.0.0",
+  "baseline_accuracy_target": 0.70,
+  "samples": [
+    {
+      "course_id": "hist-001",
+      "course_name": "MBA Executivo em Seguros e Resseguros",
+      "modality": "EAD",
+      "actual_outcome": "SUCCESS",
+      "actual_enrollments": 42,
+      "pillar_inputs": {
+        "internal_history": {"comparable_fit_score": 92.0, "conversion_rate": 0.16, "enrollments_count": 45},
+        "paid_competition": {"ad_count": 6, "competition_index": 0.75, "cpc_brl": 6.50},
+        "search_and_media": {"monthly_volume": 3200, "growth_trend_pct": 25.0, "average_interest": 80.0},
+        "employability": {"open_jobs_count": 40, "salary_median_brl": 12500.0},
+        "syllabus_fit": {"jev_syllabus_score": 95.0, "market_pain_points_covered_pct": 0.90},
+        "pricing": {"proposed_price_brl": 18500.0, "market_median_price_brl": 19000.0}
+      }
+    },
+    {
+      "course_id": "hist-002",
+      "course_name": "Gestão Comercial e Estratégia de Vendas para Corretoras",
+      "modality": "Presencial",
+      "actual_outcome": "SUCCESS",
+      "actual_enrollments": 36,
+      "pillar_inputs": {
+        "internal_history": {"comparable_fit_score": 88.0, "conversion_rate": 0.14, "enrollments_count": 38},
+        "paid_competition": {"ad_count": 5, "competition_index": 0.65, "cpc_brl": 4.20},
+        "search_and_media": {"monthly_volume": 2400, "growth_trend_pct": 18.0, "average_interest": 75.0},
+        "employability": {"open_jobs_count": 25, "salary_median_brl": 8500.0},
+        "syllabus_fit": {"jev_syllabus_score": 90.0, "market_pain_points_covered_pct": 0.85},
+        "pricing": {"proposed_price_brl": 3200.0, "market_median_price_brl": 3400.0}
+      }
+    },
+    {
+      "course_id": "hist-003",
+      "course_name": "Introdução Genérica à Inteligência Artificial",
+      "modality": "EAD",
+      "actual_outcome": "FAILED",
+      "actual_enrollments": 4,
+      "pillar_inputs": {
+        "internal_history": {"comparable_fit_score": 15.0, "conversion_rate": 0.02, "enrollments_count": 5},
+        "paid_competition": {"ad_count": 1, "competition_index": 0.20, "cpc_brl": 1.50},
+        "search_and_media": {"monthly_volume": 200, "growth_trend_pct": -10.0, "average_interest": 25.0},
+        "employability": {"open_jobs_count": 3, "salary_median_brl": 4500.0},
+        "syllabus_fit": {"jev_syllabus_score": 35.0, "market_pain_points_covered_pct": 0.20},
+        "pricing": {"proposed_price_brl": 1500.0, "market_median_price_brl": 800.0}
+      }
+    },
+    {
+      "course_id": "hist-004",
+      "course_name": "Perícia e Regulação Técnica de Sinistros Automóveis",
+      "modality": "Híbrido",
+      "actual_outcome": "SUCCESS",
+      "actual_enrollments": 32,
+      "pillar_inputs": {
+        "internal_history": {"comparable_fit_score": 85.0, "conversion_rate": 0.15, "enrollments_count": 35},
+        "paid_competition": {"ad_count": 4, "competition_index": 0.60, "cpc_brl": 5.00},
+        "search_and_media": {"monthly_volume": 1800, "growth_trend_pct": 15.0, "average_interest": 70.0},
+        "employability": {"open_jobs_count": 28, "salary_median_brl": 9000.0},
+        "syllabus_fit": {"jev_syllabus_score": 92.0, "market_pain_points_covered_pct": 0.88},
+        "pricing": {"proposed_price_brl": 4500.0, "market_median_price_brl": 4800.0}
+      }
+    },
+    {
+      "course_id": "hist-005",
+      "course_name": "Compliance, LGPD e Cibersegurança no Setor Segurador",
+      "modality": "EAD",
+      "actual_outcome": "MARGINAL",
+      "actual_enrollments": 19,
+      "pillar_inputs": {
+        "internal_history": {"comparable_fit_score": 75.0, "conversion_rate": 0.09, "enrollments_count": 20},
+        "paid_competition": {"ad_count": 3, "competition_index": 0.50, "cpc_brl": 4.50},
+        "search_and_media": {"monthly_volume": 1200, "growth_trend_pct": 8.0, "average_interest": 62.0},
+        "employability": {"open_jobs_count": 18, "salary_median_brl": 10500.0},
+        "syllabus_fit": {"jev_syllabus_score": 82.0, "market_pain_points_covered_pct": 0.75},
+        "pricing": {"proposed_price_brl": 7500.0, "market_median_price_brl": 6800.0}
+      }
+    },
+    {
+      "course_id": "hist-006",
+      "course_name": "Filosofia e Ética Clássica para Negócios",
+      "modality": "Presencial",
+      "actual_outcome": "FAILED",
+      "actual_enrollments": 2,
+      "pillar_inputs": {
+        "internal_history": {"comparable_fit_score": 10.0, "conversion_rate": 0.01, "enrollments_count": 2},
+        "paid_competition": {"ad_count": 0, "competition_index": 0.10, "cpc_brl": 0.80},
+        "search_and_media": {"monthly_volume": 150, "growth_trend_pct": -20.0, "average_interest": 20.0},
+        "employability": {"open_jobs_count": 1, "salary_median_brl": 4000.0},
+        "syllabus_fit": {"jev_syllabus_score": 40.0, "market_pain_points_covered_pct": 0.10},
+        "pricing": {"proposed_price_brl": 2500.0, "market_median_price_brl": 1200.0}
+      }
+    },
+    {
+      "course_id": "hist-007",
+      "course_name": "Atuária e Modelagem Estatística em Previdência Fechada",
+      "modality": "EAD",
+      "actual_outcome": "SUCCESS",
+      "actual_enrollments": 28,
+      "pillar_inputs": {
+        "internal_history": {"comparable_fit_score": 90.0, "conversion_rate": 0.18, "enrollments_count": 30},
+        "paid_competition": {"ad_count": 4, "competition_index": 0.58, "cpc_brl": 7.20},
+        "search_and_media": {"monthly_volume": 1600, "growth_trend_pct": 20.0, "average_interest": 72.0},
+        "employability": {"open_jobs_count": 32, "salary_median_brl": 14000.0},
+        "syllabus_fit": {"jev_syllabus_score": 94.0, "market_pain_points_covered_pct": 0.90},
+        "pricing": {"proposed_price_brl": 16000.0, "market_median_price_brl": 16500.0}
+      }
+    },
+    {
+      "course_id": "hist-008",
+      "course_name": "Seguros Paramétricos no Agronegócio Brasileiro",
+      "modality": "Híbrido",
+      "actual_outcome": "MARGINAL",
+      "actual_enrollments": 18,
+      "pillar_inputs": {
+        "internal_history": {"comparable_fit_score": 72.0, "conversion_rate": 0.09, "enrollments_count": 20},
+        "paid_competition": {"ad_count": 3, "competition_index": 0.48, "cpc_brl": 4.80},
+        "search_and_media": {"monthly_volume": 1400, "growth_trend_pct": 16.0, "average_interest": 64.0},
+        "employability": {"open_jobs_count": 14, "salary_median_brl": 9500.0},
+        "syllabus_fit": {"jev_syllabus_score": 85.0, "market_pain_points_covered_pct": 0.70},
+        "pricing": {"proposed_price_brl": 5800.0, "market_median_price_brl": 5200.0}
+      }
+    },
+    {
+      "course_id": "hist-009",
+      "course_name": "Culinária Mediterrânea e Coquetelaria Básica",
+      "modality": "Presencial",
+      "actual_outcome": "FAILED",
+      "actual_enrollments": 0,
+      "pillar_inputs": {
+        "internal_history": {"comparable_fit_score": 5.0, "conversion_rate": 0.0, "enrollments_count": 0},
+        "paid_competition": {"ad_count": 0, "competition_index": 0.05, "cpc_brl": 0.50},
+        "search_and_media": {"monthly_volume": 100, "growth_trend_pct": -40.0, "average_interest": 15.0},
+        "employability": {"open_jobs_count": 0, "salary_median_brl": 3000.0},
+        "syllabus_fit": {"jev_syllabus_score": 20.0, "market_pain_points_covered_pct": 0.05},
+        "pricing": {"proposed_price_brl": 2000.0, "market_median_price_brl": 600.0}
+      }
+    },
+    {
+      "course_id": "hist-010",
+      "course_name": "Subscrição Técnica de Riscos de Engenharia e Obras Civis",
+      "modality": "EAD",
+      "actual_outcome": "SUCCESS",
+      "actual_enrollments": 34,
+      "pillar_inputs": {
+        "internal_history": {"comparable_fit_score": 88.0, "conversion_rate": 0.14, "enrollments_count": 35},
+        "paid_competition": {"ad_count": 5, "competition_index": 0.68, "cpc_brl": 8.00},
+        "search_and_media": {"monthly_volume": 2100, "growth_trend_pct": 22.0, "average_interest": 78.0},
+        "employability": {"open_jobs_count": 26, "salary_median_brl": 11500.0},
+        "syllabus_fit": {"jev_syllabus_score": 93.0, "market_pain_points_covered_pct": 0.92},
+        "pricing": {"proposed_price_brl": 9500.0, "market_median_price_brl": 9800.0}
+      }
+    }
+  ]
+}
