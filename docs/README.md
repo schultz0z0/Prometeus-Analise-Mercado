@@ -53,6 +53,8 @@ Esta pasta é a fonte canônica do produto. O PRD original na raiz é mantido co
 - [Observabilidade](operations/observability.md)
 - [Backup e recuperação](operations/backup-and-recovery.md)
 - [Runbooks](operations/runbooks.md)
+- [Implantação em staging e operação do piloto](operations/staging-and-pilot-deployment.md)
+- [Onboarding institucional](operations/institutional-onboarding.md)
 - [Estratégia de testes](testing/test-strategy.md)
 - [Capacidade do time e processo](engineering/team-and-delivery.md)
 - [Roadmap](roadmap/roadmap.md)
