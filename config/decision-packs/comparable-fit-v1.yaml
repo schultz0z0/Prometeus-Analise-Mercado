@@ -1,0 +1,16 @@
+schema_version: 1
+pack_id: comparable-fit-v1
+version: 1.0.0
+owner: Agência Prometeus
+decision_type: SCORE
+question: "Em uma escala de 0 a 100, qual o grau de comparabilidade histórica entre o curso de referência da instituição e a nova proposta?"
+min_score: 0.0
+max_score: 100.0
+rubric:
+  "90-100": "Curso idêntico ou versão anterior direta."
+  "70-89": "Mesma macroárea com público e carga horária semelhantes."
+  "40-69": "Tema correlato com modalidade ou ticket substancialmente diferente."
+  "0-39": "Curso incomparável sem relevância para balizamento de conversão."
+review_threshold: 0.75
+notes:
+  - "Utilizado na Etapa 06 (Histórico) para selecionar comparáveis internos."

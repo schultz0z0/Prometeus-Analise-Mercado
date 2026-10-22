@@ -1,0 +1,23 @@
+schema_version: 1
+pack_id: taxonomy-v1
+version: 1.0.0
+owner: Agência Prometeus
+decision_type: CHOICE
+question: "A qual macroárea temática educacional a proposta de curso pertence?"
+options:
+  - SEGUROS_E_RESSEGUROS
+  - GESTAO_E_NEGOCIOS
+  - TECNOLOGIA_E_DADOS
+  - DIREITO_E_REGULACAO
+  - SAUDE_E_PREVIDENCIA
+  - OUTROS
+rubric:
+  SEGUROS_E_RESSEGUROS: "Cursos voltados a corretagem, subscrição, sinistros e mercado segurador."
+  GESTAO_E_NEGOCIOS: "Cursos de administração geral, liderança e finanças corporativas."
+  TECNOLOGIA_E_DADOS: "Cursos de IA, analytics, programação e cibersegurança aplicada."
+  DIREITO_E_REGULACAO: "Cursos jurídicos, compliance, SUSEP e normas regulatórias."
+  SAUDE_E_PREVIDENCIA: "Cursos de planos de saúde, previdência privada e atuária."
+  OUTROS: "Cursos fora do escopo institucional prioritário."
+review_threshold: 0.80
+notes:
+  - "Utilizado na taxonomia e categorização canônica do curso."

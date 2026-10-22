@@ -1,0 +1,128 @@
+{
+  "pack_id": "taxonomy-v1",
+  "version": "1.0.0",
+  "target_metric": "accuracy",
+  "min_acceptable_metric": 0.85,
+  "samples": [
+    {
+      "id": "tax-001",
+      "input_context": {
+        "title": "Subscrição Técnica de Riscos Patrimoniais e Garantia",
+        "description": "Inspeção de riscos, cálculo de PML (Perda Máxima Provável) e clausulado de apólices All Risks."
+      },
+      "expected_output": "SEGUROS_E_RESSEGUROS",
+      "annotator_1": "SEGUROS_E_RESSEGUROS",
+      "annotator_2": "SEGUROS_E_RESSEGUROS",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Tema nuclear de seguros corporativos."
+    },
+    {
+      "id": "tax-002",
+      "input_context": {
+        "title": "Gestão Comercial e Liderança de Equipes de Vendas",
+        "description": "Funil comercial, metas de faturamento, negociação executiva e cultura de alta performance."
+      },
+      "expected_output": "GESTAO_E_NEGOCIOS",
+      "annotator_1": "GESTAO_E_NEGOCIOS",
+      "annotator_2": "GESTAO_E_NEGOCIOS",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Administração e negócios corporativos."
+    },
+    {
+      "id": "tax-003",
+      "input_context": {
+        "title": "Python para Análise de Dados e Inteligência Artificial",
+        "description": "Bibliotecas Pandas, Scikit-Learn e construção de modelos preditivos com pipelines de ETL."
+      },
+      "expected_output": "TECNOLOGIA_E_DADOS",
+      "annotator_1": "TECNOLOGIA_E_DADOS",
+      "annotator_2": "TECNOLOGIA_E_DADOS",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Ciência de dados e tecnologia."
+    },
+    {
+      "id": "tax-004",
+      "input_context": {
+        "title": "Direito Securitário e Marco Regulatório da SUSEP",
+        "description": "Contrato de seguro, boa-fé objetiva, circulares prudenciais e contencioso judicial de seguros."
+      },
+      "expected_output": "DIREITO_E_REGULACAO",
+      "annotator_1": "DIREITO_E_REGULACAO",
+      "annotator_2": "DIREITO_E_REGULACAO",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Jurídico e regulatório."
+    },
+    {
+      "id": "tax-005",
+      "input_context": {
+        "title": "Atuária e Precificação em Planos de Saúde e Previdência Aberta",
+        "description": "Tabelas de comutação, cálculo atuarial para planos PGBL/VGBL e regulação ANS."
+      },
+      "expected_output": "SAUDE_E_PREVIDENCIA",
+      "annotator_1": "SAUDE_E_PREVIDENCIA",
+      "annotator_2": "SAUDE_E_PREVIDENCIA",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Saúde suplementar e previdência."
+    },
+    {
+      "id": "tax-006",
+      "input_context": {
+        "title": "História da Arte Moderna e Escultura Brasileira",
+        "description": "Movimento modernista da Semana de 22 e evolução das artes visuais no Brasil."
+      },
+      "expected_output": "OUTROS",
+      "annotator_1": "OUTROS",
+      "annotator_2": "OUTROS",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Fora do escopo corporativo/institucional."
+    },
+    {
+      "id": "tax-007",
+      "input_context": {
+        "title": "Regulação de Sinistros de Responsabilidade Civil D&O e E&O",
+        "description": "Análise de cobertura, litígios corporativos, custos de defesa e limites agregados."
+      },
+      "expected_output": "SEGUROS_E_RESSEGUROS",
+      "annotator_1": "SEGUROS_E_RESSEGUROS",
+      "annotator_2": "SEGUROS_E_RESSEGUROS",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Ramo financeiro de seguros."
+    },
+    {
+      "id": "tax-008",
+      "input_context": {
+        "title": "Machine Learning Aplicado à Detecção de Fraudes em Apólices",
+        "description": "Modelagem estatística de anomalias em sinistros automotivos e residenciais."
+      },
+      "expected_output": "TECNOLOGIA_E_DADOS",
+      "annotator_1": "TECNOLOGIA_E_DADOS",
+      "annotator_2": "TECNOLOGIA_E_DADOS",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Foco metodológico central em Ciência de Dados / IA."
+    },
+    {
+      "id": "tax-009",
+      "input_context": {
+        "title": "Compliance, Prevenção à Lavagem de Dinheiro (PLD) e Anticorrupção",
+        "description": "Diretrizes do COAF, due diligence de corretores e parceiros comerciais."
+      },
+      "expected_output": "DIREITO_E_REGULACAO",
+      "annotator_1": "DIREITO_E_REGULACAO",
+      "annotator_2": "DIREITO_E_REGULACAO",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Normas e compliance regulatório."
+    },
+    {
+      "id": "tax-010",
+      "input_context": {
+        "title": "Gestão de Finanças Pessoais e Orçamento Doméstico Familiar",
+        "description": "Planilhas de gastos diários, renegociação de dívidas e investimentos básicos."
+      },
+      "expected_output": "GESTAO_E_NEGOCIOS",
+      "annotator_1": "GESTAO_E_NEGOCIOS",
+      "annotator_2": "GESTAO_E_NEGOCIOS",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Finanças e gestão pessoal."
+    }
+  ]
+}

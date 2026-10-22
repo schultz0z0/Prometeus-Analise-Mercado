@@ -1,0 +1,17 @@
+schema_version: 1
+pack_id: contradiction-check-v1
+version: 1.0.0
+owner: Agência Prometeus
+decision_type: CHOICE
+question: "Existe contradição lógica ou factual entre as evidências coletadas e o resultado proposto?"
+options:
+  - NO_CONTRADICTION
+  - MINOR_DISCREPANCY
+  - DIRECT_CONTRADICTION
+rubric:
+  NO_CONTRADICTION: "Todas as fontes e números apontam para a mesma conclusão mercadológica."
+  MINOR_DISCREPANCY: "Divergência pequena de valores ou datas sem alterar a direção do julgamento."
+  DIRECT_CONTRADICTION: "Fontes diferentes afirmam conclusões mutuamente excludentes (ex.: mercado aquecido vs. demissões em massa)."
+review_threshold: 0.85
+notes:
+  - "Utilizado no Quality Gate (Etapa 11) para bloquear dossiês contraditórios."

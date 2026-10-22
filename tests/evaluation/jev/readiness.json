@@ -1,0 +1,158 @@
+{
+  "pack_id": "readiness-v1",
+  "version": "1.0.0",
+  "target_metric": "accuracy",
+  "min_acceptable_metric": 0.85,
+  "samples": [
+    {
+      "id": "readiness-001",
+      "input_context": {
+        "course_title": "MBA Executivo em Subscrição de Riscos e Resseguros",
+        "target_audience": "Subscritores, corretores sênior e atuários com 3+ anos de experiência",
+        "description": "Formação avançada em análise técnica de grandes riscos corporativos, modelagem de catástrofes e contratos de resseguro proporcional e não proporcional.",
+        "duration_hours": 360,
+        "modality": "EAD Ao Vivo"
+      },
+      "expected_output": "READY",
+      "annotator_1": "READY",
+      "annotator_2": "READY",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Proposta completa, público específico e objetivo claro."
+    },
+    {
+      "id": "readiness-002",
+      "input_context": {
+        "course_title": "Gestão Comercial e Estratégias de Vendas para Corretoras de Seguros",
+        "target_audience": "Sócios de corretoras, corretores independentes e gestores de contas",
+        "description": "Metodologia prática de prospecção consultiva B2B, retenção de apólices e cross-selling nos ramos vida e saúde.",
+        "duration_hours": 40,
+        "modality": "Presencial"
+      },
+      "expected_output": "READY",
+      "annotator_1": "READY",
+      "annotator_2": "READY",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Escopo bem delimitado para capacitação profissional de curta duração."
+    },
+    {
+      "id": "readiness-003",
+      "input_context": {
+        "course_title": "Curso de Seguros Modernos",
+        "target_audience": "",
+        "description": "Um curso completo sobre o mercado de seguros atual com novidades e tendências para profissionais.",
+        "duration_hours": null,
+        "modality": "Online"
+      },
+      "expected_output": "NEEDS_CLARIFICATION",
+      "annotator_1": "NEEDS_CLARIFICATION",
+      "annotator_2": "NEEDS_CLARIFICATION",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Público-alvo vazio e descrição excessivamente genérica sem menção a ramos ou nível."
+    },
+    {
+      "id": "readiness-004",
+      "input_context": {
+        "course_title": "Perícia e Regulação de Sinistros Automóveis",
+        "target_audience": "Peritos automotivos, engenheiros mecânicos e reguladores de sinistro",
+        "description": "Avaliação de avarias, detecção de fraudes em colisões e elaboração de laudos periciais para seguradoras.",
+        "duration_hours": 60,
+        "modality": "Híbrido"
+      },
+      "expected_output": "READY",
+      "annotator_1": "READY",
+      "annotator_2": "READY",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Tema técnico, público definido e objetivo direto."
+    },
+    {
+      "id": "readiness-005",
+      "input_context": {
+        "course_title": "Inteligência Artificial e Futuro dos Negócios",
+        "target_audience": "Todos os interessados",
+        "description": "Aprenda como a inteligência artificial vai revolucionar tudo.",
+        "duration_hours": 10,
+        "modality": "EAD"
+      },
+      "expected_output": "INSUFFICIENT_INFORMATION",
+      "annotator_1": "INSUFFICIENT_INFORMATION",
+      "annotator_2": "INSUFFICIENT_INFORMATION",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Tema totalmente genérico sem delimitação setorial ou educacional."
+    },
+    {
+      "id": "readiness-006",
+      "input_context": {
+        "course_title": "Previdência Complementar Fechada: Governança e Investimentos",
+        "target_audience": "Diretores de EFPC, conselheiros e analistas de investimentos de fundos de pensão",
+        "description": "Aspectos regulatórios da Previc, gestão de ALM e mandatos de investimento em fundos de pensão.",
+        "duration_hours": 120,
+        "modality": "EAD Gravado + Sessões de Mentoria"
+      },
+      "expected_output": "READY",
+      "annotator_1": "READY",
+      "annotator_2": "READY",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Proposta de alto valor para nicho institucional."
+    },
+    {
+      "id": "readiness-007",
+      "input_context": {
+        "course_title": "Especialização em Compliance e LGPD no Mercado Segurador",
+        "target_audience": "Advogados, DPOs e analistas de compliance em seguradoras",
+        "description": "Aplicação prática da LGPD em sinistros, circulares SUSEP de segurança cibernética e controles internos.",
+        "duration_hours": 180,
+        "modality": "EAD Ao Vivo"
+      },
+      "expected_output": "READY",
+      "annotator_1": "READY",
+      "annotator_2": "READY",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Pronto para análise."
+    },
+    {
+      "id": "readiness-008",
+      "input_context": {
+        "course_title": "Liderança e Inovação",
+        "target_audience": "Líderes",
+        "description": "Desenvolvimento de habilidades humanas e inovação corporativa.",
+        "duration_hours": 20,
+        "modality": "Online"
+      },
+      "expected_output": "NEEDS_CLARIFICATION",
+      "annotator_1": "NEEDS_CLARIFICATION",
+      "annotator_2": "NEEDS_CLARIFICATION",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Falta diferenciação e recorte setorial para balizamento de pesquisa de mercado."
+    },
+    {
+      "id": "readiness-009",
+      "input_context": {
+        "course_title": "Cripto e Finanças",
+        "target_audience": "Jovens investidores",
+        "description": "Fique rico com moedas digitais e mercado financeiro descentralizado.",
+        "duration_hours": 8,
+        "modality": "Online"
+      },
+      "expected_output": "INSUFFICIENT_INFORMATION",
+      "annotator_1": "INSUFFICIENT_INFORMATION",
+      "annotator_2": "INSUFFICIENT_INFORMATION",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Conteúdo especulativo sem estrutura curricular institucional."
+    },
+    {
+      "id": "readiness-010",
+      "input_context": {
+        "course_title": "Atuária Aplicada a Seguros de Pessoas e Saúde Suplementar",
+        "target_audience": "Atuários, estatísticos e analistas de subscrição de benefícios corporativos",
+        "description": "Construção de tábuas biométricas, cálculo de prêmio puro e comercial, provisões técnicas e exigências da ANS.",
+        "duration_hours": 150,
+        "modality": "EAD Ao Vivo"
+      },
+      "expected_output": "READY",
+      "annotator_1": "READY",
+      "annotator_2": "READY",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Proposta detalhada e consistente."
+    }
+  ]
+}

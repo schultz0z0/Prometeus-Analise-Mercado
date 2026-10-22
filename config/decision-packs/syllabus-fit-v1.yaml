@@ -1,0 +1,16 @@
+schema_version: 1
+pack_id: syllabus-fit-v1
+version: 1.0.0
+owner: Agência Prometeus
+decision_type: SCORE
+question: "Em uma escala de 0 a 100, qual o nível de adequação e completude dos módulos da ementa em relação às competências exigidas pelo mercado de trabalho?"
+min_score: 0.0
+max_score: 100.0
+rubric:
+  "85-100": "Ementa moderna, prática e cobre 100% das competências críticas observadas nas vagas."
+  "70-84": "Ementa sólida com pequenas lacunas em ferramentas práticas emergentes."
+  "50-69": "Ementa excessivamente teórica ou defasada em tópicos essenciais."
+  "0-49": "Ementa desalinhada com a proposta ou com as demandas reais do mercado."
+review_threshold: 0.80
+notes:
+  - "Utilizado no Pilar de Syllabus Fit (peso 0.15 no scoring padrão)."

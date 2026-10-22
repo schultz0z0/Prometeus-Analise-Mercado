@@ -1,0 +1,104 @@
+{
+  "pack_id": "sentiment-v1",
+  "version": "1.0.0",
+  "target_metric": "accuracy",
+  "min_acceptable_metric": 0.85,
+  "samples": [
+    {
+      "id": "sent-001",
+      "input_context": {
+        "source": "LinkedIn Post Comments",
+        "text": "Excelente iniciativa da ENS! O mercado de cyber insurance está explodindo e quase não temos profissionais no Brasil com essa formação técnica. Quero muito me inscrever!"
+      },
+      "expected_output": "POSITIVE_INTEREST",
+      "annotator_1": "POSITIVE_INTEREST",
+      "annotator_2": "POSITIVE_INTEREST",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Elogio e clara intenção de inscrição."
+    },
+    {
+      "id": "sent-002",
+      "input_context": {
+        "source": "Reclame Aqui / Fórum de Seguros",
+        "text": "Nossa corretora está perdendo clientes porque nenhum funcionário sabe operar o novo sistema da SUSEP. Falta treinamento prático nas instituições, os cursos só ensinam teoria velha."
+      },
+      "expected_output": "PAIN_POINT_OR_COMPLAINT",
+      "annotator_1": "PAIN_POINT_OR_COMPLAINT",
+      "annotator_2": "PAIN_POINT_OR_COMPLAINT",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Relato de dor de mercado e carência de capacitação prática."
+    },
+    {
+      "id": "sent-003",
+      "input_context": {
+        "source": "Notícia do Setor",
+        "text": "A Circular SUSEP nº 666 estabelece os requisitos de sustentabilidade a serem observados pelas sociedades seguradoras, entrando em vigor a partir do próximo exercício."
+      },
+      "expected_output": "NEUTRAL_INFORMATIONAL",
+      "annotator_1": "NEUTRAL_INFORMATIONAL",
+      "annotator_2": "NEUTRAL_INFORMATIONAL",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Comunicação factual sem emoção ou intenção."
+    },
+    {
+      "id": "sent-004",
+      "input_context": {
+        "source": "YouTube Comments",
+        "text": "Mais um curso caça-níquel cobrando os olhos da cara pra ler slide. Não recomendo, mercado de seguros tá falido e ninguém contrata júnior."
+      },
+      "expected_output": "NEGATIVE_CRITIQUE",
+      "annotator_1": "NEGATIVE_CRITIQUE",
+      "annotator_2": "NEGATIVE_CRITIQUE",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Crítica destrutiva e descrença no setor."
+    },
+    {
+      "id": "sent-005",
+      "input_context": {
+        "source": "Instagram Profissional",
+        "text": "Quando abrem as vagas para a turma de 2026? Tentei ano passado e esgotou super rápido, já estou com o orçamento aprovado na empresa."
+      },
+      "expected_output": "POSITIVE_INTEREST",
+      "annotator_1": "POSITIVE_INTEREST",
+      "annotator_2": "POSITIVE_INTEREST",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Alta intenção de compra corporativa."
+    },
+    {
+      "id": "sent-006",
+      "input_context": {
+        "source": "Grupo de WhatsApp Setorial",
+        "text": "O maior pesadelo hoje é regular sinistro de maquinário agrícola. Não tem perito qualificado no interior e os laudos demoram 60 dias."
+      },
+      "expected_output": "PAIN_POINT_OR_COMPLAINT",
+      "annotator_1": "PAIN_POINT_OR_COMPLAINT",
+      "annotator_2": "PAIN_POINT_OR_COMPLAINT",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Dor latente e oportunidade para formação em perícia agro."
+    },
+    {
+      "id": "sent-007",
+      "input_context": {
+        "source": "Portal CQCS",
+        "text": "O faturamento do setor segurador brasileiro cresceu 11,2% nos primeiros nove meses do ano, superando a marca de 300 bilhões de reais."
+      },
+      "expected_output": "NEUTRAL_INFORMATIONAL",
+      "annotator_1": "NEUTRAL_INFORMATIONAL",
+      "annotator_2": "NEUTRAL_INFORMATIONAL",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Dado estatístico neutro."
+    },
+    {
+      "id": "sent-008",
+      "input_context": {
+        "source": "Comentário Glassdoor",
+        "text": "A seguradora promete plano de carreira e incentivo a cursos, mas na prática ninguém tem tempo de estudar e a diretoria corta o subsídio de pós-graduação."
+      },
+      "expected_output": "NEGATIVE_CRITIQUE",
+      "annotator_1": "NEGATIVE_CRITIQUE",
+      "annotator_2": "NEGATIVE_CRITIQUE",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Crítica a políticas internas e restrição de investimento."
+    }
+  ]
+}

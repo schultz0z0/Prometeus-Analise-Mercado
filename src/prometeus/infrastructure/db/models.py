@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import (
+    Boolean,
     DateTime,
     ForeignKey,
     Index,
@@ -72,6 +73,12 @@ class AnalysisModel(Base):
         back_populates="analysis",
         uselist=False,
         cascade="all, delete-orphan",
+    )
+    decision_results: Mapped[list[DecisionResultModel]] = relationship(
+        "DecisionResultModel",
+        back_populates="analysis",
+        cascade="all, delete-orphan",
+        order_by="DecisionResultModel.created_at",
     )
 
     __table_args__ = (Index("ix_analyses_tenant_created", "tenant_id", "created_at"),)
@@ -220,3 +227,36 @@ class HistoricalFunnelModel(Base):
     __table_args__ = (
         Index("ix_historical_funnel_ext_period", "external_course_id", "period", unique=True),
     )
+
+
+class DecisionResultModel(Base):
+    """Tabela de resultados de julgamento do JEV (PostgreSQL)."""
+
+    __tablename__ = "decision_results"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    analysis_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("analyses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    pack_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    decision_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    confidence: Mapped[float] = mapped_column(nullable=False, default=0.0)
+    is_noul: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    selected_choice: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    distribution: Mapped[dict[str, Any]] = mapped_column(JsonType, nullable=False, default=dict)
+    score_value: Mapped[float | None] = mapped_column(nullable=True)
+    requires_human_review: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    evidence_ids: Mapped[list[str]] = mapped_column(JsonType, nullable=False, default=list)
+    model_version: Mapped[str] = mapped_column(String(64), nullable=False, default="jev-pinned")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+
+    analysis: Mapped[AnalysisModel] = relationship(
+        "AnalysisModel", back_populates="decision_results"
+    )
+
+    __table_args__ = (Index("ix_decision_results_analysis_pack", "analysis_id", "pack_id"),)

@@ -1,0 +1,136 @@
+{
+  "pack_id": "comparable-fit-v1",
+  "version": "1.0.0",
+  "target_metric": "mae",
+  "max_acceptable_metric": 8.0,
+  "samples": [
+    {
+      "id": "comp-001",
+      "input_context": {
+        "reference_course": "MBA Executivo em Seguros e Resseguros (ENS)",
+        "reference_area": "Seguros e Resseguros",
+        "reference_hours": 360,
+        "new_course_proposal": "Especialização Avançada em Subscrição e Resseguros Globais",
+        "new_area": "Seguros e Resseguros",
+        "new_hours": 360
+      },
+      "expected_output": 92.0,
+      "annotator_1": 90.0,
+      "annotator_2": 94.0,
+      "inter_annotator_agreement": 0.96,
+      "notes": "Mesma macroárea, mesmo nível de pós e carga horária equivalente."
+    },
+    {
+      "id": "comp-002",
+      "input_context": {
+        "reference_course": "Gestão Comercial de Corretoras de Seguros",
+        "reference_area": "Gestão e Negócios",
+        "reference_hours": 40,
+        "new_course_proposal": "Técnicas de Vendas B2B para Corretores de Benefícios",
+        "new_area": "Gestão e Negócios",
+        "new_hours": 36
+      },
+      "expected_output": 86.0,
+      "annotator_1": 85.0,
+      "annotator_2": 87.0,
+      "inter_annotator_agreement": 0.98,
+      "notes": "Foco similar em capacitação executiva rápida de vendas."
+    },
+    {
+      "id": "comp-003",
+      "input_context": {
+        "reference_course": "Introdução ao Pacote Office e Excel Básico",
+        "reference_area": "Tecnologia Básica",
+        "reference_hours": 20,
+        "new_course_proposal": "Modelagem Atuarial de Catástrofes Naturais",
+        "new_area": "Atuária e Dados",
+        "new_hours": 240
+      },
+      "expected_output": 12.0,
+      "annotator_1": 10.0,
+      "annotator_2": 14.0,
+      "inter_annotator_agreement": 0.85,
+      "notes": "Incomparável: temas, complexidade e públicos completamente discrepantes."
+    },
+    {
+      "id": "comp-004",
+      "input_context": {
+        "reference_course": "Direito Securitário Aplicado",
+        "reference_area": "Direito",
+        "reference_hours": 120,
+        "new_course_proposal": "Compliance e Contencioso de Grandes Riscos na SUSEP",
+        "new_area": "Direito e Regulação",
+        "new_hours": 150
+      },
+      "expected_output": 80.0,
+      "annotator_1": 78.0,
+      "annotator_2": 82.0,
+      "inter_annotator_agreement": 0.95,
+      "notes": "Forte afinidade jurídica com ligeira expansão de horas e especificidade."
+    },
+    {
+      "id": "comp-005",
+      "input_context": {
+        "reference_course": "Formação de Habilitados de Corretores de Seguros",
+        "reference_area": "Habilitação Profissional",
+        "reference_hours": 480,
+        "new_course_proposal": "Workshop de 4 horas: Novidades no Seguro Auto 2026",
+        "new_area": "Seguros Gerais",
+        "new_hours": 4
+      },
+      "expected_output": 28.0,
+      "annotator_1": 25.0,
+      "annotator_2": 31.0,
+      "inter_annotator_agreement": 0.88,
+      "notes": "Embora o tema seja seguro, o formato (formação regulatória vs workshop rápido) torna o funil incomparável."
+    },
+    {
+      "id": "comp-006",
+      "input_context": {
+        "reference_course": "Previdência Complementar: Fundos de Pensão",
+        "reference_area": "Previdência",
+        "reference_hours": 100,
+        "new_course_proposal": "Gestão e Governança em EFPC e Previdência Aberta",
+        "new_area": "Saúde e Previdência",
+        "new_hours": 120
+      },
+      "expected_output": 88.0,
+      "annotator_1": 86.0,
+      "annotator_2": 90.0,
+      "inter_annotator_agreement": 0.97,
+      "notes": "Excelente comparável para histórico e balizamento de conversão."
+    },
+    {
+      "id": "comp-007",
+      "input_context": {
+        "reference_course": "Perícia de Sinistros Automotivos",
+        "reference_area": "Sinistros",
+        "reference_hours": 60,
+        "new_course_proposal": "Perícia e Avaliação de Danos em Riscos de Engenharia",
+        "new_area": "Sinistros Corporativos",
+        "new_hours": 60
+      },
+      "expected_output": 68.0,
+      "annotator_1": 65.0,
+      "annotator_2": 71.0,
+      "inter_annotator_agreement": 0.93,
+      "notes": "Mesma disciplina técnica (perícia de danos) com ramos e público técnico divergentes."
+    },
+    {
+      "id": "comp-008",
+      "input_context": {
+        "reference_course": "Liderança e Gestão Estratégica",
+        "reference_area": "Gestão",
+        "reference_hours": 80,
+        "new_course_proposal": "Programação Web Full-Stack com React e Node",
+        "new_area": "Tecnologia",
+        "new_hours": 300
+      },
+      "expected_output": 8.0,
+      "annotator_1": 5.0,
+      "annotator_2": 11.0,
+      "inter_annotator_agreement": 0.80,
+      "notes": "Completamente incomparável."
+    }
+  ]
+}

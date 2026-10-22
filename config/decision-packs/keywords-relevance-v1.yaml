@@ -1,0 +1,17 @@
+schema_version: 1
+pack_id: keywords-relevance-v1
+version: 1.0.0
+owner: Agência Prometeus
+decision_type: CHOICE
+question: "O termo de busca avaliado é semanticamente relevante e comercialmente útil para pesquisar a demanda deste curso?"
+options:
+  - HIGH_RELEVANCE
+  - MEDIUM_RELEVANCE
+  - IRRELEVANT
+rubric:
+  HIGH_RELEVANCE: "Termo de busca com alta intenção de compra ou busca direta do tema."
+  MEDIUM_RELEVANCE: "Termo conceitual correlato mas mais abrangente."
+  IRRELEVANT: "Termo ambíguo, fora de contexto ou sem aderência ao produto educacional."
+review_threshold: 0.70
+notes:
+  - "Utilizado na Etapa 04 (Keyword set) para filtrar termos propostos pela LLM."

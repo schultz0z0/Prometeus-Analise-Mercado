@@ -1,0 +1,115 @@
+{
+  "pack_id": "syllabus-fit-v1",
+  "version": "1.0.0",
+  "target_metric": "mae",
+  "max_acceptable_metric": 8.0,
+  "samples": [
+    {
+      "id": "syl-001",
+      "input_context": {
+        "course_title": "MBA em Subscrição de Riscos Cibernéticos",
+        "market_requirements": "Análise de vulnerabilidades, compliance ISO 27001, precificação atuarial de ransomware, clausulado de apólices e regulação de sinistros digitais",
+        "syllabus_modules": [
+          "Módulo 1: Fundamentos de Cibersegurança e Ameaças Digitais",
+          "Módulo 2: Avaliação de Maturidade e Vulnerabilidades Corporativas",
+          "Módulo 3: Modelagem e Precificação de Riscos Cibernéticos",
+          "Módulo 4: Clausulados de Cobertura e Exclusões na SUSEP",
+          "Módulo 5: Protocolos Práticos de Resposta a Incidentes e Regulação de Sinistros Digitais"
+        ]
+      },
+      "expected_output": 94.0,
+      "annotator_1": 92.0,
+      "annotator_2": 96.0,
+      "inter_annotator_agreement": 0.96,
+      "notes": "Ementa moderna que cobre 100% dos requisitos de ponta a ponta."
+    },
+    {
+      "id": "syl-002",
+      "input_context": {
+        "course_title": "MBA em Subscrição de Riscos Cibernéticos",
+        "market_requirements": "Análise de vulnerabilidades, compliance ISO 27001, precificação atuarial de ransomware, clausulado de apólices e regulação de sinistros digitais",
+        "syllabus_modules": [
+          "Módulo 1: Introdução aos Computadores e Redes",
+          "Módulo 2: História da Internet no Brasil",
+          "Módulo 3: Noções Gerais de Direito Digital"
+        ]
+      },
+      "expected_output": 35.0,
+      "annotator_1": 30.0,
+      "annotator_2": 40.0,
+      "inter_annotator_agreement": 0.86,
+      "notes": "Ementa defasada, genérica e sem aderência à subscrição prática de seguros."
+    },
+    {
+      "id": "syl-003",
+      "input_context": {
+        "course_title": "Perícia e Investigação de Fraudes em Sinistros Automotivos",
+        "market_requirements": "Perícia física de colisão, leitura de telemetria OBD-II, detecção de fraude documental, perícia de incêndio criminoso e elaboração de laudo pericial",
+        "syllabus_modules": [
+          "Módulo 1: Dinâmica de Colisão e Biomecânica de Impacto",
+          "Módulo 2: Extração e Análise de Dados de Telemetria e Módulos Automotivos (OBD-II)",
+          "Módulo 3: Investigação de Incêndio Veicular e Vestígios Criminais",
+          "Módulo 4: Metodologia de Detecção de Fraude em Documentação e Apólices",
+          "Módulo 5: Oficina Prática de Elaboração e Sustentação de Laudo Pericial"
+        ]
+      },
+      "expected_output": 95.0,
+      "annotator_1": 94.0,
+      "annotator_2": 96.0,
+      "inter_annotator_agreement": 0.98,
+      "notes": "Perfeito alinhamento com as demandas periciais das seguradoras."
+    },
+    {
+      "id": "syl-004",
+      "input_context": {
+        "course_title": "Gestão Comercial para Corretoras de Seguros",
+        "market_requirements": "Funil B2B, prospecção outbound, técnicas de negociação de grandes contas, CRM e retenção",
+        "syllabus_modules": [
+          "Módulo 1: Estruturação do Processo Comercial e ICP em Seguros",
+          "Módulo 2: Prospecção Ativa Corporativa e Abordagem Consultiva",
+          "Módulo 3: Negociação Executiva e Cross-selling de Benefícios",
+          "Módulo 4: Gestão da Carteira, Prevenção de Churn e NPS"
+        ]
+      },
+      "expected_output": 88.0,
+      "annotator_1": 87.0,
+      "annotator_2": 89.0,
+      "inter_annotator_agreement": 0.98,
+      "notes": "Excelente matriz curricular prática."
+    },
+    {
+      "id": "syl-005",
+      "input_context": {
+        "course_title": "Atuária em Saúde Suplementar",
+        "market_requirements": "Provisões técnicas ANS, cálculo de reajuste por faixa etária, sinistralidade, VCMH e mutualismo",
+        "syllabus_modules": [
+          "Módulo 1: Legislação da ANS e Princípios de Saúde Suplementar",
+          "Módulo 2: Modelagem Estatística da VCMH e Sinistralidade Hospitalar",
+          "Módulo 3: Provisões Técnicas (PEONA, PIC) e Demonstrações Atuariais"
+        ]
+      },
+      "expected_output": 78.0,
+      "annotator_1": 76.0,
+      "annotator_2": 80.0,
+      "inter_annotator_agreement": 0.95,
+      "notes": "Ementa sólida, mas carece de módulo prático com bases de dados reais."
+    },
+    {
+      "id": "syl-006",
+      "input_context": {
+        "course_title": "Direito Securitário Avançado",
+        "market_requirements": "Contrato de seguro no Código Civil, regulação SUSEP, contencioso de grandes riscos e mediação",
+        "syllabus_modules": [
+          "Módulo 1: Introdução ao Direito Constitucional",
+          "Módulo 2: Teoria Geral do Direito Civil",
+          "Módulo 3: Direito do Consumidor Básico"
+        ]
+      },
+      "expected_output": 42.0,
+      "annotator_1": 40.0,
+      "annotator_2": 44.0,
+      "inter_annotator_agreement": 0.90,
+      "notes": "Currículo excessivamente genérico de graduação, não atende a advogados securitários."
+    }
+  ]
+}

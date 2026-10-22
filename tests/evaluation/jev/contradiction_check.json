@@ -1,0 +1,80 @@
+{
+  "pack_id": "contradiction-check-v1",
+  "version": "1.0.0",
+  "target_metric": "accuracy",
+  "min_acceptable_metric": 0.90,
+  "samples": [
+    {
+      "id": "contra-001",
+      "input_context": {
+        "statement_a": "O mercado de previdência fechada apresentou superávit técnico de 12 bilhões de reais e demanda por novos especialistas em investimentos.",
+        "statement_b": "A Previc confirmou que a solvência média das entidades fechadas subiu para 104%, estimulando a reabertura de planos patrocinados e contratação de consultores."
+      },
+      "expected_output": "NO_CONTRADICTION",
+      "annotator_1": "NO_CONTRADICTION",
+      "annotator_2": "NO_CONTRADICTION",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Declarações harmônicas e perfeitamente alinhadas."
+    },
+    {
+      "id": "contra-002",
+      "input_context": {
+        "statement_a": "O preço médio de mercado para cursos de extensão neste ramo é de R$ 1.800.",
+        "statement_b": "A média ponderada das instituições concorrentes pesquisadas resultou em R$ 1.950."
+      },
+      "expected_output": "MINOR_DISCREPANCY",
+      "annotator_1": "MINOR_DISCREPANCY",
+      "annotator_2": "MINOR_DISCREPANCY",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Discrepância numérica leve (cerca de 8%) que não invalida a viabilidade da oferta."
+    },
+    {
+      "id": "contra-003",
+      "input_context": {
+        "statement_a": "O mercado de trabalho para corretores de seguros tradicionais de automóveis está em forte ascensão, com alta de 40% na remuneração média.",
+        "statement_b": "Relatório oficial da Fenacor indica fechamento de 1.200 corretoras físicas e migração maciça para plataformas digitais sem comissionamento de pessoas."
+      },
+      "expected_output": "DIRECT_CONTRADICTION",
+      "annotator_1": "DIRECT_CONTRADICTION",
+      "annotator_2": "DIRECT_CONTRADICTION",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Contradição direta: ascensão e alta salarial versus fechamento em massa de corretoras."
+    },
+    {
+      "id": "contra-004",
+      "input_context": {
+        "statement_a": "A carga horária ideal para capacitação corporativa segundo os RHs é de 40 horas.",
+        "statement_b": "A pesquisa com diretores de seguradoras revelou preferência por programas de 36 a 45 horas."
+      },
+      "expected_output": "NO_CONTRADICTION",
+      "annotator_1": "NO_CONTRADICTION",
+      "annotator_2": "NO_CONTRADICTION",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Compatibilidade total dentro da faixa esperada."
+    },
+    {
+      "id": "contra-005",
+      "input_context": {
+        "statement_a": "As seguradoras registraram queda recorde de sinistralidade automotiva no trimestre.",
+        "statement_b": "Boletim do Sindseg registrou o maior volume histórico de pagamento de indenizações por colisão veicular no mesmo trimestre."
+      },
+      "expected_output": "DIRECT_CONTRADICTION",
+      "annotator_1": "DIRECT_CONTRADICTION",
+      "annotator_2": "DIRECT_CONTRADICTION",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Queda recorde de sinistralidade vs maior volume histórico de indenizações são mutuamente excludentes."
+    },
+    {
+      "id": "contra-006",
+      "input_context": {
+        "statement_a": "O curso anterior teve 28 alunos matriculados na turma piloto.",
+        "statement_b": "O relatório acadêmico de encerramento registrou 30 certificados emitidos na turma piloto."
+      },
+      "expected_output": "MINOR_DISCREPANCY",
+      "annotator_1": "MINOR_DISCREPANCY",
+      "annotator_2": "MINOR_DISCREPANCY",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Diferença pontual de contagem (2 alunos/ouvintes)."
+    }
+  ]
+}

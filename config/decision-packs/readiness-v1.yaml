@@ -1,0 +1,18 @@
+schema_version: 1
+pack_id: readiness-v1
+version: 1.0.0
+owner: Agência Prometeus
+decision_type: CHOICE
+question: "A proposta de curso possui clareza temática, público-alvo e objetivo suficientes para iniciar pesquisa de mercado?"
+options:
+  - READY
+  - NEEDS_CLARIFICATION
+  - INSUFFICIENT_INFORMATION
+rubric:
+  READY: "A proposta tem título claro, público definido e objetivo compreensível."
+  NEEDS_CLARIFICATION: "A proposta é viável mas possui ambiguidade sobre modalidade ou carga horária."
+  INSUFFICIENT_INFORMATION: "A proposta possui apenas palavras genéricas sem escopo educacional."
+review_threshold: 0.75
+notes:
+  - "Utilizado na Etapa 03 (Readiness) do workflow."
+  - "Se o resultado for NEEDS_CLARIFICATION, o workflow transiciona para WAITING_FOR_INPUT."

@@ -1,0 +1,128 @@
+{
+  "pack_id": "keywords-relevance-v1",
+  "version": "1.0.0",
+  "target_metric": "accuracy",
+  "min_acceptable_metric": 0.80,
+  "samples": [
+    {
+      "id": "kw-001",
+      "input_context": {
+        "course_title": "Perícia e Regulação de Sinistros Automóveis",
+        "search_term": "curso pericia sinistro automovel ens"
+      },
+      "expected_output": "HIGH_RELEVANCE",
+      "annotator_1": "HIGH_RELEVANCE",
+      "annotator_2": "HIGH_RELEVANCE",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Busca direta com alta intenção de matrícula."
+    },
+    {
+      "id": "kw-002",
+      "input_context": {
+        "course_title": "Perícia e Regulação de Sinistros Automóveis",
+        "search_term": "como funciona perito de seguro de carro"
+      },
+      "expected_output": "MEDIUM_RELEVANCE",
+      "annotator_1": "MEDIUM_RELEVANCE",
+      "annotator_2": "MEDIUM_RELEVANCE",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Busca informacional/conceitual relevante."
+    },
+    {
+      "id": "kw-003",
+      "input_context": {
+        "course_title": "Perícia e Regulação de Sinistros Automóveis",
+        "search_term": "comprar amortecedor gol g5 usado sp"
+      },
+      "expected_output": "IRRELEVANT",
+      "annotator_1": "IRRELEVANT",
+      "annotator_2": "IRRELEVANT",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Comércio de peças, sem qualquer intenção educacional."
+    },
+    {
+      "id": "kw-004",
+      "input_context": {
+        "course_title": "MBA em Subscrição de Riscos Cibernéticos",
+        "search_term": "pos graduacao cyber insurance brasil"
+      },
+      "expected_output": "HIGH_RELEVANCE",
+      "annotator_1": "HIGH_RELEVANCE",
+      "annotator_2": "HIGH_RELEVANCE",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Termo exato do público-alvo com intenção acadêmica."
+    },
+    {
+      "id": "kw-005",
+      "input_context": {
+        "course_title": "MBA em Subscrição de Riscos Cibernéticos",
+        "search_term": "ataque hacker hospital sp 2026"
+      },
+      "expected_output": "IRRELEVANT",
+      "annotator_1": "IRRELEVANT",
+      "annotator_2": "IRRELEVANT",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Notícia fática sem ligação a mercado de capacitação."
+    },
+    {
+      "id": "kw-006",
+      "input_context": {
+        "course_title": "MBA em Subscrição de Riscos Cibernéticos",
+        "search_term": "como subscrever apolice de risco cibernetico"
+      },
+      "expected_output": "HIGH_RELEVANCE",
+      "annotator_1": "HIGH_RELEVANCE",
+      "annotator_2": "HIGH_RELEVANCE",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Alta intenção técnica de capacitação profissional."
+    },
+    {
+      "id": "kw-007",
+      "input_context": {
+        "course_title": "Gestão Comercial para Corretoras de Seguros",
+        "search_term": "como vender mais seguro de vida para empresas"
+      },
+      "expected_output": "HIGH_RELEVANCE",
+      "annotator_1": "HIGH_RELEVANCE",
+      "annotator_2": "HIGH_RELEVANCE",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Dor latente do corretor de seguros."
+    },
+    {
+      "id": "kw-008",
+      "input_context": {
+        "course_title": "Gestão Comercial para Corretoras de Seguros",
+        "search_term": "cotacao seguro auto porto seguro online"
+      },
+      "expected_output": "IRRELEVANT",
+      "annotator_1": "IRRELEVANT",
+      "annotator_2": "IRRELEVANT",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Consumidor final buscando cotação de seguro individual."
+    },
+    {
+      "id": "kw-009",
+      "input_context": {
+        "course_title": "Compliance e LGPD no Mercado Segurador",
+        "search_term": "cartilha susep seguranca da informacao circular"
+      },
+      "expected_output": "MEDIUM_RELEVANCE",
+      "annotator_1": "MEDIUM_RELEVANCE",
+      "annotator_2": "MEDIUM_RELEVANCE",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Consulta regulatória conexa ao programa."
+    },
+    {
+      "id": "kw-010",
+      "input_context": {
+        "course_title": "Compliance e LGPD no Mercado Segurador",
+        "search_term": "treinamento compliance seguradoras dpo"
+      },
+      "expected_output": "HIGH_RELEVANCE",
+      "annotator_1": "HIGH_RELEVANCE",
+      "annotator_2": "HIGH_RELEVANCE",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Termo de busca transacional B2B de capacitação."
+    }
+  ]
+}

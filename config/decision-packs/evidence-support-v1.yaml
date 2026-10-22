@@ -1,0 +1,17 @@
+schema_version: 1
+pack_id: evidence-support-v1
+version: 1.0.0
+owner: Agência Prometeus
+decision_type: CHOICE
+question: "O item de evidência coletado oferece suporte empírico à afirmação proposta?"
+options:
+  - OBSERVED
+  - SUGGESTIVE
+  - UNSUPPORTED
+rubric:
+  OBSERVED: "Evidência direta, factual e verificável sustentando o claim sem inferência."
+  SUGGESTIVE: "Evidência indireta ou indício que corrobora a hipótese com razoabilidade."
+  UNSUPPORTED: "Evidência não corrobora, contradiz ou não se aplica ao claim avaliado."
+review_threshold: 0.75
+notes:
+  - "Utilizado na validação factual das claims do dossiê (Etapa 13)."

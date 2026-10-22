@@ -144,6 +144,8 @@ class AppSettings(BaseSettings):
     JEV_TIMEOUT_SECONDS: int = 15
     JEV_MAX_RETRIES: int = 2
     JEV_REVIEW_CONFIDENCE_THRESHOLD: float = 0.75
+    TYPESAFE_API_KEY: str = ""
+    JEV_BASE_URL: str = "https://api.typesafe.ai/v1"
 
     INSTITUTION_ID: str = "ens"
     INSTITUTION_CONFIG_PATH: str = "config/tenants/ens.example.yaml"

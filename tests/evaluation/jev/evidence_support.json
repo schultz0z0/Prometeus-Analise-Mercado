@@ -1,0 +1,80 @@
+{
+  "pack_id": "evidence-support-v1",
+  "version": "1.0.0",
+  "target_metric": "accuracy",
+  "min_acceptable_metric": 0.85,
+  "samples": [
+    {
+      "id": "evid-001",
+      "input_context": {
+        "claim": "O volume de contratações de peritos de sinistros cresceu 18% no último biênio no estado de São Paulo.",
+        "evidence_text": "De acordo com os registros do CAGED analisados pela CNseg no boletim trimestral, o saldo líquido de contratações formais no CBO de perito de seguros no estado de SP aumentou exatamente 18,2% entre 2024 e 2025."
+      },
+      "expected_output": "OBSERVED",
+      "annotator_1": "OBSERVED",
+      "annotator_2": "OBSERVED",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Suporte empírico direto com dados oficiais do Caged/CNseg."
+    },
+    {
+      "id": "evid-002",
+      "input_context": {
+        "claim": "Existe interesse crescente do público jovem por seguros de vida resgatáveis.",
+        "evidence_text": "Três corretores influenciadores no Instagram relataram em lives recentes que notaram um número maior de perguntas de jovens sobre planejamento financeiro familiar."
+      },
+      "expected_output": "SUGGESTIVE",
+      "annotator_1": "SUGGESTIVE",
+      "annotator_2": "SUGGESTIVE",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Indício empírico qualitativo razoável, mas sem comprovação estatística direta."
+    },
+    {
+      "id": "evid-003",
+      "input_context": {
+        "claim": "A procura por cursos de resseguro triplicou após as inundações no Sul do país.",
+        "evidence_text": "Um estudo meteorológico publicado em 2020 indicou aumento de 5% no índice pluviométrico na bacia do Prata."
+      },
+      "expected_output": "UNSUPPORTED",
+      "annotator_1": "UNSUPPORTED",
+      "annotator_2": "UNSUPPORTED",
+      "inter_annotator_agreement": 1.0,
+      "notes": "O estudo meteorológico não trata de procura por capacitação educacional nem de resseguro."
+    },
+    {
+      "id": "evid-004",
+      "input_context": {
+        "claim": "O ticket médio praticado pelo mercado para pós-graduações executivas em seguros é de R$ 18.000 a R$ 24.000.",
+        "evidence_text": "Coleta nos sites oficiais da ENS, FGV e FIA em outubro de 2026 registrou mensalidades que totalizam R$ 19.500 (ENS), R$ 23.800 (FGV) e R$ 21.000 (FIA)."
+      },
+      "expected_output": "OBSERVED",
+      "annotator_1": "OBSERVED",
+      "annotator_2": "OBSERVED",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Dados públicos e verificáveis dos concorrentes diretos."
+    },
+    {
+      "id": "evid-005",
+      "input_context": {
+        "claim": "Empresas do setor estão dispostas a patrocinar 100% da mensalidade dos colaboradores neste novo MBA.",
+        "evidence_text": "Um diretor de RH de seguradora comentou em um evento de café da manhã que 'capacitação técnica é sempre prioritária na nossa verba'."
+      },
+      "expected_output": "SUGGESTIVE",
+      "annotator_1": "SUGGESTIVE",
+      "annotator_2": "SUGGESTIVE",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Demonstra apetite institucional por treinamento, mas não garante política de custeio integral."
+    },
+    {
+      "id": "evid-006",
+      "input_context": {
+        "claim": "A sinistralidade em seguros de transporte de carga caiu pela metade em 2026.",
+        "evidence_text": "A frota de caminhões pesados em circulação no país aumentou 3% segundo o Denatran."
+      },
+      "expected_output": "UNSUPPORTED",
+      "annotator_1": "UNSUPPORTED",
+      "annotator_2": "UNSUPPORTED",
+      "inter_annotator_agreement": 1.0,
+      "notes": "Aumento de frota de caminhões não suporta a afirmação de queda de sinistralidade de carga."
+    }
+  ]
+}

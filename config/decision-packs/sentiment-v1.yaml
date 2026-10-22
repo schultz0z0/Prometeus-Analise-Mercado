@@ -1,0 +1,19 @@
+schema_version: 1
+pack_id: sentiment-v1
+version: 1.0.0
+owner: Agência Prometeus
+decision_type: CHOICE
+question: "Qual o sentimento predominante e interesse expressado no comentário coletado sobre o tema educacional?"
+options:
+  - POSITIVE_INTEREST
+  - PAIN_POINT_OR_COMPLAINT
+  - NEUTRAL_INFORMATIONAL
+  - NEGATIVE_CRITIQUE
+rubric:
+  POSITIVE_INTEREST: "Usuário demonstra desejo de aprender, pergunta sobre cursos ou elogia a área."
+  PAIN_POINT_OR_COMPLAINT: "Usuário relata dificuldade profissional, falta de capacitação ou gargalo de mercado."
+  NEUTRAL_INFORMATIONAL: "Comentário puramente técnico sem carga emocional ou intenção."
+  NEGATIVE_CRITIQUE: "Crítica à qualidade, desinteresse ou descrença no mercado."
+review_threshold: 0.70
+notes:
+  - "Utilizado no pilar de social listening para classificar dores reais do público."
