@@ -80,6 +80,18 @@ class AnalysisModel(Base):
         cascade="all, delete-orphan",
         order_by="DecisionResultModel.created_at",
     )
+    research_plans: Mapped[list[ResearchPlanModel]] = relationship(
+        "ResearchPlanModel",
+        back_populates="analysis",
+        cascade="all, delete-orphan",
+        order_by="ResearchPlanModel.created_at",
+    )
+    market_evidences: Mapped[list[MarketEvidenceModel]] = relationship(
+        "MarketEvidenceModel",
+        back_populates="analysis",
+        cascade="all, delete-orphan",
+        order_by="MarketEvidenceModel.collected_at",
+    )
 
     __table_args__ = (Index("ix_analyses_tenant_created", "tenant_id", "created_at"),)
 
@@ -260,3 +272,69 @@ class DecisionResultModel(Base):
     )
 
     __table_args__ = (Index("ix_decision_results_analysis_pack", "analysis_id", "pack_id"),)
+
+
+class ResearchPlanModel(Base):
+    """Tabela de planos de pesquisa e governança de orçamento externo."""
+
+    __tablename__ = "research_plans"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    analysis_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("analyses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    tenant_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    cache_key: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    enabled_sources: Mapped[list[str]] = mapped_column(JsonType, nullable=False, default=list)
+    budget_limit_usd: Mapped[float] = mapped_column(nullable=False, default=2.0)
+    spent_usd: Mapped[float] = mapped_column(nullable=False, default=0.0)
+    allocated_budget: Mapped[dict[str, float]] = mapped_column(
+        JsonType, nullable=False, default=dict
+    )
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="PLANNED")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+
+    analysis: Mapped[AnalysisModel] = relationship("AnalysisModel", back_populates="research_plans")
+
+    __table_args__ = (Index("ix_research_plans_analysis_cache", "analysis_id", "cache_key"),)
+
+
+class MarketEvidenceModel(Base):
+    """Tabela de evidências de mercado coletadas e higienizadas (PostgreSQL)."""
+
+    __tablename__ = "market_evidences"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    analysis_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("analyses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    evidence_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    source_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    source_url: Mapped[str] = mapped_column(String(512), nullable=False)
+    collector: Mapped[str] = mapped_column(String(64), nullable=False)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(256), nullable=False)
+    raw_payload: Mapped[dict[str, Any]] = mapped_column(JsonType, nullable=False, default=dict)
+    sanitized_data: Mapped[dict[str, Any]] = mapped_column(JsonType, nullable=False, default=dict)
+    quality_score: Mapped[float] = mapped_column(nullable=False, default=1.0)
+    cost_usd: Mapped[float] = mapped_column(nullable=False, default=0.0)
+    collected_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+
+    analysis: Mapped[AnalysisModel] = relationship(
+        "AnalysisModel", back_populates="market_evidences"
+    )
+
+    __table_args__ = (
+        Index("ix_market_evidences_analysis_type", "analysis_id", "evidence_type"),
+        Index("ix_market_evidences_analysis_hash", "analysis_id", "content_hash"),
+    )
