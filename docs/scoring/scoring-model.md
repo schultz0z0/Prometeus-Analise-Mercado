@@ -21,6 +21,21 @@ Onde cada sub-score está em `[0, 100]`:
 - `A`: aderência da ementa;
 - `P`: precificação.
 
+## Fontes por pilar
+
+**Status: HIPÓTESE** — mapeamento inicial para evitar dupla contagem; revisar na Fase 05.
+
+| Pilar | Chave no perfil | Tools/fontes principais | Observação |
+|---|---|---|---|
+| H | `internal_history` | TOOL-03, TOOL-04 | Comparar com coortes comparáveis da instituição |
+| C | `paid_competition` | TOOL-07 | Anúncios são proxy de investimento, não de vendas |
+| B | `search_and_media` | TOOL-05, TOOL-06 | Tendência, volume e CPC |
+| E | `employability` | TOOL-09 | Vagas deduplicadas e por região |
+| A | `syllabus_fit` | TOOL-10, TOOL-11, TOOL-12 | Dores sociais e competências de vagas versus cobertura da ementa |
+| P | `pricing` | TOOL-08 | Preço pretendido versus faixa observada |
+
+Social listening entra no pilar A como demanda qualitativa a ser coberta pela ementa. Ele não conta como volume de demanda em B. Competências de vagas podem alimentar A somente como cobertura, enquanto E usa volume e qualidade das vagas.
+
 ## Dados ausentes
 
 O sistema não redistribui pesos silenciosamente. Calcula:
@@ -34,15 +49,17 @@ partial_score = soma(weight_i * score_i) / coverage
 
 ## Limiares baseline
 
-| Resultado | Condição inicial |
-|---|---|
-| `APPROVED` | V >= 75, cobertura >= 0,80 e confiança aprovada |
-| `APPROVED_WITH_ADJUSTMENTS` | 60 <= V < 75 e gates aprovados |
-| `HIGH_RISK` | V < 60 e evidência suficiente |
-| `INSUFFICIENT_EVIDENCE` | cobertura/confiança abaixo do mínimo |
-| `REQUIRES_HUMAN_REVIEW` | proximidade do limite ou sinais conflitantes |
+A tabela define a `recommendation` de uma análise `COMPLETED` ([ADR-0005](../architecture/adr/0005-status-vs-recommendation.md)). A avaliação segue a ordem abaixo; a primeira condição verdadeira vence.
 
-Todos os números são hipóteses até backtest.
+| Ordem | Recomendação | Condição inicial |
+|---:|---|---|
+| 1 | `INSUFFICIENT_EVIDENCE` | cobertura/confiança abaixo do mínimo ou pilar obrigatório ausente |
+| 2 | `REQUIRES_HUMAN_REVIEW` | distância entre V e qualquer limiar menor que `boundary_review_margin` ou sinais conflitantes |
+| 3 | `APPROVED` | V >= 75 e gates aprovados |
+| 4 | `APPROVED_WITH_ADJUSTMENTS` | 60 <= V < 75 e gates aprovados |
+| 5 | `HIGH_RISK` | V < 60 e gates aprovados |
+
+Todos os números, incluindo `boundary_review_margin`, são hipóteses até backtest. Enquanto o Gate D não for aprovado, o dossiê marca `score.experimental = true`.
 
 ## Sub-scores
 

@@ -2,13 +2,17 @@
 
 ## Objetivo
 
-Entregar contratos estáveis para o chatbot sem expor ferramentas internas ou manter chamadas longas.
+Entregar contratos estáveis para o chatbot sem expor ferramentas internas ou manter chamadas longas. Implementa as etapas 14 (entrega) e 15 (feedback) do [workflow](../agent/workflow.md) e fecha o fluxo de ponta a ponta.
+
+## Gate de release relacionado
+
+[Gate E — Integration ready](../roadmap/release-gates.md#gate-e--integration-ready).
 
 ## Arquivos principais previstos
 
-- `src/.../entrypoints/rest/`
-- `src/.../entrypoints/mcp/`
-- `src/.../infrastructure/webhooks/`
+- `src/prometeus/entrypoints/rest/`
+- `src/prometeus/entrypoints/mcp/`
+- `src/prometeus/infrastructure/webhooks/`
 - `openapi.yaml`
 - `tests/contract/api/`
 - `tests/contract/mcp/`
@@ -16,16 +20,18 @@ Entregar contratos estáveis para o chatbot sem expor ferramentas internas ou ma
 
 ## Tarefas
 
-1. Implementar endpoints v1 e Problem Details.
-2. Implementar autenticação, escopos e rate limit.
-3. Implementar tools MCP de alto nível.
-4. Mapear progresso e erros para respostas legíveis.
-5. Implementar webhooks HMAC, timestamp e idempotência.
-6. Implementar retries e dead-letter.
-7. Publicar OpenAPI e schemas MCP versionados.
-8. Criar cliente simulador do chatbot.
-9. Executar fluxo E2E, cancelamento e missing input.
-10. Validar compatibilidade com o chatbot real em staging.
+1. Validar a revisão vigente da especificação MCP e do SDK Python oficial e registrar a escolha em ADR.
+2. Implementar endpoints v1 e Problem Details.
+3. Implementar autenticação, escopos e rate limit.
+4. Implementar tools MCP de alto nível.
+5. Mapear progresso e erros para respostas legíveis.
+6. Implementar reanálise vinculada (`previous_analysis_id`, RF-010), decisão humana (RF-009), outcomes (RF-013) e export do dossiê (RF-012).
+7. Implementar webhooks HMAC, timestamp e idempotência.
+8. Implementar retries e dead-letter.
+9. Publicar OpenAPI e schemas MCP versionados.
+10. Criar cliente simulador do chatbot.
+11. Executar fluxo E2E, cancelamento, missing input e `BLOCKED`.
+12. Validar compatibilidade com o chatbot real em staging.
 
 ## Verificação
 

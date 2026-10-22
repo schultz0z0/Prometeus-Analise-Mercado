@@ -2,14 +2,22 @@
 
 ## Objetivo
 
-Normalizar as APIs de leads, inscritos e matriculados da ENS sem acoplar o domínio aos schemas externos.
+Normalizar as APIs de leads, inscritos e matriculados da ENS sem acoplar o domínio aos schemas externos. Implementa a etapa 06 (histórico interno) do [workflow](../agent/workflow.md).
+
+## Gate de release relacionado
+
+[Gate B — Data ready](../roadmap/release-gates.md#gate-b--data-ready) (adaptador institucional).
+
+## Dependências
+
+Exige conclusão e aprovação da [Fase 00](phase-00-validation.md) e infraestrutura base da [Fase 01](phase-01-foundation.md).
 
 ## Arquivos principais previstos
 
-- `src/.../domain/ports/institutional_data.py`
-- `src/.../infrastructure/institutional/ens/client.py`
-- `src/.../infrastructure/institutional/ens/mappers.py`
-- `src/.../infrastructure/institutional/mock.py`
+- `src/prometeus/domain/ports/institutional_data.py`
+- `src/prometeus/infrastructure/institutional/ens/client.py`
+- `src/prometeus/infrastructure/institutional/ens/mappers.py`
+- `src/prometeus/infrastructure/institutional/mock.py`
 - `tests/contract/institutional/ens/`
 - `tests/fixtures/institutional/`
 

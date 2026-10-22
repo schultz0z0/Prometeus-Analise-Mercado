@@ -29,21 +29,23 @@ Quando perguntado sobre sua identidade no contexto deste sistema, o agente deve 
 - Forma completa: `Prometeus — Inteligência para Produtos Educacionais`.
 - Evitar: `Prometheus`, `Prometeo`, `Prometheus AI` ou traduções espontâneas.
 
-## Uso white-label
+## Uso white-label e integridade da marca no frontend
 
-Prometeus é a identidade canônica do código-base e da documentação. Cada instituição pode configurar um nome de exibição diferente no chatbot, nos relatórios e nas mensagens ao usuário.
+O conceito de **white-label** no Prometeus aplica-se à camada de **sistema, backend e governança de dados**:
 
-Exemplos permitidos:
+- banco de dados, volumes, credenciais e instâncias isoladas por instituição;
+- adaptadores de CRM específicos (ex.: ENS);
+- perfis de scoring, limiares, modalidades e taxonomias parametrizáveis por tenant.
 
-- nome integralmente definido pela instituição quando o contrato exigir white-label;
-- `Prometeus — uma solução da Agência Prometeus` quando a autoria estiver visível;
-- `Powered by Agência Prometeus` quando aprovado comercialmente.
+**No frontend e na experiência de usuário, a marca, o logotipo e a identidade visual são sempre da criadora: Prometeus.**
 
-Mesmo quando oculto na interface white-label, o nome canônico e a empresa desenvolvedora permanecem nos metadados técnicos internos, documentação, auditoria e versionamento, salvo exigência contratual específica.
+- O logotipo oficial da Prometeus, a paleta de cores (`#040814`, `#0652C5`, `#8DB5FF`) e a tipografia **Outfit** comandam todas as telas do sistema;
+- A instituição cliente é indicada como tenant/ambiente de trabalho ativo (ex.: badge no topo: `Ambiente: ENS — Escola de Negócios e Seguros`), preservando o cabeçalho master da Prometeus;
+- Assinatura oficial: `Prometeus — Inteligência para Produtos Educacionais` (produto) e `Tecnologia que amplia pessoas` (institucional).
 
 ## Nome técnico
 
-O pacote Python planejado permanece `course_market_intelligence` por ser descritivo e evitar uma renomeação estrutural antes da Fase 01. Serviços, telemetria e imagens futuras devem preferir o slug `prometeus`.
+O pacote Python é `prometeus` (`src/prometeus/`), conforme [ADR-0006](../architecture/adr/0006-python-namespace.md). Serviços, telemetria, imagens, banco local e volumes usam o mesmo slug `prometeus`. O nome provisório `course_market_intelligence` pode aparecer apenas em documentos históricos de `docs/plans/`.
 
 ## Significado de marca
 

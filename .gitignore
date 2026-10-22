@@ -7,8 +7,8 @@ __pycache__/
 .coverage
 htmlcov/
 .venv/
-dist/
-build/
+/dist/
+/build/
 *.egg-info/
 
 # Environment and secrets
@@ -19,10 +19,11 @@ secrets/
 *.pem
 *.key
 
-# Runtime data
-data/
-logs/
-artifacts/
+# Runtime data (anchored to the repository root on purpose:
+# an unanchored "data/" also ignores docs/data/ and source packages named data)
+/data/
+/logs/
+/artifacts/
 *.sqlite3
 
 # IDE and OS

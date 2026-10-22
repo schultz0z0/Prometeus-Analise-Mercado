@@ -2,13 +2,21 @@
 
 ## Objetivo
 
-Integrar o JEV como dependência obrigatória e provar a qualidade de cada julgamento delimitado.
+Integrar o JEV como dependência obrigatória e provar a qualidade de cada julgamento delimitado. Implementa as etapas 03 (readiness com JEV) e 09 (julgamentos semânticos com JEV) do [workflow](../agent/workflow.md), além de dar suporte aos decision packs usados nas etapas 04, 06 e 13.
+
+## Gate de release relacionado
+
+[Gate C — AI ready](../roadmap/release-gates.md#gate-c--ai-ready) (JEV e decision packs).
+
+## Dependências
+
+Exige spikes concluídos da [Fase 00](phase-00-validation.md) e infraestrutura base da [Fase 01](phase-01-foundation.md).
 
 ## Arquivos principais previstos
 
-- `src/.../domain/ports/decision_model.py`
-- `src/.../infrastructure/jev/client.py`
-- `src/.../application/decision_service.py`
+- `src/prometeus/domain/ports/decision_model.py`
+- `src/prometeus/infrastructure/jev/client.py`
+- `src/prometeus/application/decision_service.py`
 - `config/decision-packs/*.yaml`
 - `tests/evaluation/jev/`
 - `scripts/evaluate_jev.py`

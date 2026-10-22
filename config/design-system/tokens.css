@@ -1,0 +1,111 @@
+/* =============================================================================
+ * PROMETEUS DESIGN SYSTEM — CSS TOKENS
+ * Inspirado no Manual da Marca Prometeus e no portal agenciaprometeus.com.br
+ * ============================================================================= */
+
+:root {
+  /* Cores Base e Canvas */
+  --prometeus-bg-canvas: #040814;
+  --prometeus-bg-canvas-subtle: #070a10;
+  --prometeus-surface-card: rgba(26, 35, 56, 0.75);
+  --prometeus-surface-elevated: #1a2338;
+  --prometeus-surface-glass: rgba(255, 255, 255, 0.04);
+
+  /* Cores da Marca */
+  --prometeus-primary: #0652c5;
+  --prometeus-primary-hover: #0860e8;
+  --prometeus-primary-glow: rgba(6, 82, 197, 0.45);
+  --prometeus-accent-ice: #8db5ff;
+  --prometeus-accent-sparkle: #c2d9ff;
+
+  /* Bordas e Linhas */
+  --prometeus-border-subtle: rgba(255, 255, 255, 0.10);
+  --prometeus-border-card: rgba(255, 255, 255, 0.08);
+  --prometeus-border-focus: rgba(141, 181, 255, 0.50);
+
+  /* Tipografia */
+  --prometeus-text-primary: #ffffff;
+  --prometeus-text-secondary: #94a3b8;
+  --prometeus-text-muted: #64748b;
+  --prometeus-text-accent: #8db5ff;
+
+  /* Status Semânticos */
+  --prometeus-status-approved: #34d399;
+  --prometeus-status-adjustments: #f59e0b;
+  --prometeus-status-risk: #ef4444;
+  --prometeus-status-running: #38bdf8;
+  --prometeus-status-blocked: #a855f7;
+  --prometeus-status-insufficient: #64748b;
+
+  /* Famílias Tipográficas */
+  --prometeus-font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --prometeus-font-mono: 'Geist Mono', 'JetBrains Mono', Menlo, monospace;
+
+  /* Raios de Borda */
+  --prometeus-radius-sm: 6px;
+  --prometeus-radius-md: 10px;
+  --prometeus-radius-lg: 16px;
+  --prometeus-radius-xl: 24px;
+  --prometeus-radius-full: 9999px;
+
+  /* Sombras */
+  --prometeus-shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+  --prometeus-shadow-glow-primary: 0 0 24px var(--prometeus-primary-glow);
+  --prometeus-shadow-glow-success: 0 0 20px rgba(52, 211, 153, 0.35);
+
+  /* Desfoque */
+  --prometeus-blur-glass: blur(16px);
+}
+
+/* Utilitários Básicos de Composição */
+body {
+  background-color: var(--prometeus-bg-canvas);
+  color: var(--prometeus-text-primary);
+  font-family: var(--prometeus-font-sans);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.prometeus-card {
+  background-color: var(--prometeus-surface-card);
+  border: 1px solid var(--prometeus-border-card);
+  border-radius: var(--prometeus-radius-lg);
+  box-shadow: var(--prometeus-shadow-card);
+  backdrop-filter: var(--prometeus-blur-glass);
+  padding: 24px;
+}
+
+.prometeus-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: var(--prometeus-primary);
+  color: #ffffff;
+  font-family: var(--prometeus-font-sans);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: var(--prometeus-radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.prometeus-btn-primary:hover {
+  background-color: var(--prometeus-primary-hover);
+  box-shadow: var(--prometeus-shadow-glow-primary);
+  transform: translateY(-1px);
+}
+
+.prometeus-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--prometeus-radius-full);
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--prometeus-border-subtle);
+  background-color: var(--prometeus-surface-glass);
+}

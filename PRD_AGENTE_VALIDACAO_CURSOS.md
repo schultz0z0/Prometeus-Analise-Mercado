@@ -2,6 +2,9 @@
 > Documento histórico de origem. Foi substituído pelo PRD canônico em
 > [`docs/product/PRD.md`](docs/product/PRD.md). As metas, integrações e fórmulas
 > abaixo não devem ser implementadas sem consultar a documentação canônica.
+> O status "Aprovado para Implementação" abaixo refere-se apenas à versão 2.0.
+> As diferenças deliberadas estão em
+> [PRD canônico §14 — Relação com o PRD de origem](docs/product/PRD.md#14-relação-com-o-prd-de-origem).
 
 # Product Requirements Document (PRD) - Versão 2.0 (Arquitetura Híbrida)
 ## Agente de Inteligência e Validação de Lançamento de Cursos (EdTech Market & Academic Intelligence)

@@ -18,7 +18,7 @@ Execute primeiro a [Fase 00](../implementation/phase-00-validation.md). Não cri
 
 **Files:**
 - Create: `pyproject.toml`
-- Create: `src/course_market_intelligence/__init__.py`
+- Create: `src/prometeus/__init__.py`
 - Create: `tests/unit/test_package.py`
 
 **Steps:**
@@ -32,7 +32,7 @@ Execute primeiro a [Fase 00](../implementation/phase-00-validation.md). Não cri
 ### Task 2: Implementar máquina de estados
 
 **Files:**
-- Create: `src/course_market_intelligence/domain/analyses.py`
+- Create: `src/prometeus/domain/analyses.py`
 - Create: `tests/unit/domain/test_analysis_state.py`
 
 **Steps:**
@@ -46,8 +46,8 @@ Execute primeiro a [Fase 00](../implementation/phase-00-validation.md). Não cri
 ### Task 3: Adicionar persistência e migrations
 
 **Files:**
-- Create: `src/course_market_intelligence/infrastructure/db/models.py`
-- Create: `src/course_market_intelligence/infrastructure/db/repositories.py`
+- Create: `src/prometeus/infrastructure/db/models.py`
+- Create: `src/prometeus/infrastructure/db/repositories.py`
 - Create: `alembic.ini`
 - Create: `migrations/versions/*_create_analysis_tables.py`
 - Create: `tests/integration/test_analysis_repository.py`
@@ -63,9 +63,9 @@ Execute primeiro a [Fase 00](../implementation/phase-00-validation.md). Não cri
 ### Task 4: Criar API e fila mínimas
 
 **Files:**
-- Create: `src/course_market_intelligence/entrypoints/rest/app.py`
-- Create: `src/course_market_intelligence/application/create_analysis.py`
-- Create: `src/course_market_intelligence/workers/tasks.py`
+- Create: `src/prometeus/entrypoints/rest/app.py`
+- Create: `src/prometeus/application/create_analysis.py`
+- Create: `src/prometeus/workers/tasks.py`
 - Create: `tests/contract/api/test_create_analysis.py`
 
 **Steps:**

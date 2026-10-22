@@ -1,7 +1,7 @@
 # PRD — Prometeus
 
-**Versão:** 5.0.0-draft  
-**Data:** 2026-10-09  
+**Versão:** 5.1.0-draft  
+**Data:** 2026-10-22  
 **Status:** aprovado para validação técnica e planejamento; implementação ainda não iniciada  
 **Empresa desenvolvedora e mantenedora:** Agência Prometeus  
 **Primeira instituição:** ENS — Escola de Negócios e Seguros
@@ -99,6 +99,7 @@ Diretor ou gerente de novos produtos, responsável por decidir se a proposta ava
 ### 5.5 Entrega e aprendizado
 
 - Expor MCP, REST e webhooks.
+- Oferecer CLI operacional (Typer + Rich) para diagnóstico, validação de configuração e execução local; não é interface de usuário final.
 - Manter execução assíncrona e consulta de progresso.
 - Registrar decisão humana, justificativa e ajustes.
 - Associar posteriormente resultados reais ao dossiê original.
@@ -144,21 +145,15 @@ Baseline inicial, sujeito a backtest:
 
 Viability Score, Confidence Index e Coverage Index são independentes. Uma análise parcial não é promovida automaticamente a recomendação final.
 
-### Status
+### Status e recomendação
 
-- `QUEUED`
-- `RUNNING`
-- `WAITING_FOR_INPUT`
-- `REQUIRES_HUMAN_REVIEW`
-- `INSUFFICIENT_EVIDENCE`
-- `BLOCKED`
-- `APPROVED`
-- `APPROVED_WITH_ADJUSTMENTS`
-- `HIGH_RISK`
-- `FAILED`
-- `CANCELLED`
+Conforme [ADR-0005](../architecture/adr/0005-status-vs-recommendation.md), ciclo de vida e recomendação são campos distintos.
 
-Os limiares iniciais são hipóteses. Consulte [Modelo de scoring](../scoring/scoring-model.md).
+**`status` (ciclo de vida):** `QUEUED`, `RUNNING`, `WAITING_FOR_INPUT`, `BLOCKED`, `COMPLETED`, `FAILED`, `CANCELLED`.
+
+**`recommendation` (somente quando `COMPLETED`):** `APPROVED`, `APPROVED_WITH_ADJUSTMENTS`, `HIGH_RISK`, `INSUFFICIENT_EVIDENCE`, `REQUIRES_HUMAN_REVIEW`.
+
+A recomendação é calculada em código e nunca equivale a aprovação humana. Os limiares iniciais são hipóteses. Consulte [Modelo de scoring](../scoring/scoring-model.md).
 
 ## 9. Requisitos não funcionais
 
@@ -225,3 +220,20 @@ Os limiares iniciais são hipóteses. Consulte [Modelo de scoring](../scoring/sc
 ## 13. Roadmap
 
 O roadmap completo está em [docs/roadmap/roadmap.md](../roadmap/roadmap.md). A visão expandida é preservada; ela será entregue por gates de evidência e risco, não reduzida a um MVP descartável.
+
+## 14. Relação com o PRD de origem
+
+O documento [PRD_AGENTE_VALIDACAO_CURSOS.md](../../PRD_AGENTE_VALIDACAO_CURSOS.md) (v2.0) é histórico. Principais mudanças deliberadas:
+
+| Tema no PRD v2.0 | Decisão vigente | Motivo |
+|---|---|---|
+| E2E < 10 s | P95 de aceite < 1 s; workflow assíncrono | Coleta externa leva minutos ([ADR-0004](../architecture/adr/0004-async-workflow.md)) |
+| Redução de 85% no custo | Custo medido por análise e fonte | Meta sem baseline medido |
+| JEV “alimenta” o score | Score calculado só em código | Auditabilidade ([ADR-0003](../architecture/adr/0003-jev-required.md)) |
+| Meta Ad Library API oficial | Actor Apify avaliado para Brasil | API oficial não cobre anúncios comerciais BR |
+| 4 sub-scores | 6 pilares + Confidence e Coverage | Visão expandida e evidência mínima |
+| Status único `APROVADO_COM_AJUSTES` | `status` + `recommendation` | [ADR-0005](../architecture/adr/0005-status-vs-recommendation.md) |
+| REST + CLI | REST + MCP + webhooks; CLI operacional | Integração com o chatbot existente |
+| Fases 1–5 técnicas | Fases 00–09 com gates | Validação de premissas antes de integrações |
+
+Taxonomia de dores sociais, matriz booleana de ementa e seções de naming/ganchos do PRD v2.0 continuam válidas como insumo para os decision packs `social_comment_v1` e `syllabus_coverage_v1` e para a política da LLM.

@@ -22,6 +22,7 @@ profiles:
 webhooks:
   events:
     - analysis.waiting_for_input
+    - analysis.blocked
     - analysis.requires_review
     - analysis.completed
     - analysis.failed

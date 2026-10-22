@@ -4,6 +4,10 @@
 
 Eliminar incógnitas que podem invalidar a arquitetura antes de implementar integrações.
 
+## Dependências e paralelismo
+
+Pode ser executada em paralelo com a [Fase 01](phase-01-foundation.md); o cumprimento deste gate é pré-requisito bloqueante para iniciar as Fases 02, 03 e 04. Ver [Dependências e paralelismo](README.md#dependências-e-paralelismo).
+
 ## Entradas
 
 PRD, responsáveis da ENS, documentação das três APIs, acesso de avaliação ao JEV e contas/provedores externos.

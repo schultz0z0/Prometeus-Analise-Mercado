@@ -12,3 +12,10 @@
 - **Adaptador institucional:** implementação que traduz dados de um CRM para contratos canônicos.
 - **Shadow mode:** execução paralela sem influência sobre a decisão real.
 - **White-label:** configuração por instituição sobre o mesmo código-base.
+- **Choice / Score / Noul:** tipos de decisão do JEV — escolha entre opções, nota em rubrica delimitada e verificação de presença/ausência de uma condição.
+- **Pilar:** dimensão ponderada do Viability Score (histórico, concorrência, busca, empregabilidade, ementa, preço).
+- **Claim:** afirmação do dossiê vinculada a `evidence_ids` e a um nível de suporte.
+- **Proxy:** sinal indireto (anúncios, buscas, vagas, comentários) que sugere, mas não comprova, demanda.
+- **Status:** ciclo de vida técnico da análise (`QUEUED` … `COMPLETED`).
+- **Recomendação:** resultado calculado em código para uma análise concluída; não é aprovação humana.
+- **Idempotency key:** chave que garante que a repetição de um pedido não cria nova análise nem duplica custos.

@@ -6,6 +6,8 @@ Esta pasta é a fonte canônica do produto. O PRD original na raiz é mantido co
 
 - [PRD canônico](product/PRD.md)
 - [Nome e identidade](product/brand-and-naming.md)
+- [Manual e diretrizes de marca](product/brand-guidelines.md)
+- [Design System Prometeus UI](product/design-system.md)
 - [Visão e escopo](product/vision-and-scope.md)
 - [Personas e Jobs to Be Done](product/personas-and-jtbd.md)
 - [Casos de uso](product/use-cases.md)

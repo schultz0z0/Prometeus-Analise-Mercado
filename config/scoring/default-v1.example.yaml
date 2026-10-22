@@ -14,6 +14,7 @@ gates:
 thresholds:
   approved: 75
   approved_with_adjustments: 60
+  boundary_review_margin: 3
 required_pillars:
   - internal_history
   - search_and_media

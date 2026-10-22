@@ -18,9 +18,12 @@ Os exemplos são conceituais; o OpenAPI definitivo será gerado na Fase 07.
     "delivery_format": "online",
     "target_regions": ["BR"]
   },
-  "callback_url": "https://chatbot.example.com/hooks/course-analysis"
+  "callback_url": "https://chatbot.example.com/hooks/course-analysis",
+  "previous_analysis_id": null
 }
 ```
+
+`previous_analysis_id` é opcional e cria uma reanálise vinculada (RF-010) sem alterar a análise anterior.
 
 Resposta:
 
@@ -37,7 +40,8 @@ Resposta:
 ```json
 {
   "analysis_id": "anl_01J...",
-  "status": "APPROVED_WITH_ADJUSTMENTS",
+  "status": "COMPLETED",
+  "recommendation": "APPROVED_WITH_ADJUSTMENTS",
   "scoring_profile_id": "default-v1",
   "score": {
     "viability": 72.4,

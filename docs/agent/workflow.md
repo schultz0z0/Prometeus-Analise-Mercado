@@ -2,14 +2,16 @@
 
 ## Estados macro
 
+O ciclo de vida segue o [ADR-0005](../architecture/adr/0005-status-vs-recommendation.md):
+
 ```text
-QUEUED -> RUNNING -> WAITING_FOR_INPUT
-                  -> REQUIRES_HUMAN_REVIEW
-                  -> INSUFFICIENT_EVIDENCE
-                  -> BLOCKED
-                  -> APPROVED | APPROVED_WITH_ADJUSTMENTS | HIGH_RISK
+QUEUED -> RUNNING -> WAITING_FOR_INPUT -> RUNNING
+                  -> BLOCKED           -> RUNNING | FAILED
+                  -> COMPLETED  (recommendation preenchida)
                   -> FAILED | CANCELLED
 ```
+
+A `recommendation` (`APPROVED`, `APPROVED_WITH_ADJUSTMENTS`, `HIGH_RISK`, `INSUFFICIENT_EVIDENCE`, `REQUIRES_HUMAN_REVIEW`) é definida em código na etapa 11 e só existe quando `status = COMPLETED`.
 
 ## Etapas
 
@@ -25,7 +27,7 @@ QUEUED -> RUNNING -> WAITING_FOR_INPUT
 | 08 Higienização | Evidências brutas | Código | Evidências válidas | Duplicação ou conteúdo inválido |
 | 09 Julgamentos | Estado delimitado | JEV | Decision results | Baixa confiança |
 | 10 Scoring | Features | Código | 3 índices + sub-scores | Cobertura insuficiente |
-| 11 Quality gate | Dossiê estruturado | Código | Aprovar/revisar/bloquear | Contradição |
+| 11 Quality gate | Dossiê estruturado | Código | `recommendation` + aprovar/revisar/bloquear | Contradição |
 | 12 Síntese | Fatos aprovados | LLM | Texto estruturado | Afirmação não suportada |
 | 13 Verificação | Texto + fatos | Código/JEV específico | Dossiê validado | Número inventado |
 | 14 Entrega | Dossiê | Persistência/webhook | Evento entregue | Destino indisponível |
@@ -39,6 +41,8 @@ QUEUED -> RUNNING -> WAITING_FOR_INPUT
 - Repetição usa idempotency key e não duplica custos quando cache válido existe.
 - Dados brutos nunca são considerados verdade sem proveniência e validação.
 - O workflow pode retomar do último checkpoint seguro.
+
+A fase responsável por implementar cada etapa está em [Planos de implementação](../implementation/README.md#etapas-do-workflow-por-fase).
 
 ## Progresso
 
