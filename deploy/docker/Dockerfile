@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir uv
 
 COPY pyproject.toml uv.lock README.md /build/
+COPY src/ /build/src/
 RUN uv venv /opt/venv && \
     . /opt/venv/bin/activate && \
     uv pip install --no-cache -e ".[dev]"
@@ -53,6 +54,7 @@ COPY --from=builder /opt/venv /opt/venv
 
 # Copia código da aplicação com propriedade do usuário não-root
 COPY --chown=prometeus:prometeus src/ /app/src/
+COPY --chown=prometeus:prometeus web/ /app/web/
 COPY --chown=prometeus:prometeus config/ /app/config/
 COPY --chown=prometeus:prometeus migrations/ /app/migrations/
 COPY --chown=prometeus:prometeus alembic.ini /app/alembic.ini

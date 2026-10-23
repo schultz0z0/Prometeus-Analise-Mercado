@@ -84,12 +84,41 @@ class PrometeusStore {
     this.notify();
   }
 
-  updateSettings(tenantId, newSettings) {
+  updateSettings(tenantId, newSettings, shouldNotify = true) {
     this.state.settings[tenantId] = {
       ...this.state.settings[tenantId],
       ...newSettings
     };
-    this.notify();
+    if (shouldNotify) {
+      this.notify();
+    } else {
+      this.saveState();
+    }
+  }
+
+  async syncBackendSettings() {
+    if (this._syncingBackendSettings || this._hasSyncedBackendSettings) return;
+    this._syncingBackendSettings = true;
+    try {
+      const resp = await fetch('/v1/settings');
+      if (resp.ok) {
+        const backendSettings = await resp.json();
+        const tenantId = this.state.currentTenantId;
+        this.updateSettings(tenantId, {
+          gen_llm_provider: backendSettings.gen_llm_provider || "chatgpt_oauth",
+          gen_llm_model: backendSettings.gen_llm_model || "gpt-6.1-sol",
+          gen_llm_reasoning_effort: backendSettings.gen_llm_reasoning_effort || "high",
+          chatgpt_access_token: backendSettings.chatgpt_access_token_masked || "",
+          jev_model: backendSettings.jev_model || "jev-v1.2.0",
+          apify_max_charge: backendSettings.apify_max_charge || 5.0,
+        }, false);
+        this._hasSyncedBackendSettings = true;
+      }
+    } catch (e) {
+      console.warn("Backend settings sync failed:", e);
+    } finally {
+      this._syncingBackendSettings = false;
+    }
   }
 
   startAnalysis(courseInput) {

@@ -40,6 +40,11 @@ services:
     restart: unless-stopped
     ports:
       - "${API_PORT:-8000}:8000"
+      - "1455:8000"
+    volumes:
+      - ./web:/app/web
+      - ./src:/app/src
+      - ./.env:/app/.env
     environment:
       APP_ENV: ${APP_ENV:-production}
       DATABASE_URL: postgresql+asyncpg://prometeus:prometeus@postgres:5432/prometeus
@@ -50,6 +55,7 @@ services:
       JEV_MODEL: ${JEV_MODEL:-jev-v1.2.0}
       SHADOW_MODE: ${SHADOW_MODE:-false}
       KILL_SWITCH_ACTIVE: ${KILL_SWITCH_ACTIVE:-false}
+      AUTO_MIGRATE: ${AUTO_MIGRATE:-true}
     networks:
       - prometeus_internal
       - prometeus_public

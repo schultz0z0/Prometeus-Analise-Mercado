@@ -140,12 +140,29 @@ class AppSettings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     EVIDENCE_STORAGE_PATH: str = "var/evidence"
 
+    # JEV / TypeSafe AI (Motor de Decisão System One - Opcional / Modo Híbrido)
     JEV_MODEL: str = "jev-latest"
     JEV_TIMEOUT_SECONDS: int = 15
     JEV_MAX_RETRIES: int = 2
     JEV_REVIEW_CONFIDENCE_THRESHOLD: float = 0.75
     TYPESAFE_API_KEY: str = ""
     JEV_BASE_URL: str = "https://api.typesafe.ai/v1"
+
+    # LLM Tradicional / Generativa (Síntese de Texto, Dossiê, Chatbot e Fallback de Decisões)
+    GEN_LLM_PROVIDER: str = "openai"  # openai, chatgpt_oauth, codex, anthropic, gemini
+    GEN_LLM_MODEL: str = "gpt-4o-mini"
+    GEN_LLM_REASONING_EFFORT: str = ""  # none, low, medium, high, extra_high, max
+    GEN_LLM_TIMEOUT_SECONDS: int = 60
+    OPENAI_API_KEY: str = ""
+    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
+    CHATGPT_ACCESS_TOKEN: str = ""
+    ANTHROPIC_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
+
+    # Apify / Coleta de Dados Web (Scraping de Concorrentes e Vagas)
+    APIFY_TOKEN: str = ""
+    APIFY_BASE_URL: str = "https://api.apify.com/v2"
+    APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS: float = 5.00
 
     INSTITUTION_ID: str = "ens"
     INSTITUTION_CONFIG_PATH: str = "config/tenants/ens.example.yaml"
@@ -154,6 +171,23 @@ class AppSettings(BaseSettings):
     SERVICE_API_KEYS: str = ""
     SHADOW_MODE: bool = False
     KILL_SWITCH_ACTIVE: bool = False
+
+    @property
+    def is_jev_configured(self) -> bool:
+        """Indica se as credenciais do TypeSafe JEV foram fornecidas para habilitar o modo híbrido."""
+        return bool(self.TYPESAFE_API_KEY and self.TYPESAFE_API_KEY.strip())
+
+    @property
+    def is_traditional_llm_configured(self) -> bool:
+        """Indica se há uma LLM tradicional configurada (API Key ou ChatGPT OAuth)."""
+        provider = self.GEN_LLM_PROVIDER.lower()
+        if provider in {"openai", "chatgpt_oauth", "codex", "openrouter"}:
+            return bool(self.OPENAI_API_KEY or self.CHATGPT_ACCESS_TOKEN)
+        if provider == "anthropic":
+            return bool(self.ANTHROPIC_API_KEY)
+        if provider == "gemini":
+            return bool(self.GEMINI_API_KEY)
+        return False
 
 
 def validate_environment_and_models(settings: AppSettings) -> None:

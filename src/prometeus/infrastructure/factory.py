@@ -1,0 +1,77 @@
+"""Fábrica centralizada de provedores de IA (Híbrido JEV + LLM Tradicional ou 100% Tradicional).
+
+Gerencia automaticamente:
+- Modo Híbrido: JEV (TypeSafe AI) para decisões atômicas System One + LLM Tradicional para síntese de texto.
+- Modo 100% Tradicional: Caso o JEV não esteja conectado, a LLM Tradicional assume automaticamente ambos os papéis.
+- Suporte a conexões diretas via ChatGPT OAuth / Codex (Hermes-agent / OpenClaw style) e API keys padrão (OpenAI, Claude, Gemini).
+"""
+
+from __future__ import annotations
+
+import logging
+
+from prometeus.domain.configuration import AppSettings
+from prometeus.domain.ports.decision_model import DecisionModelPort
+from prometeus.domain.ports.generative_model import GenerativeModelPort
+from prometeus.infrastructure.jev.client import TypeSafeJEVClient
+from prometeus.infrastructure.llm.client import OpenAIGenerativeClient
+from prometeus.infrastructure.llm.decision_adapter import LLMDecisionAdapter
+
+logger = logging.getLogger(__name__)
+
+
+def get_generative_model(settings: AppSettings | None = None) -> GenerativeModelPort:
+    """Retorna o cliente de LLM Tradicional para síntese de texto, dossiê e chatbot."""
+    settings = settings or AppSettings()
+    provider = settings.GEN_LLM_PROVIDER.strip().lower()
+
+    # Suporte a ChatGPT OAuth / Codex ou API OpenAI
+    if provider in {"openai", "chatgpt_oauth", "codex", "openrouter"}:
+        # Prioriza token de acesso OAuth/Codex se configurado, ou chave de API padrão
+        api_key = settings.CHATGPT_ACCESS_TOKEN or settings.OPENAI_API_KEY
+        base_url = settings.OPENAI_BASE_URL
+        model = settings.GEN_LLM_MODEL or "gpt-4o-mini"
+        return OpenAIGenerativeClient(
+            base_url=base_url,
+            api_key=api_key,
+            model=model,
+            reasoning_effort=settings.GEN_LLM_REASONING_EFFORT,
+            timeout_seconds=float(settings.GEN_LLM_TIMEOUT_SECONDS),
+        )
+
+    # Fallback padrão
+    return OpenAIGenerativeClient(
+        base_url=settings.OPENAI_BASE_URL,
+        api_key=settings.OPENAI_API_KEY or settings.CHATGPT_ACCESS_TOKEN,
+        model=settings.GEN_LLM_MODEL or "gpt-4o-mini",
+        reasoning_effort=settings.GEN_LLM_REASONING_EFFORT,
+        timeout_seconds=float(settings.GEN_LLM_TIMEOUT_SECONDS),
+    )
+
+
+def get_decision_model(settings: AppSettings | None = None) -> DecisionModelPort:
+    """Retorna o motor de decisão System One.
+
+    Chaveamento 100% automático:
+    - Se TYPESAFE_API_KEY estiver configurada -> Modo Híbrido com TypeSafe JEV.
+    - Se TYPESAFE_API_KEY estiver vazia -> Modo 100% Tradicional via LLMDecisionAdapter.
+    """
+    settings = settings or AppSettings()
+
+    if settings.is_jev_configured:
+        logger.info(
+            f"Modo Híbrido Ativo: Conectado ao TypeSafe JEV (Model: {settings.JEV_MODEL}) para System One."
+        )
+        return TypeSafeJEVClient(
+            base_url=settings.JEV_BASE_URL,
+            api_key=settings.TYPESAFE_API_KEY,
+            model=settings.JEV_MODEL,
+            timeout_seconds=float(settings.JEV_TIMEOUT_SECONDS),
+            max_retries=settings.JEV_MAX_RETRIES,
+        )
+
+    logger.info(
+        "JEV não conectado: Chaveando automaticamente para Modo 100% Tradicional (LLMDecisionAdapter)."
+    )
+    gen_model = get_generative_model(settings)
+    return LLMDecisionAdapter(generative_model=gen_model)

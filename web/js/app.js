@@ -25,6 +25,9 @@ class PrometeusApp {
 
     // Render inicial
     this.render(store.getState());
+
+    // Sincroniza configurações persistidas no backend apenas uma vez
+    store.syncBackendSettings();
   }
 
   render(state) {

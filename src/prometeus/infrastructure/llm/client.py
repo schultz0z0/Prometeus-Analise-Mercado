@@ -43,6 +43,7 @@ class OpenAIGenerativeClient(GenerativeModelPort):
         base_url: str = "https://api.openai.com/v1",
         api_key: str | None = None,
         model: str = "gpt-4o-mini",
+        reasoning_effort: str | None = None,
         timeout_seconds: float = 20.0,
         http_client: httpx.AsyncClient | None = None,
         prompts_dir: Path | str = PROMPTS_DIR,
@@ -50,6 +51,7 @@ class OpenAIGenerativeClient(GenerativeModelPort):
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key or getattr(AppSettings(), "OPENAI_API_KEY", "")
         self.model = model
+        self.reasoning_effort = reasoning_effort or getattr(AppSettings(), "GEN_LLM_REASONING_EFFORT", "")
         self.timeout_seconds = timeout_seconds
         self._custom_client = http_client
         self.prompts_dir = Path(prompts_dir)
@@ -91,11 +93,18 @@ class OpenAIGenerativeClient(GenerativeModelPort):
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
-        payload = {
+        payload: dict[str, Any] = {
             "model": self.model,
             "messages": messages,
-            "temperature": temperature,
         }
+
+        # Modelos com raciocínio (ex.: Codex GPT-6 Astra, GPT-6.1 Sol, GPT-5.6 Sol/Terra/Luna ou o1/o3)
+        # usam reasoning_effort e rejeitam o parâmetro 'temperature' na API da OpenAI.
+        effort = (self.reasoning_effort or "").strip().lower()
+        if effort and effort != "none":
+            payload["reasoning_effort"] = effort
+        else:
+            payload["temperature"] = temperature
 
         client = self._custom_client or httpx.AsyncClient(timeout=self.timeout_seconds)
         close_client = self._custom_client is None
