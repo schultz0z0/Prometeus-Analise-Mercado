@@ -94,6 +94,12 @@ class AnalysisModel(Base):
         cascade="all, delete-orphan",
         order_by="MarketEvidenceModel.collected_at",
     )
+    tool_runs: Mapped[list[ToolRunModel]] = relationship(
+        "ToolRunModel",
+        back_populates="analysis",
+        cascade="all, delete-orphan",
+        order_by="ToolRunModel.started_at",
+    )
     scoring_result: Mapped[ScoringResultModel | None] = relationship(
         "ScoringResultModel",
         back_populates="analysis",
@@ -326,14 +332,75 @@ class ResearchPlanModel(Base):
     allocated_budget: Mapped[dict[str, float]] = mapped_column(
         JsonType, nullable=False, default=dict
     )
+    understanding_snapshot: Mapped[dict[str, Any]] = mapped_column(
+        JsonType, nullable=False, default=dict
+    )
+    plan_snapshot: Mapped[dict[str, Any]] = mapped_column(JsonType, nullable=False, default=dict)
+    snapshot_hash: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    skill_snapshots: Mapped[list[dict[str, str]]] = mapped_column(
+        JsonType, nullable=False, default=list
+    )
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="PLANNED")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
     )
 
     analysis: Mapped[AnalysisModel] = relationship("AnalysisModel", back_populates="research_plans")
+    tool_runs: Mapped[list[ToolRunModel]] = relationship(
+        "ToolRunModel",
+        back_populates="research_plan",
+        cascade="all, delete-orphan",
+        order_by="ToolRunModel.started_at",
+    )
 
     __table_args__ = (Index("ix_research_plans_analysis_cache", "analysis_id", "cache_key"),)
+
+
+class ToolRunModel(Base):
+    """Execução auditável de uma ferramenta externa planejada."""
+
+    __tablename__ = "tool_runs"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    analysis_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("analyses.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    research_plan_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("research_plans.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    planned_call_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    capability: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    query: Mapped[str] = mapped_column(Text, nullable=False)
+    required: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    provider: Mapped[str] = mapped_column(String(32), nullable=False, default="apify")
+    actor_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    provider_run_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    dataset_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="PLANNED")
+    parameters: Mapped[dict[str, Any]] = mapped_column(JsonType, nullable=False, default=dict)
+    raw_items_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    valid_items_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    cost_usd: Mapped[float] = mapped_column(nullable=False, default=0.0)
+    error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    analysis: Mapped[AnalysisModel] = relationship("AnalysisModel", back_populates="tool_runs")
+    research_plan: Mapped[ResearchPlanModel] = relationship(
+        "ResearchPlanModel", back_populates="tool_runs"
+    )
+    evidences: Mapped[list[MarketEvidenceModel]] = relationship(
+        "MarketEvidenceModel", back_populates="tool_run"
+    )
+
+    __table_args__ = (
+        UniqueConstraint("research_plan_id", "planned_call_id", name="uq_tool_run_plan_call"),
+        Index("ix_tool_runs_analysis_status", "analysis_id", "status"),
+    )
 
 
 class MarketEvidenceModel(Base):
@@ -347,6 +414,9 @@ class MarketEvidenceModel(Base):
         ForeignKey("analyses.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
+    )
+    tool_run_id: Mapped[str | None] = mapped_column(
+        String(64), ForeignKey("tool_runs.id", ondelete="SET NULL"), nullable=True, index=True
     )
     evidence_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     source_name: Mapped[str] = mapped_column(String(64), nullable=False)
@@ -364,6 +434,9 @@ class MarketEvidenceModel(Base):
 
     analysis: Mapped[AnalysisModel] = relationship(
         "AnalysisModel", back_populates="market_evidences"
+    )
+    tool_run: Mapped[ToolRunModel | None] = relationship(
+        "ToolRunModel", back_populates="evidences"
     )
 
     __table_args__ = (

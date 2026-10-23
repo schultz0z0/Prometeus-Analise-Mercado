@@ -141,6 +141,7 @@ class AppSettings(BaseSettings):
     EVIDENCE_STORAGE_PATH: str = "var/evidence"
 
     # JEV / TypeSafe AI (Motor de Decisão System One - Opcional / Modo Híbrido)
+    AI_MODE: str = "auto"  # auto, traditional, hybrid
     JEV_MODEL: str = "jev-latest"
     JEV_TIMEOUT_SECONDS: int = 15
     JEV_MAX_RETRIES: int = 2
@@ -163,6 +164,22 @@ class AppSettings(BaseSettings):
     APIFY_TOKEN: str = ""
     APIFY_BASE_URL: str = "https://api.apify.com/v2"
     APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS: float = 5.00
+    APIFY_ACTOR_GOOGLE_SEARCH: str = ""
+    APIFY_ACTOR_WEB_CRAWLER: str = ""
+    APIFY_ACTOR_META_AD_LIBRARY: str = ""
+    APIFY_ACTOR_LINKEDIN: str = ""
+    APIFY_ACTOR_LINKEDIN_JOBS: str = ""
+    APIFY_ACTOR_INSTAGRAM: str = ""
+    APIFY_ACTOR_TIKTOK: str = ""
+    APIFY_ACTOR_YOUTUBE_COMMENTS: str = ""
+    APIFY_ACTOR_REDDIT: str = ""
+    APIFY_ACTOR_GOOGLE_TRENDS: str = ""
+    APIFY_ACTOR_GOOGLE_ANALYTICS: str = ""
+    APIFY_REQUIRED_SOURCES: str = (
+        "google_search,web_crawler,meta_ads_library,linkedin,linkedin_jobs,"
+        "instagram,tiktok,youtube_comments"
+    )
+    ALLOW_SYNTHETIC_INSTITUTIONAL_HISTORY: bool = True
 
     INSTITUTION_ID: str = "ens"
     INSTITUTION_CONFIG_PATH: str = "config/tenants/ens.example.yaml"
@@ -188,6 +205,18 @@ class AppSettings(BaseSettings):
         if provider == "gemini":
             return bool(self.GEMINI_API_KEY)
         return False
+
+    @property
+    def required_market_sources(self) -> list[str]:
+        """Fontes externas obrigatórias normalizadas e sem duplicatas."""
+        seen: set[str] = set()
+        sources: list[str] = []
+        for raw in self.APIFY_REQUIRED_SOURCES.split(","):
+            source = raw.strip().lower()
+            if source and source not in seen:
+                seen.add(source)
+                sources.append(source)
+        return sources
 
 
 def validate_environment_and_models(settings: AppSettings) -> None:

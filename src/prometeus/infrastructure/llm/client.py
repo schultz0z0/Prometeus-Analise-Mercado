@@ -48,10 +48,16 @@ class OpenAIGenerativeClient(GenerativeModelPort):
         http_client: httpx.AsyncClient | None = None,
         prompts_dir: Path | str = PROMPTS_DIR,
     ) -> None:
-        self.base_url = base_url.rstrip("/")
-        self.api_key = api_key or getattr(AppSettings(), "OPENAI_API_KEY", "")
-        self.model = model
-        self.reasoning_effort = reasoning_effort or getattr(AppSettings(), "GEN_LLM_REASONING_EFFORT", "")
+        settings = AppSettings()
+        provider = (settings.GEN_LLM_PROVIDER or "").lower()
+        effective_key = api_key or settings.OPENAI_API_KEY
+        if not effective_key and provider in {"chatgpt_oauth", "codex"}:
+            effective_key = settings.CHATGPT_ACCESS_TOKEN
+
+        self.base_url = (base_url or settings.OPENAI_BASE_URL or "https://api.openai.com/v1").rstrip("/")
+        self.api_key = effective_key
+        self.model = model if model != "gpt-4o-mini" else (settings.GEN_LLM_MODEL or "gpt-4o-mini")
+        self.reasoning_effort = reasoning_effort or getattr(settings, "GEN_LLM_REASONING_EFFORT", "")
         self.timeout_seconds = timeout_seconds
         self._custom_client = http_client
         self.prompts_dir = Path(prompts_dir)

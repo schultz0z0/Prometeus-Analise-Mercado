@@ -70,32 +70,36 @@ class ApifyCollector(MarketSourcePort):
         client: httpx.AsyncClient,
     ) -> list[dict[str, Any]]:
         """Inicia a execução do Actor e aguarda o status SUCCEEDED."""
-        start_url = f"{self.base_url}/acts/{actor_id.replace('@', '~')}/runs"
+        clean_actor = actor_id.split("@")[0].replace("/", "~")
+        start_url = f"{self.base_url}/acts/{clean_actor}/runs?waitForFinish=8"
         resp = await client.post(start_url, json=actor_input, headers=self._get_headers())
         resp.raise_for_status()
         run_data = resp.json().get("data", {})
         run_id = run_data.get("id")
         dataset_id = run_data.get("defaultDatasetId")
+        cur_status = run_data.get("status")
 
-        # Polling assíncrono
-        poll_url = f"{self.base_url}/actor-runs/{run_id}"
-        for _ in range(self.max_poll_attempts):
-            await asyncio.sleep(self.polling_interval_seconds)
-            status_resp = await client.get(poll_url, headers=self._get_headers())
-            if status_resp.status_code == 200:
-                cur_status = status_resp.json().get("data", {}).get("status")
-                if cur_status == "SUCCEEDED":
-                    break
-                elif cur_status in {"FAILED", "ABORTED", "TIMED-OUT"}:
-                    raise ApifyError(f"Execução do Actor {actor_id} falhou com status {cur_status}")
+        # Polling assíncrono se não tiver terminado no waitForFinish
+        if cur_status != "SUCCEEDED" and run_id:
+            poll_url = f"{self.base_url}/actor-runs/{run_id}"
+            for _ in range(self.max_poll_attempts):
+                await asyncio.sleep(self.polling_interval_seconds)
+                status_resp = await client.get(poll_url, headers=self._get_headers())
+                if status_resp.status_code == 200:
+                    cur_status = status_resp.json().get("data", {}).get("status")
+                    if cur_status == "SUCCEEDED":
+                        break
+                    elif cur_status in {"FAILED", "ABORTED", "TIMED-OUT"}:
+                        raise ApifyError(f"Execução do Actor {actor_id} falhou com status {cur_status}")
 
         # Busca dados no dataset
-        items_url = f"{self.base_url}/datasets/{dataset_id}/items"
-        items_resp = await client.get(items_url, headers=self._get_headers())
-        if items_resp.status_code == 200:
-            result = items_resp.json()
-            if isinstance(result, list):
-                return result
+        if dataset_id:
+            items_url = f"{self.base_url}/datasets/{dataset_id}/items"
+            items_resp = await client.get(items_url, headers=self._get_headers())
+            if items_resp.status_code == 200:
+                result = items_resp.json()
+                if isinstance(result, list):
+                    return result
         return []
 
     async def collect(
@@ -118,11 +122,10 @@ class ApifyCollector(MarketSourcePort):
                     )
                     break
 
-                actor_id = PINNED_ACTORS["linkedin_jobs"]
+                actor_id = PINNED_ACTORS.get("educational_offers", "apify/google-search-scraper")
                 actor_input = {
-                    "queries": [term],
-                    "location": "Brasil",
-                    "maxItems": 10,
+                    "queries": f"{term} curso pós-graduação seguros",
+                    "maxPagesPerQuery": 1,
                 }
 
                 try:
@@ -138,7 +141,7 @@ class ApifyCollector(MarketSourcePort):
                     "term": term,
                     "actor_id": actor_id,
                     "jobs_count": len(items),
-                    "items": items,
+                    "items": items[:5],
                 }
 
                 ev = MarketEvidence.create(

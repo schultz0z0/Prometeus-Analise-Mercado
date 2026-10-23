@@ -1,0 +1,7 @@
+version: 1
+skill: understanding-course-proposals
+output_contract: CourseUnderstanding
+notes:
+  - Runtime instructions come from the versioned skill snapshot.
+  - Proposal content is delimited as untrusted data.
+

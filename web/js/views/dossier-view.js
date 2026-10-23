@@ -169,6 +169,37 @@ export function renderDossierView(store) {
       </div>
     </div>
 
+    <!-- PARECER EXECUTIVO & SÍNTESE DA INTELIGÊNCIA ARTIFICIAL (LLM) -->
+    <div class="prometeus-card" style="margin-bottom:28px; border:1px solid rgba(141, 181, 255, 0.25); background:linear-gradient(135deg, rgba(6, 82, 197, 0.08) 0%, rgba(4, 8, 20, 0.7) 100%);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:20px;">🧠</span>
+          <div>
+            <h2 style="font-size:16px; font-weight:700; color:#ffffff; margin:0;">Parecer Executivo & Síntese da Inteligência Artificial</h2>
+            <div style="font-size:12px; color:var(--prometeus-text-muted);">Síntese gerada e verificada com base na ementa submetida, base histórica ENS e varredura Apify</div>
+          </div>
+        </div>
+        <span class="prometeus-pill-badge" data-status="APPROVED" style="font-size:11px;">
+          ⚡ Modelo: ${dossier.model_name || 'ChatGPT / Prometeus Sol'}
+        </span>
+      </div>
+
+      <div style="font-size:14px; color:var(--prometeus-text-primary); line-height:1.65; white-space:pre-wrap; background:rgba(0,0,0,0.3); padding:16px; border-radius:8px; border:1px solid var(--prometeus-border-subtle); margin-bottom:${dossier.sections && dossier.sections.length > 0 ? '16px' : '0'};">
+        ${dossier.executive_summary || 'Análise de viabilidade realizada com base na ementa submetida e no cruzamento com a base histórica de cursos da ENS.'}
+      </div>
+
+      ${dossier.sections && dossier.sections.length > 0 ? `
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;">
+          ${dossier.sections.map(s => `
+            <div style="background:rgba(255,255,255,0.02); border:1px solid var(--prometeus-border-subtle); border-radius:6px; padding:12px;">
+              <div style="font-size:13px; font-weight:600; color:var(--prometeus-accent-ice); margin-bottom:6px;">${s.title}</div>
+              <div style="font-size:12px; color:var(--prometeus-text-secondary); line-height:1.5;">${s.content}</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    </div>
+
     <!-- OS 5 BLOCOS DE RESPOSTAS DE NEGÓCIO -->
     <div class="business-cards-grid">
       <!-- BLOCO 1: TEM DEMANDA REAL? -->

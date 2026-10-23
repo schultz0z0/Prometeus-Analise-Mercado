@@ -83,7 +83,7 @@ def build_chatgpt_auth_url(
         "response_type": "code",
         "client_id": OPENAI_OAUTH_CLIENT_ID,
         "redirect_uri": effective_redirect,
-        "scope": "openid profile email offline_access",
+        "scope": "openid profile email offline_access model.request",
         "code_challenge": code_challenge,
         "code_challenge_method": "S256",
         "state": state,

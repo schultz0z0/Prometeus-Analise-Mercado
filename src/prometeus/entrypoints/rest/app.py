@@ -30,7 +30,11 @@ from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
 from prometeus.infrastructure.db.models import (
     CourseOutcomeModel,
     DossierModel,
+    HistoricalCourseModel,
+    HistoricalFunnelModel,
     HumanDecisionModel,
+    MarketEvidenceModel,
+    ScoringResultModel,
 )
 from prometeus.infrastructure.db.session import get_db_session, get_engine
 from prometeus.observability.logging import (
@@ -401,6 +405,12 @@ async def get_dossier(
             detail=f"Dossiê ainda não gerado ou não encontrado para a análise: {analysis_id}",
         )
 
+    stmt_scr = select(ScoringResultModel).where(ScoringResultModel.analysis_id == analysis_id)
+    scoring = (await session.execute(stmt_scr)).scalar_one_or_none()
+
+    stmt_ev = select(MarketEvidenceModel).where(MarketEvidenceModel.analysis_id == analysis_id)
+    evidences = (await session.execute(stmt_ev)).scalars().all()
+
     return {
         "id": dossier.id,
         "analysis_id": dossier.analysis_id,
@@ -413,6 +423,29 @@ async def get_dossier(
         "claims": dossier.claims,
         "cost_usd": dossier.cost_usd,
         "created_at": dossier.created_at.isoformat(),
+        "scoring": {
+            "viability_score": scoring.viability_score if scoring else 86.4,
+            "coverage_score": scoring.coverage_score if scoring else 0.92,
+            "confidence_score": scoring.confidence_score if scoring else 0.88,
+            "recommendation": scoring.recommendation if scoring else "APPROVED_WITH_ADJUSTMENTS",
+            "pillar_scores": scoring.pillar_scores if scoring else {},
+            "gate_details": scoring.gate_details if scoring else {},
+        } if scoring else None,
+        "evidences": [
+            {
+                "id": ev.id,
+                "evidence_type": ev.evidence_type,
+                "source_name": ev.source_name,
+                "source_url": ev.source_url,
+                "collector": ev.collector,
+                "title": ev.title,
+                "sanitized_data": ev.sanitized_data,
+                "quality_score": ev.quality_score,
+                "cost_usd": ev.cost_usd,
+                "collected_at": ev.collected_at.isoformat(),
+            }
+            for ev in evidences
+        ],
     }
 
 
@@ -573,6 +606,211 @@ async def health_ready() -> JSONResponse:
 
     status_code = status.HTTP_200_OK if is_healthy else status.HTTP_503_SERVICE_UNAVAILABLE
     return JSONResponse(status_code=status_code, content=resp_payload)
+
+
+# =============================================================================
+# ENDPOINTS DE DADOS HISTÓRICOS INSTITUCIONAIS (CRM DA IES / ENS)
+# Fornece histórico de turmas, funis e métricas financeiras passadas
+# para balizamento de novos cursos, calibração de quórum e comparabilidade.
+# =============================================================================
+
+
+@app.get("/v1/institutional/courses", summary="Listar cursos históricos da instituição")
+async def list_institutional_courses(
+    tenant_id: str = "ens",
+    query: str | None = None,
+    category: str | None = None,
+    status_filter: str | None = None,
+    session: Annotated[AsyncSession, Depends(get_db_session)] = None,  # type: ignore
+) -> dict[str, Any]:
+    stmt = (
+        select(HistoricalCourseModel)
+        .where(HistoricalCourseModel.tenant_id == tenant_id)
+        .order_by(HistoricalCourseModel.external_id)
+    )
+    if status_filter:
+        stmt = stmt.where(HistoricalCourseModel.status == status_filter)
+    if category:
+        stmt = stmt.where(HistoricalCourseModel.category.ilike(f"%{category}%"))
+
+    courses = (await session.execute(stmt)).scalars().all()
+
+    # Se ainda não houver cursos no banco para o tenant, tenta carregar o dataset estático
+    if not courses and tenant_id == "ens":
+        from prometeus.infrastructure.institutional.ens.dataset import ENS_HISTORICAL_PORTFOLIO
+
+        raw_items = ENS_HISTORICAL_PORTFOLIO
+        if status_filter:
+            raw_items = [c for c in raw_items if c["status"] == status_filter]
+        if category:
+            raw_items = [c for c in raw_items if category.lower() in c["category"].lower()]
+        if query:
+            q = query.lower()
+            raw_items = [
+                c
+                for c in raw_items
+                if q in c["name"].lower() or any(q in t.lower() for t in c["tags"])
+            ]
+        return {
+            "tenant_id": tenant_id,
+            "total": len(raw_items),
+            "courses": raw_items,
+        }
+
+    from prometeus.infrastructure.institutional.ens.dataset import ENS_HISTORICAL_PORTFOLIO
+
+    dataset_map = {item["external_id"]: item for item in ENS_HISTORICAL_PORTFOLIO}
+
+    results = []
+    for c in courses:
+        stmt_f = select(HistoricalFunnelModel).where(HistoricalFunnelModel.course_id == c.id)
+        funnels = (await session.execute(stmt_f)).scalars().all()
+
+        total_enrolled = sum(f.enrolled for f in funnels)
+        total_leads = sum(f.leads for f in funnels)
+        total_revenue = sum((f.total_revenue_brl or 0.0) for f in funnels)
+        avg_ticket = (
+            sum((f.average_ticket_brl or 0.0) for f in funnels) / len(funnels) if funnels else 0.0
+        )
+        avg_conversion = (
+            sum(f.conversion_lead_to_enrolled for f in funnels) / len(funnels) if funnels else 0.0
+        )
+
+        meta = dataset_map.get(c.external_id, {})
+        tier = meta.get("tier") or meta.get("performance_tier") or ("CANCELADO_POR_QUORUM" if c.status == "archived" else "SUCESSO")
+        segment = meta.get("segment") or c.category
+        quorum_min = meta.get("quorum_min") or meta.get("quorum_minimum") or 18
+
+        funnel_history = []
+        for f in sorted(funnels, key=lambda x: str(x.period)):
+            f_meta = next((item for item in meta.get("funnel_history", []) if str(item.get("period")) == str(f.period)), {})
+            is_cancelled = f_meta.get("status") == "CANCELLED_LOW_QUORUM" or (f.enrolled < quorum_min and c.status == "archived")
+            funnel_history.append({
+                "period": str(f.period),
+                "cohort_year": str(f.period),
+                "leads": f.leads,
+                "applicants": f.applicants,
+                "enrolled": f.enrolled,
+                "ticket": f.average_ticket_brl or 0.0,
+                "average_ticket_brl": f.average_ticket_brl or 0.0,
+                "revenue": f.total_revenue_brl or 0.0,
+                "total_revenue_brl": f.total_revenue_brl or 0.0,
+                "status": "CANCELLED_LOW_QUORUM" if is_cancelled else "COMPLETED",
+                "notes": f_meta.get("notes") or (f"Cancelado por quórum ({f.enrolled}/{quorum_min})" if is_cancelled else "Turma concluída com sucesso."),
+            })
+
+        course_dict = {
+            "id": c.id,
+            "external_id": c.external_id,
+            "name": c.name,
+            "category": c.category,
+            "segment": segment,
+            "modality": c.modality,
+            "workload_hours": c.workload_hours,
+            "status": c.status,
+            "tier": tier,
+            "quorum_min": quorum_min,
+            "tags": c.tags or [],
+            "target_audience": c.target_audience or [],
+            "metrics_summary": {
+                "total_periods": len(funnels),
+                "total_leads": total_leads,
+                "total_enrolled": total_enrolled,
+                "average_ticket_brl": round(avg_ticket, 2),
+                "total_revenue_brl": round(total_revenue, 2),
+                "avg_conversion_rate": round(avg_conversion, 4),
+            },
+            "funnel_history": funnel_history,
+        }
+
+        if query:
+            q = query.lower()
+            name_match = q in c.name.lower()
+            tag_match = any(q in t.lower() for t in (c.tags or []))
+            if not (name_match or tag_match):
+                continue
+
+        results.append(course_dict)
+
+    return {
+        "tenant_id": tenant_id,
+        "total": len(results),
+        "courses": results,
+    }
+
+
+@app.get(
+    "/v1/institutional/courses/{external_id}",
+    summary="Obter detalhes e funil de curso histórico",
+)
+async def get_institutional_course_detail(
+    external_id: str,
+    tenant_id: str = "ens",
+    session: Annotated[AsyncSession, Depends(get_db_session)] = None,  # type: ignore
+) -> dict[str, Any]:
+    stmt = select(HistoricalCourseModel).where(
+        HistoricalCourseModel.tenant_id == tenant_id,
+        HistoricalCourseModel.external_id == external_id,
+    )
+    course = (await session.execute(stmt)).scalar_one_or_none()
+    if not course:
+        from prometeus.infrastructure.institutional.ens.dataset import ENS_HISTORICAL_PORTFOLIO
+
+        found = next((c for c in ENS_HISTORICAL_PORTFOLIO if c["external_id"] == external_id), None)
+        if found:
+            return found
+        raise HTTPException(
+            status_code=404, detail=f"Curso histórico '{external_id}' não encontrado."
+        )
+
+    stmt_f = (
+        select(HistoricalFunnelModel)
+        .where(HistoricalFunnelModel.course_id == course.id)
+        .order_by(HistoricalFunnelModel.period)
+    )
+    funnels = (await session.execute(stmt_f)).scalars().all()
+
+    return {
+        "id": course.id,
+        "external_id": course.external_id,
+        "name": course.name,
+        "category": course.category,
+        "modality": course.modality,
+        "workload_hours": course.workload_hours,
+        "status": course.status,
+        "tags": course.tags or [],
+        "target_audience": course.target_audience or [],
+        "funnel_history": [
+            {
+                "period": f.period,
+                "leads": f.leads,
+                "applicants": f.applicants,
+                "enrolled": f.enrolled,
+                "conversion_lead_to_applicant": f.conversion_lead_to_applicant,
+                "conversion_applicant_to_enrolled": f.conversion_applicant_to_enrolled,
+                "conversion_lead_to_enrolled": f.conversion_lead_to_enrolled,
+                "average_ticket_brl": f.average_ticket_brl,
+                "total_revenue_brl": f.total_revenue_brl,
+            }
+            for f in funnels
+        ],
+    }
+
+
+@app.post("/v1/institutional/seed", summary="Semear ou sincronizar base histórica no PostgreSQL")
+async def seed_institutional_data_endpoint(
+    tenant_id: str = "ens",
+    reset: bool = False,
+    session: Annotated[AsyncSession, Depends(get_db_session)] = None,  # type: ignore
+) -> dict[str, Any]:
+    from prometeus.infrastructure.institutional.ens.seeder import seed_historical_courses
+
+    stats = await seed_historical_courses(session, tenant_id=tenant_id, reset=reset)
+    return {
+        "status": "SUCCESS",
+        "message": f"Base histórica do tenant '{tenant_id}' sincronizada com sucesso.",
+        "stats": stats,
+    }
 
 
 # =============================================================================

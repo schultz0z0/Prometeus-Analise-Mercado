@@ -40,7 +40,16 @@ class LLMDecisionAdapter(DecisionModelPort):
                     return parsed
             except json.JSONDecodeError:
                 pass
-        return {}
+        raise ValueError("A LLM de decisão não retornou um objeto JSON válido.")
+
+    @staticmethod
+    def _required_probability(payload: dict[str, Any], key: str) -> float:
+        if key not in payload:
+            raise ValueError(f"A resposta estruturada da LLM não contém '{key}'.")
+        value = float(payload[key])
+        if not 0.0 <= value <= 1.0:
+            raise ValueError(f"'{key}' deve estar entre 0.0 e 1.0.")
+        return value
 
     async def execute_choice(
         self,
@@ -70,9 +79,18 @@ class LLMDecisionAdapter(DecisionModelPort):
             prompt=prompt, system_prompt=system_prompt, temperature=0.1
         )
         parsed = self._extract_json(raw)
-        choice = str(parsed.get("selected_choice") or (pack.options[0] if pack.options else "NONE"))
-        confidence = float(parsed.get("confidence", 0.85))
-        dist = parsed.get("distribution") or ({choice: 1.0} if choice else {})
+        if "selected_choice" not in parsed:
+            raise ValueError("A resposta estruturada da LLM não contém 'selected_choice'.")
+        choice = str(parsed["selected_choice"])
+        if choice not in pack.options:
+            raise ValueError(
+                f"A LLM retornou a opção não permitida '{choice}' para o pack '{pack.pack_id}'."
+            )
+        confidence = self._required_probability(parsed, "confidence")
+        dist_raw = parsed.get("distribution")
+        if not isinstance(dist_raw, dict):
+            raise ValueError("A resposta estruturada da LLM não contém 'distribution' válido.")
+        dist = {str(key): float(value) for key, value in dist_raw.items()}
 
         return DecisionResult.choice(
             pack_id=pack.pack_id,
@@ -81,7 +99,7 @@ class LLMDecisionAdapter(DecisionModelPort):
             distribution=dist,
             review_threshold=pack.review_threshold,
             evidence_ids=evidence_ids,
-            model_version="llm-traditional-fallback",
+            model_version="llm-traditional",
         )
 
     async def execute_score(
@@ -113,9 +131,14 @@ class LLMDecisionAdapter(DecisionModelPort):
             prompt=prompt, system_prompt=system_prompt, temperature=0.1
         )
         parsed = self._extract_json(raw)
-        score = float(parsed.get("score_value", (pack.min_score + pack.max_score) / 2))
-        score = max(pack.min_score, min(pack.max_score, score))
-        confidence = float(parsed.get("confidence", 0.85))
+        if "score_value" not in parsed:
+            raise ValueError("A resposta estruturada da LLM não contém 'score_value'.")
+        score = float(parsed["score_value"])
+        if not pack.min_score <= score <= pack.max_score:
+            raise ValueError(
+                f"O score {score} está fora da escala {pack.min_score}..{pack.max_score}."
+            )
+        confidence = self._required_probability(parsed, "confidence")
 
         return DecisionResult.score(
             pack_id=pack.pack_id,
@@ -123,7 +146,7 @@ class LLMDecisionAdapter(DecisionModelPort):
             confidence=confidence,
             review_threshold=pack.review_threshold,
             evidence_ids=evidence_ids,
-            model_version="llm-traditional-fallback",
+            model_version="llm-traditional",
         )
 
     async def evaluate(self, pack: DecisionPack, state: dict[str, Any]) -> DecisionResult:
@@ -133,9 +156,24 @@ class LLMDecisionAdapter(DecisionModelPort):
         elif pack.decision_type == DecisionType.SCORE:
             return await self.execute_score(pack, state)
         else:
-            # NOUL
+            context_str = json.dumps(state, ensure_ascii=False, indent=2)
+            raw = await self.generative_model.generate_text(
+                prompt=f"Pergunta: {pack.question}\nContexto:\n{context_str}",
+                system_prompt=(
+                    "Avalie se a evidência é insuficiente ou inconclusiva. Responda somente "
+                    "JSON com is_noul (boolean), confidence (0..1) e reason (string)."
+                ),
+                temperature=0.1,
+            )
+            parsed = self._extract_json(raw)
+            if parsed.get("is_noul") is not True:
+                raise ValueError(
+                    "Um decision pack NOUL só pode produzir resultado quando is_noul=true."
+                )
+            self._required_probability(parsed, "confidence")
+            reason = str(parsed.get("reason") or "Evidência insuficiente segundo a LLM.")
             return DecisionResult.noul(
                 pack_id=pack.pack_id,
-                reason="Proposição avaliada como Noul via LLM",
-                model_version="llm-traditional-fallback",
+                reason=reason,
+                model_version="llm-traditional",
             )

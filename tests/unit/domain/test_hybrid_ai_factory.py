@@ -108,6 +108,21 @@ async def test_llm_decision_adapter_evaluates_choice_score_and_noul() -> None:
     assert res_noul.requires_human_review is True
 
 
+@pytest.mark.asyncio
+async def test_llm_decision_adapter_rejects_malformed_choice_instead_of_inventing_default() -> None:
+    fake_llm = FakeGenerativeModel(canned_text="resposta sem JSON")
+    adapter = LLMDecisionAdapter(fake_llm)
+    pack = DecisionPack(
+        pack_id="pack_choice_strict",
+        decision_type=DecisionType.CHOICE,
+        question="Qual opção é sustentada?",
+        options=["SUPPORTED", "UNSUPPORTED"],
+    )
+
+    with pytest.raises(ValueError, match="JSON válido"):
+        await adapter.execute_choice(pack, {"evidence_ids": ["ev-1"]})
+
+
 def test_factory_supports_codex_models_and_reasoning_effort() -> None:
     """Verifica se modelos como GPT-6 Astra, GPT-6.1 Sol e reasoning_effort são propagados corretamente."""
     settings = AppSettings(
@@ -152,4 +167,3 @@ async def test_openai_generative_client_payload_reasoning_effort(monkeypatch: py
     assert captured_payload["model"] == "gpt-6-astra"
     assert captured_payload["reasoning_effort"] == "extra_high"
     assert "temperature" not in captured_payload
-

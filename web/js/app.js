@@ -3,13 +3,13 @@
  * Orquestrador principal da aplicação SPA, roteamento e renderização reativa.
  */
 
-import { store } from './store.js';
-import { renderPortfolioView, bindPortfolioEvents } from './views/portfolio-view.js';
-import { renderIntakeView, bindIntakeEvents } from './views/intake-view.js';
-import { renderLiveView, bindLiveEvents } from './views/live-view.js';
-import { renderDossierView, bindDossierEvents } from './views/dossier-view.js';
-import { renderSettingsView, bindSettingsEvents } from './views/settings-view.js';
-import { renderEvidenceDrawer, bindEvidenceDrawerEvents } from './components/evidence-drawer.js';
+import { store } from './store.js?v=20261023c';
+import { renderPortfolioView, bindPortfolioEvents } from './views/portfolio-view.js?v=20261023c';
+import { renderIntakeView, bindIntakeEvents } from './views/intake-view.js?v=20261023c';
+import { renderLiveView, bindLiveEvents } from './views/live-view.js?v=20261023c';
+import { renderDossierView, bindDossierEvents } from './views/dossier-view.js?v=20261023c';
+import { renderSettingsView, bindSettingsEvents } from './views/settings-view.js?v=20261023c';
+import { renderEvidenceDrawer, bindEvidenceDrawerEvents } from './components/evidence-drawer.js?v=20261023c';
 
 class PrometeusApp {
   constructor() {
@@ -28,6 +28,7 @@ class PrometeusApp {
 
     // Sincroniza configurações persistidas no backend apenas uma vez
     store.syncBackendSettings();
+    store.loadHistoricalCourses();
   }
 
   render(state) {

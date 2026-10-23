@@ -64,15 +64,17 @@ export function renderIntakeView(store) {
           Ementa Proposta ou Grade Curricular
         </h2>
 
-        <div class="dropzone-box" id="dropzone-curriculum">
-          <div class="dropzone-icon">📄</div>
-          <strong style="color:#ffffff; font-size:14px;">Arraste o PDF/Word da ementa aqui ou clique para selecionar</strong>
-          <span style="color:var(--prometeus-text-muted); font-size:12px;">O JEV analisa automaticamente as competências, ferramentas e matérias propostas</span>
+        <input type="file" id="curriculum-file-input" accept=".pdf,.doc,.docx,.txt" style="display:none;">
+        <div class="dropzone-box" id="dropzone-curriculum" style="cursor:pointer; transition:all 0.2s ease;">
+          <div class="dropzone-icon" id="dropzone-icon">📄</div>
+          <strong id="dropzone-title" style="color:#ffffff; font-size:14px;">Clique para anexar ou arraste o arquivo da ementa (.pdf, .docx, .txt)</strong>
+          <span id="dropzone-desc" style="color:var(--prometeus-text-muted); font-size:12px;">Selecione o arquivo do seu computador para ser analisado</span>
+          <div id="dropzone-file-badge" style="display:none; margin-top:8px; padding:4px 10px; background:rgba(16,185,129,0.15); color:#34d399; border-radius:6px; font-size:12px; font-weight:600; border:1px solid rgba(16,185,129,0.3);"></div>
         </div>
 
         <div style="margin-top:14px;">
-          <label class="form-label" for="curriculum-text">Ou cole o texto dos módulos e disciplinas:</label>
-          <textarea id="curriculum-text" class="form-textarea" placeholder="Módulo 1: Fundamentos de IA e Big Data&#10;Módulo 2: Machine Learning na Prevenção de Sinistros&#10;Módulo 3: Modelos Estatísticos de Risco&#10;Módulo 4: Governança, LGPD e SUSEP...">Módulo 1: Fundamentos de IA e Big Data no Setor Segurador (40h)
+          <label class="form-label" for="curriculum-text">Ou edite / cole o conteúdo da grade curricular e módulos:</label>
+          <textarea id="curriculum-text" class="form-textarea" style="min-height:120px;" placeholder="Módulo 1: Fundamentos de IA e Big Data&#10;Módulo 2: Machine Learning na Prevenção de Sinistros&#10;Módulo 3: Modelos Estatísticos de Risco&#10;Módulo 4: Governança, LGPD e SUSEP...">Módulo 1: Fundamentos de IA e Big Data no Setor Segurador (40h)
 Módulo 2: Machine Learning na Prevenção e Detecção de Sinistros Fraudulentos (40h)
 Módulo 3: Modelagem Teórica de Riscos e Séries Temporais (40h)
 Módulo 4: Automação de Subscrição com Processamento de Linguagem Natural (40h)
@@ -173,11 +175,69 @@ export function bindIntakeEvents(store, container) {
     });
   });
 
-  // Dropzone visual feedback
+  // File upload and dropzone handling
+  const fileInput = container.querySelector('#curriculum-file-input');
   const dropzone = container.querySelector('#dropzone-curriculum');
-  if (dropzone) {
+  const fileBadge = container.querySelector('#dropzone-file-badge');
+  const curriculumTextArea = container.querySelector('#curriculum-text');
+  let attachedFileName = null;
+
+  function handleFile(file) {
+    if (!file) return;
+    attachedFileName = file.name;
+    if (fileBadge) {
+      fileBadge.style.display = 'inline-block';
+      fileBadge.textContent = `✓ Arquivo anexado: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    }
+    const dropzoneTitle = container.querySelector('#dropzone-title');
+    if (dropzoneTitle) {
+      dropzoneTitle.textContent = `Arquivo selecionado: ${file.name}`;
+    }
+
+    // Se for arquivo de texto, carrega o conteúdo diretamente no textarea
+    if (file.name.endsWith('.txt') || file.type.startsWith('text/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result && curriculumTextArea) {
+          curriculumTextArea.value = e.target.result;
+        }
+      };
+      reader.readAsText(file);
+    } else {
+      // Para PDF/DOCX, avisa o usuário e prefixa a ementa com o nome do arquivo auditável
+      if (curriculumTextArea && !curriculumTextArea.value.includes(file.name)) {
+        curriculumTextArea.value = `[Documento Anexado: ${file.name} (${(file.size / 1024).toFixed(1)} KB)]\n` + curriculumTextArea.value;
+      }
+    }
+  }
+
+  if (dropzone && fileInput) {
     dropzone.addEventListener('click', () => {
-      alert("Simulação: Ementa 'Ementa_MBA_IA_Seguros_2026.pdf' carregada e processada pelo JEV com 6 módulos identificados.");
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      handleFile(file);
+    });
+
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = 'var(--prometeus-primary)';
+      dropzone.style.background = 'rgba(6, 82, 197, 0.1)';
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.style.borderColor = '';
+      dropzone.style.background = '';
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = '';
+      dropzone.style.background = '';
+      const file = e.dataTransfer?.files?.[0];
+      handleFile(file);
     });
   }
 
@@ -196,7 +256,8 @@ export function bindIntakeEvents(store, container) {
         duration: container.querySelector('#course-duration').value,
         curriculum: container.querySelector('#curriculum-text').value,
         audience: container.querySelector('#course-audience').value,
-        competitors: container.querySelector('#course-competitors').value
+        competitors: container.querySelector('#course-competitors').value,
+        curriculum_file_name: attachedFileName
       };
 
       store.startAnalysis(payload);

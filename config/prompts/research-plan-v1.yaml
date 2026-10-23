@@ -1,0 +1,6 @@
+version: 1
+skill: planning-market-research
+output_contract: CourseResearchPlan
+notes:
+  - Capabilities are supplied by the runtime allowlist.
+  - Missing mandatory sources invalidate the plan.

@@ -590,3 +590,24 @@
 .gap-4 { gap: 16px; }
 .align-center { align-items: center; }
 .justify-between { justify-content: space-between; }
+
+/* Abas do Portfólio */
+.prometeus-tab-btn {
+  transition: all var(--prometeus-transition-fast);
+  border-radius: var(--prometeus-radius-sm) var(--prometeus-radius-sm) 0 0;
+}
+.prometeus-tab-btn:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.04);
+}
+.prometeus-tab-btn.active {
+  color: #ffffff !important;
+  border-bottom: 2px solid var(--prometeus-accent-ice) !important;
+}
+
+.historical-course-row {
+  transition: background-color var(--prometeus-transition-fast);
+}
+.historical-course-row:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}

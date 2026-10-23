@@ -272,13 +272,30 @@ export function renderSettingsView(store) {
           <div>
             <h2 style="font-size:17px; font-weight:700; color:#ffffff; margin:0; display:flex; align-items:center; gap:8px;">
               <span>🏢</span>
-              <span>4. Conector de Dados Acadêmicos (CRM / ERP da Faculdade)</span>
+              <span>4. Conector de Dados Acadêmicos (CRM / ERP da ENS)</span>
             </h2>
             <p style="font-size:13px; color:var(--prometeus-text-secondary); margin:4px 0 0 0;">
-              Consulta a API interna de turmas da ENS para cruzar com o histórico de matrículas reais.
+              Consulta a base histórica do PostgreSQL (5 cursos de seguros, 2 anos de ofertas: 2024 e 2025) para cruzar com novas propostas.
             </p>
           </div>
-          <span class="prometeus-pill-badge" data-status="APPROVED">● CONECTADO</span>
+          <span class="prometeus-pill-badge" data-status="APPROVED">● CONECTADO (5 CURSOS / 2 ANOS)</span>
+        </div>
+
+        <div style="background:rgba(56, 189, 248, 0.05); border:1px solid rgba(56, 189, 248, 0.2); border-radius:var(--prometeus-radius-md); padding:16px; margin-bottom:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+              <div style="font-size:13px; font-weight:700; color:#ffffff; display:flex; align-items:center; gap:8px;">
+                <span>🏛️ Base Histórica Oficial ENS Carregada</span>
+                <span class="prometeus-pill-badge" style="background:rgba(52, 211, 153, 0.15); color:#34d399; font-size:11px;">10 Ofertas Consolidadas</span>
+              </div>
+              <div style="font-size:12px; color:var(--prometeus-text-secondary); margin-top:4px;">
+                Cobre 5 segmentos: <strong>MBA Gestão (Sucesso)</strong>, <strong>Cyber (Sucesso Técnico)</strong>, <strong>Sinistros (Mediano)</strong>, <strong>Vendas (Fraco)</strong> e <strong>Direito Doutrinário (Cancelado por quórum)</strong>.
+              </div>
+            </div>
+            <button type="button" id="btn-sync-crm-data" class="prometeus-btn-secondary" style="font-size:12px; padding:8px 16px;">
+              🔄 Sincronizar Base Histórica
+            </button>
+          </div>
         </div>
 
         <div class="form-grid">
@@ -541,6 +558,22 @@ export function bindSettingsEvents(store, container) {
           saveBtn.innerHTML = '<span>Salvar Configurações no App</span>';
         }
       }
+    });
+  }
+
+  const syncCrmBtn = container.querySelector('#btn-sync-crm-data');
+  if (syncCrmBtn) {
+    syncCrmBtn.addEventListener('click', async () => {
+      syncCrmBtn.textContent = 'Sincronizando...';
+      syncCrmBtn.disabled = true;
+      const ok = await store.seedInstitutionalData(true);
+      if (ok) {
+        alert('✓ Base Histórica da ENS (5 cursos / ofertas 2024 e 2025) sincronizada com sucesso no PostgreSQL!');
+      } else {
+        alert('Falha ao sincronizar com o banco.');
+      }
+      syncCrmBtn.textContent = '🔄 Sincronizar Base Histórica';
+      syncCrmBtn.disabled = false;
     });
   }
 }

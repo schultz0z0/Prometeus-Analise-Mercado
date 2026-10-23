@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 
-from prometeus.domain.configuration import AppSettings
+from prometeus.domain.configuration import AppSettings, ConfigurationError
 from prometeus.domain.ports.decision_model import DecisionModelPort
 from prometeus.domain.ports.generative_model import GenerativeModelPort
 from prometeus.infrastructure.jev.client import TypeSafeJEVClient
@@ -24,6 +24,11 @@ def get_generative_model(settings: AppSettings | None = None) -> GenerativeModel
     """Retorna o cliente de LLM Tradicional para síntese de texto, dossiê e chatbot."""
     settings = settings or AppSettings()
     provider = settings.GEN_LLM_PROVIDER.strip().lower()
+
+    if not settings.is_traditional_llm_configured:
+        raise ConfigurationError(
+            f"A LLM tradicional '{provider or 'não definida'}' não possui credencial configurada."
+        )
 
     # Suporte a ChatGPT OAuth / Codex ou API OpenAI
     if provider in {"openai", "chatgpt_oauth", "codex", "openrouter"}:
@@ -40,12 +45,8 @@ def get_generative_model(settings: AppSettings | None = None) -> GenerativeModel
         )
 
     # Fallback padrão
-    return OpenAIGenerativeClient(
-        base_url=settings.OPENAI_BASE_URL,
-        api_key=settings.OPENAI_API_KEY or settings.CHATGPT_ACCESS_TOKEN,
-        model=settings.GEN_LLM_MODEL or "gpt-4o-mini",
-        reasoning_effort=settings.GEN_LLM_REASONING_EFFORT,
-        timeout_seconds=float(settings.GEN_LLM_TIMEOUT_SECONDS),
+    raise ConfigurationError(
+        f"GEN_LLM_PROVIDER '{provider}' ainda não possui adaptador de runtime implementado."
     )
 
 
@@ -57,8 +58,18 @@ def get_decision_model(settings: AppSettings | None = None) -> DecisionModelPort
     - Se TYPESAFE_API_KEY estiver vazia -> Modo 100% Tradicional via LLMDecisionAdapter.
     """
     settings = settings or AppSettings()
+    mode = settings.AI_MODE.strip().lower()
 
-    if settings.is_jev_configured:
+    if mode not in {"auto", "traditional", "hybrid"}:
+        raise ConfigurationError("AI_MODE deve ser auto, traditional ou hybrid.")
+
+    if mode == "traditional":
+        return LLMDecisionAdapter(generative_model=get_generative_model(settings))
+
+    if mode == "hybrid" and not settings.is_jev_configured:
+        raise ConfigurationError("O modo híbrido exige TYPESAFE_API_KEY configurada.")
+
+    if mode == "hybrid" or settings.is_jev_configured:
         logger.info(
             f"Modo Híbrido Ativo: Conectado ao TypeSafe JEV (Model: {settings.JEV_MODEL}) para System One."
         )

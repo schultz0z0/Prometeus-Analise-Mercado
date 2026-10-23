@@ -14,14 +14,14 @@ export const INITIAL_SETTINGS = {
     crm_api_url: "https://api.ens.edu.br/v1/cursos-historico",
     crm_token: "ens_live_sec_884912fa89b",
     crm_status: "CONNECTED",
-    crm_last_sync: "Hoje às 08:30 (18 turmas históricas sincronizadas)",
-    apify_token: "apify_api_live_99412a8bc94e772",
-    apify_status: "ACTIVE",
+    crm_last_sync: "Sincronizado: 5 cursos (2 anos de ofertas: 2024 e 2025)",
+    apify_token: "",
+    apify_status: "NOT_CONFIGURED",
     ga_property_id: "GA4-ENS-PROMETEUS-2026",
-    meta_ads_token: "EAAB88921fa0c884...",
-    meta_ads_status: "ACTIVE",
-    llm_provider: "Claude 3.7 Sonnet (Anthropic)",
-    quorum_min: 22,
+    meta_ads_token: "",
+    meta_ads_status: "NOT_CONFIGURED",
+    llm_provider: "ChatGPT Codex (OAuth Oficial)",
+    quorum_min: 18,
     target_margin: 42,
     reference_cac: 480
   }
@@ -211,3 +211,121 @@ export const DETAILED_DOSSIER = {
     }
   ]
 };
+
+export const INITIAL_HISTORICAL_COURSES = [
+  {
+    external_id: "ENS-MBA-SEG-01",
+    name: "MBA em Gestão Estratégica de Seguros e Resseguros",
+    category: "MBA Executivo",
+    segment: "Gestão Executiva & Resseguros",
+    modality: "Online (Síncrono)",
+    workload_hours: 360,
+    status: "active",
+    tier: "SUCESSO",
+    quorum_min: 20,
+    metrics_summary: {
+      total_periods: 2,
+      total_leads: 2730,
+      total_enrolled: 186,
+      average_ticket_brl: 16350.00,
+      total_revenue_brl: 3051000.00,
+      avg_conversion_rate: 0.0680
+    },
+    funnel_history: [
+      { period: "2024", leads: 1250, applicants: 260, enrolled: 84, ticket: 15800.00, revenue: 1327200.00, status: "COMPLETED", notes: "Superou quórum em 420%. Margem líquida de 48%." },
+      { period: "2025", leads: 1480, applicants: 310, enrolled: 102, ticket: 16900.00, revenue: 1723800.00, status: "COMPLETED", notes: "Expansão recorde com 102 matriculados via convênios corporativos." }
+    ]
+  },
+  {
+    external_id: "ENS-ESP-CYBER-02",
+    name: "Especialização em Subscrição de Riscos Cibernéticos e Fraudes Digitais",
+    category: "Pós-Graduação Lato Sensu",
+    segment: "Cibersegurança & Fraudes Digitais",
+    modality: "Online (Síncrono)",
+    workload_hours: 180,
+    status: "active",
+    tier: "SUCESSO",
+    quorum_min: 18,
+    metrics_summary: {
+      total_periods: 2,
+      total_leads: 1740,
+      total_enrolled: 126,
+      average_ticket_brl: 9800.00,
+      total_revenue_brl: 1245600.00,
+      avg_conversion_rate: 0.0721
+    },
+    funnel_history: [
+      { period: "2024", leads: 780, applicants: 155, enrolled: 54, ticket: 9200.00, revenue: 496800.00, status: "COMPLETED", notes: "Quórum de 300%. Forte adesão de seguradoras e bancos." },
+      { period: "2025", leads: 960, applicants: 198, enrolled: 72, ticket: 10400.00, revenue: 748800.00, status: "COMPLETED", notes: "Crescimento de +33% YoY impulsionado por alta de incidentes no país." }
+    ]
+  },
+  {
+    external_id: "ENS-EXT-SIN-03",
+    name: "Extensão Executiva em Gestão e Regulação Técnica de Sinistros",
+    category: "Extensão Universitária",
+    segment: "Operações & Perícia de Sinistros",
+    modality: "Híbrido",
+    workload_hours: 90,
+    status: "active",
+    tier: "MEDIANO",
+    quorum_min: 18,
+    metrics_summary: {
+      total_periods: 2,
+      total_leads: 1010,
+      total_enrolled: 46,
+      average_ticket_brl: 5400.00,
+      total_revenue_brl: 248800.00,
+      avg_conversion_rate: 0.0456
+    },
+    funnel_history: [
+      { period: "2024", leads: 490, applicants: 72, enrolled: 22, ticket: 5200.00, revenue: 114400.00, status: "COMPLETED", notes: "Atingiu quórum no limite de sustentabilidade (22 alunos vs 18 mín.)." },
+      { period: "2025", leads: 520, applicants: 76, enrolled: 24, ticket: 5600.00, revenue: 134400.00, status: "COMPLETED", notes: "Turma estável com margem moderada de 26%." }
+    ]
+  },
+  {
+    external_id: "ENS-CAP-VEND-04",
+    name: "Capacitação em Técnicas Tradicionais de Vendas para Corretores Locais",
+    category: "Aperfeiçoamento Profissional",
+    segment: "Comercial & Vendas Presenciais",
+    modality: "Presencial",
+    workload_hours: 40,
+    status: "active",
+    tier: "FRACO",
+    quorum_min: 15,
+    metrics_summary: {
+      total_periods: 2,
+      total_leads: 600,
+      total_enrolled: 28,
+      average_ticket_brl: 1850.00,
+      total_revenue_brl: 51600.00,
+      avg_conversion_rate: 0.0466
+    },
+    funnel_history: [
+      { period: "2024", leads: 340, applicants: 42, enrolled: 16, ticket: 1800.00, revenue: 28800.00, status: "COMPLETED", notes: "Turma abriu no limite (16 alunos vs breakeven 15). Margem residual." },
+      { period: "2025", leads: 260, applicants: 29, enrolled: 12, ticket: 1900.00, revenue: 22800.00, status: "COMPLETED", notes: "Queda de 23% na procura. Turma operou com 12 alunos em prejuízo." }
+    ]
+  },
+  {
+    external_id: "ENS-APERF-DIR-05",
+    name: "Aperfeiçoamento em Doutrina e Teoria Pura do Direito Securitário",
+    category: "Aperfeiçoamento Jurídico",
+    segment: "Doutrina & Teoria Jurídica Pura",
+    modality: "Presencial",
+    workload_hours: 60,
+    status: "archived",
+    tier: "CANCELADO_POR_QUORUM",
+    quorum_min: 15,
+    metrics_summary: {
+      total_periods: 2,
+      total_leads: 325,
+      total_enrolled: 21,
+      average_ticket_brl: 4200.00,
+      total_revenue_brl: 58500.00,
+      avg_conversion_rate: 0.0618
+    },
+    funnel_history: [
+      { period: "2024", leads: 210, applicants: 24, enrolled: 15, ticket: 3900.00, revenue: 58500.00, status: "COMPLETED", notes: "Turma 2024 abriu exatamente no ponto de equilíbrio (15 alunos)." },
+      { period: "2025", leads: 115, applicants: 11, enrolled: 6, ticket: 4500.00, revenue: 0.00, status: "CANCELLED_LOW_QUORUM", notes: "OFERTA 2025 CANCELADA: Apenas 6 alunos matriculados de 15 necessários. Valores estornados e oferta presencial descontinuada." }
+    ]
+  }
+];
