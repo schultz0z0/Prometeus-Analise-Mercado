@@ -19,6 +19,12 @@ O fluxo suporta dois modos sem alterar suas garantias:
 
 JEV desativado não autoriza o uso de `FakeDecisionModel`, fixtures ou respostas fixas em runtime. O fallback permitido é somente do adaptador JEV para o adaptador de decisão baseado na LLM real.
 
+## Skills de domínio
+
+A LLM usa skills versionadas para executar o trabalho especializado, sem conhecimento específico da ENS. O conjunto inicial cobre compreensão de propostas educacionais, planejamento de pesquisa de mercado, revisão crítica de evidências, auditoria curricular e construção de oferta/dossiê.
+
+Skills são instruções de procedimento, não fontes de verdade. Elas não contêm números de mercado, concorrentes fixos, faixas de preço permanentes nem regras regulatórias sem fonte e data. O orquestrador seleciona skills por allowlist, registra nome/versão/hash no snapshot da análise e continua responsável pela autorização das ferramentas.
+
 ## Arquitetura
 
 O workflow será um orquestrador híbrido controlado por código. A LLM compreende o curso e propõe um plano de investigação; uma política determinística valida esse plano e executa apenas ferramentas registradas, com limites de custo e escopo. A LLM nunca chama fornecedores diretamente nem calcula o score.
