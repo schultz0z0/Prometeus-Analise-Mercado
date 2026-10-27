@@ -47,7 +47,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Cria usuário sem privilégios de root (princípio do menor privilégio)
 RUN groupadd -g 10001 prometeus && \
-    useradd -u 10001 -g prometeus -s /bin/sh -m prometeus
+    useradd -u 10001 -g prometeus -s /bin/sh -m prometeus && \
+    mkdir -p /app/var /app/config && \
+    chown -R prometeus:prometeus /app
 
 # Copia ambiente virtual compilado do builder
 COPY --from=builder /opt/venv /opt/venv

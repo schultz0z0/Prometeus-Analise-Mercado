@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +20,7 @@ async def seed_historical_courses(
     session: AsyncSession,
     tenant_id: str = "ens",
     reset: bool = False,
-) -> dict[str, int | float]:
+) -> dict[str, Any]:
     """Popula cursos históricos e registros de funil de forma transacional e idempotente."""
     if reset:
         logger.info(f"Modo reset ativado. Excluindo cursos históricos do tenant '{tenant_id}'...")

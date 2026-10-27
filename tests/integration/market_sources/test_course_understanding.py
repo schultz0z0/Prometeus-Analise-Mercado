@@ -58,4 +58,3 @@ async def test_course_understanding_rejects_non_json_instead_of_guessing() -> No
 
     with pytest.raises(ValueError, match="JSON"):
         await service.understand("anl-1", "Curso", {"description": "Breve"})
-

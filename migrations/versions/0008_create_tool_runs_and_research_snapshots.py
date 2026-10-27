@@ -58,6 +58,7 @@ def upgrade() -> None:
         sa.Column("required", sa.Boolean(), nullable=False, server_default=sa.true()),
         sa.Column("provider", sa.String(length=32), nullable=False),
         sa.Column("actor_id", sa.String(length=255), nullable=False),
+        sa.Column("actor_build", sa.String(length=32), nullable=False),
         sa.Column("provider_run_id", sa.String(length=128), nullable=True),
         sa.Column("dataset_id", sa.String(length=128), nullable=True),
         sa.Column("status", sa.String(length=32), nullable=False),

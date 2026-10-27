@@ -23,10 +23,15 @@ from prometeus.infrastructure.db.models import (
     DecisionResultModel,
     DossierModel,
     MarketEvidenceModel,
+    ResearchPlanModel,
     ScoringResultModel,
 )
 
 logger = logging.getLogger(__name__)
+
+
+class DossierVerificationError(RuntimeError):
+    """O conteúdo gerado não pode ser publicado porque falhou no gate factual."""
 
 
 class DossierSynthesisService:
@@ -72,6 +77,13 @@ class DossierSynthesisService:
         )
         decisions = (await self.db.execute(stmt_decisions)).scalars().all()
 
+        stmt_plan = (
+            select(ResearchPlanModel)
+            .where(ResearchPlanModel.analysis_id == analysis_id)
+            .order_by(ResearchPlanModel.created_at.desc())
+        )
+        research_plan = (await self.db.execute(stmt_plan)).scalars().first()
+
         fact_items: list[DossierFactItem] = []
 
         # Adiciona evidências de mercado
@@ -98,20 +110,21 @@ class DossierSynthesisService:
                     title=ev.title,
                     key_metrics=metrics,
                     summary=f"Evidência de mercado tipo {ev.evidence_type}: {ev.title}",
+                    source_url=ev.source_url,
                 )
             )
 
-        # Adiciona decisões do JEV
+        # Adiciona julgamentos semânticos do modo ativo (LLM tradicional ou híbrido)
         for dec in decisions:
+            decision_metrics: dict[str, Any] = {"confidence": dec.confidence}
+            if dec.score_value is not None:
+                decision_metrics["score_value"] = dec.score_value
             fact_items.append(
                 DossierFactItem(
                     evidence_id=dec.id,
-                    source_type="jev_decision",
-                    title=f"Decisão JEV {dec.pack_id}",
-                    key_metrics={
-                        "confidence": dec.confidence,
-                        "score_value": dec.score_value or 0.0,
-                    },
+                    source_type="semantic_decision",
+                    title=f"Julgamento semântico {dec.pack_id}",
+                    key_metrics=decision_metrics,
                     summary=(
                         f"Julgamento {dec.pack_id} ({dec.decision_type}): "
                         f"escolha={dec.selected_choice}, score={dec.score_value}"
@@ -131,11 +144,16 @@ class DossierSynthesisService:
                         reason = p_data.get("missing_reason", "Ausência de dados")
                         limitations.append(f"Pilar {p_key} ausente: {reason}")
 
-        target_audience = "Profissionais de mercado e líderes em transição de carreira"
-        if analysis.course_name:
-            target_audience = (
-                f"Especialistas e profissionais interessados em {analysis.course_name}"
-            )
+        understanding_snapshot = (
+            dict(research_plan.understanding_snapshot) if research_plan is not None else {}
+        )
+        plan_snapshot = dict(research_plan.plan_snapshot) if research_plan is not None else {}
+        target_audiences = understanding_snapshot.get("target_audiences", [])
+        if isinstance(target_audiences, list) and target_audiences:
+            target_audience = ", ".join(str(item) for item in target_audiences)
+        else:
+            target_audience = "Não informado no entendimento do curso"
+            limitations.append("Público-alvo não informado no entendimento persistido do curso")
 
         return DossierFacts(
             analysis_id=analysis_id,
@@ -148,6 +166,9 @@ class DossierSynthesisService:
             pillar_summaries=pillar_summaries,
             items=fact_items,
             limitations=limitations,
+            course_understanding=understanding_snapshot,
+            research_plan=plan_snapshot,
+            counterevidence=[],
         )
 
     async def synthesize_and_verify(
@@ -163,6 +184,10 @@ class DossierSynthesisService:
 
         # Verificação determinística (TOOL-15)
         verified_dossier = self.verifier.verify(raw_dossier, facts)
+        if verified_dossier.status.value != "VERIFIED":
+            raise DossierVerificationError(
+                f"Dossiê da análise {analysis_id} não passou no gate de verificação factual"
+            )
 
         # Persistência relacional em PostgreSQL
         stmt_exist = select(DossierModel).where(DossierModel.analysis_id == analysis_id)

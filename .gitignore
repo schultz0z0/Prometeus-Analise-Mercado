@@ -24,9 +24,11 @@ secrets/
 /data/
 /logs/
 /artifacts/
+/var/
 *.sqlite3
 
 # IDE and OS
+.agents/
 .idea/
 .vscode/
 .DS_Store

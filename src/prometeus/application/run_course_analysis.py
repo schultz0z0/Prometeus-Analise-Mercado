@@ -1,0 +1,611 @@
+"""Caso de uso canônico para a auditoria completa de um novo curso."""
+
+from __future__ import annotations
+
+import uuid
+from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime
+from typing import Any
+
+import httpx
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from prometeus.application.collect_market_evidence import (
+    CollectMarketEvidenceService,
+    RequiredSourceBlockedError,
+    ResearchToolExecutor,
+)
+from prometeus.application.course_understanding import CourseUnderstandingService
+from prometeus.application.decision_service import DecisionService
+from prometeus.application.dossier_verifier import DossierVerifier
+from prometeus.application.evidence_features import (
+    EvidenceFeatureExtractor,
+    EvidenceFeatureSet,
+    VerifiedFeature,
+)
+from prometeus.application.keywords import KeywordPipeline
+from prometeus.application.plan_course_research import (
+    CourseResearchPlanner,
+    ResearchPlanValidationError,
+)
+from prometeus.application.runtime_preflight import validate_runtime_preflight
+from prometeus.application.scoring_service import ScoringService
+from prometeus.application.skill_registry import SkillRegistry
+from prometeus.application.synthesize_dossier import (
+    DossierSynthesisService,
+    DossierVerificationError,
+)
+from prometeus.domain.analyses import Analysis, AnalysisStatus, AnalysisStep
+from prometeus.domain.configuration import AppSettings, ConfigurationError
+from prometeus.domain.dossiers import DossierStatus
+from prometeus.domain.ports.decision_model import DecisionModelPort
+from prometeus.domain.ports.generative_model import GenerativeModelPort
+from prometeus.domain.ports.market_sources import EvidenceType, KeywordSet, MarketEvidence
+from prometeus.domain.research import CourseResearchPlan, CourseUnderstanding
+from prometeus.infrastructure.apify.client import ApifyError
+from prometeus.infrastructure.apify.registry import ApifyActorRegistry
+from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
+from prometeus.infrastructure.db.models import (
+    DossierModel,
+    HistoricalCourseModel,
+    HistoricalFunnelModel,
+    MarketEvidenceModel,
+    ScoringResultModel,
+)
+from prometeus.infrastructure.jev.client import JEVError
+
+__all__ = ["WORKFLOW_STEPS", "RunCourseAnalysis"]
+
+
+WORKFLOW_STEPS: tuple[tuple[int, str], ...] = (
+    (1, "runtime_preflight"),
+    (2, "intake_normalization"),
+    (3, "readiness_assessment"),
+    (4, "course_understanding"),
+    (5, "keyword_entity_mapping"),
+    (6, "research_planning"),
+    (7, "institutional_history"),
+    (8, "external_tool_execution"),
+    (9, "evidence_sanitization"),
+    (10, "semantic_judgments"),
+    (11, "verified_feature_scoring"),
+    (12, "quality_gates"),
+    (13, "dossier_synthesis"),
+    (14, "factual_verification"),
+    (15, "publish_completion"),
+)
+
+
+BlockedWorkflowError = (
+    ApifyError,
+    ConfigurationError,
+    ConnectionError,
+    DossierVerificationError,
+    JEVError,
+    ResearchPlanValidationError,
+    RequiredSourceBlockedError,
+    TimeoutError,
+    ValueError,
+    httpx.HTTPError,
+)
+
+
+class RunCourseAnalysis:
+    """Orquestra LLM, decisões, ferramentas, scoring e dossiê com checkpoints."""
+
+    def __init__(
+        self,
+        *,
+        session: AsyncSession,
+        settings: AppSettings,
+        llm: GenerativeModelPort,
+        decision_model: DecisionModelPort,
+        tool_executor: ResearchToolExecutor,
+        registry: ApifyActorRegistry,
+        skills: SkillRegistry | None = None,
+    ) -> None:
+        self.session = session
+        self.settings = settings
+        self.llm = llm
+        self.registry = registry
+        self.repository = AnalysisRepository(session)
+        self.skills = skills or SkillRegistry()
+        self.decisions = DecisionService(decision_model=decision_model, session=session)
+        self.collector = CollectMarketEvidenceService(
+            session=session,
+            executor=tool_executor,
+            registry=registry,
+        )
+
+    @staticmethod
+    def _feature_dump(features: EvidenceFeatureSet) -> dict[str, dict[str, Any]]:
+        return {
+            name: {
+                "name": feature.name,
+                "value": feature.value,
+                "evidence_ids": feature.evidence_ids,
+                "method": feature.method,
+            }
+            for name, feature in features.features.items()
+        }
+
+    @staticmethod
+    def _feature_load(payload: dict[str, Any]) -> EvidenceFeatureSet:
+        return EvidenceFeatureSet(
+            features={
+                name: VerifiedFeature(
+                    name=str(item["name"]),
+                    value=item["value"],
+                    evidence_ids=[str(value) for value in item.get("evidence_ids", [])],
+                    method=str(item["method"]),
+                )
+                for name, item in payload.items()
+                if isinstance(item, dict)
+            }
+        )
+
+    @staticmethod
+    def _normalize(value: Any) -> Any:
+        if isinstance(value, str):
+            return value.strip()
+        if isinstance(value, dict):
+            return {str(key): RunCourseAnalysis._normalize(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [RunCourseAnalysis._normalize(item) for item in value]
+        return value
+
+    async def _checkpoint(
+        self,
+        analysis: Analysis,
+        step_number: int,
+        operation: Callable[[], Awaitable[dict[str, Any]]],
+    ) -> dict[str, Any]:
+        _, name = WORKFLOW_STEPS[step_number - 1]
+        existing = next(
+            (step for step in analysis.steps if step.step_number == step_number),
+            None,
+        )
+        if existing is not None and existing.status == "COMPLETED":
+            return existing.output_summary
+
+        now = datetime.now(UTC)
+        if existing is None:
+            existing = AnalysisStep(
+                id=str(uuid.uuid4()),
+                analysis_id=analysis.id,
+                step_number=step_number,
+                name=name,
+                status="RUNNING",
+                started_at=now,
+            )
+            analysis.steps.append(existing)
+        else:
+            existing.status = "RUNNING"
+            existing.started_at = now
+            existing.finished_at = None
+            existing.error_message = None
+        await self.repository.save(analysis)
+        await self.session.commit()
+
+        try:
+            output = await operation()
+        except Exception as exc:
+            existing.status = "FAILED"
+            existing.finished_at = datetime.now(UTC)
+            existing.error_message = str(exc).replace("\r", " ").replace("\n", " ")[:500]
+            await self.repository.save(analysis)
+            await self.session.commit()
+            raise
+
+        existing.status = "COMPLETED"
+        existing.finished_at = datetime.now(UTC)
+        existing.output_summary = output
+        existing.error_message = None
+        analysis.steps.sort(key=lambda step: step.step_number)
+        await self.repository.save(analysis)
+        await self.session.commit()
+        return output
+
+    async def _historical_features(
+        self,
+        analysis: Analysis,
+        understanding: CourseUnderstanding,
+        correlation_id: str,
+    ) -> EvidenceFeatureSet:
+        courses = list(
+            (
+                await self.session.execute(
+                    select(HistoricalCourseModel).where(
+                        HistoricalCourseModel.tenant_id == analysis.tenant_id
+                    )
+                )
+            ).scalars()
+        )
+        if not courses:
+            return EvidenceFeatureSet(features={})
+
+        course_ids = [course.id for course in courses]
+        funnels = list(
+            (
+                await self.session.execute(
+                    select(HistoricalFunnelModel).where(
+                        HistoricalFunnelModel.course_id.in_(course_ids)
+                    )
+                )
+            ).scalars()
+        )
+        evidence_ids = [course.id for course in courses] + [funnel.id for funnel in funnels]
+        decision = await self.decisions.execute_judgment(
+            pack_id="comparable-fit-v1",
+            context={
+                "course_understanding": understanding.model_dump(mode="json"),
+                "historical_courses": [
+                    {
+                        "id": course.id,
+                        "name": course.name,
+                        "category": course.category,
+                        "modality": course.modality,
+                        "tags": course.tags,
+                        "target_audience": course.target_audience,
+                    }
+                    for course in courses
+                ],
+            },
+            analysis=analysis,
+            correlation_id=correlation_id,
+            evidence_ids=evidence_ids,
+        )
+        features: dict[str, VerifiedFeature] = {}
+        if decision.score_value is not None:
+            features["comparable_fit_score"] = VerifiedFeature(
+                name="comparable_fit_score",
+                value=decision.score_value,
+                evidence_ids=[decision.id, *evidence_ids],
+                method="semantic_comparable_fit",
+            )
+        total_leads = sum(funnel.leads for funnel in funnels)
+        total_enrolled = sum(funnel.enrolled for funnel in funnels)
+        if funnels and total_leads > 0:
+            features["conversion_rate"] = VerifiedFeature(
+                name="conversion_rate",
+                value=round(total_enrolled / total_leads, 6),
+                evidence_ids=[funnel.id for funnel in funnels],
+                method="historical_enrolled_over_leads",
+            )
+        if funnels:
+            features["enrollments_count"] = VerifiedFeature(
+                name="enrollments_count",
+                value=round(total_enrolled / len(funnels)),
+                evidence_ids=[funnel.id for funnel in funnels],
+                method="historical_mean_enrollments",
+            )
+        return EvidenceFeatureSet(features=features)
+
+    async def _market_features(self, analysis_id: str) -> EvidenceFeatureSet:
+        rows = list(
+            (
+                await self.session.execute(
+                    select(MarketEvidenceModel).where(
+                        MarketEvidenceModel.analysis_id == analysis_id
+                    )
+                )
+            ).scalars()
+        )
+        evidences: list[MarketEvidence] = []
+        for row in rows:
+            try:
+                evidence_type = EvidenceType(row.evidence_type)
+            except ValueError:
+                continue
+            evidences.append(
+                MarketEvidence(
+                    id=row.id,
+                    analysis_id=row.analysis_id,
+                    evidence_type=evidence_type,
+                    source_name=row.source_name,
+                    source_url=row.source_url,
+                    collector=row.collector,
+                    content_hash=row.content_hash,
+                    title=row.title,
+                    raw_payload=row.raw_payload,
+                    sanitized_data=row.sanitized_data,
+                    quality_score=row.quality_score,
+                    cost_usd=row.cost_usd,
+                    collected_at=row.collected_at,
+                )
+            )
+        return EvidenceFeatureExtractor().extract(evidences)
+
+    async def execute(self, analysis_id: str, correlation_id: str) -> Analysis:
+        analysis = await self.repository.get_by_id(analysis_id)
+        if analysis is None:
+            raise ValueError(f"Análise não encontrada: {analysis_id}")
+        if analysis.status == AnalysisStatus.COMPLETED:
+            return analysis
+        if analysis.status in {AnalysisStatus.BLOCKED, AnalysisStatus.WAITING_FOR_INPUT}:
+            analysis.resume(
+                correlation_id=correlation_id, reason="Retomada idempotente do workflow"
+            )
+        elif analysis.status == AnalysisStatus.QUEUED:
+            analysis.start(correlation_id=correlation_id, reason="Início da auditoria real")
+        await self.repository.save(analysis)
+        await self.session.commit()
+
+        try:
+
+            async def preflight() -> dict[str, Any]:
+                report = validate_runtime_preflight(self.settings)
+                if not report.ready:
+                    messages = "; ".join(issue.message for issue in report.errors)
+                    raise ConfigurationError(messages)
+                return {
+                    "ai_mode": report.ai_mode,
+                    "jev_enabled": report.jev_enabled,
+                    "required_sources": report.required_sources,
+                    "synthetic_sources": report.synthetic_sources,
+                }
+
+            await self._checkpoint(analysis, 1, preflight)
+
+            async def normalize_intake() -> dict[str, Any]:
+                normalized = self._normalize(analysis.proposal_data)
+                if not analysis.course_name.strip():
+                    raise ValueError("O título do curso é obrigatório.")
+                return {"course_name": analysis.course_name.strip(), "proposal": normalized}
+
+            intake = await self._checkpoint(analysis, 2, normalize_intake)
+            proposal = dict(intake["proposal"])
+
+            async def assess_readiness() -> dict[str, Any]:
+                result = await self.decisions.execute_judgment(
+                    pack_id="readiness-v1",
+                    context={"course_name": analysis.course_name, "proposal": proposal},
+                    analysis=analysis,
+                    correlation_id=correlation_id,
+                )
+                return {
+                    "decision_id": result.id,
+                    "selected_choice": result.selected_choice,
+                    "confidence": result.confidence,
+                }
+
+            readiness = await self._checkpoint(analysis, 3, assess_readiness)
+            if readiness.get("selected_choice") != "READY":
+                analysis.wait_for_input(
+                    correlation_id=correlation_id,
+                    reason=f"Readiness: {readiness.get('selected_choice')}",
+                )
+                await self.repository.save(analysis)
+                await self.session.commit()
+                return analysis
+
+            async def understand_course() -> dict[str, Any]:
+                understanding = await CourseUnderstandingService(self.llm, self.skills).understand(
+                    analysis.id, analysis.course_name, proposal
+                )
+                return understanding.model_dump(mode="json")
+
+            understanding_payload = await self._checkpoint(analysis, 4, understand_course)
+            understanding = CourseUnderstanding.model_validate(understanding_payload)
+
+            async def map_keywords() -> dict[str, Any]:
+                keyword_set = await KeywordPipeline(self.llm, self.decisions).build_keyword_set(
+                    course_title=understanding.course_title,
+                    description=understanding.summary,
+                    target_audience=", ".join(understanding.target_audiences),
+                    correlation_id=correlation_id,
+                )
+                if not keyword_set.all_search_terms:
+                    raise ValueError("A LLM não produziu keywords relevantes para a pesquisa.")
+                return keyword_set.model_dump(mode="json")
+
+            keyword_payload = await self._checkpoint(analysis, 5, map_keywords)
+            KeywordSet.model_validate(keyword_payload)
+
+            async def plan_research() -> dict[str, Any]:
+                plan = await CourseResearchPlanner(self.llm, self.skills, self.settings).plan(
+                    understanding
+                )
+                return plan.model_dump(mode="json")
+
+            plan_payload = await self._checkpoint(analysis, 6, plan_research)
+            plan = CourseResearchPlan.model_validate(plan_payload)
+
+            async def inspect_history() -> dict[str, Any]:
+                features = await self._historical_features(analysis, understanding, correlation_id)
+                return {"features": self._feature_dump(features)}
+
+            history_payload = await self._checkpoint(analysis, 7, inspect_history)
+            history_features = self._feature_load(dict(history_payload.get("features", {})))
+
+            async def execute_tools() -> dict[str, Any]:
+                outcome = await self.collector.collect(
+                    tenant_id=analysis.tenant_id,
+                    plan=plan,
+                    understanding_snapshot=understanding.model_dump(mode="json"),
+                )
+                return {
+                    "research_plan_id": outcome.research_plan_id,
+                    "completed_call_ids": outcome.completed_call_ids,
+                    "evidence_ids": outcome.evidence_ids,
+                    "optional_failures": outcome.optional_failures,
+                    "spent_usd": outcome.spent_usd,
+                }
+
+            await self._checkpoint(analysis, 8, execute_tools)
+
+            async def sanitize_evidence() -> dict[str, Any]:
+                market = await self._market_features(analysis.id)
+                merged = EvidenceFeatureSet(
+                    features={**market.features, **history_features.features}
+                )
+                return {"features": self._feature_dump(merged)}
+
+            feature_payload = await self._checkpoint(analysis, 9, sanitize_evidence)
+            verified_features = self._feature_load(dict(feature_payload.get("features", {})))
+
+            async def semantic_judgments() -> dict[str, Any]:
+                evidence_ids = sorted(
+                    (
+                        await self.session.execute(
+                            select(MarketEvidenceModel.id).where(
+                                MarketEvidenceModel.analysis_id == analysis.id
+                            )
+                        )
+                    ).scalars()
+                )
+                evidence_rows = list(
+                    (
+                        await self.session.execute(
+                            select(MarketEvidenceModel).where(
+                                MarketEvidenceModel.analysis_id == analysis.id
+                            )
+                        )
+                    ).scalars()
+                )
+                result = await self.decisions.execute_judgment(
+                    pack_id="syllabus-fit-v1",
+                    context={
+                        "course_understanding": understanding.model_dump(mode="json"),
+                        "curriculum": proposal.get("curriculum_text") or proposal.get("curriculum"),
+                        "market_evidence": [
+                            {
+                                "id": row.id,
+                                "type": row.evidence_type,
+                                "title": row.title,
+                                "data": row.sanitized_data,
+                            }
+                            for row in evidence_rows
+                        ],
+                    },
+                    analysis=analysis,
+                    correlation_id=correlation_id,
+                    evidence_ids=evidence_ids,
+                )
+                if result.score_value is None:
+                    raise ValueError("O julgamento de aderência curricular não retornou score.")
+                return {
+                    "decision_id": result.id,
+                    "score_value": result.score_value,
+                    "confidence": result.confidence,
+                    "evidence_ids": evidence_ids,
+                }
+
+            judgment = await self._checkpoint(analysis, 10, semantic_judgments)
+            verified_features.features["syllabus_fit_score"] = VerifiedFeature(
+                name="syllabus_fit_score",
+                value=float(judgment["score_value"]),
+                evidence_ids=[str(judgment["decision_id"]), *judgment["evidence_ids"]],
+                method="semantic_syllabus_fit",
+            )
+
+            async def calculate_score() -> dict[str, Any]:
+                scoring = ScoringService(session=self.session)
+                inputs = scoring.build_pillar_inputs(
+                    verified_features,
+                    proposed_price_brl=understanding.proposed_price_brl,
+                    proposed_price_source_id=f"course-understanding:{understanding.snapshot_hash}",
+                )
+                result = await scoring.execute_scoring(
+                    pillar_inputs=inputs,
+                    analysis=analysis,
+                    correlation_id=correlation_id,
+                    is_experimental=True,
+                    finalize_analysis=False,
+                )
+                return {
+                    "scoring_result_id": result.id,
+                    "viability_score": result.viability_score,
+                    "coverage_score": result.coverage_score,
+                    "confidence_score": result.confidence_score,
+                    "recommendation": result.recommendation.value,
+                }
+
+            score_payload = await self._checkpoint(analysis, 11, calculate_score)
+
+            async def apply_quality_gates() -> dict[str, Any]:
+                scoring = (
+                    await self.session.execute(
+                        select(ScoringResultModel).where(
+                            ScoringResultModel.analysis_id == analysis.id
+                        )
+                    )
+                ).scalar_one()
+                return {
+                    "recommendation": scoring.recommendation,
+                    "gate_details": scoring.gate_details,
+                    "coverage_score": scoring.coverage_score,
+                    "confidence_score": scoring.confidence_score,
+                }
+
+            await self._checkpoint(analysis, 12, apply_quality_gates)
+
+            async def synthesize() -> dict[str, Any]:
+                dossier = await DossierSynthesisService(
+                    self.session, self.llm, DossierVerifier()
+                ).synthesize_and_verify(analysis.id)
+                return {
+                    "dossier_id": dossier.id,
+                    "status": dossier.status.value,
+                    "model_name": dossier.model_name,
+                    "facts_hash": dossier.facts_hash,
+                }
+
+            dossier_payload = await self._checkpoint(analysis, 13, synthesize)
+
+            async def verify_facts() -> dict[str, Any]:
+                dossier = (
+                    await self.session.execute(
+                        select(DossierModel).where(DossierModel.analysis_id == analysis.id)
+                    )
+                ).scalar_one()
+                if dossier.status != DossierStatus.VERIFIED.value:
+                    raise DossierVerificationError("Dossiê persistido não está verificado.")
+                return {
+                    "dossier_id": dossier.id,
+                    "status": dossier.status,
+                    "facts_hash": dossier.facts_hash,
+                }
+
+            await self._checkpoint(analysis, 14, verify_facts)
+
+            async def publish_completion() -> dict[str, Any]:
+                scoring = (
+                    await self.session.execute(
+                        select(ScoringResultModel).where(
+                            ScoringResultModel.analysis_id == analysis.id
+                        )
+                    )
+                ).scalar_one()
+                return {
+                    "recommendation": scoring.recommendation,
+                    "score": score_payload["viability_score"],
+                    "dossier_id": dossier_payload["dossier_id"],
+                    "checkpoint_persisted": True,
+                    "webhook": "not_configured",
+                }
+
+            completion = await self._checkpoint(analysis, 15, publish_completion)
+            from prometeus.domain.analyses import AnalysisRecommendation
+
+            analysis.complete(
+                recommendation=AnalysisRecommendation(completion["recommendation"]),
+                correlation_id=correlation_id,
+                reason="Auditoria real concluída com dossiê verificado",
+            )
+            await self.repository.save(analysis)
+            await self.session.commit()
+            return analysis
+        except BlockedWorkflowError as exc:
+            if analysis.status == AnalysisStatus.RUNNING:
+                analysis.block(correlation_id=correlation_id, reason=str(exc)[:500])
+            await self.repository.save(analysis)
+            await self.session.commit()
+            return analysis
+        except Exception as exc:
+            if analysis.status == AnalysisStatus.RUNNING:
+                analysis.fail(correlation_id=correlation_id, reason=str(exc)[:500])
+            await self.repository.save(analysis)
+            await self.session.commit()
+            raise

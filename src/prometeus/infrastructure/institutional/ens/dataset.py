@@ -33,7 +33,14 @@ ENS_HISTORICAL_PORTFOLIO: list[dict[str, Any]] = [
             "Corretores corporate e brokers de resseguro",
             "Subscritores seniores e gestores de riscos corporativos",
         ],
-        "tags": ["seguros", "resseguros", "gestao executiva", "mba", "lideranca", "mercado segurador"],
+        "tags": [
+            "seguros",
+            "resseguros",
+            "gestao executiva",
+            "mba",
+            "lideranca",
+            "mercado segurador",
+        ],
         "funnel_history": [
             {
                 "period": "2024",
@@ -61,7 +68,6 @@ ENS_HISTORICAL_PORTFOLIO: list[dict[str, Any]] = [
             },
         ],
     },
-
     # =========================================================================
     # 2. CURSO BEM-SUCEDIDO (Nicho Técnico Emergente em Alta Expansão)
     # Segmento: Cibersegurança, Subscrição Especializada e Proteção de Dados
@@ -80,7 +86,14 @@ ENS_HISTORICAL_PORTFOLIO: list[dict[str, Any]] = [
             "Analistas de segurança da informação e ciberdefesa",
             "Advogados especializados em Direito Digital, LGPD e incidentes",
         ],
-        "tags": ["cyber", "riscos ciberneticos", "subscricao", "fraudes digitais", "lgpd", "seguranca"],
+        "tags": [
+            "cyber",
+            "riscos ciberneticos",
+            "subscricao",
+            "fraudes digitais",
+            "lgpd",
+            "seguranca",
+        ],
         "funnel_history": [
             {
                 "period": "2024",
@@ -108,7 +121,6 @@ ENS_HISTORICAL_PORTFOLIO: list[dict[str, Any]] = [
             },
         ],
     },
-
     # =========================================================================
     # 3. CURSO MEDIANO (Quórum no Limite de Sustentabilidade Econômica)
     # Segmento: Operações Técnicas, Sinistros e Regulação Pericial
@@ -127,7 +139,14 @@ ENS_HISTORICAL_PORTFOLIO: list[dict[str, Any]] = [
             "Assistentes técnicos de seguradoras e montadoras",
             "Supervisores de sinistros de ramos elementares e automóvel",
         ],
-        "tags": ["sinistros", "regulacao", "pericia tecnica", "automovel", "patrimonial", "liquidacao"],
+        "tags": [
+            "sinistros",
+            "regulacao",
+            "pericia tecnica",
+            "automovel",
+            "patrimonial",
+            "liquidacao",
+        ],
         "funnel_history": [
             {
                 "period": "2024",
@@ -155,7 +174,6 @@ ENS_HISTORICAL_PORTFOLIO: list[dict[str, Any]] = [
             },
         ],
     },
-
     # =========================================================================
     # 4. CURSO FRACO (Procura em Declínio, Margem Estreita / Deficitária)
     # Segmento: Vendas Presenciais Tradicionais para Pequenas Corretoras
@@ -201,7 +219,6 @@ ENS_HISTORICAL_PORTFOLIO: list[dict[str, Any]] = [
             },
         ],
     },
-
     # =========================================================================
     # 5. OFERTA CANCELADA POR FALTA DE QUÓRUM
     # Segmento: Doutrina Jurídica Pura / Teoria Acadêmica
@@ -219,7 +236,14 @@ ENS_HISTORICAL_PORTFOLIO: list[dict[str, Any]] = [
             "Advogados acadêmicos e pesquisadores de Direito dos Seguros",
             "Bacharéis em Direito interessados em teoria contratual clássica",
         ],
-        "tags": ["direito securitario", "doutrina", "teoria pura", "presencial", "juridico", "academico"],
+        "tags": [
+            "direito securitario",
+            "doutrina",
+            "teoria pura",
+            "presencial",
+            "juridico",
+            "academico",
+        ],
         "funnel_history": [
             {
                 "period": "2024",

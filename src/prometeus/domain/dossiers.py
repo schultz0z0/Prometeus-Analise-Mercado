@@ -32,6 +32,7 @@ class SupportLevel(StrEnum):
 class VerificationStatus(StrEnum):
     """Resultado da verificação determinística de suporte da claim."""
 
+    PENDING = "pending"
     VERIFIED = "verified"
     UNSUPPORTED = "unsupported"
     FLAGGED_HALLUCINATION = "flagged_hallucination"
@@ -55,6 +56,7 @@ class DossierFactItem:
     title: str
     key_metrics: dict[str, Any] = field(default_factory=dict)
     summary: str = ""
+    source_url: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -63,6 +65,7 @@ class DossierFactItem:
             "title": self.title,
             "key_metrics": self.key_metrics,
             "summary": self.summary,
+            "source_url": self.source_url,
         }
 
 
@@ -80,6 +83,9 @@ class DossierFacts:
     pillar_summaries: dict[str, float] = field(default_factory=dict)
     items: list[DossierFactItem] = field(default_factory=list)
     limitations: list[str] = field(default_factory=list)
+    course_understanding: dict[str, Any] = field(default_factory=dict)
+    research_plan: dict[str, Any] = field(default_factory=dict)
+    counterevidence: list[str] = field(default_factory=list)
 
     def compute_facts_hash(self) -> str:
         """Gera hash SHA-256 canônico e imutável para proveniência do dossiê."""
@@ -93,6 +99,9 @@ class DossierFacts:
             "pillar_summaries": {k: round(v, 2) for k, v in sorted(self.pillar_summaries.items())},
             "items": [item.to_dict() for item in sorted(self.items, key=lambda x: x.evidence_id)],
             "limitations": sorted(self.limitations),
+            "course_understanding": self.course_understanding,
+            "research_plan": self.research_plan,
+            "counterevidence": sorted(self.counterevidence),
         }
         serialized = json.dumps(payload, sort_keys=True, ensure_ascii=False)
         return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
@@ -120,7 +129,7 @@ class DossierClaim(BaseModel):
     claim_type: ClaimType = ClaimType.QUALITATIVE
     evidence_ids: list[str] = Field(default_factory=list)
     support_level: SupportLevel = SupportLevel.OBSERVED
-    verification_status: VerificationStatus = VerificationStatus.VERIFIED
+    verification_status: VerificationStatus = VerificationStatus.PENDING
     verification_note: str | None = None
 
 
@@ -145,7 +154,7 @@ class DossierOutput(BaseModel):
     sections: list[DossierSection] = Field(default_factory=list)
     claims: list[DossierClaim] = Field(default_factory=list)
     facts_hash: str
-    status: DossierStatus = DossierStatus.VERIFIED
+    status: DossierStatus = DossierStatus.DRAFT
     cost_usd: float = 0.0
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 

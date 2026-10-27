@@ -25,6 +25,7 @@ def test_tool_run_persists_provider_provenance_and_outcome() -> None:
         "capability",
         "provider",
         "actor_id",
+        "actor_build",
         "provider_run_id",
         "dataset_id",
         "raw_items_count",
@@ -38,4 +39,3 @@ def test_tool_run_persists_provider_provenance_and_outcome() -> None:
 def test_market_evidence_can_reference_the_tool_run_that_produced_it() -> None:
     sql = compiled_table(MarketEvidenceModel)
     assert "tool_run_id" in sql
-

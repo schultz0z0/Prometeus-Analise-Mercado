@@ -7,8 +7,10 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from prometeus.application.evidence_features import EvidenceFeatureSet, VerifiedFeature
 from prometeus.domain.analyses import Analysis, AnalysisStatus
 from prometeus.domain.configuration import ConfigurationError, ScoringProfileConfig
 from prometeus.domain.scoring.calculator import ScoringCalculator
@@ -34,6 +36,117 @@ class ScoringService:
         self.calculator = calculator or ScoringCalculator()
         self.gate_evaluator = gate_evaluator or QualityGateEvaluator()
         self._profiles_cache: dict[str, ScoringProfileConfig] = {}
+
+    @staticmethod
+    def _pillar_from_features(
+        feature_set: EvidenceFeatureSet,
+        mapping: dict[str, str],
+        *,
+        required_any: set[str],
+    ) -> dict[str, Any]:
+        values: dict[str, Any] = {}
+        provenance: dict[str, list[str]] = {}
+        evidence_ids: list[str] = []
+
+        for input_name, feature_name in mapping.items():
+            feature: VerifiedFeature | None = feature_set.get(feature_name)
+            if feature is None:
+                continue
+            values[input_name] = feature.value
+            provenance[input_name] = list(feature.evidence_ids)
+            for evidence_id in feature.evidence_ids:
+                if evidence_id not in evidence_ids:
+                    evidence_ids.append(evidence_id)
+
+        is_present = any(name in values for name in required_any)
+        return {
+            **values,
+            "is_present": is_present,
+            "evidence_ids": evidence_ids,
+            "feature_provenance": provenance,
+            **(
+                {}
+                if is_present
+                else {"missing_reason": "Nenhuma feature verificada mínima para o pilar"}
+            ),
+        }
+
+    def build_pillar_inputs(
+        self,
+        feature_set: EvidenceFeatureSet,
+        *,
+        proposed_price_brl: float | None = None,
+        proposed_price_source_id: str | None = None,
+    ) -> dict[str, dict[str, Any]]:
+        """Mapeia somente features verificadas para o contrato do scoring.
+
+        O preço proposto vem do entendimento imutável do curso e só é aceito com
+        um identificador de proveniência desse snapshot.
+        """
+        pillars = {
+            "internal_history": self._pillar_from_features(
+                feature_set,
+                {
+                    "comparable_fit_score": "comparable_fit_score",
+                    "conversion_rate": "conversion_rate",
+                    "enrollments_count": "enrollments_count",
+                },
+                required_any={"comparable_fit_score"},
+            ),
+            "paid_competition": self._pillar_from_features(
+                feature_set,
+                {
+                    "ad_count": "ad_count",
+                    "competition_index": "competition_index",
+                    "cpc_brl": "cpc_brl",
+                },
+                required_any={"ad_count", "competition_index"},
+            ),
+            "search_and_media": self._pillar_from_features(
+                feature_set,
+                {
+                    "monthly_volume": "monthly_search_volume",
+                    "growth_trend_pct": "growth_trend_pct",
+                    "average_interest": "average_interest",
+                },
+                required_any={"monthly_volume", "average_interest"},
+            ),
+            "employability": self._pillar_from_features(
+                feature_set,
+                {
+                    "open_jobs_count": "open_jobs_count",
+                    "salary_median_brl": "salary_median_brl",
+                },
+                required_any={"open_jobs_count"},
+            ),
+            "syllabus_fit": self._pillar_from_features(
+                feature_set,
+                {
+                    "syllabus_fit_score": "syllabus_fit_score",
+                    "market_pain_points_covered_pct": "market_pain_points_covered_pct",
+                },
+                required_any={"syllabus_fit_score"},
+            ),
+            "pricing": self._pillar_from_features(
+                feature_set,
+                {"market_median_price_brl": "market_median_price_brl"},
+                required_any={"market_median_price_brl"},
+            ),
+        }
+
+        pricing = pillars["pricing"]
+        if proposed_price_brl is None or proposed_price_source_id is None:
+            pricing["is_present"] = False
+            pricing["missing_reason"] = "Preço proposto sem valor ou proveniência verificável"
+        else:
+            pricing["proposed_price_brl"] = proposed_price_brl
+            pricing["feature_provenance"]["proposed_price_brl"] = [proposed_price_source_id]
+            pricing["evidence_ids"] = [
+                proposed_price_source_id,
+                *pricing["evidence_ids"],
+            ]
+
+        return pillars
 
     def get_profile(self, profile_id: str) -> ScoringProfileConfig:
         """Carrega e valida o perfil de scoring a partir de arquivo YAML."""
@@ -65,6 +178,7 @@ class ScoringService:
         profile_id: str = "default-v1",
         correlation_id: str = "none",
         is_experimental: bool = True,
+        finalize_analysis: bool = True,
     ) -> ScoringResult:
         """Executa o cálculo completo de viabilidade e gates (Etapas 10 e 11 do workflow)."""
         profile = self.get_profile(profile_id)
@@ -100,7 +214,7 @@ class ScoringService:
         )
 
         # Transição de estado na análise (ADR-0005)
-        if analysis is not None:
+        if analysis is not None and finalize_analysis:
             if analysis.status == AnalysisStatus.QUEUED:
                 analysis.start(
                     correlation_id=correlation_id, reason="Início do processamento de scoring"
@@ -114,21 +228,33 @@ class ScoringService:
 
         # Persistência relacional em PostgreSQL se session fornecida
         if self.session is not None and analysis is not None:
-            model = ScoringResultModel(
-                id=result.id,
-                analysis_id=analysis.id,
-                profile_id=result.profile_id,
-                viability_score=result.viability_score,
-                coverage_score=result.coverage_score,
-                confidence_score=result.confidence_score,
-                partial_score=result.partial_score,
-                recommendation=result.recommendation.value,
-                is_experimental=result.is_experimental,
-                pillar_scores={k: asdict(v) for k, v in result.pillar_scores.items()},
-                gate_details=result.gate_details.model_dump(),
-                created_at=result.created_at,
-            )
-            self.session.add(model)
+            model = (
+                await self.session.execute(
+                    select(ScoringResultModel).where(ScoringResultModel.analysis_id == analysis.id)
+                )
+            ).scalar_one_or_none()
+            payload = {
+                "profile_id": result.profile_id,
+                "viability_score": result.viability_score,
+                "coverage_score": result.coverage_score,
+                "confidence_score": result.confidence_score,
+                "partial_score": result.partial_score,
+                "recommendation": result.recommendation.value,
+                "is_experimental": result.is_experimental,
+                "pillar_scores": {k: asdict(v) for k, v in result.pillar_scores.items()},
+                "gate_details": result.gate_details.model_dump(),
+            }
+            if model is None:
+                model = ScoringResultModel(
+                    id=result.id,
+                    analysis_id=analysis.id,
+                    created_at=result.created_at,
+                    **payload,
+                )
+                self.session.add(model)
+            else:
+                for key, value in payload.items():
+                    setattr(model, key, value)
             await self.session.flush()
 
         return result

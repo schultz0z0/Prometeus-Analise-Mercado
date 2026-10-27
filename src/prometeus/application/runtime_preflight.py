@@ -6,7 +6,6 @@ from dataclasses import dataclass, field
 
 from prometeus.domain.configuration import AppSettings
 
-
 ACTOR_SETTING_BY_SOURCE: dict[str, str] = {
     "google_search": "APIFY_ACTOR_GOOGLE_SEARCH",
     "web_crawler": "APIFY_ACTOR_WEB_CRAWLER",
@@ -108,9 +107,7 @@ def validate_runtime_preflight(settings: AppSettings) -> RuntimePreflightReport:
             )
 
     synthetic_sources = (
-        ["institutional_history"]
-        if settings.ALLOW_SYNTHETIC_INSTITUTIONAL_HISTORY
-        else []
+        ["institutional_history"] if settings.ALLOW_SYNTHETIC_INSTITUTIONAL_HISTORY else []
     )
 
     return RuntimePreflightReport(

@@ -1,112 +1,79 @@
-from collections.abc import AsyncGenerator
-
-import pytest
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-
-from prometeus.application.create_analysis import (
-    CreateAnalysisCommand,
-    CreateAnalysisUseCase,
-)
-from prometeus.domain.analyses import (
-    AnalysisRecommendation,
-    AnalysisStatus,
-    AnalysisStep,
-)
-from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
-from prometeus.infrastructure.db.models import Base
-from prometeus.workers.tasks import WORKFLOW_STEPS, execute_workflow_steps
-
-
-@pytest.fixture
-async def e2e_session() -> AsyncGenerator[AsyncSession, None]:
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-    session_factory = async_sessionmaker(bind=engine, expire_on_commit=False, class_=AsyncSession)
-    async with session_factory() as session:
-        yield session
-
-    await engine.dispose()
-
-
-async def test_e2e_resumable_job_flow_with_worker_restart(e2e_session: AsyncSession) -> None:
-    """Valida o fluxo ponta a ponta da Fundação (Fase 01):
-
-    criação -> fila -> execução parcial -> interrupção/restart do worker -> retomada -> conclusão.
-    """
-    repo = AnalysisRepository(e2e_session)
-    use_case = CreateAnalysisUseCase(e2e_session)
-
-    # 1. Submissão da análise
-    cmd = CreateAnalysisCommand(
-        tenant_id="ens",
-        course_name="MBA Executivo em Fraudes e Regulação de Seguros",
-        proposal_data={"target_market": "Brasil", "price": 18000},
-        idempotency_key="e2e-restart-key-001",
-        correlation_id="corr-e2e-root",
-    )
-    result = await use_case.execute(cmd)
-    await e2e_session.commit()
-
-    assert result.status == AnalysisStatus.QUEUED
-    analysis_id = result.analysis_id
-
-    # 2. Primeira execução: Worker inicia e executa até o step 2, simulando crash
-    analysis = await repo.get_by_id(analysis_id)
-    assert analysis is not None
-    analysis.start(correlation_id="worker-run-1", reason="Worker iniciou processamento")
-
-    # Executa step 1 e step 2 manualmente para simular progresso parcial antes do crash
-    analysis.steps = [
-        AnalysisStep(
-            id=f"step-{step_num}",
-            analysis_id=analysis_id,
-            step_number=step_num,
-            name=step_name,
-            status="COMPLETED",
-            output_summary={"checkpoint": True, "partial": True},
-        )
-        for step_num, step_name in WORKFLOW_STEPS[:2]
-    ]
-    await repo.save(analysis)
-    await e2e_session.commit()
-
-    # Verifica estado intermediário: RUNNING, 2 steps concluídos, sem recomendação
-    mid_analysis = await repo.get_by_id(analysis_id)
-    assert mid_analysis is not None
-    assert mid_analysis.status == AnalysisStatus.RUNNING
-    assert mid_analysis.recommendation is None
-    assert len(mid_analysis.steps) == 2
-
-    # 3. RESTART DO WORKER: Novo processo de worker assume a mesma tarefa
-    # Invoca o motor de execução do workflow que detecta os checkpoints existentes
-    await execute_workflow_steps(
-        analysis_id=analysis_id,
-        correlation_id="worker-run-2-post-restart",
-        repository=repo,
-    )
-    await e2e_session.commit()
-
-    # 4. Verificação final pós-retomada
-    final_analysis = await repo.get_by_id(analysis_id)
-    assert final_analysis is not None
-    assert final_analysis.status == AnalysisStatus.COMPLETED
-    assert final_analysis.recommendation == AnalysisRecommendation.APPROVED
-    assert len(final_analysis.steps) == 4
-
-    # Steps 1 e 2 preservaram os dados parciais do checkpoint anterior
-    assert final_analysis.steps[0].output_summary.get("partial") is True
-    assert final_analysis.steps[1].output_summary.get("partial") is True
-
-    # Steps 3 e 4 foram concluídos pelo worker reiniciado
-    assert final_analysis.steps[2].status == "COMPLETED"
-    assert final_analysis.steps[2].output_summary.get("score") == 82.5
-    assert final_analysis.steps[3].status == "COMPLETED"
-    assert final_analysis.steps[3].output_summary.get("dossier_ready") is True
-
-    # Trilha de auditoria contém toda a linha do tempo com correlation IDs distintos
-    to_statuses = [e.to_status for e in final_analysis.audit_events]
-    assert AnalysisStatus.QUEUED in to_statuses
-    assert AnalysisStatus.RUNNING in to_statuses
-    assert AnalysisStatus.COMPLETED in to_statuses
+from collections.abc import AsyncGenerator
+from typing import Any
+
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from prometeus.domain.analyses import Analysis
+from prometeus.domain.configuration import AppSettings
+from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
+from prometeus.infrastructure.db.models import Base
+from prometeus.workers.tasks import WORKFLOW_STEPS, execute_workflow_steps
+
+
+@pytest.fixture
+async def e2e_session() -> AsyncGenerator[AsyncSession, None]:
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+    factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+    async with factory() as session:
+        yield session
+    await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_worker_is_a_thin_adapter_for_the_fifteen_step_use_case(
+    e2e_session: AsyncSession,
+) -> None:
+    calls: list[tuple[str, str]] = []
+
+    class StubUseCase:
+        async def execute(self, analysis_id: str, correlation_id: str) -> Any:
+            calls.append((analysis_id, correlation_id))
+
+    assert len(WORKFLOW_STEPS) == 15
+    assert [number for number, _ in WORKFLOW_STEPS] == list(range(1, 16))
+
+    await execute_workflow_steps(
+        analysis_id="analysis-1",
+        correlation_id="correlation-1",
+        repository=AnalysisRepository(e2e_session),
+        use_case=StubUseCase(),  # type: ignore[arg-type]
+    )
+
+    assert calls == [("analysis-1", "correlation-1")]
+
+
+@pytest.mark.asyncio
+async def test_worker_blocks_before_external_cost_when_runtime_preflight_fails(
+    e2e_session: AsyncSession,
+) -> None:
+    analysis = Analysis.create(
+        tenant_id="ens",
+        course_name="Curso sem credencial válida",
+        correlation_id="correlation-preflight",
+    )
+    repository = AnalysisRepository(e2e_session)
+    await repository.save(analysis)
+    await e2e_session.commit()
+
+    await execute_workflow_steps(
+        analysis_id=analysis.id,
+        correlation_id="correlation-preflight",
+        repository=repository,
+        runtime_settings=AppSettings(
+            _env_file=None,
+            AI_MODE="traditional",
+            GEN_LLM_PROVIDER="chatgpt_oauth",
+            CHATGPT_ACCESS_TOKEN="not-an-api-key",
+            OPENAI_API_KEY="",
+            APIFY_REQUIRED_SOURCES="",
+            CHATGPT_CREDENTIALS_PATH="var/test-non-existent-creds.json",
+        ),
+    )
+
+    persisted = await repository.get_by_id(analysis.id)
+    assert persisted is not None
+    assert persisted.status.value == "BLOCKED"
+    assert "llm_credentials_missing" in (persisted.audit_events[-1].reason or "")

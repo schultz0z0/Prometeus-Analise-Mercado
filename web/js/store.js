@@ -1,9 +1,23 @@
-/**
- * PROMETEUS INTELLIGENCE PLATFORM — REACTIVE STORE
- * Gerencia o estado da aplicação, persistência em localStorage e emissão de eventos.
- */
+/** Estado reativo da interface, alimentado exclusivamente pela API. */
 
-import { INITIAL_TENANTS, INITIAL_SETTINGS, INITIAL_COURSES, INITIAL_HISTORICAL_COURSES, DETAILED_DOSSIER } from './mock-data.js?v=20261023';
+import {
+  INITIAL_TENANTS,
+  INITIAL_SETTINGS,
+  INITIAL_COURSES,
+  INITIAL_HISTORICAL_COURSES
+} from './mock-data.js?v=20261027';
+
+const REAL_COURSES_STORAGE_KEY = 'prometeus_courses_real_v2';
+
+function numericOrNull(value) {
+  if (value === '' || value === null || value === undefined) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function nowLabel() {
+  return new Date().toLocaleTimeString('pt-BR');
+}
 
 class PrometeusStore {
   constructor() {
@@ -12,69 +26,52 @@ class PrometeusStore {
   }
 
   loadState() {
+    let savedSettings = INITIAL_SETTINGS;
+    let savedCourses = INITIAL_COURSES;
     try {
-      const savedTenant = localStorage.getItem('prometeus_tenant') || 'ens';
-      const savedSettings = JSON.parse(localStorage.getItem('prometeus_settings')) || INITIAL_SETTINGS;
-      const savedCourses = JSON.parse(localStorage.getItem('prometeus_courses')) || INITIAL_COURSES;
-      
-      this.state = {
-        tenants: INITIAL_TENANTS,
-        currentTenantId: savedTenant,
-        settings: savedSettings,
-        courses: savedCourses,
-        historicalCourses: INITIAL_HISTORICAL_COURSES,
-        portfolioTab: "historical", // 'historical' | 'diagnostics'
-        activeCourseId: "JOB-2026-ENS-884",
-        currentDossier: DETAILED_DOSSIER,
-        currentView: "portfolio", // 'validate' | 'portfolio' | 'live' | 'dossier' | 'settings'
-        liveJob: null
-      };
-    } catch (e) {
-      this.state = {
-        tenants: INITIAL_TENANTS,
-        currentTenantId: 'ens',
-        settings: INITIAL_SETTINGS,
-        courses: INITIAL_COURSES,
-        historicalCourses: INITIAL_HISTORICAL_COURSES,
-        portfolioTab: "historical",
-        activeCourseId: "JOB-2026-ENS-884",
-        currentDossier: DETAILED_DOSSIER,
-        currentView: "portfolio",
-        liveJob: null
-      };
+      savedSettings = JSON.parse(localStorage.getItem('prometeus_settings')) || INITIAL_SETTINGS;
+      savedCourses = JSON.parse(localStorage.getItem(REAL_COURSES_STORAGE_KEY)) || INITIAL_COURSES;
+    } catch (error) {
+      console.warn('Estado local inválido; iniciando interface limpa.', error);
     }
+    this.state = {
+      tenants: INITIAL_TENANTS,
+      currentTenantId: localStorage.getItem('prometeus_tenant') || 'ens',
+      settings: savedSettings,
+      courses: savedCourses,
+      historicalCourses: INITIAL_HISTORICAL_COURSES,
+      portfolioTab: 'historical',
+      activeCourseId: null,
+      currentDossier: null,
+      currentView: 'portfolio',
+      liveJob: null
+    };
   }
 
   saveState() {
     try {
       localStorage.setItem('prometeus_tenant', this.state.currentTenantId);
       localStorage.setItem('prometeus_settings', JSON.stringify(this.state.settings));
-      localStorage.setItem('prometeus_courses', JSON.stringify(this.state.courses));
-    } catch (e) {
-      console.warn("Falha ao salvar no localStorage", e);
+      localStorage.setItem(REAL_COURSES_STORAGE_KEY, JSON.stringify(this.state.courses));
+    } catch (error) {
+      console.warn('Falha ao salvar preferências locais.', error);
     }
   }
 
-  getState() {
-    return this.state;
-  }
+  getState() { return this.state; }
 
   subscribe(listener) {
     this.listeners.push(listener);
-    return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
-    };
+    return () => { this.listeners = this.listeners.filter(item => item !== listener); };
   }
 
   notify() {
     this.saveState();
-    for (const listener of this.listeners) {
-      listener(this.state);
-    }
+    this.listeners.forEach(listener => listener(this.state));
   }
 
   setTenant(tenantId) {
-    if (this.state.currentTenantId !== tenantId) {
+    if (this.state.tenants.some(tenant => tenant.id === tenantId)) {
       this.state.currentTenantId = tenantId;
       this.notify();
     }
@@ -84,6 +81,8 @@ class PrometeusStore {
     this.state.currentView = viewName;
     if (params.courseId) {
       this.state.activeCourseId = params.courseId;
+      const course = this.state.courses.find(item => item.id === params.courseId);
+      this.state.currentDossier = course?.dossier || null;
     }
     this.notify();
   }
@@ -95,495 +94,219 @@ class PrometeusStore {
 
   async loadHistoricalCourses() {
     try {
-      const resp = await fetch('/v1/institutional/courses?tenant_id=' + this.state.currentTenantId);
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data.courses && data.courses.length > 0) {
-          this.state.historicalCourses = data.courses;
-          this.notify();
-        }
-      }
-    } catch (e) {
-      console.warn("Falha ao carregar cursos históricos do backend:", e);
+      const response = await fetch(`/v1/institutional/courses?tenant_id=${encodeURIComponent(this.state.currentTenantId)}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      this.state.historicalCourses = Array.isArray(data.courses) ? data.courses : [];
+      this.notify();
+    } catch (error) {
+      console.warn('Base histórica indisponível.', error);
+      this.state.historicalCourses = [];
+      this.notify();
     }
   }
 
   async seedInstitutionalData(reset = true) {
     try {
-      const resp = await fetch('/v1/institutional/seed?tenant_id=' + this.state.currentTenantId + '&reset=' + reset, {
-        method: 'POST'
-      });
-      if (resp.ok) {
-        await this.loadHistoricalCourses();
-        return true;
-      }
-    } catch (e) {
-      console.error("Erro ao semear dados:", e);
+      const response = await fetch(`/v1/institutional/seed?tenant_id=${encodeURIComponent(this.state.currentTenantId)}&reset=${reset}`, { method: 'POST' });
+      if (!response.ok) return false;
+      await this.loadHistoricalCourses();
+      return true;
+    } catch (error) {
+      console.error('Falha ao carregar a base histórica de teste.', error);
+      return false;
     }
-    return false;
   }
 
   updateSettings(tenantId, newSettings, shouldNotify = true) {
-    this.state.settings[tenantId] = {
-      ...this.state.settings[tenantId],
-      ...newSettings
-    };
-    if (shouldNotify) {
-      this.notify();
-    } else {
-      this.saveState();
-    }
+    this.state.settings[tenantId] = { ...this.state.settings[tenantId], ...newSettings };
+    if (shouldNotify) this.notify(); else this.saveState();
   }
 
   async syncBackendSettings() {
     if (this._syncingBackendSettings || this._hasSyncedBackendSettings) return;
     this._syncingBackendSettings = true;
     try {
-      const resp = await fetch('/v1/settings');
-      if (resp.ok) {
-        const backendSettings = await resp.json();
-        const tenantId = this.state.currentTenantId;
-        this.updateSettings(tenantId, {
-          gen_llm_provider: backendSettings.gen_llm_provider || "chatgpt_oauth",
-          gen_llm_model: backendSettings.gen_llm_model || "gpt-6.1-sol",
-          gen_llm_reasoning_effort: backendSettings.gen_llm_reasoning_effort || "high",
-          chatgpt_access_token: backendSettings.chatgpt_access_token_masked || "",
-          jev_model: backendSettings.jev_model || "jev-v1.2.0",
-          apify_max_charge: backendSettings.apify_max_charge || 5.0,
-        }, false);
-        this._hasSyncedBackendSettings = true;
-      }
-    } catch (e) {
-      console.warn("Backend settings sync failed:", e);
+      const response = await fetch('/v1/settings');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const settings = await response.json();
+      this.updateSettings(this.state.currentTenantId, {
+        gen_llm_provider: settings.gen_llm_provider || '',
+        gen_llm_model: settings.gen_llm_model || '',
+        gen_llm_reasoning_effort: settings.gen_llm_reasoning_effort || '',
+        chatgpt_oauth_connected: Boolean(settings.chatgpt_oauth_connected),
+        chatgpt_oauth_email: settings.chatgpt_oauth_email || '',
+        chatgpt_oauth_model: settings.chatgpt_oauth_model || '',
+        openai_api_key_masked: settings.openai_api_key_masked || '',
+        apify_token_masked: settings.apify_token_masked || '',
+        is_jev_configured: Boolean(settings.is_jev_configured),
+        jev_model: settings.jev_model || '',
+        apify_max_charge: settings.apify_max_charge ?? null
+      }, false);
+      this._hasSyncedBackendSettings = true;
+    } catch (error) {
+      console.warn('Configuração do backend indisponível.', error);
     } finally {
       this._syncingBackendSettings = false;
     }
   }
 
   async startAnalysis(courseInput) {
-    const tempId = `anl_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
-    const idempotencyKey = `idemp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-
-    const newJob = {
-      id: tempId,
-      name: courseInput.name || "Novo Curso de Seguros",
-      area: courseInput.area || "Tecnologia & Negócios",
-      level: courseInput.level || "MBA Executivo",
-      modality: courseInput.modality || "EAD Síncrono",
-      ticket: parseFloat(courseInput.ticket) || 980.0,
-      duration_months: parseInt(courseInput.duration) || 12,
-      status: "RUNNING",
+    const job = {
+      id: `pending_${Date.now().toString(36)}`,
+      name: courseInput.name,
+      status: 'SUBMITTING',
       created_at: new Date().toISOString(),
-      step: 1,
-      logs: [
-        `[${new Date().toLocaleTimeString()}] Sistema: Conectando com o Backend FastAPI Real do Prometeus...`
-      ]
+      steps: [],
+      toolRuns: [],
+      blocking: null,
+      error: null,
+      logs: [`[${nowLabel()}] Enviando proposta para a API do Prometeus.`]
     };
-
-    this.state.liveJob = newJob;
-    this.state.currentView = "live";
+    this.state.liveJob = job;
+    this.state.currentView = 'live';
     this.notify();
 
-    try {
-      const payload = {
-        course_name: courseInput.name,
-        tenant_id: this.state.currentTenantId || "ens",
-        proposal_data: {
-          curriculum: courseInput.curriculum || "",
-          curriculum_text: courseInput.curriculum || "",
-          curriculum_file_name: courseInput.curriculum_file_name || "",
-          area: courseInput.area || "Ciências de Dados & Mercado Financeiro",
-          level: courseInput.level || "MBA Executivo",
-          modality: courseInput.modality || "EAD Síncrono",
-          ticket: parseFloat(courseInput.ticket) || 980.0,
-          duration_months: parseInt(courseInput.duration) || 12,
-          audience: courseInput.audience || "",
-          competitors: courseInput.competitors || ""
-        }
-      };
+    const payload = {
+      course_name: courseInput.name,
+      tenant_id: this.state.currentTenantId,
+      proposal_data: {
+        curriculum: courseInput.curriculum || '',
+        curriculum_text: courseInput.curriculum || '',
+        curriculum_file_name: courseInput.curriculum_file_name || '',
+        area: courseInput.area || '',
+        level: courseInput.level || '',
+        modality: courseInput.modality || '',
+        ticket: numericOrNull(courseInput.ticket),
+        duration_months: numericOrNull(courseInput.duration),
+        audience: courseInput.audience || '',
+        competitors: courseInput.competitors || ''
+      }
+    };
 
-      const resp = await fetch('/v1/analyses', {
+    try {
+      const response = await fetch('/v1/analyses', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Idempotency-Key': idempotencyKey
-        },
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
         body: JSON.stringify(payload)
       });
-
-      if (!resp.ok) {
-        throw new Error(`Falha HTTP ${resp.status}`);
-      }
-
-      const resData = await resp.json();
-      const realId = resData.analysis_id || tempId;
-      this.state.liveJob.id = realId;
-      this.state.liveJob.logs.push(`[${new Date().toLocaleTimeString()}] FastAPI: Análise ${realId} aceita (202 Accepted) e enfileirada no Celery Worker.`);
+      if (!response.ok) throw new Error(`A API recusou a solicitação (HTTP ${response.status}).`);
+      const data = await response.json();
+      job.id = data.analysis_id;
+      job.status = data.status;
+      job.logs.push(`[${nowLabel()}] Análise ${job.id} aceita e enviada ao worker.`);
       this.notify();
-
-      this.pollAnalysisStatus(realId, courseInput);
-    } catch (err) {
-      console.warn("Falha ao submeter via API real. Ativando pipeline local resiliente:", err);
-      this.state.liveJob.logs.push(`[${new Date().toLocaleTimeString()}] Aviso: Backend em modo offline/resiliente (${err.message}).`);
+      this.pollAnalysisStatus(job.id, courseInput);
+    } catch (error) {
+      job.status = 'FAILED';
+      job.error = error.message;
+      job.logs.push(`[${nowLabel()}] Falha real: ${error.message}`);
       this.notify();
-      this.simulateLivePipeline(this.state.liveJob, courseInput);
     }
   }
 
   pollAnalysisStatus(analysisId, courseInput) {
     let attempts = 0;
-    const maxAttempts = 60;
-    const loggedSteps = new Set();
-
-    const interval = setInterval(async () => {
-      attempts++;
-      if (!this.state.liveJob || this.state.liveJob.id !== analysisId) {
-        clearInterval(interval);
-        return;
-      }
-
+    const logged = new Set();
+    const poll = setInterval(async () => {
+      attempts += 1;
+      const job = this.state.liveJob;
+      if (!job || job.id !== analysisId) return clearInterval(poll);
       try {
-        const resp = await fetch(`/v1/analyses/${analysisId}`);
-        if (!resp.ok) {
-          if (attempts >= maxAttempts) {
-            clearInterval(interval);
-            this.finishJobWithFallback(this.state.liveJob, courseInput);
+        const response = await fetch(`/v1/analyses/${analysisId}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        job.status = data.status;
+        job.steps = data.steps || [];
+        job.toolRuns = data.tool_runs || [];
+        job.blocking = data.blocking || null;
+        job.steps.forEach(step => {
+          const key = `${step.step_number}:${step.status}`;
+          if (!logged.has(key)) {
+            logged.add(key);
+            job.logs.push(`[${nowLabel()}] Etapa ${step.step_number} — ${step.name}: ${step.status}.`);
           }
-          return;
-        }
-
-        const data = await resp.json();
-
-        // Mapeia steps do backend para a visualização
-        if (data.steps && data.steps.length > 0) {
-          const completedSteps = data.steps.filter(s => s.status === 'COMPLETED');
-          const currentStepIdx = Math.min(completedSteps.length + 1, 7);
-          this.state.liveJob.step = currentStepIdx;
-
-          data.steps.forEach(s => {
-            const stepLogKey = `step_${s.step_number}_${s.status}`;
-            if (!loggedSteps.has(stepLogKey)) {
-              loggedSteps.add(stepLogKey);
-              const summary = s.output_summary;
-              if (s.name === 'intake_validation' && summary) {
-                this.state.liveJob.logs.push(`[${new Date().toLocaleTimeString()}] Gatekeeper: ${summary.message || 'Ementa e premissas validadas.'}`);
-              } else if (s.name === 'evidence_collection' && summary) {
-                this.state.liveJob.logs.push(`[${new Date().toLocaleTimeString()}] Apify & CRM: ${summary.evidences_count || 3} fontes coletadas (${(summary.sources || []).join(', ')}).`);
-              } else if (s.name === 'scoring_calculation' && summary) {
-                this.state.liveJob.logs.push(`[${new Date().toLocaleTimeString()}] Scoring Engine: Viability Score ${summary.viability_score}. Breakeven: ${summary.breakeven_students} alunos.`);
-              } else if (s.name === 'dossier_compilation' && summary) {
-                this.state.liveJob.logs.push(`[${new Date().toLocaleTimeString()}] LLM Dossiê: Dossiê sintetizado com sucesso (${summary.model_used || 'GPT'}).`);
-              }
-            }
-          });
-          this.notify();
-        }
-
+        });
+        this.notify();
         if (data.status === 'COMPLETED') {
-          clearInterval(interval);
+          clearInterval(poll);
           await this.completeRealAnalysis(analysisId, data, courseInput);
-        } else if (data.status === 'FAILED') {
-          clearInterval(interval);
-          this.state.liveJob.logs.push(`[${new Date().toLocaleTimeString()}] Erro no worker da análise.`);
+        } else if (['BLOCKED', 'FAILED', 'WAITING_FOR_INPUT', 'CANCELLED'].includes(data.status)) {
+          clearInterval(poll);
+          job.error = data.blocking?.reason || `Processamento encerrado em ${data.status}.`;
+          job.logs.push(`[${nowLabel()}] ${job.error}`);
           this.notify();
-        } else if (attempts >= maxAttempts) {
-          clearInterval(interval);
-          await this.completeRealAnalysis(analysisId, data, courseInput);
+        } else if (attempts >= 150) {
+          clearInterval(poll);
+          job.status = 'TIMEOUT';
+          job.error = 'O processamento continua sem confirmação de conclusão. Consulte novamente a análise.';
+          this.notify();
         }
-      } catch (e) {
-        console.warn("Erro no polling de status:", e);
-        if (attempts >= maxAttempts) {
-          clearInterval(interval);
-          this.finishJobWithFallback(this.state.liveJob, courseInput);
+      } catch (error) {
+        if (attempts >= 150) {
+          clearInterval(poll);
+          job.status = 'CONNECTION_ERROR';
+          job.error = `Não foi possível consultar o backend: ${error.message}`;
+          this.notify();
         }
       }
-    }, 1200);
+    }, 2000);
   }
 
   async completeRealAnalysis(analysisId, analysisData, courseInput) {
-    let dossierData = null;
-    try {
-      const resp = await fetch(`/v1/analyses/${analysisId}/dossier`);
-      if (resp.ok) {
-        dossierData = await resp.json();
-      }
-    } catch (e) {
-      console.warn("Dossiê não pôde ser recuperado da API:", e);
+    const response = await fetch(`/v1/analyses/${analysisId}/dossier`);
+    if (!response.ok) {
+      this.state.liveJob.status = 'FAILED';
+      this.state.liveJob.error = `Análise concluída sem dossiê verificável (HTTP ${response.status}).`;
+      this.notify();
+      return;
     }
-
-    const ticket = parseFloat(courseInput.ticket) || 980.0;
-    const duration = parseInt(courseInput.duration) || 12;
-
-    const scoring = dossierData?.scoring || {};
-    const viabilityScore = scoring.viability_score || 86.4;
-    const breakevenStudents = scoring.gate_details?.breakeven_students || Math.max(12, Math.round(18000 / ticket));
-    const projectedStudents = scoring.gate_details?.projected_students || Math.round(breakevenStudents * 1.75);
-    const netRevenueProjected = scoring.gate_details?.net_revenue_projected || ((projectedStudents * ticket) - 18000);
-
-    const completedCourse = {
+    const dossier = await response.json();
+    if (dossier.status !== 'VERIFIED' || !dossier.scoring) {
+      this.state.liveJob.status = 'FAILED';
+      this.state.liveJob.error = 'O backend não retornou um dossiê factual verificado com scoring.';
+      this.notify();
+      return;
+    }
+    const scoring = dossier.scoring;
+    const course = {
       id: analysisId,
       name: courseInput.name,
-      area: courseInput.area || "Ciências de Dados & Mercado Financeiro",
-      level: courseInput.level || "MBA Executivo",
-      modality: courseInput.modality || "EAD Síncrono",
-      ticket: ticket,
-      duration_months: duration,
-      status: "COMPLETED",
-      recommendation: scoring.recommendation || analysisData.recommendation || "APPROVED_WITH_ADJUSTMENTS",
-      viability_score: viabilityScore,
-      coverage_index: scoring.coverage_score ? (scoring.coverage_score * 100) : 92.0,
-      confidence_index: scoring.confidence_score || 0.88,
-      demand_level: "ALTA (+88% YoY)",
-      competition_pressure: "MODERADA / ALTA",
-      breakeven_students: breakevenStudents,
-      projected_students: projectedStudents,
-      net_revenue_projected: netRevenueProjected,
-      created_at: new Date().toISOString(),
-      human_decision: null
+      area: courseInput.area || '',
+      level: courseInput.level || '',
+      modality: courseInput.modality || '',
+      ticket: numericOrNull(courseInput.ticket),
+      duration_months: numericOrNull(courseInput.duration),
+      status: analysisData.status,
+      recommendation: scoring.recommendation,
+      viability_score: scoring.viability_score,
+      coverage_index: scoring.coverage_score,
+      confidence_index: scoring.confidence_score,
+      created_at: dossier.created_at,
+      dossier
     };
-
-    if (dossierData) {
-      this.state.currentDossier = this.buildDossierViewObject(completedCourse, dossierData, courseInput);
-    }
-
-    this.state.courses.unshift(completedCourse);
+    this.state.courses = [course, ...this.state.courses.filter(item => item.id !== analysisId)];
     this.state.activeCourseId = analysisId;
+    this.state.currentDossier = dossier;
     this.state.liveJob = null;
-    this.state.currentView = "dossier";
+    this.state.currentView = 'dossier';
     this.notify();
   }
 
-  buildDossierViewObject(course, dossierData, courseInput) {
-    const rawSections = dossierData.sections || [];
-    const rawEvidences = dossierData.evidences || [];
-    const scoring = dossierData.scoring || {};
-    const pillarScores = scoring.pillar_scores || {};
-
-    const pillars = [
-      {
-        name: "Histórico Interno (ENS CRM)",
-        weight: "20%",
-        score: pillarScores.internal_history?.raw_score || 88.0,
-        status: "Forte",
-        detail: "5 cursos e 10 turmas históricas ENS analisadas com conversão média de 5.88%."
-      },
-      {
-        name: "Concorrência Paga (Meta Ads & Apify)",
-        weight: "20%",
-        score: pillarScores.paid_competition?.raw_score || 82.0,
-        status: "Moderada/Alta",
-        detail: "Varredura Apify de ofertas concorrentes ativas (FGV, FIA, PUC)."
-      },
-      {
-        name: "Busca & Tendência (Google)",
-        weight: "20%",
-        score: pillarScores.search_demand?.raw_score || 92.0,
-        status: "Altíssima",
-        detail: "Crescimento de +88% YoY em pesquisas por tecnologia aplicada a seguros."
-      },
-      {
-        name: "Empregabilidade (CBO / LinkedIn)",
-        weight: "15%",
-        score: pillarScores.employability?.raw_score || 85.0,
-        status: "Aquecida",
-        detail: "1.420 vagas mapeadas com média salarial de R$ 12.800 no CBO/LinkedIn."
-      },
-      {
-        name: "Aderência da Ementa (LLM / JEV)",
-        weight: "15%",
-        score: pillarScores.curriculum_fit?.raw_score || 78.0,
-        status: "Alinhada com Ajustes",
-        detail: `Ementa avaliada com ${courseInput.curriculum ? courseInput.curriculum.split('\n').filter(Boolean).length : 6} módulos propostos.`
-      },
-      {
-        name: "Maturidade Regulatória (MEC / SUSEP)",
-        weight: "10%",
-        score: pillarScores.regulatory?.raw_score || 95.0,
-        status: "Conforme",
-        detail: "Carga horária e diretrizes aderentes às normas da Resolução CNE/CES nº 1/2018."
-      }
-    ];
-
-    const radar_points = {
-      historico: pillars[0].score,
-      concorrencia: pillars[1].score,
-      busca: pillars[2].score,
-      empregabilidade: pillars[3].score,
-      ementa: pillars[4].score,
-      regulatorio: pillars[5].score
-    };
-
-    const competitors = [
-      {
-        institution: "Fundação Getulio Vargas (FGV)",
-        course: "Master em Analytics e Data Science nos Negócios",
-        modality: "EAD Síncrono",
-        price: "R$ 1.250,00/mês",
-        active_ads: 14,
-        weakness: "Pouca profundidade na regulação de seguros da SUSEP."
-      },
-      {
-        institution: "PUC Minas Virtual",
-        course: "Pós-Graduação em Inteligência Artificial e Aprendizado de Máquina",
-        modality: "100% EAD Assíncrono",
-        price: "R$ 680,00/mês",
-        active_ads: 8,
-        weakness: "Muito genérico; não dialoga com o mercado segurador e financeiro."
-      },
-      {
-        institution: "FIA Business School",
-        course: "Analytics Aplicado a Riscos e Fraudes Corporativas",
-        modality: "Híbrido (SP)",
-        price: "R$ 1.480,00/mês",
-        active_ads: 19,
-        weakness: "Formato rígido presencial/híbrido com ticket muito elevado."
-      }
-    ];
-
-    const curriculum_adjustments = [
-      {
-        module: "Módulo Teórico de Fundamentos",
-        problem: "Módulo excessivamente abstrato; risco de desengajamento de profissionais já atuantes.",
-        solution: "Substituir por laboratórios aplicados em Python para precificação e combate a fraudes em apólices.",
-        impact: "Aumenta a percepção de valor prático imediato e diferencia a oferta frente à FGV e PUC."
-      },
-      {
-        module: "Módulo de Governança Geral",
-        problem: "Falta de aprofundamento nas novas circulares da SUSEP e Open Insurance.",
-        solution: "Incluir auditoria algorítmica, sandbox regulatório da SUSEP e LGPD no setor segurador.",
-        impact: "Posiciona a ENS como a instituição definitiva e oficial do mercado regulado."
-      }
-    ];
-
-    return {
-      course_id: course.id,
-      model_name: dossierData.model_name || "ChatGPT / Prometeus Sol",
-      executive_summary: dossierData.executive_summary || "Análise executiva compilada com sucesso.",
-      sections: rawSections,
-      claims: dossierData.claims || [],
-      pillars,
-      radar_points,
-      competitors,
-      social_listening_pains: [
-        { pain: "Cursos concorrentes são excessivamente teóricos com slides antigos e fórmulas sem código.", count: 184, percent: "38%" },
-        { pain: "Falta de foco no dia a dia regulatório (SUSEP, Lei do Open Insurance e LGPD).", count: 122, percent: "25%" },
-        { pain: "Desejo expresso por projetos práticos em Python para precificação atuarial e sinistros.", count: 98, percent: "20%" },
-        { pain: "Preço muito alto nos cursos de elite sem flexibilidade de horário.", count: 82, percent: "17%" }
-      ],
-      curriculum_adjustments,
-      commercial_kit: {
-        recommended_names: [
-          { name: course.name, note: "Nome original submetido com forte relevância de marca." },
-          { name: `MBA Executivo em Inteligência Artificial e Analytics para Seguros`, note: "Maior volume de buscas orgânicas (+88% YoY)." },
-          { name: `Pós-Graduação em Gestão de Riscos, IA e Regulação SUSEP`, note: "Alta atratividade para o público corporativo B2B." }
-        ],
-        ad_hooks: [
-          `Pare de ver IA como teoria. Aprenda a prever sinistros e combater fraudes com os dados reais do mercado segurador na ENS.`,
-          `O mercado de seguros tem 1.400+ vagas para quem domina dados e regulação. Seu próximo passo profissional na ENS.`,
-          `Enquanto a concorrência ensina teorias antigas, a ENS entrega os modelos reais que as maiores seguradoras operam.`
-        ]
-      },
-      evidences: rawEvidences.length > 0 ? rawEvidences.map(e => ({
-        id: e.id,
-        source: e.source_name,
-        url: e.source_url,
-        timestamp: e.collected_at,
-        sha256: e.id,
-        snippet: JSON.stringify(e.sanitized_data || {})
-      })) : [
-        {
-          id: "EV-HIST-ENS-01",
-          source: "CRM Oficial ENS (Ofertas 2024 e 2025)",
-          url: "https://ens.edu.br/v1/cursos-historico",
-          timestamp: new Date().toISOString(),
-          sha256: "b6201948ba29048102948190248109284102984102",
-          snippet: "Base histórica ENS: 5 cursos em 2 anos acumulando 407 alunos e R$ 4,66M faturados com conversão média de 5.88%."
-        },
-        {
-          id: "EV-APIFY-SERP-01",
-          source: "Google Search Scraper (Apify Real)",
-          url: "https://api.apify.com/v2/acts/apify~google-search-scraper",
-          timestamp: new Date().toISOString(),
-          sha256: "a9019248ba29048102948190248109284102984101",
-          snippet: "Mapeamento em tempo real de campanhas ativas de pós-graduação e MBA no setor de seguros da FGV, FIA e PUC."
-        }
-      ]
-    };
-  }
-
-  simulateLivePipeline(job, courseInput) {
-    const steps = [
-      { step: 1, delay: 800, engine: "JEV Gatekeeper", text: "Proposta avaliada com prontidão semântica 100%. Ementa validada." },
-      { step: 2, delay: 1800, engine: "CRM Institucional", text: "Consultando CRM da ENS... 5 cursos históricos encontrados (407 alunos, conversão 5.88%)." },
-      { step: 3, delay: 2800, engine: "Google Trends", text: "Volume de busca em alta (+88% YoY). Pico de sazonalidade previsto para janeiro." },
-      { step: 4, delay: 3800, engine: "Meta Ads & Apify", text: "22 anúncios concorrentes ativos capturados da FGV, PUC e FIA. Mapeando criativos." },
-      { step: 5, delay: 4800, engine: "CBO & LinkedIn", text: "1.420 vagas ativas mapeadas exigindo formação em dados e regulação no setor de seguros." },
-      { step: 6, delay: 5800, engine: "JEV Ementa", text: "Auditoria curricular concluída: recomendada inclusão de laboratórios práticos em Python e SUSEP." },
-      { step: 7, delay: 6800, engine: "Scoring Engine", text: "Viability Score calculado: 86.4 (Recomendação: APPROVED_WITH_ADJUSTMENTS). Ponto de equilíbrio: 18 alunos." }
-    ];
-
-    steps.forEach(({ step, delay, engine, text }) => {
-      setTimeout(() => {
-        if (!this.state.liveJob || this.state.liveJob.id !== job.id) return;
-        
-        this.state.liveJob.step = step;
-        this.state.liveJob.logs.push(`[${new Date().toLocaleTimeString()}] ${engine}: ${text}`);
-        
-        if (step === 7) {
-          this.finishJobWithFallback(this.state.liveJob, courseInput);
-        } else {
-          this.notify();
-        }
-      }, delay);
+  async registerHumanDecision(courseId, decision, notes, deciderName) {
+    const response = await fetch(`/v1/analyses/${courseId}/decisions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: deciderName,
+        user_role: 'academic_committee',
+        decision,
+        rationale: notes,
+        adjustments: {}
+      })
     });
-  }
-
-  finishJobWithFallback(job, courseInput) {
-    const ticket = parseFloat(courseInput?.ticket || job.ticket) || 980.0;
-    const breakeven = Math.max(12, Math.round(18000 / ticket));
-    const projected = Math.round(breakeven * 1.75);
-    const netRevenue = (projected * ticket) - 18000;
-
-    const completedCourse = {
-      id: job.id,
-      name: job.name,
-      area: job.area,
-      level: job.level,
-      modality: job.modality,
-      ticket: ticket,
-      duration_months: job.duration_months,
-      status: "COMPLETED",
-      recommendation: "APPROVED_WITH_ADJUSTMENTS",
-      viability_score: 86.4,
-      coverage_index: 92.0,
-      confidence_index: 0.88,
-      demand_level: "MUITO ALTA (+88% YoY)",
-      competition_pressure: "MODERADA / ALTA",
-      breakeven_students: breakeven,
-      projected_students: projected,
-      net_revenue_projected: netRevenue,
-      created_at: job.created_at,
-      human_decision: null
-    };
-
-    this.state.courses.unshift(completedCourse);
-    this.state.activeCourseId = job.id;
-    this.state.liveJob = null;
-    this.state.currentView = "dossier";
-    this.notify();
-  }
-
-  registerHumanDecision(courseId, decision, notes, deciderName) {
-    const course = this.state.courses.find(c => c.id === courseId);
-    if (course) {
-      course.human_decision = {
-        status: decision,
-        decision_by: deciderName || "Diretoria Acadêmica",
-        decided_at: new Date().toISOString(),
-        notes: notes || "Decisão registrada em comitê."
-      };
-      this.notify();
-    }
+    if (!response.ok) throw new Error(`Decisão não registrada (HTTP ${response.status}).`);
+    return response.json();
   }
 }
 

@@ -31,9 +31,12 @@ def test_compose_yaml_network_isolation_and_services() -> None:
     assert "prometeus_internal" in services["api"]["networks"]
     assert "prometeus_public" in services["api"]["networks"]
 
-    # 4. Worker deve estar apenas na rede interna
+    # 4. Worker precisa da rede interna (DB/Redis) e de egress para LLM/Apify
     assert "worker" in services
-    assert services["worker"]["networks"] == ["prometeus_internal"]
+    assert "prometeus_internal" in services["worker"]["networks"]
+    assert "prometeus_public" in services["worker"]["networks"]
+    worker_healthcheck = " ".join(services["worker"]["healthcheck"]["test"])
+    assert "|| exit 0" not in worker_healthcheck
 
     # 5. Serviço de backup deve existir com snapshot configurado
     assert "backup" in services

@@ -90,6 +90,22 @@ def test_verifier_marks_unsupported_when_evidence_id_is_missing() -> None:
     assert verified.verification_status == VerificationStatus.UNSUPPORTED
 
 
+def test_verifier_rejects_qualitative_claim_without_existing_evidence() -> None:
+    verifier = DossierVerifier()
+    facts = create_fixture_facts()
+    claim = DossierClaim(
+        claim_id="CLM-NO-SOURCE",
+        statement="O curso possui forte aderência estratégica ao mercado.",
+        claim_type=ClaimType.QUALITATIVE,
+        evidence_ids=[],
+    )
+
+    verified = verifier.verify_claim(claim, facts)
+
+    assert verified.verification_status == VerificationStatus.UNSUPPORTED
+    assert "evidence_id" in (verified.verification_note or "")
+
+
 def test_verifier_marks_unsupported_when_evidence_id_does_not_exist() -> None:
     verifier = DossierVerifier()
     facts = create_fixture_facts()

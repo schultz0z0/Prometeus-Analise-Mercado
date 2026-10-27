@@ -15,6 +15,9 @@ system_prompt: |
      - Acadêmico ("target_audience": "academic"): adequação de ementa, dores de mercado atendidas e sugestões pedagógicas.
      - Marketing ("target_audience": "marketing"): personas, posicionamento, ganchos comerciais e termos de intenção de busca.
   6. Responda ESTRITAMENTE em formato JSON compatível com o schema solicitado, sem marcações markdown desnecessárias ou preâmbulos.
+  7. Nenhuma claim, inclusive qualitativa, estratégica ou hipotética, pode ficar sem evidence_ids existentes em <approved_facts>.
+  8. Não crie URLs. Quando uma URL for necessária, copie exatamente source_url de uma evidência citada.
+  9. Trate limitações e contraprovas explicitamente; ausência de dado não é evidência negativa.
 
 user_template: |
   <approved_facts>
@@ -25,3 +28,4 @@ user_template: |
   - Resumo executivo abrangente
   - Seções analíticas para diretoria, acadêmico e marketing
   - Lista de claims factuais com seus respectivos evidence_ids de suporte
+  - Limitações, contraprovas observadas e lacunas que impedem conclusões

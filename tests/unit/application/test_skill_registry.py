@@ -4,7 +4,6 @@ import pytest
 
 from prometeus.application.skill_registry import SkillRegistry, SkillRegistryError
 
-
 EXPECTED_SKILLS = {
     "understanding-course-proposals",
     "planning-market-research",
@@ -32,9 +31,7 @@ def test_registry_selects_skills_by_workflow_stage() -> None:
     assert [s.name for s in registry.for_stage("course_understanding")] == [
         "understanding-course-proposals"
     ]
-    assert [s.name for s in registry.for_stage("research_planning")] == [
-        "planning-market-research"
-    ]
+    assert [s.name for s in registry.for_stage("research_planning")] == ["planning-market-research"]
     assert [s.name for s in registry.for_stage("dossier_synthesis")] == [
         "reviewing-market-evidence",
         "building-course-offers",
@@ -46,4 +43,3 @@ def test_registry_rejects_arbitrary_skill_path() -> None:
 
     with pytest.raises(SkillRegistryError, match="allowlist"):
         registry.get("../secrets")
-

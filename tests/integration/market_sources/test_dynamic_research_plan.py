@@ -12,7 +12,7 @@ from prometeus.domain.research import CourseUnderstanding
 from prometeus.infrastructure.llm.fake import FakeGenerativeModel
 
 
-def test_settings() -> AppSettings:
+def make_settings() -> AppSettings:
     return AppSettings(
         _env_file=None,
         APIFY_REQUIRED_SOURCES="google_search,meta_ads_library,linkedin_jobs",
@@ -75,7 +75,7 @@ async def test_research_plan_is_course_specific_and_covers_required_sources() ->
         subject_domains=["seguros", "inteligência artificial"],
         target_audiences=["subscritores"],
     )
-    planner = CourseResearchPlanner(llm, SkillRegistry("skills"), test_settings())
+    planner = CourseResearchPlanner(llm, SkillRegistry("skills"), make_settings())
 
     plan = await planner.plan(understanding)
 
@@ -86,7 +86,9 @@ async def test_research_plan_is_course_specific_and_covers_required_sources() ->
         "meta_ads_library",
         "linkedin_jobs",
     }
-    assert all("subscr" in call.query.lower() or "ia" in call.query.lower() for call in plan.tool_calls)
+    assert all(
+        "subscr" in call.query.lower() or "ia" in call.query.lower() for call in plan.tool_calls
+    )
     assert plan.skill_snapshots[0]["name"] == "planning-market-research"
 
 
@@ -108,10 +110,9 @@ async def test_research_plan_rejects_missing_required_source() -> None:
             }
         )
     )
-    planner = CourseResearchPlanner(llm, SkillRegistry("skills"), test_settings())
+    planner = CourseResearchPlanner(llm, SkillRegistry("skills"), make_settings())
 
     with pytest.raises(ResearchPlanValidationError, match="fontes obrigatórias"):
         await planner.plan(
             CourseUnderstanding(analysis_id="anl-1", course_title="Curso de Seguros")
         )
-

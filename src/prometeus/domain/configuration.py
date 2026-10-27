@@ -6,6 +6,8 @@ e restrições operacionais críticas (ex.: proibição de jev-latest em produç
 
 from __future__ import annotations
 
+import base64
+import json
 import math
 from pathlib import Path
 from typing import Any
@@ -150,13 +152,19 @@ class AppSettings(BaseSettings):
     JEV_BASE_URL: str = "https://api.typesafe.ai/v1"
 
     # LLM Tradicional / Generativa (Síntese de Texto, Dossiê, Chatbot e Fallback de Decisões)
-    GEN_LLM_PROVIDER: str = "openai"  # openai, chatgpt_oauth, codex, anthropic, gemini
+    GEN_LLM_PROVIDER: str = "openai"  # adaptadores implementados: openai, openrouter
     GEN_LLM_MODEL: str = "gpt-4o-mini"
     GEN_LLM_REASONING_EFFORT: str = ""  # none, low, medium, high, extra_high, max
     GEN_LLM_TIMEOUT_SECONDS: int = 60
     OPENAI_API_KEY: str = ""
     OPENAI_BASE_URL: str = "https://api.openai.com/v1"
     CHATGPT_ACCESS_TOKEN: str = ""
+    CHATGPT_REFRESH_TOKEN: str = ""
+    CHATGPT_ID_TOKEN: str = ""
+    CHATGPT_OAUTH_CLIENT_ID: str = ""
+    CHATGPT_OAUTH_SCOPES: str = ""
+    CHATGPT_TOKEN_EXPIRES_AT: float = 0.0
+    CHATGPT_CREDENTIALS_PATH: str = "var/chatgpt/credentials.json"
     ANTHROPIC_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
 
@@ -196,14 +204,39 @@ class AppSettings(BaseSettings):
 
     @property
     def is_traditional_llm_configured(self) -> bool:
-        """Indica se há uma LLM tradicional configurada (API Key ou ChatGPT OAuth)."""
+        """Indica se o adaptador implementado possui uma API key compatível."""
         provider = self.GEN_LLM_PROVIDER.lower()
-        if provider in {"openai", "chatgpt_oauth", "codex", "openrouter"}:
-            return bool(self.OPENAI_API_KEY or self.CHATGPT_ACCESS_TOKEN)
-        if provider == "anthropic":
-            return bool(self.ANTHROPIC_API_KEY)
-        if provider == "gemini":
-            return bool(self.GEMINI_API_KEY)
+        if provider in {"openai", "openrouter"}:
+            return bool(self.OPENAI_API_KEY.strip())
+        if provider in {"chatgpt_oauth", "codex"}:
+            credential_path = Path(self.CHATGPT_CREDENTIALS_PATH)
+            if credential_path.is_file():
+                try:
+                    stored = json.loads(credential_path.read_text(encoding="utf-8"))
+                    scopes = stored.get("scopes", [])
+                    return bool(
+                        stored.get("access_token")
+                        and stored.get("refresh_token")
+                        and stored.get("client_id")
+                        and isinstance(scopes, list)
+                        and "chatgpt.tokens.use.direct" in scopes
+                    )
+                except (OSError, TypeError, ValueError, json.JSONDecodeError):
+                    return False
+        if provider in {"chatgpt_oauth", "codex"} and self.CHATGPT_ACCESS_TOKEN.strip():
+            try:
+                payload_segment = self.CHATGPT_ACCESS_TOKEN.split(".")[1]
+                payload_segment += "=" * (-len(payload_segment) % 4)
+                payload = json.loads(base64.urlsafe_b64decode(payload_segment))
+                scope = str(payload.get("scope", "")).split()
+                audience = payload.get("aud", [])
+                if isinstance(audience, str):
+                    audience = [audience]
+                return (
+                    "chatgpt.tokens.use.direct" in scope and "https://api.openai.com/v1" in audience
+                )
+            except (IndexError, ValueError, TypeError, json.JSONDecodeError):
+                return False
         return False
 
     @property

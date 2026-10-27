@@ -135,7 +135,6 @@ Módulo 6: Projeto Aplicado de Inteligência de Seguros (50h)</textarea>
           <div class="form-group col-12">
             <label class="form-label" for="course-competitors">Concorrentes Conhecidos (Opcional)</label>
             <input type="text" id="course-competitors" class="form-input" 
-                   value="FGV, FIA Business School, PUC Minas"
                    placeholder="Ex: FGV, PUC, Insper, cursos online da Alura/Udemy">
             <span class="form-hint">O Prometeus também varre automaticamente novas ofertas via Meta Ads e Google</span>
           </div>
@@ -145,7 +144,7 @@ Módulo 6: Projeto Aplicado de Inteligência de Seguros (50h)</textarea>
       <!-- Barra de Ação de Disparo -->
       <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--prometeus-border-subtle); padding-top:24px;">
         <div style="font-size:12px; color:var(--prometeus-text-muted);">
-          🏢 Conectado à API do CRM da <strong>${currentTenant.name}</strong> para cruzar com seu histórico interno.
+          🏢 A comparação histórica usa a base sintética autorizada de <strong>${currentTenant.name}</strong>, persistida no backend.
         </div>
         <button type="submit" class="prometeus-btn-primary" style="font-size:15px; padding:12px 28px;">
           <span>✦ Analisar Viabilidade da Oferta</span>

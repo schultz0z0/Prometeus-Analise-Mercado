@@ -24,6 +24,25 @@ class ScoringCalculator:
         """Limita valor estritamente ao intervalo [min_val, max_val]."""
         return max(min_val, min(max_val, val))
 
+    @staticmethod
+    def _observed_weighted_score(
+        components: list[tuple[float | None, float]],
+        *,
+        maximum_confidence: float,
+    ) -> tuple[float, float]:
+        """Agrega somente componentes observados e penaliza a confiança pela ausência.
+
+        Os pesos ausentes não recebem valores substitutos. Eles são removidos do
+        denominador do sub-score e reduzem proporcionalmente a confiança do pilar.
+        """
+        observed = [(value, weight) for value, weight in components if value is not None]
+        if not observed:
+            return 0.0, 0.0
+        observed_weight = sum(weight for _, weight in observed)
+        score = sum(float(value) * weight for value, weight in observed) / observed_weight
+        confidence = maximum_confidence * observed_weight
+        return round(score, 2), round(confidence, 4)
+
     def compute_internal_history(
         self,
         comparable_fit_score: float | None,
@@ -36,23 +55,18 @@ class ScoringCalculator:
 
         comp_part = self._clamp(comparable_fit_score)
 
-        # Conversão de 0% a 20% mapeada para [0, 100]
-        if conversion_rate is not None:
-            conv_part = self._clamp((conversion_rate / 0.15) * 100.0)
-        else:
-            conv_part = comp_part
-
-        # Volume de matrículas históricas (0 a 100 alunos)
-        if enrollments_count is not None:
-            vol_part = self._clamp((enrollments_count / 50.0) * 100.0)
-        else:
-            vol_part = comp_part
-
-        raw_score = 0.50 * comp_part + 0.30 * conv_part + 0.20 * vol_part
-        confidence = (
-            0.90 if (conversion_rate is not None and enrollments_count is not None) else 0.70
+        conv_part = (
+            self._clamp((conversion_rate / 0.15) * 100.0) if conversion_rate is not None else None
         )
-        return round(raw_score, 2), confidence
+        vol_part = (
+            self._clamp((enrollments_count / 50.0) * 100.0)
+            if enrollments_count is not None
+            else None
+        )
+        return self._observed_weighted_score(
+            [(comp_part, 0.50), (conv_part, 0.30), (vol_part, 0.20)],
+            maximum_confidence=0.90,
+        )
 
     def compute_paid_competition(
         self,
@@ -65,16 +79,15 @@ class ScoringCalculator:
             return 0.0, 0.0
 
         # Anúncios concorrentes (proxy de validação de mercado e apetite de compra)
-        ad_val = ad_count or 0
-        ad_part = self._clamp((ad_val / 8.0) * 100.0)
+        ad_part = self._clamp((ad_count / 8.0) * 100.0) if ad_count is not None else None
 
         # Índice de concorrência Google Ads [0.0, 1.0]
-        comp_idx = competition_index if competition_index is not None else 0.5
-        idx_part = self._clamp(comp_idx * 100.0)
+        idx_part = self._clamp(competition_index * 100.0) if competition_index is not None else None
 
-        raw_score = 0.50 * ad_part + 0.50 * idx_part
-        confidence = 0.88 if (ad_count is not None and competition_index is not None) else 0.65
-        return round(raw_score, 2), confidence
+        return self._observed_weighted_score(
+            [(ad_part, 0.50), (idx_part, 0.50)],
+            maximum_confidence=0.88,
+        )
 
     def compute_search_and_media(
         self,
@@ -87,23 +100,23 @@ class ScoringCalculator:
             return 0.0, 0.0
 
         # Volume de busca mensal em escala logarítmica suave
-        vol = monthly_volume or 0
-        if vol <= 0:
+        if monthly_volume is None:
+            vol_part = None
+        elif monthly_volume <= 0:
             vol_part = 10.0
         else:
-            # log10(100) = 2 -> 30; log10(1000) = 3 -> 60; log10(10000) = 4 -> 90
-            vol_part = self._clamp(math.log10(max(10, vol)) * 25.0 - 15.0)
+            vol_part = self._clamp(math.log10(max(10, monthly_volume)) * 25.0 - 15.0)
 
         # Crescimento de tendência (-30% a +70% mapeado para [0, 100])
-        growth = growth_trend_pct if growth_trend_pct is not None else 10.0
-        growth_part = self._clamp(((growth + 30.0) / 100.0) * 100.0)
+        growth_part = self._clamp(growth_trend_pct + 30.0) if growth_trend_pct is not None else None
 
         # Interesse Google Trends (0 a 100)
-        interest_part = self._clamp(average_interest if average_interest is not None else 60.0)
+        interest_part = self._clamp(average_interest) if average_interest is not None else None
 
-        raw_score = 0.45 * vol_part + 0.30 * interest_part + 0.25 * growth_part
-        confidence = 0.92 if (monthly_volume is not None and average_interest is not None) else 0.70
-        return round(raw_score, 2), confidence
+        return self._observed_weighted_score(
+            [(vol_part, 0.45), (interest_part, 0.30), (growth_part, 0.25)],
+            maximum_confidence=0.92,
+        )
 
     def compute_employability(
         self,
@@ -118,30 +131,42 @@ class ScoringCalculator:
         jobs_part = self._clamp((open_jobs_count / 30.0) * 100.0)
 
         # Salário mediano de mercado (R$ 4.000 a R$ 14.000)
-        if salary_median_brl is not None:
-            sal_part = self._clamp(((salary_median_brl - 4000.0) / 10000.0) * 100.0)
-        else:
-            sal_part = jobs_part
+        sal_part = (
+            self._clamp(((salary_median_brl - 4000.0) / 10000.0) * 100.0)
+            if salary_median_brl is not None
+            else None
+        )
 
-        raw_score = 0.60 * jobs_part + 0.40 * sal_part
-        confidence = 0.85 if salary_median_brl is not None else 0.72
-        return round(raw_score, 2), confidence
+        return self._observed_weighted_score(
+            [(jobs_part, 0.60), (sal_part, 0.40)],
+            maximum_confidence=0.85,
+        )
 
     def compute_syllabus_fit(
         self,
-        jev_syllabus_score: float | None,
+        syllabus_fit_score: float | None = None,
         market_pain_points_covered_pct: float | None = None,
+        *,
+        jev_syllabus_score: float | None = None,
     ) -> tuple[float, float]:
         """Calcula sub-score e confiança do Pilar A (Aderência da Ementa às Demandas)."""
-        if jev_syllabus_score is None:
+        observed_syllabus_score = (
+            syllabus_fit_score if syllabus_fit_score is not None else jev_syllabus_score
+        )
+        if observed_syllabus_score is None:
             return 0.0, 0.0
 
-        jev_part = self._clamp(jev_syllabus_score)
-        pain_part = self._clamp((market_pain_points_covered_pct or 0.80) * 100.0)
+        syllabus_part = self._clamp(observed_syllabus_score)
+        pain_part = (
+            self._clamp(market_pain_points_covered_pct * 100.0)
+            if market_pain_points_covered_pct is not None
+            else None
+        )
 
-        raw_score = 0.75 * jev_part + 0.25 * pain_part
-        confidence = 0.90
-        return round(raw_score, 2), confidence
+        return self._observed_weighted_score(
+            [(syllabus_part, 0.75), (pain_part, 0.25)],
+            maximum_confidence=0.90,
+        )
 
     def compute_pricing(
         self,
@@ -224,8 +249,9 @@ class ScoringCalculator:
                 )
             elif pillar_key == PillarType.SYLLABUS_FIT:
                 raw, conf = self.compute_syllabus_fit(
-                    jev_syllabus_score=inputs.get("jev_syllabus_score"),
+                    syllabus_fit_score=inputs.get("syllabus_fit_score"),
                     market_pain_points_covered_pct=inputs.get("market_pain_points_covered_pct"),
+                    jev_syllabus_score=inputs.get("jev_syllabus_score"),
                 )
             elif pillar_key == PillarType.PRICING:
                 raw, conf = self.compute_pricing(
@@ -233,8 +259,33 @@ class ScoringCalculator:
                     market_median_price_brl=inputs.get("market_median_price_brl"),
                 )
             else:
-                raw = self._clamp(float(inputs.get("raw_score", 50.0)))
-                conf = float(inputs.get("confidence", 0.70))
+                if "raw_score" not in inputs or "confidence" not in inputs:
+                    pillar_scores[pillar_key] = PillarScore(
+                        pillar_id=pillar_key,
+                        raw_score=0.0,
+                        weight=weight,
+                        confidence=0.0,
+                        is_present=False,
+                        missing_reason="Pilar sem fórmula ou score explícito verificado",
+                        features={},
+                    )
+                    continue
+                raw = self._clamp(float(inputs["raw_score"]))
+                conf = self._clamp(float(inputs["confidence"]), 0.0, 1.0)
+
+            if conf <= 0.0:
+                pillar_scores[pillar_key] = PillarScore(
+                    pillar_id=pillar_key,
+                    raw_score=0.0,
+                    weight=weight,
+                    confidence=0.0,
+                    is_present=False,
+                    missing_reason=inputs.get(
+                        "missing_reason", "Nenhuma feature observada para o pilar"
+                    ),
+                    features={},
+                )
+                continue
 
             pillar_scores[pillar_key] = PillarScore(
                 pillar_id=pillar_key,

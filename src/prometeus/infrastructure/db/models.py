@@ -377,6 +377,7 @@ class ToolRunModel(Base):
     required: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     provider: Mapped[str] = mapped_column(String(32), nullable=False, default="apify")
     actor_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    actor_build: Mapped[str] = mapped_column(String(32), nullable=False)
     provider_run_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
     dataset_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="PLANNED")
@@ -435,9 +436,7 @@ class MarketEvidenceModel(Base):
     analysis: Mapped[AnalysisModel] = relationship(
         "AnalysisModel", back_populates="market_evidences"
     )
-    tool_run: Mapped[ToolRunModel | None] = relationship(
-        "ToolRunModel", back_populates="evidences"
-    )
+    tool_run: Mapped[ToolRunModel | None] = relationship("ToolRunModel", back_populates="evidences")
 
     __table_args__ = (
         Index("ix_market_evidences_analysis_type", "analysis_id", "evidence_type"),

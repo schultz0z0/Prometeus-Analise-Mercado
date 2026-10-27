@@ -14,7 +14,11 @@ from prometeus.domain.configuration import AppSettings, ConfigurationError
 from prometeus.domain.ports.decision_model import DecisionModelPort
 from prometeus.domain.ports.generative_model import GenerativeModelPort
 from prometeus.infrastructure.jev.client import TypeSafeJEVClient
-from prometeus.infrastructure.llm.client import OpenAIGenerativeClient
+from prometeus.infrastructure.llm.client import (
+    ChatGPTPlanGenerativeClient,
+    OpenAIGenerativeClient,
+)
+from prometeus.infrastructure.llm.codex_oauth import ChatGPTCredentialStore
 from prometeus.infrastructure.llm.decision_adapter import LLMDecisionAdapter
 
 logger = logging.getLogger(__name__)
@@ -30,21 +34,35 @@ def get_generative_model(settings: AppSettings | None = None) -> GenerativeModel
             f"A LLM tradicional '{provider or 'não definida'}' não possui credencial configurada."
         )
 
-    # Suporte a ChatGPT OAuth / Codex ou API OpenAI
-    if provider in {"openai", "chatgpt_oauth", "codex", "openrouter"}:
-        # Prioriza token de acesso OAuth/Codex se configurado, ou chave de API padrão
-        api_key = settings.CHATGPT_ACCESS_TOKEN or settings.OPENAI_API_KEY
+    if provider in {"openai", "openrouter"}:
         base_url = settings.OPENAI_BASE_URL
         model = settings.GEN_LLM_MODEL or "gpt-4o-mini"
         return OpenAIGenerativeClient(
             base_url=base_url,
-            api_key=api_key,
+            api_key=settings.OPENAI_API_KEY,
             model=model,
             reasoning_effort=settings.GEN_LLM_REASONING_EFFORT,
             timeout_seconds=float(settings.GEN_LLM_TIMEOUT_SECONDS),
         )
 
-    # Fallback padrão
+    if provider in {"chatgpt_oauth", "codex"}:
+        credential_store = ChatGPTCredentialStore(settings.CHATGPT_CREDENTIALS_PATH)
+        credentials = credential_store.load()
+        return ChatGPTPlanGenerativeClient(
+            access_token=(
+                credentials.access_token if credentials else settings.CHATGPT_ACCESS_TOKEN
+            ),
+            base_url=settings.OPENAI_BASE_URL,
+            model=(
+                credentials.selected_model
+                if credentials
+                else settings.GEN_LLM_MODEL or "gpt-6.1-sol"
+            ),
+            reasoning_effort=settings.GEN_LLM_REASONING_EFFORT,
+            timeout_seconds=float(settings.GEN_LLM_TIMEOUT_SECONDS),
+            credential_store=credential_store if credentials else None,
+        )
+
     raise ConfigurationError(
         f"GEN_LLM_PROVIDER '{provider}' ainda não possui adaptador de runtime implementado."
     )

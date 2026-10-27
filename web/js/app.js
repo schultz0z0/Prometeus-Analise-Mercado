@@ -3,13 +3,13 @@
  * Orquestrador principal da aplicação SPA, roteamento e renderização reativa.
  */
 
-import { store } from './store.js?v=20261023c';
-import { renderPortfolioView, bindPortfolioEvents } from './views/portfolio-view.js?v=20261023c';
-import { renderIntakeView, bindIntakeEvents } from './views/intake-view.js?v=20261023c';
-import { renderLiveView, bindLiveEvents } from './views/live-view.js?v=20261023c';
-import { renderDossierView, bindDossierEvents } from './views/dossier-view.js?v=20261023c';
-import { renderSettingsView, bindSettingsEvents } from './views/settings-view.js?v=20261023c';
-import { renderEvidenceDrawer, bindEvidenceDrawerEvents } from './components/evidence-drawer.js?v=20261023c';
+import { store } from './store.js?v=20261027';
+import { renderPortfolioView, bindPortfolioEvents } from './views/portfolio-view.js?v=20261027';
+import { renderIntakeView, bindIntakeEvents } from './views/intake-view.js?v=20261027';
+import { renderLiveView, bindLiveEvents } from './views/live-view.js?v=20261027';
+import { renderDossierView, bindDossierEvents } from './views/dossier-view.js?v=20261027';
+import { renderSettingsView, bindSettingsEvents } from './views/settings-view.js?v=20261027';
+import { renderEvidenceDrawer, bindEvidenceDrawerEvents } from './components/evidence-drawer.js?v=20261027';
 
 class PrometeusApp {
   constructor() {
@@ -56,7 +56,7 @@ class PrometeusApp {
           <div class="header-actions">
             <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--prometeus-text-secondary);">
               <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--prometeus-status-approved); box-shadow:0 0 8px var(--prometeus-status-approved);"></span>
-              <span>Engine Operacional</span>
+              <span>Status detalhado disponível durante cada análise</span>
             </div>
 
             <button class="prometeus-btn-secondary" id="btn-header-settings" style="padding:6px 14px; font-size:13px; min-height:36px;">
@@ -142,15 +142,6 @@ class PrometeusApp {
     if (tabDossier) tabDossier.addEventListener('click', () => store.setView('dossier'));
     if (tabSettings) tabSettings.addEventListener('click', () => store.setView('settings'));
     if (btnHeaderSettings) btnHeaderSettings.addEventListener('click', () => store.setView('settings'));
-
-    // Seletor de Tenant
-    const tenantTrigger = document.getElementById('tenant-dropdown-trigger');
-    if (tenantTrigger) {
-      tenantTrigger.addEventListener('click', () => {
-        const nextTenant = state.currentTenantId === 'ens' ? 'fgv' : state.currentTenantId === 'fgv' ? 'puc' : 'ens';
-        store.setTenant(nextTenant);
-      });
-    }
 
     // Binda eventos da view ativa
     if (state.currentView === 'portfolio') {

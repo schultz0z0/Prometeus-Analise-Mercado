@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import html
+import json
 import logging
 import os
+import time
 import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -35,8 +38,20 @@ from prometeus.infrastructure.db.models import (
     HumanDecisionModel,
     MarketEvidenceModel,
     ScoringResultModel,
+    ToolRunModel,
 )
 from prometeus.infrastructure.db.session import get_db_session, get_engine
+from prometeus.infrastructure.llm.client import ChatGPTPlanGenerativeClient
+from prometeus.infrastructure.llm.codex_oauth import (
+    DIRECT_USAGE_SCOPE,
+    DYNAMIC_CLIENT_ID,
+    ChatGPTCredentials,
+    ChatGPTCredentialStore,
+    build_chatgpt_auth_url,
+    exchange_chatgpt_code,
+    get_verifier_for_state,
+    list_chatgpt_models,
+)
 from prometeus.observability.logging import (
     correlation_id_ctx,
     setup_logging,
@@ -242,6 +257,22 @@ async def get_analysis(
             detail=f"Análise não encontrada: {analysis_id}",
         )
 
+    tool_runs = (
+        (
+            await session.execute(
+                select(ToolRunModel)
+                .where(ToolRunModel.analysis_id == analysis_id)
+                .order_by(ToolRunModel.started_at, ToolRunModel.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    blocking_event = next(
+        (event for event in reversed(analysis.audit_events) if event.to_status.value == "BLOCKED"),
+        None,
+    )
+
     return {
         "analysis_id": analysis.id,
         "tenant_id": analysis.tenant_id,
@@ -250,6 +281,14 @@ async def get_analysis(
         "recommendation": analysis.recommendation.value if analysis.recommendation else None,
         "created_at": analysis.created_at.isoformat(),
         "updated_at": analysis.updated_at.isoformat(),
+        "blocking": (
+            {
+                "reason": blocking_event.reason,
+                "created_at": blocking_event.created_at.isoformat(),
+            }
+            if blocking_event
+            else None
+        ),
         "steps": [
             {
                 "step_number": s.step_number,
@@ -268,6 +307,27 @@ async def get_analysis(
                 "created_at": e.created_at.isoformat(),
             }
             for e in analysis.audit_events
+        ],
+        "tool_runs": [
+            {
+                "capability": run.capability,
+                "query": run.query,
+                "required": run.required,
+                "provider": run.provider,
+                "actor_id": run.actor_id,
+                "actor_build": run.actor_build,
+                "status": run.status,
+                "run_id": run.provider_run_id,
+                "dataset_id": run.dataset_id,
+                "raw_items_count": run.raw_items_count,
+                "valid_items_count": run.valid_items_count,
+                "cost_usd": run.cost_usd,
+                "error_code": run.error_code,
+                "error_message": run.error_message,
+                "started_at": run.started_at.isoformat() if run.started_at else None,
+                "finished_at": run.finished_at.isoformat() if run.finished_at else None,
+            }
+            for run in tool_runs
         ],
     }
 
@@ -424,13 +484,15 @@ async def get_dossier(
         "cost_usd": dossier.cost_usd,
         "created_at": dossier.created_at.isoformat(),
         "scoring": {
-            "viability_score": scoring.viability_score if scoring else 86.4,
-            "coverage_score": scoring.coverage_score if scoring else 0.92,
-            "confidence_score": scoring.confidence_score if scoring else 0.88,
-            "recommendation": scoring.recommendation if scoring else "APPROVED_WITH_ADJUSTMENTS",
-            "pillar_scores": scoring.pillar_scores if scoring else {},
-            "gate_details": scoring.gate_details if scoring else {},
-        } if scoring else None,
+            "viability_score": scoring.viability_score,
+            "coverage_score": scoring.coverage_score,
+            "confidence_score": scoring.confidence_score,
+            "recommendation": scoring.recommendation,
+            "pillar_scores": scoring.pillar_scores,
+            "gate_details": scoring.gate_details,
+        }
+        if scoring
+        else None,
         "evidences": [
             {
                 "id": ev.id,
@@ -677,27 +739,47 @@ async def list_institutional_courses(
         )
 
         meta = dataset_map.get(c.external_id, {})
-        tier = meta.get("tier") or meta.get("performance_tier") or ("CANCELADO_POR_QUORUM" if c.status == "archived" else "SUCESSO")
+        tier = (
+            meta.get("tier")
+            or meta.get("performance_tier")
+            or ("CANCELADO_POR_QUORUM" if c.status == "archived" else "SUCESSO")
+        )
         segment = meta.get("segment") or c.category
         quorum_min = meta.get("quorum_min") or meta.get("quorum_minimum") or 18
 
-        funnel_history = []
+        funnel_history: list[dict[str, Any]] = []
         for f in sorted(funnels, key=lambda x: str(x.period)):
-            f_meta = next((item for item in meta.get("funnel_history", []) if str(item.get("period")) == str(f.period)), {})
-            is_cancelled = f_meta.get("status") == "CANCELLED_LOW_QUORUM" or (f.enrolled < quorum_min and c.status == "archived")
-            funnel_history.append({
-                "period": str(f.period),
-                "cohort_year": str(f.period),
-                "leads": f.leads,
-                "applicants": f.applicants,
-                "enrolled": f.enrolled,
-                "ticket": f.average_ticket_brl or 0.0,
-                "average_ticket_brl": f.average_ticket_brl or 0.0,
-                "revenue": f.total_revenue_brl or 0.0,
-                "total_revenue_brl": f.total_revenue_brl or 0.0,
-                "status": "CANCELLED_LOW_QUORUM" if is_cancelled else "COMPLETED",
-                "notes": f_meta.get("notes") or (f"Cancelado por quórum ({f.enrolled}/{quorum_min})" if is_cancelled else "Turma concluída com sucesso."),
-            })
+            f_meta: dict[str, Any] = next(
+                (
+                    item
+                    for item in meta.get("funnel_history", [])
+                    if str(item.get("period")) == str(f.period)
+                ),
+                {},
+            )
+            is_cancelled = f_meta.get("status") == "CANCELLED_LOW_QUORUM" or (
+                f.enrolled < quorum_min and c.status == "archived"
+            )
+            funnel_history.append(
+                {
+                    "period": str(f.period),
+                    "cohort_year": str(f.period),
+                    "leads": f.leads,
+                    "applicants": f.applicants,
+                    "enrolled": f.enrolled,
+                    "ticket": f.average_ticket_brl or 0.0,
+                    "average_ticket_brl": f.average_ticket_brl or 0.0,
+                    "revenue": f.total_revenue_brl or 0.0,
+                    "total_revenue_brl": f.total_revenue_brl or 0.0,
+                    "status": "CANCELLED_LOW_QUORUM" if is_cancelled else "COMPLETED",
+                    "notes": f_meta.get("notes")
+                    or (
+                        f"Cancelado por quórum ({f.enrolled}/{quorum_min})"
+                        if is_cancelled
+                        else "Turma concluída com sucesso."
+                    ),
+                }
+            )
 
         course_dict = {
             "id": c.id,
@@ -824,7 +906,6 @@ class SettingsUpdateRequest(BaseModel):
     gen_llm_provider: str | None = None
     gen_llm_model: str | None = None
     gen_llm_reasoning_effort: str | None = None
-    chatgpt_access_token: str | None = None
     openai_api_key: str | None = None
     openai_base_url: str | None = None
     typesafe_api_key: str | None = None
@@ -833,9 +914,60 @@ class SettingsUpdateRequest(BaseModel):
     apify_max_charge: float | None = None
 
 
+def _env_path() -> Path:
+    local_path = Path(".env")
+    return local_path if local_path.exists() or not Path("/app").is_dir() else Path("/app/.env")
+
+
+def _persist_env_updates(updates: dict[str, str]) -> None:
+    """Atualiza somente chaves conhecidas sem permitir injeção de novas linhas."""
+    if any("\n" in value or "\r" in value for value in updates.values()):
+        raise HTTPException(status_code=422, detail="Valor de configuração inválido.")
+    env_path = _env_path()
+    lines = env_path.read_text(encoding="utf-8").splitlines() if env_path.exists() else []
+    new_lines: list[str] = []
+    found_keys: set[str] = set()
+    for line in lines:
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#") and "=" in stripped:
+            key = stripped.split("=", 1)[0].strip()
+            if key in updates:
+                new_lines.append(f"{key}={updates[key]}")
+                found_keys.add(key)
+                continue
+        new_lines.append(line)
+    for key, value in updates.items():
+        if key not in found_keys:
+            new_lines.append(f"{key}={value}")
+        os.environ[key] = value
+    content = "\n".join(new_lines) + "\n"
+    written = False
+    temporary: Path | None = None
+    try:
+        temporary = env_path.with_suffix(f".tmp.{os.getpid()}")
+        temporary.write_text(content, encoding="utf-8")
+        temporary.replace(env_path)
+        written = True
+    except OSError:
+        pass
+    finally:
+        if not written and temporary is not None and temporary.exists():
+            try:
+                temporary.unlink()
+            except OSError:
+                pass
+
+    if not written:
+        try:
+            env_path.write_text(content, encoding="utf-8")
+        except OSError as exc:
+            logger.warning("Falha ao gravar arquivo de configuração %s: %s", env_path, exc)
+
+
 @app.get("/v1/settings", summary="Obter configurações ativas de IA e conectores")
 async def get_settings() -> dict[str, Any]:
     settings = AppSettings()
+    oauth_credentials = ChatGPTCredentialStore(settings.CHATGPT_CREDENTIALS_PATH).load()
 
     def mask(val: str) -> str:
         if not val or not val.strip():
@@ -849,6 +981,9 @@ async def get_settings() -> dict[str, Any]:
         "gen_llm_model": settings.GEN_LLM_MODEL,
         "gen_llm_reasoning_effort": settings.GEN_LLM_REASONING_EFFORT or "none",
         "chatgpt_access_token_masked": mask(settings.CHATGPT_ACCESS_TOKEN),
+        "chatgpt_oauth_connected": bool(oauth_credentials and oauth_credentials.has_direct_usage),
+        "chatgpt_oauth_email": oauth_credentials.email if oauth_credentials else None,
+        "chatgpt_oauth_model": oauth_credentials.selected_model if oauth_credentials else None,
         "openai_api_key_masked": mask(settings.OPENAI_API_KEY),
         "typesafe_api_key_masked": mask(settings.TYPESAFE_API_KEY),
         "jev_model": settings.JEV_MODEL,
@@ -866,22 +1001,15 @@ async def get_settings() -> dict[str, Any]:
 
 @app.post("/v1/settings", summary="Atualizar configurações de IA e conectores via app")
 async def update_settings_endpoint(payload: SettingsUpdateRequest) -> dict[str, Any]:
-    env_path = Path(".env")
-    if not env_path.exists():
-        env_path = Path("/app/.env")
-
-    env_content = env_path.read_text(encoding="utf-8") if env_path.exists() else ""
-    lines = env_content.splitlines()
-
     updates: dict[str, str] = {}
     if payload.gen_llm_provider is not None:
+        if payload.gen_llm_provider not in {"openai", "openrouter", "chatgpt_oauth"}:
+            raise HTTPException(status_code=422, detail="Provedor de LLM não suportado.")
         updates["GEN_LLM_PROVIDER"] = payload.gen_llm_provider
     if payload.gen_llm_model is not None:
         updates["GEN_LLM_MODEL"] = payload.gen_llm_model
     if payload.gen_llm_reasoning_effort is not None:
         updates["GEN_LLM_REASONING_EFFORT"] = payload.gen_llm_reasoning_effort
-    if payload.chatgpt_access_token is not None and not payload.chatgpt_access_token.startswith("••••"):
-        updates["CHATGPT_ACCESS_TOKEN"] = payload.chatgpt_access_token
     if payload.openai_api_key is not None and not payload.openai_api_key.startswith("••••"):
         updates["OPENAI_API_KEY"] = payload.openai_api_key
     if payload.openai_base_url is not None:
@@ -895,26 +1023,7 @@ async def update_settings_endpoint(payload: SettingsUpdateRequest) -> dict[str, 
     if payload.apify_max_charge is not None:
         updates["APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS"] = str(payload.apify_max_charge)
 
-    new_lines: list[str] = []
-    found_keys: set[str] = set()
-    for line in lines:
-        stripped = line.strip()
-        if stripped and not stripped.startswith("#") and "=" in stripped:
-            k = stripped.split("=", 1)[0].strip()
-            if k in updates:
-                new_lines.append(f"{k}={updates[k]}")
-                found_keys.add(k)
-                continue
-        new_lines.append(line)
-
-    for k, v in updates.items():
-        if k not in found_keys:
-            new_lines.append(f"{k}={v}")
-
-    for k, v in updates.items():
-        os.environ[k] = str(v)
-
-    env_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+    _persist_env_updates(updates)
     logger.info("Configurações atualizadas com sucesso via REST API /v1/settings.")
     return {"status": "SUCCESS", "message": "Configurações salvas com sucesso no Prometeus."}
 
@@ -925,17 +1034,15 @@ async def update_settings_endpoint(payload: SettingsUpdateRequest) -> dict[str, 
 # e suporte a autorização oficial OpenAI e simulação rápida em staging.
 # =============================================================================
 
-from prometeus.infrastructure.llm.codex_oauth import (
-    build_chatgpt_auth_url,
-    exchange_chatgpt_code,
-    get_verifier_for_state,
-)
-
 
 @app.get("/v1/auth/chatgpt/url", summary="Obter URL oficial de autorização da OpenAI com PKCE")
 async def chatgpt_oauth_url() -> dict[str, str]:
     """Gera o par PKCE S256 e retorna a URL oficial da OpenAI para o fluxo OAuth direto."""
-    auth_data = build_chatgpt_auth_url(redirect_uri="http://localhost:1455/auth/callback")
+    settings = AppSettings()
+    credentials = ChatGPTCredentialStore(settings.CHATGPT_CREDENTIALS_PATH).load()
+    auth_data = build_chatgpt_auth_url(
+        client_id=credentials.client_id if credentials else DYNAMIC_CLIENT_ID
+    )
     return {
         "auth_url": auth_data["auth_url"],
         "state": auth_data["state"],
@@ -943,402 +1050,169 @@ async def chatgpt_oauth_url() -> dict[str, str]:
     }
 
 
-@app.get("/v1/auth/chatgpt/login", summary="Redirecionar diretamente para tela oficial de login da OpenAI")
+@app.get(
+    "/v1/auth/chatgpt/login",
+    summary="Redirecionar diretamente para tela oficial de login da OpenAI",
+)
 async def chatgpt_oauth_login() -> RedirectResponse:
     """Redireciona o navegador diretamente para a tela oficial de login da OpenAI com PKCE."""
-    auth_data = build_chatgpt_auth_url(redirect_uri="http://localhost:1455/auth/callback")
-    return RedirectResponse(url=auth_data["auth_url"], status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+    settings = AppSettings()
+    credentials = ChatGPTCredentialStore(settings.CHATGPT_CREDENTIALS_PATH).load()
+    auth_data = build_chatgpt_auth_url(
+        client_id=credentials.client_id if credentials else DYNAMIC_CLIENT_ID
+    )
+    return RedirectResponse(
+        url=auth_data["auth_url"], status_code=status.HTTP_307_TEMPORARY_REDIRECT
+    )
 
 
-@app.get("/v1/auth/chatgpt/consent", response_class=HTMLResponse, summary="Tela informativa alternativa")
-async def chatgpt_oauth_consent() -> str:
-    auth_data = build_chatgpt_auth_url(redirect_uri="http://localhost:1455/auth/callback")
-    official_auth_url = auth_data["auth_url"]
-
-    return f"""<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>Autorizar Conexão ChatGPT / Codex — Prometeus</title>
-  <style>
-    body {{
-      margin: 0;
-      padding: 32px 24px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background: #0d0f17;
-      color: #f1f5f9;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 85vh;
-    }}
-    .auth-card {{
-      background: #161b26;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
-      padding: 32px 28px;
-      max-width: 440px;
-      width: 100%;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-      text-align: center;
-    }}
-    .brand-icon {{
-      width: 56px;
-      height: 56px;
-      background: #10a37f;
-      border-radius: 12px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      margin-bottom: 16px;
-      box-shadow: 0 4px 16px rgba(16, 163, 127, 0.4);
-    }}
-    h1 {{
-      font-size: 20px;
-      font-weight: 700;
-      margin: 0 0 8px 0;
-      color: #ffffff;
-    }}
-    p {{
-      font-size: 13px;
-      color: #94a3b8;
-      line-height: 1.5;
-      margin: 0 0 20px 0;
-    }}
-    .scope-box {{
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 10px;
-      padding: 14px;
-      text-align: left;
-      font-size: 12px;
-      margin-bottom: 24px;
-    }}
-    .scope-item {{
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-      color: #cbd5e1;
-    }}
-    .scope-item:last-child {{
-      margin-bottom: 0;
-    }}
-    .btn-official {{
-      background: #10a37f;
-      color: #ffffff;
-      border: none;
-      border-radius: 8px;
-      padding: 12px 20px;
-      font-size: 14px;
-      font-weight: 600;
-      width: 100%;
-      cursor: pointer;
-      text-decoration: none;
-      display: block;
-      box-sizing: border-box;
-      transition: background 0.2s;
-      margin-bottom: 10px;
-    }}
-    .btn-official:hover {{
-      background: #0e8e6e;
-    }}
-    .btn-simulate {{
-      background: rgba(255, 255, 255, 0.08);
-      color: #e2e8f0;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 8px;
-      padding: 10px 18px;
-      font-size: 13px;
-      font-weight: 500;
-      width: 100%;
-      cursor: pointer;
-      transition: background 0.2s;
-    }}
-    .btn-simulate:hover {{
-      background: rgba(255, 255, 255, 0.14);
-      color: #ffffff;
-    }}
-    .btn-cancel {{
-      background: transparent;
-      color: #94a3b8;
-      border: none;
-      padding: 10px;
-      font-size: 13px;
-      cursor: pointer;
-      margin-top: 8px;
-      width: 100%;
-    }}
-    .btn-cancel:hover {{
-      color: #ffffff;
-    }}
-  </style>
-</head>
-<body>
-  <div class="auth-card">
-    <div class="brand-icon">⚡</div>
-    <h1>Conectar Conta ChatGPT / Codex</h1>
-    <p>O aplicativo <strong>Prometeus</strong> solicita autorização para utilizar sua conta conectada e acessar os modelos de raciocínio da família Codex.</p>
-
-    <div class="scope-box">
-      <div class="scope-item">
-        <span style="color:#10a37f;">✓</span>
-        <span>Acesso à cota nativa da sua conta</span>
-      </div>
-      <div class="scope-item">
-        <span style="color:#10a37f;">✓</span>
-        <span>Modelos: <strong>GPT-6 Astra, GPT-6.1 Sol, GPT-5.6</strong></span>
-      </div>
-      <div class="scope-item">
-        <span style="color:#10a37f;">✓</span>
-        <span>Níveis de raciocínio: <strong>Low, Medium, High, Extra High, Max</strong></span>
-      </div>
-    </div>
-
-    <!-- Opção 1: Redirecionar para o Login Oficial da OpenAI com PKCE -->
-    <a href="{official_auth_url}" class="btn-official">
-      🔐 Entrar com OpenAI Oficial (PKCE)
-    </a>
-
-    <!-- Opção 2: 1-Clique Local Imediato em Staging -->
-    <button id="btn-submit" class="btn-simulate" onclick="authorizeSimulated()">
-      ⚡ Conectar com 1-Clique (Modo Rápido Staging)
-    </button>
-
-    <button class="btn-cancel" onclick="window.close()">Cancelar</button>
-  </div>
-
-  <script>
-    async function authorizeSimulated() {{
-      const btn = document.getElementById('btn-submit');
-      btn.textContent = 'Conectando conta...';
-      btn.disabled = true;
-
-      try {{
-        const resp = await fetch('/v1/auth/chatgpt/authorize', {{ method: 'POST' }});
-        if (resp.ok) {{
-          if (window.opener) {{
-            window.opener.postMessage({{ type: 'CHATGPT_OAUTH_SUCCESS' }}, '*');
-          }}
-          btn.textContent = '✓ Conectado com Sucesso!';
-          setTimeout(() => {{
-            window.close();
-          }}, 600);
-        }} else {{
-          alert('Falha na autorização');
-          btn.textContent = 'Tentar Novamente';
-          btn.disabled = false;
-        }}
-      }} catch (err) {{
-        alert('Erro ao conectar: ' + err);
-        btn.textContent = 'Tentar Novamente';
-        btn.disabled = false;
-      }}
-    }}
-  </script>
-</body>
-</html>
-"""
+@app.get("/v1/auth/chatgpt/consent", summary="Redirecionar para o consentimento oficial")
+async def chatgpt_oauth_consent() -> RedirectResponse:
+    settings = AppSettings()
+    credentials = ChatGPTCredentialStore(settings.CHATGPT_CREDENTIALS_PATH).load()
+    auth_data = build_chatgpt_auth_url(
+        client_id=credentials.client_id if credentials else DYNAMIC_CLIENT_ID
+    )
+    return RedirectResponse(
+        url=auth_data["auth_url"], status_code=status.HTTP_307_TEMPORARY_REDIRECT
+    )
 
 
-@app.get("/auth/callback", response_class=HTMLResponse, summary="Callback padrão OpenAI Codex na porta 1455")
-@app.get("/v1/auth/chatgpt/callback", response_class=HTMLResponse, summary="Callback de redirecionamento OAuth do ChatGPT")
-async def chatgpt_oauth_callback(code: str = "", state: str = "", error: str = "") -> str:
-    """Recebe o authorization code da OpenAI e troca pelo token de acesso."""
-    if error:
-        return f"""<!DOCTYPE html><html><body style="background:#0d0f17;color:#fff;font-family:sans-serif;padding:30px;text-align:center;">
-        <h3 style="color:#f87171;">Erro na autenticação OpenAI: {error}</h3>
-        <script>setTimeout(() => window.close(), 3000);</script>
-        </body></html>"""
-
+@app.get(
+    "/auth/callback",
+    response_class=HTMLResponse,
+    summary="Callback padrão OpenAI Codex na porta 1455",
+)
+@app.get(
+    "/v1/auth/chatgpt/callback",
+    response_class=HTMLResponse,
+    summary="Callback de redirecionamento OAuth do ChatGPT",
+)
+async def chatgpt_oauth_callback(
+    code: str = "",
+    state: str = "",
+    error: str = "",
+    client_id: str = "",
+) -> str:
+    """Troca e valida a autorização oficial antes de ativar a conta."""
     verifier_entry = get_verifier_for_state(state)
     if not verifier_entry:
-        return """<!DOCTYPE html><html><body style="background:#0d0f17;color:#fff;font-family:sans-serif;padding:30px;text-align:center;">
-        <h3 style="color:#fbbf24;">Estado OAuth expirado ou já utilizado. Tente novamente.</h3>
+        return """<!DOCTYPE html><html><body><h3>Estado OAuth expirado ou já utilizado.</h3>
         <script>setTimeout(() => window.close(), 3000);</script>
         </body></html>"""
+    if error:
+        return f"""<!DOCTYPE html><html><body><h3>Autorização não concluída: {html.escape(error)}</h3>
+        <script>setTimeout(() => window.close(), 3000);</script></body></html>"""
+    if not code:
+        return """<!DOCTYPE html><html><body><h3>O callback não recebeu código OAuth.</h3>
+        <script>setTimeout(() => window.close(), 3000);</script></body></html>"""
+
+    if verifier_entry.requested_client_id == DYNAMIC_CLIENT_ID:
+        effective_client_id = client_id
+        if not effective_client_id.startswith("oaiapp_"):
+            return """<!DOCTYPE html><html><body><h3>Registro OAuth não retornou client_id válido.</h3>
+            <script>setTimeout(() => window.close(), 3000);</script></body></html>"""
+    else:
+        effective_client_id = verifier_entry.requested_client_id
+        if client_id and client_id != effective_client_id:
+            return """<!DOCTYPE html><html><body><h3>client_id divergente; autorização rejeitada.</h3>
+            <script>setTimeout(() => window.close(), 3000);</script></body></html>"""
 
     try:
         token_result = await exchange_chatgpt_code(
             code=code,
             code_verifier=verifier_entry.code_verifier,
+            client_id=effective_client_id,
+            nonce=verifier_entry.nonce,
             redirect_uri=verifier_entry.redirect_uri,
         )
+        models = await list_chatgpt_models(token_result.access_token)
+        if not models:
+            raise RuntimeError("A conta não retornou modelos disponíveis para uso direto.")
+        configured_model = AppSettings().GEN_LLM_MODEL
+        available_slugs = [model["slug"] for model in models]
+        selected_model = (
+            configured_model if configured_model in available_slugs else available_slugs[0]
+        )
+        validation_client = ChatGPTPlanGenerativeClient(
+            access_token=token_result.access_token,
+            model=selected_model,
+            reasoning_effort="none",
+        )
+        validation_text = await validation_client.generate_text(
+            "Responda exatamente: OAuth Prometeus validado."
+        )
+        if not validation_text.strip():
+            raise RuntimeError("A inferência de validação terminou sem conteúdo.")
 
-        env_path = Path(".env")
-        if not env_path.exists():
-            env_path = Path("/app/.env")
-
-        env_content = env_path.read_text(encoding="utf-8") if env_path.exists() else ""
-        lines = env_content.splitlines()
-
-        updates = {
-            "GEN_LLM_PROVIDER": "chatgpt_oauth",
-            "CHATGPT_ACCESS_TOKEN": token_result.access_token,
-            "GEN_LLM_MODEL": "gpt-6.1-sol",
-            "GEN_LLM_REASONING_EFFORT": "high",
-        }
-
-        new_lines: list[str] = []
-        found_keys: set[str] = set()
-        for line in lines:
-            stripped = line.strip()
-            if stripped and not stripped.startswith("#") and "=" in stripped:
-                k = stripped.split("=", 1)[0].strip()
-                if k in updates:
-                    new_lines.append(f"{k}={updates[k]}")
-                    found_keys.add(k)
-                    continue
-            new_lines.append(line)
-
-        for k, v in updates.items():
-            if k not in found_keys:
-                new_lines.append(f"{k}={v}")
-
-        for k, v in updates.items():
-            os.environ[k] = str(v)
-
-        env_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
-        email_str = token_result.email or "usuario@chatgpt"
-
-        return f"""<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Conexão Concluída — Prometeus</title>
-  <style>
-    body {{
-      background: #0d0f17;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 90vh;
-      margin: 0;
-    }}
-  </style>
-</head>
-<body>
-  <div style="text-align:center; background:#161b26; padding:32px; border-radius:16px; border:1px solid rgba(255,255,255,0.12);">
-    <div style="font-size:36px; margin-bottom:12px;">⚡</div>
-    <h2 style="color:#10a37f; margin:0 0 8px 0;">Conectado com Sucesso!</h2>
-    <p style="color:#cbd5e1; font-size:14px; margin:0 0 16px 0;">Conta vinculada: <strong>{email_str}</strong></p>
-    <p style="font-size:12px; color:#94a3b8; margin:0;">Fechando janela e atualizando aplicação...</p>
-  </div>
-  <script>
-    if (window.opener) {{
-      window.opener.postMessage({{ type: 'CHATGPT_OAUTH_SUCCESS', email: '{email_str}' }}, '*');
-    }}
-    setTimeout(() => window.close(), 900);
-  </script>
-</body>
-</html>"""
+        settings = AppSettings()
+        credentials = ChatGPTCredentials(
+            access_token=token_result.access_token,
+            refresh_token=token_result.refresh_token,
+            id_token=token_result.id_token,
+            expires_at=time.time() + token_result.expires_in,
+            scopes=token_result.scopes,
+            client_id=token_result.client_id,
+            subject=token_result.subject,
+            email=token_result.email,
+            selected_model=selected_model,
+        )
+        ChatGPTCredentialStore(settings.CHATGPT_CREDENTIALS_PATH).save(credentials)
+        try:
+            _persist_env_updates(
+                {
+                    "GEN_LLM_PROVIDER": "chatgpt_oauth",
+                    "GEN_LLM_MODEL": selected_model,
+                    "CHATGPT_ACCESS_TOKEN": "",
+                }
+            )
+        except Exception as exc:
+            logger.warning("Credenciais salvas, mas falha ao atualizar .env: %s", exc)
+        message = json.dumps({"type": "CHATGPT_OAUTH_SUCCESS"})
+        return f"""<!DOCTYPE html><html><body><h2>Conexão validada com sucesso</h2>
+        <p>{html.escape(token_result.email or "Conta ChatGPT")}</p>
+        <p>Modelo validado: {html.escape(selected_model)}</p>
+        <script>if(window.opener)window.opener.postMessage({message}, window.location.origin);
+        setTimeout(() => window.close(), 1200);</script></body></html>"""
     except Exception as exc:
-        logger.error(f"Erro na troca do código OAuth com a OpenAI: {exc}")
-        return f"""<!DOCTYPE html><html><body style="background:#0d0f17;color:#fff;font-family:sans-serif;padding:30px;text-align:center;">
-        <h3 style="color:#f87171;">Falha ao trocar código OAuth com a OpenAI</h3>
-        <p style="color:#94a3b8;font-size:13px;">{exc}</p>
-        <script>setTimeout(() => window.close(), 4000);</script>
+        logger.exception("Falha ao validar a conexão ChatGPT OAuth.")
+        return f"""<!DOCTYPE html><html><body><h3>Falha ao validar ChatGPT OAuth</h3>
+        <p>{html.escape(str(exc))}</p><script>setTimeout(() => window.close(), 5000);</script>
         </body></html>"""
 
 
 @app.post("/v1/auth/chatgpt/authorize", summary="Processar autorização OAuth 1-clique")
 async def chatgpt_oauth_authorize() -> dict[str, Any]:
-    """Gera e persiste a sessão OAuth conectada automaticamente."""
-    env_path = Path(".env")
-    if not env_path.exists():
-        env_path = Path("/app/.env")
-
-    # Gera token de sessão OAuth para a conta
-    token = f"sess-chatgpt-oauth-{uuid.uuid4().hex[:16]}"
-    
-    env_content = env_path.read_text(encoding="utf-8") if env_path.exists() else ""
-    lines = env_content.splitlines()
-
-    updates = {
-        "GEN_LLM_PROVIDER": "chatgpt_oauth",
-        "CHATGPT_ACCESS_TOKEN": token,
-        "GEN_LLM_MODEL": "gpt-6.1-sol",
-        "GEN_LLM_REASONING_EFFORT": "high",
-    }
-
-    new_lines: list[str] = []
-    found_keys: set[str] = set()
-    for line in lines:
-        stripped = line.strip()
-        if stripped and not stripped.startswith("#") and "=" in stripped:
-            k = stripped.split("=", 1)[0].strip()
-            if k in updates:
-                new_lines.append(f"{k}={updates[k]}")
-                found_keys.add(k)
-                continue
-        new_lines.append(line)
-
-    for k, v in updates.items():
-        if k not in found_keys:
-            new_lines.append(f"{k}={v}")
-
-    for k, v in updates.items():
-        os.environ[k] = str(v)
-
-    env_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
-    logger.info("Conta ChatGPT OAuth conectada com sucesso via 1-Clique.")
-    return {
-        "status": "SUCCESS",
-        "message": "Conta ChatGPT OAuth conectada com sucesso.",
-        "provider": "chatgpt_oauth",
-        "model": "gpt-6.1-sol",
-        "access_token": token,
-    }
+    """Impossível simular autorização: somente o callback oficial pode conectar."""
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail="Fluxo simulado removido. Use /v1/auth/chatgpt/login.",
+    )
 
 
 @app.post("/v1/auth/chatgpt/disconnect", summary="Desconectar conta ChatGPT OAuth")
 async def chatgpt_oauth_disconnect() -> dict[str, Any]:
-    """Remove o token OAuth conectado."""
-    env_path = Path(".env")
-    if not env_path.exists():
-        env_path = Path("/app/.env")
-
-    env_content = env_path.read_text(encoding="utf-8") if env_path.exists() else ""
-    lines = env_content.splitlines()
-
-    new_lines: list[str] = []
-    for line in lines:
-        stripped = line.strip()
-        if stripped and not stripped.startswith("#") and "=" in stripped:
-            k = stripped.split("=", 1)[0].strip()
-            if k == "CHATGPT_ACCESS_TOKEN":
-                new_lines.append("CHATGPT_ACCESS_TOKEN=")
-                continue
-        new_lines.append(line)
-
-    os.environ["CHATGPT_ACCESS_TOKEN"] = ""
-
-    env_path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
-    logger.info("Conta ChatGPT OAuth desconectada com sucesso.")
-    return {"status": "DISCONNECTED"}
+    """Remove localmente o conjunto completo de credenciais OAuth."""
+    settings = AppSettings()
+    ChatGPTCredentialStore(settings.CHATGPT_CREDENTIALS_PATH).clear()
+    _persist_env_updates({"CHATGPT_ACCESS_TOKEN": ""})
+    logger.info("Credenciais locais ChatGPT OAuth removidas.")
+    return {"status": "DISCONNECTED", "remote_revocation_confirmed": False}
 
 
 @app.get("/v1/auth/chatgpt/status", summary="Consultar status da conexão ChatGPT OAuth")
 async def chatgpt_oauth_status() -> dict[str, Any]:
     settings = AppSettings()
-    is_connected = bool(settings.CHATGPT_ACCESS_TOKEN and settings.CHATGPT_ACCESS_TOKEN.strip())
+    credentials = ChatGPTCredentialStore(settings.CHATGPT_CREDENTIALS_PATH).load()
+    is_connected = bool(credentials and credentials.has_direct_usage)
     return {
         "connected": is_connected,
         "provider": settings.GEN_LLM_PROVIDER,
-        "model": settings.GEN_LLM_MODEL,
+        "model": credentials.selected_model if credentials else None,
         "reasoning_effort": settings.GEN_LLM_REASONING_EFFORT,
-        "account_type": "ChatGPT Plus/Team (Codex Enabled)" if is_connected else None,
-        "available_models": [
-            "gpt-6-astra",
-            "gpt-6.1-sol",
-            "gpt-5.6-sol",
-            "gpt-5.6-terra",
-            "gpt-5.6-luna",
-        ],
+        "email": credentials.email if credentials else None,
+        "direct_usage_scope": bool(credentials and DIRECT_USAGE_SCOPE in credentials.scopes),
+        "expires_at": credentials.expires_at if credentials else None,
     }
 
 
@@ -1352,4 +1226,3 @@ if not web_dir.exists():
 
 if web_dir.exists():
     app.mount("/", StaticFiles(directory=str(web_dir), html=True), name="web")
-

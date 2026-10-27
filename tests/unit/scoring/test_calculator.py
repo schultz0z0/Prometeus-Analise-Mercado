@@ -83,3 +83,45 @@ def test_missing_data_coverage_and_partial_score() -> None:
     # Partial score deve ser (V / Coverage)
     expected_partial = v_score / cov_score
     assert part_score == pytest.approx(expected_partial, abs=0.02)
+
+
+def test_missing_metrics_are_not_replaced_by_synthetic_defaults() -> None:
+    calc = ScoringCalculator()
+
+    paid_score, paid_confidence = calc.compute_paid_competition(
+        ad_count=8,
+        competition_index=None,
+    )
+    search_score, search_confidence = calc.compute_search_and_media(
+        monthly_volume=1000,
+        growth_trend_pct=None,
+        average_interest=None,
+    )
+    syllabus_score, syllabus_confidence = calc.compute_syllabus_fit(
+        syllabus_fit_score=80.0,
+        market_pain_points_covered_pct=None,
+    )
+
+    assert paid_score == 100.0
+    assert paid_confidence < 0.50
+    assert search_score == 60.0
+    assert search_confidence < 0.50
+    assert syllabus_score == 80.0
+    assert syllabus_confidence < 0.75
+
+
+def test_unknown_pillar_without_explicit_score_is_absent() -> None:
+    calc = ScoringCalculator()
+    profile = ScoringProfileConfig(
+        profile_id="custom-v1",
+        weights={"custom": 1.0},
+    )
+
+    _, coverage, confidence, _, pillars = calc.calculate_all(
+        profile,
+        {"custom": {"is_present": True, "some_unmapped_value": 99}},
+    )
+
+    assert coverage == 0.0
+    assert confidence == 0.0
+    assert pillars["custom"].is_present is False

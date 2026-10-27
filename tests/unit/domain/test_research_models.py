@@ -90,4 +90,3 @@ def test_successful_tool_run_preserves_provider_provenance() -> None:
     assert completed.dataset_id == "dataset-456"
     assert completed.valid_items_count == 37
     assert completed.cost_usd == 0.17
-

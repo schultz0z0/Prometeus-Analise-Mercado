@@ -1,6 +1,6 @@
 # Fontes externas
 
-**Validado em:** 2026-10-09. Revalidar antes de implementar e em cada upgrade relevante.
+**Validado em:** 2026-10-27. Revalidar em cada upgrade relevante.
 
 ## JEV / TypeSafe AI
 
@@ -9,7 +9,18 @@ Fonte oficial confirma Choice, Score e Noul, decisões paralelas, probabilidades
 - [Introdução oficial](https://docs.typesafe.ai/introduction)
 - [Anúncio oficial](https://typesafe.ai/blog/introducing-system-one-models-and-jev)
 
-Status: dependência obrigatória e ainda jovem. Validar limites, região de processamento, retenção, contrato e versão disponível.
+Status: opcional no modo híbrido. O modo tradicional usa a LLM para os mesmos julgamentos delimitados, preservando fórmulas e estados em código.
+
+## OpenAI / plano ChatGPT
+
+O fluxo oficial para aplicações locais/open source permite registro dinâmico sem client secret, uso do escopo `chatgpt.tokens.use.direct`, descoberta de modelos da conta e inferência na Responses API com a cota do plano ChatGPT elegível.
+
+- [Registro e login](https://developers.openai.com/siwc/token-sharing-open-source/sign-in)
+- [Modelos e inferência](https://developers.openai.com/siwc/token-sharing-open-source/models-and-inference)
+- [Token e renovação](https://developers.openai.com/siwc/token-sharing-open-source/token-reference)
+- [Erros e recuperação](https://developers.openai.com/siwc/token-sharing-open-source/errors-and-recovery)
+
+Decisão: usar somente `https://api.openai.com/v1/models` e `POST /v1/responses` nesse modo. Tokens antigos sem escopo direto e endpoints internos do ChatGPT são rejeitados.
 
 ## Apify
 
@@ -51,7 +62,7 @@ Possui quota e políticas próprias; a quota padrão documentada é 10.000 unida
 
 ## Vagas, Instagram, TikTok e páginas concorrentes
 
-Serão atendidos por provedores/Actors configuráveis. Nenhum Actor específico é considerado garantido antes da avaliação da Fase 04. LinkedIn não será raspado diretamente sem autorização e revisão de termos.
+São capabilities reais do registry Apify: `google_search`, `web_crawler`, `meta_ads_library`, `linkedin`, `linkedin_jobs`, `instagram`, `tiktok`, `youtube_comments`, além de `reddit`, `google_trends` e `google_analytics` opcionais. O deployment fornece Actor e build pinados; ausência de capability obrigatória bloqueia a análise. O uso continua sujeito à revisão de termos, permissões e políticas de cada fonte.
 
 ## Critérios comuns
 

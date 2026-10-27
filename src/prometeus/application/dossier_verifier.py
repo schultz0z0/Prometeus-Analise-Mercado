@@ -50,6 +50,10 @@ class DossierVerifier:
                 continue
         return numbers
 
+    @staticmethod
+    def _extract_urls(text: str) -> list[str]:
+        return re.findall(r"https?://[^\s)\]}>]+", text)
+
     def _collect_fact_metrics(self, facts: DossierFacts, evidence_ids: list[str]) -> list[float]:
         """Coleta todos os valores numéricos conhecidos das evidências citadas e dos índices gerais."""
         known_numbers: list[float] = []
@@ -107,19 +111,9 @@ class DossierVerifier:
         # 2. Checagem de referências a evidências
         known_ids = facts.get_all_known_ids()
         if not claim.evidence_ids:
-            if claim.claim_type == ClaimType.QUANTITATIVE:
-                claim.verification_status = VerificationStatus.UNSUPPORTED
-                claim.verification_note = (
-                    "Claim quantitativa sem nenhum evidence_id de suporte fornecido"
-                )
-                return claim
-            else:
-                # Hipótese ou afirmação qualitativa geral sem evidência explícita
-                claim.verification_status = VerificationStatus.VERIFIED
-                claim.verification_note = (
-                    "Afirmação qualitativa sem evidências específicas vinculadas"
-                )
-                return claim
+            claim.verification_status = VerificationStatus.UNSUPPORTED
+            claim.verification_note = "Claim sem nenhum evidence_id de suporte fornecido"
+            return claim
 
         # Valida se os IDs citados existem
         invalid_ids = [eid for eid in claim.evidence_ids if eid not in known_ids]
@@ -127,6 +121,21 @@ class DossierVerifier:
             claim.verification_status = VerificationStatus.UNSUPPORTED
             claim.verification_note = f"Contém IDs de evidência inexistentes: {invalid_ids}"
             return claim
+
+        claimed_urls = self._extract_urls(claim.statement)
+        if claimed_urls:
+            cited_urls = {
+                item.source_url
+                for evidence_id in claim.evidence_ids
+                if (item := facts.get_fact_item(evidence_id)) is not None and item.source_url
+            }
+            invalid_urls = [url for url in claimed_urls if url not in cited_urls]
+            if invalid_urls:
+                claim.verification_status = VerificationStatus.UNSUPPORTED
+                claim.verification_note = (
+                    f"Contém URLs não presentes nas evidências citadas: {invalid_urls}"
+                )
+                return claim
 
         # 3. Checagem de consistência numérica para claims quantitativas
         if claim.claim_type == ClaimType.QUANTITATIVE:
@@ -155,6 +164,27 @@ class DossierVerifier:
         """Audita integralmente todas as claims e seções do dossiê."""
         has_hallucination = False
         unsupported_count = 0
+        structural_error = False
+
+        if (
+            dossier.analysis_id != facts.analysis_id
+            or dossier.facts_hash != facts.compute_facts_hash()
+        ):
+            structural_error = True
+        if not dossier.executive_summary.strip() or not dossier.sections or not dossier.claims:
+            structural_error = True
+
+        claim_ids = [claim.claim_id for claim in dossier.claims]
+        if len(claim_ids) != len(set(claim_ids)):
+            structural_error = True
+        known_claim_ids = set(claim_ids)
+        referenced_claim_ids = {
+            claim_id for section in dossier.sections for claim_id in section.claim_ids
+        }
+        if not referenced_claim_ids.issubset(known_claim_ids):
+            structural_error = True
+        if known_claim_ids - referenced_claim_ids:
+            structural_error = True
 
         verified_claims: list[DossierClaim] = []
         for claim in dossier.claims:
@@ -171,16 +201,12 @@ class DossierVerifier:
 
         dossier.claims = verified_claims
 
-        # Regra de aprovação do Gate C:
-        # Zero alucinações e taxa de claims não suportadas <= 20%
-        total_claims = len(dossier.claims) or 1
-        unsupported_ratio = unsupported_count / total_claims
-
-        if has_hallucination or unsupported_ratio > 0.20:
+        if structural_error or has_hallucination or unsupported_count:
             dossier.status = DossierStatus.REVISION_REQUIRED
             logger.warning(
                 f"Dossiê da análise {facts.analysis_id} requer revisão: "
-                f"hallucination={has_hallucination}, unsupported_ratio={unsupported_ratio:.2%}"
+                f"structural_error={structural_error}, hallucination={has_hallucination}, "
+                f"unsupported_claims={unsupported_count}"
             )
         else:
             dossier.status = DossierStatus.VERIFIED

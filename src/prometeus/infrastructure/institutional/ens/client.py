@@ -116,7 +116,9 @@ class ENSInstitutionalAdapter(InstitutionalDataAdapter):
         limit: int = 50,
         page: int = 1,
     ) -> list[CanonicalCourse]:
-        if self._custom_client is not None or (self.api_token and not self.api_token.startswith("mock")):
+        if self._custom_client is not None or (
+            self.api_token and not self.api_token.startswith("mock")
+        ):
             params: dict[str, Any] = {"page": page, "per_page": limit}
             if query:
                 params["q"] = query
@@ -127,10 +129,14 @@ class ENSInstitutionalAdapter(InstitutionalDataAdapter):
             raw_items = payload.get("data") or payload.get("items") or []
             return [map_ens_course(item) for item in raw_items]
 
-        return await self._list_courses_from_db_or_dataset(query=query, category=category, limit=limit, page=page)
+        return await self._list_courses_from_db_or_dataset(
+            query=query, category=category, limit=limit, page=page
+        )
 
     async def get_course(self, course_id: str) -> CanonicalCourse | None:
-        if self._custom_client is not None or (self.api_token and not self.api_token.startswith("mock")):
+        if self._custom_client is not None or (
+            self.api_token and not self.api_token.startswith("mock")
+        ):
             try:
                 payload = await self._safe_get(f"cursos/{course_id}")
                 raw = payload.get("data") or payload
@@ -147,7 +153,9 @@ class ENSInstitutionalAdapter(InstitutionalDataAdapter):
         course_ids: list[str],
         period: str | None = None,
     ) -> list[FunnelMetrics]:
-        if self._custom_client is not None or (self.api_token and not self.api_token.startswith("mock")):
+        if self._custom_client is not None or (
+            self.api_token and not self.api_token.startswith("mock")
+        ):
             params = {}
             if period:
                 params["periodo"] = period
@@ -162,7 +170,9 @@ class ENSInstitutionalAdapter(InstitutionalDataAdapter):
 
             leads_list = leads_raw.get("data") or leads_raw.get("items") or []
             inscritos_list = inscritos_raw.get("items") or inscritos_raw.get("data") or []
-            matriculados_list = matriculados_raw.get("registros") or matriculados_raw.get("data") or []
+            matriculados_list = (
+                matriculados_raw.get("registros") or matriculados_raw.get("data") or []
+            )
 
             leads_map = map_ens_leads(leads_list)
             inscritos_map = map_ens_inscritos(inscritos_list)
@@ -187,13 +197,17 @@ class ENSInstitutionalAdapter(InstitutionalDataAdapter):
         course_ids: list[str],
         period: str | None = None,
     ) -> list[FinancialMetrics]:
-        if self._custom_client is not None or (self.api_token and not self.api_token.startswith("mock")):
+        if self._custom_client is not None or (
+            self.api_token and not self.api_token.startswith("mock")
+        ):
             params = {}
             if period:
                 params["semestre"] = period
 
             matriculados_raw = await self._safe_get("matriculados", params=params)
-            matriculados_list = matriculados_raw.get("registros") or matriculados_raw.get("data") or []
+            matriculados_list = (
+                matriculados_raw.get("registros") or matriculados_raw.get("data") or []
+            )
             _, financial_map = map_ens_matriculados(matriculados_list)
 
             results: list[FinancialMetrics] = []
@@ -208,7 +222,9 @@ class ENSInstitutionalAdapter(InstitutionalDataAdapter):
         return await self._get_financial_from_db_or_dataset(course_ids=course_ids, period=period)
 
     async def healthcheck(self) -> AdapterHealthStatus:
-        if self._custom_client is not None or (self.api_token and not self.api_token.startswith("mock")):
+        if self._custom_client is not None or (
+            self.api_token and not self.api_token.startswith("mock")
+        ):
             start_time = time.perf_counter()
             try:
                 await self._safe_get("health")
@@ -244,6 +260,7 @@ class ENSInstitutionalAdapter(InstitutionalDataAdapter):
     ) -> list[CanonicalCourse]:
         try:
             from sqlalchemy import select
+
             from prometeus.infrastructure.db.models import HistoricalCourseModel
             from prometeus.infrastructure.db.session import get_session
 
@@ -269,7 +286,9 @@ class ENSInstitutionalAdapter(InstitutionalDataAdapter):
                     if query:
                         q = query.lower()
                         courses = [
-                            c for c in courses if q in c.name.lower() or any(q in t.lower() for t in c.tags)
+                            c
+                            for c in courses
+                            if q in c.name.lower() or any(q in t.lower() for t in c.tags)
                         ]
                     start = (page - 1) * limit
                     return courses[start : start + limit]
@@ -310,6 +329,7 @@ class ENSInstitutionalAdapter(InstitutionalDataAdapter):
     ) -> list[FunnelMetrics]:
         try:
             from sqlalchemy import select
+
             from prometeus.infrastructure.db.models import HistoricalFunnelModel
             from prometeus.infrastructure.db.session import get_session
 
@@ -362,6 +382,7 @@ class ENSInstitutionalAdapter(InstitutionalDataAdapter):
     ) -> list[FinancialMetrics]:
         try:
             from sqlalchemy import select
+
             from prometeus.infrastructure.db.models import HistoricalFunnelModel
             from prometeus.infrastructure.db.session import get_session
 

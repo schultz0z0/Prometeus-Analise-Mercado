@@ -7,5 +7,6 @@
 - [ADR-0005 — Ciclo de vida separado da recomendação](0005-status-vs-recommendation.md)
 - [ADR-0006 — Namespace Python `prometeus`](0006-python-namespace.md)
 - [ADR-0007 — Integração via MCP e Webhooks](0007-mcp-and-webhooks.md)
+- [ADR-0008 — Modos de IA e uso direto do plano ChatGPT](0008-ai-runtime-and-chatgpt-oauth.md)
 
 Novas decisões irreversíveis ou de alto custo devem gerar um ADR antes da implementação.

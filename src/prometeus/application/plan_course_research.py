@@ -45,9 +45,18 @@ class CourseResearchPlanner:
             f"Allowlist de capabilities: {json.dumps(allowed, ensure_ascii=False)}\n"
             f"Fontes obrigatórias: {json.dumps(self.settings.required_market_sources)}\n"
             f"Orçamento total USD: {self.settings.APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS}\n"
+            "Contrato de parâmetros: country=BR, language=pt, location=Brasil; "
+            "web_crawler e youtube_comments aceitam parameters.urls com URLs HTTP(S). "
+            "Quando essas URLs ainda não forem conhecidas, planeje antes google_search com "
+            "consulta apropriada (inclua site:youtube.com para descobrir vídeos); o executor "
+            "resolverá as URLs reais encontradas antes de chamar as ferramentas dependentes. "
+            "Não invente URLs, IDs, métricas, atores ou resultados. Cada query deve ser "
+            "específica ao curso entendido.\n"
             f"<course_understanding>\n{understanding_json}\n</course_understanding>"
         )
-        raw = await self.llm.generate_text(prompt=prompt, system_prompt=system_prompt, temperature=0.1)
+        raw = await self.llm.generate_text(
+            prompt=prompt, system_prompt=system_prompt, temperature=0.1
+        )
         payload = extract_json_object(raw)
 
         questions = [ResearchQuestion.model_validate(item) for item in payload.get("questions", [])]

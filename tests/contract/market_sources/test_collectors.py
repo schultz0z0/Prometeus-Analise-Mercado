@@ -2,14 +2,15 @@
 
 import pytest
 
+from prometeus.domain.configuration import AppSettings
 from prometeus.domain.ports.market_sources import (
     EvidenceType,
     ResearchPlan,
 )
 from prometeus.infrastructure.apify.client import (
-    PINNED_ACTORS,
     FakeApifyCollector,
 )
+from prometeus.infrastructure.apify.registry import ApifyActorRegistry
 from prometeus.infrastructure.google_ads.client import (
     FakeGoogleAdsCollector,
     GoogleAdsCollector,
@@ -125,9 +126,16 @@ async def test_fake_youtube_collector_exceeded_error() -> None:
 
 @pytest.mark.asyncio
 async def test_apify_pinned_actors() -> None:
-    assert "linkedin_jobs" in PINNED_ACTORS
-    assert "@" in PINNED_ACTORS["linkedin_jobs"]
-    assert "educational_offers" in PINNED_ACTORS
+    registry = ApifyActorRegistry.from_settings(
+        AppSettings(
+            _env_file=None,
+            APIFY_ACTOR_LINKEDIN_JOBS="curious_coder/linkedin-jobs-scraper@1.7.18",
+            APIFY_ACTOR_GOOGLE_SEARCH="apify/google-search-scraper@0.0.473",
+        )
+    )
+
+    assert registry.require("linkedin_jobs").build == "1.7.18"
+    assert registry.require("google_search").actor_id == "apify/google-search-scraper"
 
 
 @pytest.mark.asyncio

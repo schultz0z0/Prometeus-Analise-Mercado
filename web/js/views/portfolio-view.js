@@ -103,7 +103,7 @@ export function renderPortfolioView(store) {
         <div style="padding:20px 24px; border-bottom:1px solid var(--prometeus-border-subtle); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
           <div>
             <div style="font-weight:600; font-size:16px; color:#ffffff;">Catálogo Histórico ENS — Ofertas 2024 e 2025</div>
-            <div style="font-size:12px; color:var(--prometeus-text-muted); margin-top:2px;">Exemplos reais de cursos bem-sucedidos, medianos, fracos e 1 oferta cancelada por falta de quórum.</div>
+            <div style="font-size:12px; color:var(--prometeus-text-muted); margin-top:2px;">Massa histórica sintética e explicitamente identificada, usada somente para testar comparação interna.</div>
           </div>
           <div style="display:flex; gap:10px;">
             <button id="btn-reseed-data" class="prometeus-btn-secondary" style="font-size:12px; padding:6px 14px;">
@@ -204,8 +204,8 @@ export function renderPortfolioView(store) {
 
         <div class="prometeus-card">
           <div style="font-size:12px; text-transform:uppercase; color:var(--prometeus-text-muted); font-weight:600; letter-spacing:0.05em;">Conector CRM da IES</div>
-          <div class="metric-big-highlight" style="font-size:20px; color:#38BDF8; margin-top:14px;">● Conectado</div>
-          <div style="font-size:12px; color:var(--prometeus-text-secondary);">${state.settings[state.currentTenantId]?.crm_last_sync || "Sincronizado"}</div>
+          <div class="metric-big-highlight" style="font-size:20px; color:#38BDF8; margin-top:14px;">Base de teste</div>
+          <div style="font-size:12px; color:var(--prometeus-text-secondary);">Somente histórico ENS sintético autorizado</div>
         </div>
       </div>
 
@@ -242,12 +242,12 @@ export function renderPortfolioView(store) {
                     <span style="font-size:13px; color:var(--prometeus-text-secondary);">${course.modality}</span>
                   </td>
                   <td class="prometeus-stat-mono" style="font-weight:600; color:#ffffff;">
-                    R$ ${course.ticket.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}<span style="font-size:11px; color:var(--prometeus-text-muted);">/mês</span>
+                    ${course.ticket === null ? 'Não informado' : `R$ ${Number(course.ticket).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}<span style="font-size:11px; color:var(--prometeus-text-muted);">${course.ticket === null ? '' : '/mês'}</span>
                   </td>
                   <td>
                     <div style="display:flex; align-items:center; gap:8px;">
                       <div style="width:36px; height:36px; border-radius:50%; border:2px solid ${getScoreColor(course.viability_score)}; display:flex; align-items:center; justify-content:center; font-family:var(--prometeus-font-mono); font-size:12px; font-weight:700; color:#ffffff;">
-                        ${course.viability_score.toFixed(0)}
+                        ${Number(course.viability_score).toFixed(0)}
                       </div>
                     </div>
                   </td>
@@ -257,7 +257,7 @@ export function renderPortfolioView(store) {
                     </span>
                   </td>
                   <td style="font-size:13px; color:var(--prometeus-text-secondary);">
-                    ${course.demand_level}
+                    ${course.coverage_index === null ? 'Não disponível' : `Cobertura ${(Number(course.coverage_index) * 100).toFixed(0)}%`}
                   </td>
                   <td style="text-align:right;">
                     <button class="prometeus-btn-primary btn-open-dossier" data-id="${course.id}" style="padding:6px 12px; font-size:12px; min-height:30px;">

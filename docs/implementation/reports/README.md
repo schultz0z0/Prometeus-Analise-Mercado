@@ -1,5 +1,7 @@
 # Relatórios de conclusão das fases
 
+- [Runtime factual e OAuth ChatGPT — 2026-10-27](real-runtime-2026-10-27.md)
+
 Cada execução de fase deve produzir um relatório em:
 
 ```text

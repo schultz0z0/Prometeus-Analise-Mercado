@@ -1,10 +1,10 @@
-"""Adaptador oficial para Apify com pinagem de Actors e acompanhamento assíncrono de runs."""
+"""Cliente Apify assíncrono com Actors pinados, orçamento e proveniência real."""
 
 from __future__ import annotations
 
 import asyncio
-import logging
 from typing import Any
+from urllib.parse import quote_plus
 
 import httpx
 
@@ -15,31 +15,203 @@ from prometeus.domain.ports.market_sources import (
     MarketSourcePort,
     ResearchPlan,
 )
-
-logger = logging.getLogger(__name__)
-
-# Pinagem imutável de Actors aprovados (Task 6)
-PINNED_ACTORS: dict[str, str] = {
-    "linkedin_jobs": "apify/linkedin-jobs-scraper@1.3.0",
-    "educational_offers": "apify/google-search-scraper@1.1.0",
-    "social_listening": "apify/instagram-scraper@1.4.0",
-}
+from prometeus.domain.research import PlannedToolCall
+from prometeus.infrastructure.apify.registry import ApifyActorRegistry
+from prometeus.infrastructure.apify.schemas import (
+    ApifyExecutionResult,
+    ApifyRunMetadata,
+    validate_dataset_items,
+)
 
 
-class ApifyError(Exception):
-    """Exceção base para erros em integrações com Apify."""
-
-    pass
+class ApifyError(RuntimeError):
+    """Erro base sanitizado da integração Apify."""
 
 
 class ApifyBudgetExceededError(ApifyError):
-    """Tentativa de disparo de Actor cujo custo excede o orçamento do plano."""
+    """A chamada ultrapassaria o orçamento autorizado."""
 
-    pass
+
+class ApifyTimeoutError(ApifyError):
+    """A run não alcançou estado terminal no limite de polling."""
+
+
+class ApifySchemaDriftError(ApifyError):
+    """Resposta da Apify ou dataset divergiu do contrato esperado."""
+
+
+class ApifyActorFailedError(ApifyError):
+    """A run terminou em um estado de falha explícito."""
+
+    def __init__(self, *, run_id: str, status: str, message: str = "") -> None:
+        self.run_id = run_id
+        self.status = status
+        safe_message = message.strip().replace("\r", " ").replace("\n", " ")[:500]
+        detail = f": {safe_message}" if safe_message else ""
+        super().__init__(f"Run Apify {run_id} terminou com status {status}{detail}")
+
+
+TERMINAL_STATUSES = frozenset(
+    {"SUCCEEDED", "FAILED", "TIMING-OUT", "TIMED-OUT", "ABORTING", "ABORTED"}
+)
+FAILED_STATUSES = TERMINAL_STATUSES - {"SUCCEEDED"}
+
+
+class ApifyClient:
+    """Executa uma chamada planejada sem permitir escolha livre de Actor."""
+
+    def __init__(
+        self,
+        *,
+        api_token: str,
+        registry: ApifyActorRegistry,
+        base_url: str = "https://api.apify.com/v2",
+        timeout_seconds: float = 30.0,
+        polling_interval_seconds: float = 1.0,
+        max_poll_attempts: int = 300,
+        wait_for_finish_seconds: int = 10,
+        http_client: httpx.AsyncClient | None = None,
+    ) -> None:
+        if not api_token.strip():
+            raise ApifyError("Token Apify não configurado.")
+        self._api_token = api_token.strip()
+        self.registry = registry
+        self.base_url = base_url.rstrip("/")
+        self.polling_interval_seconds = polling_interval_seconds
+        self.max_poll_attempts = max_poll_attempts
+        self.wait_for_finish_seconds = max(0, min(wait_for_finish_seconds, 60))
+        self._owns_client = http_client is None
+        self._client = http_client or httpx.AsyncClient(timeout=timeout_seconds)
+
+    @property
+    def _headers(self) -> dict[str, str]:
+        return {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self._api_token}",
+        }
+
+    @staticmethod
+    def _run_data(response: httpx.Response) -> dict[str, Any]:
+        try:
+            payload = response.json()
+        except ValueError as exc:
+            raise ApifySchemaDriftError("A API Apify retornou JSON inválido.") from exc
+        data = payload.get("data") if isinstance(payload, dict) else None
+        if not isinstance(data, dict):
+            raise ApifySchemaDriftError("A API Apify não retornou o objeto data esperado.")
+        return data
+
+    @staticmethod
+    def _ensure_success_or_raise(run_data: dict[str, Any]) -> None:
+        status = str(run_data.get("status", ""))
+        if status in FAILED_STATUSES:
+            raise ApifyActorFailedError(
+                run_id=str(run_data.get("id", "unknown")),
+                status=status,
+                message=str(run_data.get("statusMessage", "")),
+            )
+
+    async def _wait_for_terminal(self, run_data: dict[str, Any]) -> dict[str, Any]:
+        run_id = str(run_data.get("id", ""))
+        if not run_id:
+            raise ApifySchemaDriftError("A resposta de início não contém run id.")
+
+        self._ensure_success_or_raise(run_data)
+        if run_data.get("status") == "SUCCEEDED":
+            return run_data
+
+        poll_url = f"{self.base_url}/actor-runs/{run_id}"
+        for _ in range(self.max_poll_attempts):
+            await asyncio.sleep(self.polling_interval_seconds)
+            response = await self._client.get(poll_url, headers=self._headers)
+            response.raise_for_status()
+            run_data = self._run_data(response)
+            self._ensure_success_or_raise(run_data)
+            if run_data.get("status") == "SUCCEEDED":
+                return run_data
+        raise ApifyTimeoutError(
+            f"Run Apify {run_id} não terminou após {self.max_poll_attempts} consultas."
+        )
+
+    async def execute(
+        self,
+        call: PlannedToolCall,
+        *,
+        max_total_charge_usd: float,
+    ) -> ApifyExecutionResult:
+        if max_total_charge_usd <= 0:
+            raise ApifyBudgetExceededError("A chamada Apify não possui orçamento positivo.")
+
+        spec = self.registry.require(call.capability)
+        actor_input = self.registry.build_input(call)
+        start_url = f"{self.base_url}/actors/{spec.actor_path}/runs"
+        response = await self._client.post(
+            start_url,
+            params={
+                "build": spec.build,
+                "waitForFinish": self.wait_for_finish_seconds,
+                "maxItems": call.max_items,
+                "maxTotalChargeUsd": max_total_charge_usd,
+                "restartOnError": "false",
+            },
+            json=actor_input,
+            headers=self._headers,
+        )
+        response.raise_for_status()
+        run_data = await self._wait_for_terminal(self._run_data(response))
+
+        run_id = str(run_data.get("id", ""))
+        dataset_id = str(run_data.get("defaultDatasetId", ""))
+        build_number = str(run_data.get("buildNumber", ""))
+        if not run_id or not dataset_id or not build_number:
+            raise ApifySchemaDriftError(
+                "A run concluída não contém run id, dataset id e build number."
+            )
+        if build_number != spec.build:
+            raise ApifySchemaDriftError(
+                f"A run usou build {build_number}, diferente do build pinado {spec.build}."
+            )
+
+        items_response = await self._client.get(
+            f"{self.base_url}/datasets/{dataset_id}/items",
+            params={"format": "json", "clean": "true", "limit": call.max_items},
+            headers=self._headers,
+        )
+        items_response.raise_for_status()
+        try:
+            items = validate_dataset_items(call.capability, items_response.json())
+        except (ValueError, TypeError) as exc:
+            raise ApifySchemaDriftError(str(exc)) from exc
+
+        total_header = items_response.headers.get("X-Apify-Pagination-Total")
+        try:
+            total_items = int(total_header) if total_header is not None else len(items)
+        except ValueError:
+            total_items = len(items)
+        raw_cost = run_data.get("usageTotalUsd", 0.0)
+        cost_usd = float(raw_cost) if isinstance(raw_cost, int | float) else 0.0
+
+        return ApifyExecutionResult(
+            run=ApifyRunMetadata(
+                run_id=run_id,
+                dataset_id=dataset_id,
+                status="SUCCEEDED",
+                actor_id=spec.actor_id,
+                build_number=build_number,
+                cost_usd=round(cost_usd, 6),
+            ),
+            items=items,
+            total_items=total_items,
+        )
+
+    async def aclose(self) -> None:
+        if self._owns_client or not self._client.is_closed:
+            await self._client.aclose()
 
 
 class ApifyCollector(MarketSourcePort):
-    """Cliente para disparo e acompanhamento assíncrono de Actors no Apify."""
+    """Compatibilidade temporária para o port antigo, sem fallback ou Actor implícito."""
 
     def __init__(
         self,
@@ -47,60 +219,20 @@ class ApifyCollector(MarketSourcePort):
         base_url: str = "https://api.apify.com/v2",
         timeout_seconds: float = 30.0,
         polling_interval_seconds: float = 0.5,
-        max_poll_attempts: int = 10,
+        max_poll_attempts: int = 120,
         http_client: httpx.AsyncClient | None = None,
     ) -> None:
-        self.api_token = api_token or getattr(AppSettings(), "APIFY_TOKEN", "")
-        self.base_url = base_url.rstrip("/")
-        self.timeout_seconds = timeout_seconds
-        self.polling_interval_seconds = polling_interval_seconds
-        self.max_poll_attempts = max_poll_attempts
-        self._custom_client = http_client
-
-    def _get_headers(self) -> dict[str, str]:
-        headers = {"Accept": "application/json", "Content-Type": "application/json"}
-        if self.api_token:
-            headers["Authorization"] = f"Bearer {self.api_token}"
-        return headers
-
-    async def _run_actor_and_wait(
-        self,
-        actor_id: str,
-        actor_input: dict[str, Any],
-        client: httpx.AsyncClient,
-    ) -> list[dict[str, Any]]:
-        """Inicia a execução do Actor e aguarda o status SUCCEEDED."""
-        clean_actor = actor_id.split("@")[0].replace("/", "~")
-        start_url = f"{self.base_url}/acts/{clean_actor}/runs?waitForFinish=8"
-        resp = await client.post(start_url, json=actor_input, headers=self._get_headers())
-        resp.raise_for_status()
-        run_data = resp.json().get("data", {})
-        run_id = run_data.get("id")
-        dataset_id = run_data.get("defaultDatasetId")
-        cur_status = run_data.get("status")
-
-        # Polling assíncrono se não tiver terminado no waitForFinish
-        if cur_status != "SUCCEEDED" and run_id:
-            poll_url = f"{self.base_url}/actor-runs/{run_id}"
-            for _ in range(self.max_poll_attempts):
-                await asyncio.sleep(self.polling_interval_seconds)
-                status_resp = await client.get(poll_url, headers=self._get_headers())
-                if status_resp.status_code == 200:
-                    cur_status = status_resp.json().get("data", {}).get("status")
-                    if cur_status == "SUCCEEDED":
-                        break
-                    elif cur_status in {"FAILED", "ABORTED", "TIMED-OUT"}:
-                        raise ApifyError(f"Execução do Actor {actor_id} falhou com status {cur_status}")
-
-        # Busca dados no dataset
-        if dataset_id:
-            items_url = f"{self.base_url}/datasets/{dataset_id}/items"
-            items_resp = await client.get(items_url, headers=self._get_headers())
-            if items_resp.status_code == 200:
-                result = items_resp.json()
-                if isinstance(result, list):
-                    return result
-        return []
+        settings = AppSettings()
+        self._settings = settings
+        self._client = ApifyClient(
+            api_token=api_token or settings.APIFY_TOKEN,
+            registry=ApifyActorRegistry.from_settings(settings),
+            base_url=base_url,
+            timeout_seconds=timeout_seconds,
+            polling_interval_seconds=polling_interval_seconds,
+            max_poll_attempts=max_poll_attempts,
+            http_client=http_client,
+        )
 
     async def collect(
         self,
@@ -109,61 +241,54 @@ class ApifyCollector(MarketSourcePort):
         plan: ResearchPlan | None = None,
     ) -> list[MarketEvidence]:
         evidences: list[MarketEvidence] = []
-        estimated_cost_per_term = 0.05
-
-        client = self._custom_client or httpx.AsyncClient(timeout=self.timeout_seconds)
-        close_client = self._custom_client is None
-
-        try:
-            for term in search_terms:
-                if plan and not plan.has_budget_for(estimated_cost_per_term):
-                    logger.warning(
-                        f"Orçamento insuficiente para Apify no termo '{term}' (Gasto: ${plan.spent_usd:.2f})"
-                    )
-                    break
-
-                actor_id = PINNED_ACTORS.get("educational_offers", "apify/google-search-scraper")
-                actor_input = {
-                    "queries": f"{term} curso pós-graduação seguros",
-                    "maxPagesPerQuery": 1,
-                }
-
-                try:
-                    items = await self._run_actor_and_wait(actor_id, actor_input, client)
-                except Exception as exc:
-                    logger.error(f"Erro executando Apify para '{term}': {exc}")
-                    continue
-
-                if plan:
-                    plan.record_cost(estimated_cost_per_term)
-
-                payload = {
-                    "term": term,
-                    "actor_id": actor_id,
-                    "jobs_count": len(items),
-                    "items": items[:5],
-                }
-
-                ev = MarketEvidence.create(
+        for index, term in enumerate(search_terms):
+            remaining_budget = (
+                plan.budget_limit_usd - plan.spent_usd
+                if plan is not None
+                else self._settings.APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS
+            )
+            if remaining_budget <= 0:
+                raise ApifyBudgetExceededError("Orçamento da análise esgotado.")
+            call = PlannedToolCall(
+                id=f"legacy-google-search-{index}",
+                capability="google_search",
+                query=term,
+                required=True,
+                rationale="Compatibilidade temporária do coletor antigo.",
+                max_items=20,
+                parameters={"country": "BR", "language": "pt"},
+            )
+            result = await self._client.execute(
+                call,
+                max_total_charge_usd=remaining_budget,
+            )
+            if plan is not None:
+                plan.record_cost(result.run.cost_usd)
+            evidences.append(
+                MarketEvidence.create(
                     analysis_id=analysis_id,
-                    evidence_type=EvidenceType.JOB_MARKET,
-                    source_name="apify_linkedin_jobs",
-                    source_url=f"https://www.linkedin.com/jobs/search/?keywords={term}",
+                    evidence_type=self._client.registry.require("google_search").evidence_type,
+                    source_name="apify_google_search",
+                    source_url=f"https://www.google.com/search?q={quote_plus(term)}",
                     collector="apify_actor_runner",
-                    title=f"Vagas de mercado: {term}",
-                    raw_payload=payload,
-                    cost_usd=estimated_cost_per_term,
+                    title=f"Pesquisa Google: {term}",
+                    raw_payload={
+                        "run_id": result.run.run_id,
+                        "dataset_id": result.run.dataset_id,
+                        "actor_id": result.run.actor_id,
+                        "build_number": result.run.build_number,
+                        "query": term,
+                        "total_items": result.total_items,
+                        "items": result.items,
+                    },
+                    cost_usd=result.run.cost_usd,
                 )
-                evidences.append(ev)
-
-            return evidences
-        finally:
-            if close_client:
-                await client.aclose()
+            )
+        return evidences
 
 
 class FakeApifyCollector(MarketSourcePort):
-    """Coletor fake determinístico para testes e CI."""
+    """Test double explícito; nunca é criado pelas factories de runtime."""
 
     def __init__(
         self,
@@ -188,40 +313,27 @@ class FakeApifyCollector(MarketSourcePort):
         evidences: list[MarketEvidence] = []
         for term in search_terms:
             if plan and not plan.has_budget_for(self.cost_per_term):
-                logger.info(f"Plano orçamentário interrompeu Apify para termo '{term}'")
                 break
-
             self.call_count += 1
             if plan:
                 plan.record_cost(self.cost_per_term)
-
             items = self.canned_jobs or [
                 {
                     "title": f"Analista de {term}",
-                    "company": "Seguradora Nacional S/A",
+                    "company": "Empresa de teste",
                     "location": "São Paulo, SP",
-                    "skills": [term, "SUSEP", "Excel Avançado"],
-                    "salary_range": "R$ 7.000 - R$ 9.500",
                 }
             ]
-
-            payload = {
-                "term": term,
-                "actor_id": PINNED_ACTORS["linkedin_jobs"],
-                "jobs_count": len(items),
-                "items": items,
-            }
-
-            ev = MarketEvidence.create(
-                analysis_id=analysis_id,
-                evidence_type=EvidenceType.JOB_MARKET,
-                source_name="apify_linkedin_jobs",
-                source_url=f"https://www.linkedin.com/jobs/search/?keywords={term}",
-                collector="fake_apify_collector",
-                title=f"Vagas Apify: {term}",
-                raw_payload=payload,
-                cost_usd=self.cost_per_term,
+            evidences.append(
+                MarketEvidence.create(
+                    analysis_id=analysis_id,
+                    evidence_type=EvidenceType.JOB_MARKET,
+                    source_name="test_double_apify_jobs",
+                    source_url="https://example.invalid/test-only",
+                    collector="fake_apify_collector",
+                    title=f"Fixture de teste: {term}",
+                    raw_payload={"term": term, "items": items},
+                    cost_usd=self.cost_per_term,
+                )
             )
-            evidences.append(ev)
-
         return evidences

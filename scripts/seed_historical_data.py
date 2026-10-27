@@ -23,7 +23,9 @@ logger = logging.getLogger("prometeus.seed_historical")
 async def main() -> None:
     parser = argparse.ArgumentParser(description="Semeadura da base histórica de cursos e funil")
     parser.add_argument("--tenant", default="ens", help="Identificador do tenant (padrão: ens)")
-    parser.add_argument("--reset", action="store_true", help="Limpar dados prévios do tenant antes de semear")
+    parser.add_argument(
+        "--reset", action="store_true", help="Limpar dados prévios do tenant antes de semear"
+    )
     args = parser.parse_args()
 
     logger.info(f"Iniciando semeadura de dados históricos para o tenant '{args.tenant}'...")
