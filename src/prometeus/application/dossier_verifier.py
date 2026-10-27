@@ -56,20 +56,34 @@ class DossierVerifier:
 
     def _collect_fact_metrics(self, facts: DossierFacts, evidence_ids: list[str]) -> list[float]:
         """Coleta todos os valores numéricos conhecidos das evidências citadas e dos índices gerais."""
-        known_numbers: list[float] = []
+        known_numbers: list[float] = [float(len(evidence_ids))]
 
         if "scoring_result" in evidence_ids:
             known_numbers.extend(
                 [
                     round(facts.viability_score, 1),
+                    round(facts.viability_score, 2),
                     round(facts.coverage_score * 100, 1),
+                    round(facts.coverage_score * 100, 2),
                     round(facts.confidence_score * 100, 1),
+                    round(facts.confidence_score * 100, 2),
                     round(facts.coverage_score, 2),
+                    round(facts.coverage_score, 4),
                     round(facts.confidence_score, 2),
+                    round(facts.confidence_score, 4),
+                    float(len(facts.items)),
+                    float(len(facts.pillar_summaries)),
                 ]
             )
             for sub in facts.pillar_summaries.values():
                 known_numbers.append(round(sub, 1))
+                known_numbers.append(round(sub, 2))
+            if facts.course_understanding:
+                known_numbers.extend(self._extract_numbers(str(facts.course_understanding)))
+            if facts.research_plan:
+                known_numbers.extend(self._extract_numbers(str(facts.research_plan)))
+            if facts.limitations:
+                known_numbers.extend(self._extract_numbers(" ".join(facts.limitations)))
 
         for eid in evidence_ids:
             item = facts.get_fact_item(eid)
@@ -77,9 +91,15 @@ class DossierVerifier:
                 # Extrai das métricas estruturadas
                 for val in item.key_metrics.values():
                     if isinstance(val, (int, float)):
-                        known_numbers.append(float(val))
+                        fval = float(val)
+                        known_numbers.append(fval)
+                        if 0 < fval <= 1.0:
+                            known_numbers.append(round(fval * 100, 1))
+                            known_numbers.append(round(fval * 100, 2))
                     elif isinstance(val, str):
                         known_numbers.extend(self._extract_numbers(val))
+                if item.title:
+                    known_numbers.extend(self._extract_numbers(item.title))
                 # Extrai do resumo textual
                 if item.summary:
                     known_numbers.extend(self._extract_numbers(item.summary))

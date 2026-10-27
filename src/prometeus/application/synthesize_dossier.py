@@ -103,13 +103,39 @@ class DossierSynthesisService:
             if "market_median_price_brl" in sanitized:
                 metrics["market_median_price_brl"] = sanitized["market_median_price_brl"]
 
+            summary_parts = [f"Evidência de mercado tipo {ev.evidence_type}: {ev.title}"]
+            organic = sanitized.get("organicResults")
+            if isinstance(organic, list) and organic:
+                snippets: list[str] = []
+                for entry in organic[:4]:
+                    if isinstance(entry, dict):
+                        t = str(entry.get("title") or "").strip()
+                        d = str(entry.get("description") or "").strip()
+                        if t or d:
+                            snippets.append(f"{t} ({d[:140]})" if d else t)
+                if snippets:
+                    summary_parts.append("Resultados: " + " | ".join(snippets))
+            else:
+                for text_key in ("description", "text", "markdown", "caption", "comment", "body"):
+                    val = sanitized.get(text_key)
+                    if isinstance(val, str) and val.strip():
+                        summary_parts.append(val.strip()[:300])
+                        break
+                extra_meta = [
+                    f"{k}={sanitized[k]}"
+                    for k in ("companyName", "company", "positionName", "location", "pageName")
+                    if isinstance(sanitized.get(k), str) and str(sanitized.get(k)).strip()
+                ]
+                if extra_meta:
+                    summary_parts.append(", ".join(extra_meta))
+
             fact_items.append(
                 DossierFactItem(
                     evidence_id=ev.id,
                     source_type=ev.evidence_type,
                     title=ev.title,
                     key_metrics=metrics,
-                    summary=f"Evidência de mercado tipo {ev.evidence_type}: {ev.title}",
+                    summary=" — ".join(summary_parts)[:600],
                     source_url=ev.source_url,
                 )
             )

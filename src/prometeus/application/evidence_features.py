@@ -48,18 +48,30 @@ def _price_brl(payload: dict[str, Any]) -> float | None:
         value = _positive_number(payload.get(field_name))
         if value is not None and value > 0:
             return value
-    raw = payload.get("price")
-    if not isinstance(raw, str):
-        return None
-    match = _BRL_PRICE_RE.search(raw)
-    if match is None:
-        return None
-    normalized = match.group(1).replace(".", "").replace(",", ".")
-    try:
-        value = float(normalized)
-    except ValueError:
-        return None
-    return value if value > 0 else None
+    candidate_texts: list[str] = []
+    for text_field in ("price", "text", "markdown", "description", "caption"):
+        raw = payload.get(text_field)
+        if isinstance(raw, str) and raw.strip():
+            candidate_texts.append(raw)
+    organic = payload.get("organicResults")
+    if isinstance(organic, list):
+        for entry in organic:
+            if isinstance(entry, dict):
+                desc = entry.get("description")
+                if isinstance(desc, str) and desc.strip():
+                    candidate_texts.append(desc)
+    for raw in candidate_texts:
+        match = _BRL_PRICE_RE.search(raw)
+        if match is None:
+            continue
+        normalized = match.group(1).replace(".", "").replace(",", ".")
+        try:
+            value = float(normalized)
+        except ValueError:
+            continue
+        if value > 0:
+            return value
+    return None
 
 
 class EvidenceFeatureExtractor:

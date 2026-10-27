@@ -48,6 +48,7 @@ services:
       - ./src:/app/src
       - ./scripts:/app/scripts
       - ./config:/app/config
+      - ./skills:/app/skills
       - ./.env:/app/.env
       - ./var:/app/var
     environment:
@@ -88,6 +89,7 @@ services:
       - ./src:/app/src
       - ./scripts:/app/scripts
       - ./config:/app/config
+      - ./skills:/app/skills
       - ./.env:/app/.env
       - ./var:/app/var
     environment:

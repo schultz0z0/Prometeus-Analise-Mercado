@@ -88,8 +88,8 @@ def test_registry_builds_actor_specific_inputs_without_forwarding_unknown_parame
     assert google == {
         "queries": "MBA inteligência artificial seguros Brasil",
         "maxPagesPerQuery": 3,
-        "countryCode": "BR",
-        "languageCode": "pt",
+        "countryCode": "br",
+        "languageCode": "pt-BR",
     }
     assert jobs == {
         "keywords": "subscritor inteligência artificial",

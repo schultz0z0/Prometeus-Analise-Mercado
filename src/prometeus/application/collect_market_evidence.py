@@ -112,8 +112,18 @@ class CollectMarketEvidenceService:
     def _is_usable_discovered_url(capability: str, value: object) -> bool:
         if not isinstance(value, str) or not value.startswith(("https://", "http://")):
             return False
-        hostname = (urlsplit(value).hostname or "").lower()
+        if "[" in value or "]" in value or " " in value:
+            return False
+        parsed = urlsplit(value)
+        hostname = (parsed.hostname or "").lower()
         if not hostname or hostname == "api.apify.com":
+            return False
+        if hostname in {
+            "www.google.com",
+            "google.com",
+            "www.google.com.br",
+            "google.com.br",
+        } and parsed.path.startswith("/search"):
             return False
         if capability == "youtube_comments":
             return (
@@ -122,6 +132,21 @@ class CollectMarketEvidenceService:
                 or hostname == "youtube.com"
             )
         return True
+
+    @staticmethod
+    def _extract_payload_urls(payload: object) -> list[object]:
+        if not isinstance(payload, dict):
+            return []
+        found: list[object] = [
+            payload.get(key) for key in ("url", "link", "videoUrl", "webVideoUrl")
+        ]
+        for nested_key in ("organicResults", "paidResults"):
+            nested = payload.get(nested_key)
+            if isinstance(nested, list):
+                for entry in nested:
+                    if isinstance(entry, dict):
+                        found.extend(entry.get(k) for k in ("url", "link"))
+        return found
 
     async def _resolve_dependent_urls(
         self, call: PlannedToolCall, *, analysis_id: str
@@ -150,11 +175,8 @@ class CollectMarketEvidenceService:
         discovered: list[str] = []
         for evidence in evidence_rows:
             candidates: list[object] = [evidence.source_url]
-            for payload in (evidence.sanitized_data, evidence.raw_payload):
-                if isinstance(payload, dict):
-                    candidates.extend(
-                        payload.get(key) for key in ("url", "link", "videoUrl", "webVideoUrl")
-                    )
+            for payload in (evidence.raw_payload, evidence.sanitized_data):
+                candidates.extend(self._extract_payload_urls(payload))
             for candidate in candidates:
                 if (
                     self._is_usable_discovered_url(call.capability, candidate)
@@ -237,21 +259,57 @@ class CollectMarketEvidenceService:
             "url",
             "link",
             "jobUrl",
+            "job_url",
             "linkedinUrl",
+            "websiteUrl",
             "webVideoUrl",
             "snapshotUrl",
+            "pageUrl",
+            "inputUrl",
+            "channelUrl",
+            "inputChannelUrl",
         ):
             value = item.get(field_name)
             if isinstance(value, str) and value.startswith(("https://", "http://")):
                 return value
+        snapshot = item.get("snapshot")
+        if isinstance(snapshot, dict):
+            for snap_field in ("link_url", "page_profile_uri"):
+                snap_val = snapshot.get(snap_field)
+                if isinstance(snap_val, str) and snap_val.startswith(("https://", "http://")):
+                    return snap_val
         return f"https://api.apify.com/v2/datasets/{result.run.dataset_id}/items"
 
     @staticmethod
     def _title(call: PlannedToolCall, item: dict[str, object]) -> str:
-        for field_name in ("title", "name", "pageName", "positionName"):
+        for field_name in (
+            "title",
+            "name",
+            "pageName",
+            "page_name",
+            "companyName",
+            "channelName",
+            "positionName",
+            "text",
+            "caption",
+            "comment",
+            "channelDescription",
+            "note",
+        ):
             value = item.get(field_name)
             if isinstance(value, str) and value.strip():
                 return value.strip()[:256]
+        snapshot = item.get("snapshot")
+        if isinstance(snapshot, dict):
+            for snap_field in ("title", "page_name", "caption"):
+                snap_val = snapshot.get(snap_field)
+                if isinstance(snap_val, str) and snap_val.strip():
+                    return snap_val.strip()[:256]
+        organic = item.get("organicResults")
+        if isinstance(organic, list) and organic and isinstance(organic[0], dict):
+            org_title = organic[0].get("title")
+            if isinstance(org_title, str) and org_title.strip():
+                return org_title.strip()[:256]
         return f"{call.capability}: {call.query}"[:256]
 
     async def _persist_result(

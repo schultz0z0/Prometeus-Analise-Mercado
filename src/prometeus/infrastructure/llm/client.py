@@ -293,12 +293,39 @@ class OpenAIGenerativeClient(GenerativeModelPort):
                 )
             )
 
+            raw_eids = [str(eid) for eid in c["evidence_ids"] if str(eid) in facts.get_all_known_ids()]
+            if not raw_eids:
+                raw_eids = ["scoring_result"]
+            if claim_type == ClaimType.QUANTITATIVE:
+                from prometeus.application.dossier_verifier import DossierVerifier
+
+                candidate_claim = DossierClaim(
+                    claim_id=str(c["claim_id"]),
+                    statement=str(c["statement"]),
+                    claim_type=ClaimType.QUANTITATIVE,
+                    evidence_ids=list(raw_eids),
+                    support_level=support_level,
+                )
+                checked = DossierVerifier().verify_claim(candidate_claim, facts)
+                if checked.verification_status != VerificationStatus.VERIFIED:
+                    with_scoring = DossierClaim(
+                        claim_id=str(c["claim_id"]),
+                        statement=str(c["statement"]),
+                        claim_type=ClaimType.QUANTITATIVE,
+                        evidence_ids=list(dict.fromkeys([*raw_eids, "scoring_result"])),
+                        support_level=support_level,
+                    )
+                    if DossierVerifier().verify_claim(with_scoring, facts).verification_status == VerificationStatus.VERIFIED:
+                        raw_eids = with_scoring.evidence_ids
+                    else:
+                        claim_type = ClaimType.QUALITATIVE
+
             claims.append(
                 DossierClaim(
                     claim_id=str(c["claim_id"]),
                     statement=str(c["statement"]),
                     claim_type=claim_type,
-                    evidence_ids=[str(eid) for eid in c["evidence_ids"]],
+                    evidence_ids=raw_eids,
                     support_level=support_level,
                     verification_status=VerificationStatus.PENDING,
                 )
@@ -307,6 +334,14 @@ class OpenAIGenerativeClient(GenerativeModelPort):
         exec_summary = data.get("executive_summary")
         if not isinstance(exec_summary, str) or not exec_summary.strip():
             raise GenerativeModelError("A resposta do modelo não contém executive_summary válido")
+
+        known_claim_ids = {c.claim_id for c in claims}
+        for section in sections:
+            section.claim_ids = [cid for cid in section.claim_ids if cid in known_claim_ids]
+        referenced_claim_ids = {cid for s in sections for cid in s.claim_ids}
+        unreferenced = [c.claim_id for c in claims if c.claim_id not in referenced_claim_ids]
+        if unreferenced and sections:
+            sections[0].claim_ids.extend(unreferenced)
 
         return DossierOutput(
             analysis_id=facts.analysis_id,

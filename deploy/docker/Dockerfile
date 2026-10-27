@@ -48,7 +48,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Cria usuário sem privilégios de root (princípio do menor privilégio)
 RUN groupadd -g 10001 prometeus && \
     useradd -u 10001 -g prometeus -s /bin/sh -m prometeus && \
-    mkdir -p /app/var /app/config && \
+    mkdir -p /app/var /app/config /app/skills && \
     chown -R prometeus:prometeus /app
 
 # Copia ambiente virtual compilado do builder
@@ -58,6 +58,7 @@ COPY --from=builder /opt/venv /opt/venv
 COPY --chown=prometeus:prometeus src/ /app/src/
 COPY --chown=prometeus:prometeus web/ /app/web/
 COPY --chown=prometeus:prometeus config/ /app/config/
+COPY --chown=prometeus:prometeus skills/ /app/skills/
 COPY --chown=prometeus:prometeus migrations/ /app/migrations/
 COPY --chown=prometeus:prometeus alembic.ini /app/alembic.ini
 COPY --chown=prometeus:prometeus scripts/ /app/scripts/

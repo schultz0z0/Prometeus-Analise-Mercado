@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import base64
 import html
+import io
 import json
 import logging
 import os
 import time
 import uuid
+import xml.etree.ElementTree as ET
+import zipfile
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -27,10 +31,11 @@ from prometeus.application.create_analysis import (
     CreateAnalysisCommand,
     CreateAnalysisUseCase,
 )
-from prometeus.domain.analyses import Analysis, DomainError
+from prometeus.domain.analyses import Analysis, AnalysisStatus, DomainError
 from prometeus.domain.configuration import AppSettings, ConfigurationError
 from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
 from prometeus.infrastructure.db.models import (
+    AnalysisModel,
     CourseOutcomeModel,
     DossierModel,
     HistoricalCourseModel,
@@ -241,6 +246,151 @@ async def create_analysis(
     )
 
 
+class ExtractDocumentRequest(BaseModel):
+    filename: str
+    content_base64: str
+
+
+def _extract_docx_text(raw_bytes: bytes) -> str:
+    ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
+    with zipfile.ZipFile(io.BytesIO(raw_bytes)) as zf:
+        xml_bytes = zf.read("word/document.xml")
+    root = ET.fromstring(xml_bytes)
+    lines: list[str] = []
+    body = root.find("w:body", ns)
+    target = body if body is not None else root
+    for child in target:
+        tag = child.tag.rsplit("}", 1)[-1]
+        if tag == "p":
+            texts = [t.text for t in child.findall(".//w:t", ns) if t.text]
+            line = "".join(texts).strip()
+            if line:
+                lines.append(line)
+        elif tag == "tbl":
+            for tr in child.findall(".//w:tr", ns):
+                cells: list[str] = []
+                for tc in tr.findall(".//w:tc", ns):
+                    cell_text = " ".join(
+                        "".join(t.text for t in p.findall(".//w:t", ns) if t.text).strip()
+                        for p in tc.findall(".//w:p", ns)
+                    ).strip()
+                    if cell_text:
+                        cells.append(cell_text)
+                if cells:
+                    lines.append(" | ".join(cells))
+    return "\n".join(lines)
+
+
+@app.post(
+    "/v1/intake/extract-document",
+    summary="Extrair texto estruturado de arquivo .docx ou .txt para o formulário de intake",
+)
+async def extract_intake_document(payload: ExtractDocumentRequest) -> dict[str, str]:
+    try:
+        b64 = payload.content_base64.split(",", 1)[-1].strip()
+        raw_bytes = base64.b64decode(b64)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Arquivo base64 inválido: {exc}") from exc
+
+    fname = payload.filename.lower()
+    if fname.endswith(".docx"):
+        try:
+            extracted = _extract_docx_text(raw_bytes)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=400, detail=f"Não foi possível ler o arquivo DOCX: {exc}"
+            ) from exc
+    else:
+        extracted = raw_bytes.decode("utf-8", errors="replace").strip()
+
+    return {"filename": payload.filename, "text": extracted}
+
+
+@app.get(
+    "/v1/analyses",
+    summary="Listar análises e dossiês verificados do tenant",
+)
+async def list_analyses(
+    tenant_id: str = "ens",
+    session: Annotated[AsyncSession, Depends(get_db_session)] = None,  # type: ignore[assignment]
+) -> dict[str, Any]:
+    stmt = (
+        select(AnalysisModel)
+        .where(AnalysisModel.tenant_id == tenant_id)
+        .order_by(AnalysisModel.created_at.desc())
+        .limit(50)
+    )
+    rows = (await session.execute(stmt)).scalars().all()
+    items: list[dict[str, Any]] = []
+    repo = AnalysisRepository(session)
+    for row in rows:
+        domain_analysis = await repo.get_by_id(row.id)
+        proposal = domain_analysis.proposal_data if domain_analysis else {}
+        dossier_stmt = select(DossierModel).where(DossierModel.analysis_id == row.id)
+        dossier = (await session.execute(dossier_stmt)).scalar_one_or_none()
+        scoring_stmt = select(ScoringResultModel).where(ScoringResultModel.analysis_id == row.id)
+        scoring = (await session.execute(scoring_stmt)).scalar_one_or_none()
+        dossier_payload: dict[str, Any] | None = None
+        if dossier and scoring and dossier.status == "VERIFIED":
+            ev_stmt = select(MarketEvidenceModel).where(MarketEvidenceModel.analysis_id == row.id)
+            evidences = (await session.execute(ev_stmt)).scalars().all()
+            dossier_payload = {
+                "id": dossier.id,
+                "analysis_id": dossier.analysis_id,
+                "prompt_version": dossier.prompt_version,
+                "model_name": dossier.model_name,
+                "facts_hash": dossier.facts_hash,
+                "status": dossier.status,
+                "executive_summary": dossier.executive_summary,
+                "sections": dossier.sections,
+                "claims": dossier.claims,
+                "cost_usd": dossier.cost_usd,
+                "created_at": dossier.created_at.isoformat(),
+                "scoring": {
+                    "viability_score": scoring.viability_score,
+                    "coverage_score": scoring.coverage_score,
+                    "confidence_score": scoring.confidence_score,
+                    "recommendation": scoring.recommendation,
+                    "pillar_scores": scoring.pillar_scores,
+                    "gate_details": scoring.gate_details,
+                },
+                "evidences": [
+                    {
+                        "id": ev.id,
+                        "evidence_type": ev.evidence_type,
+                        "source_name": ev.source_name,
+                        "source_url": ev.source_url,
+                        "collector": ev.collector,
+                        "title": ev.title,
+                        "sanitized_data": ev.sanitized_data,
+                        "quality_score": ev.quality_score,
+                        "cost_usd": ev.cost_usd,
+                        "collected_at": ev.collected_at.isoformat(),
+                    }
+                    for ev in evidences
+                ],
+            }
+        items.append(
+            {
+                "id": row.id,
+                "name": row.course_name,
+                "area": proposal.get("area") or "Jurídico & Seguros",
+                "level": proposal.get("level") or "MBA Executivo",
+                "modality": proposal.get("modality") or "100% EAD",
+                "ticket": proposal.get("ticket"),
+                "duration_months": proposal.get("duration_months"),
+                "status": row.status,
+                "recommendation": scoring.recommendation if scoring else row.recommendation,
+                "viability_score": scoring.viability_score if scoring else None,
+                "coverage_index": scoring.coverage_score if scoring else None,
+                "confidence_index": scoring.confidence_score if scoring else None,
+                "created_at": row.created_at.isoformat(),
+                "dossier": dossier_payload,
+            }
+        )
+    return {"tenant_id": tenant_id, "items": items}
+
+
 @app.get(
     "/v1/analyses/{analysis_id}",
     summary="Consultar detalhes e dossiê da análise",
@@ -286,7 +436,7 @@ async def get_analysis(
                 "reason": blocking_event.reason,
                 "created_at": blocking_event.created_at.isoformat(),
             }
-            if blocking_event
+            if blocking_event and analysis.status == AnalysisStatus.BLOCKED
             else None
         ),
         "steps": [

@@ -6,6 +6,7 @@ e seleção determinística por regra em código (KeywordSet).
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -61,31 +62,37 @@ class KeywordPipeline:
                 seen.add(norm)
                 cleaned_terms.append(norm)
 
-        # TOOL-02: Julgamento atômico de relevância de cada termo no JEV
+        # TOOL-02: Julgamento atômico de relevância de cada termo no JEV / DecisionModel
+        semaphore = asyncio.Semaphore(5)
+
+        async def _evaluate_term(term: str) -> tuple[str, str, float]:
+            context: dict[str, Any] = {
+                "course_title": course_title,
+                "search_term": term,
+            }
+            async with semaphore:
+                try:
+                    jev_res = await self.decision_service.execute_judgment(
+                        pack_id="keywords-relevance-v1",
+                        context=context,
+                        correlation_id=correlation_id,
+                    )
+                    relevance = jev_res.selected_choice or "IRRELEVANT"
+                    confidence = jev_res.confidence
+                except Exception as exc:
+                    logger.warning(f"Falha avaliando relevância do termo '{term}' no JEV: {exc}")
+                    relevance = "IRRELEVANT"
+                    confidence = 0.0
+            return term, relevance, confidence
+
+        judged_terms = await asyncio.gather(*(_evaluate_term(term) for term in cleaned_terms))
+
         evaluated_candidates: list[KeywordCandidate] = []
         primary_list: list[str] = []
         secondary_list: list[str] = []
         negative_list: list[str] = []
 
-        for term in cleaned_terms:
-            context: dict[str, Any] = {
-                "course_title": course_title,
-                "search_term": term,
-            }
-
-            try:
-                jev_res = await self.decision_service.execute_judgment(
-                    pack_id="keywords-relevance-v1",
-                    context=context,
-                    correlation_id=correlation_id,
-                )
-                relevance = jev_res.selected_choice or "IRRELEVANT"
-                confidence = jev_res.confidence
-            except Exception as exc:
-                logger.warning(f"Falha avaliando relevância do termo '{term}' no JEV: {exc}")
-                relevance = "IRRELEVANT"
-                confidence = 0.0
-
+        for term, relevance, confidence in judged_terms:
             # Regra em código para classificação e categorização
             if relevance == "HIGH_RELEVANCE":
                 if len(primary_list) < self.max_primary:

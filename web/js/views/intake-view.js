@@ -204,6 +204,34 @@ export function bindIntakeEvents(store, container) {
       reader.readAsText(file);
     } else {
       // Para PDF/DOCX, avisa o usuário e prefixa a ementa com o nome do arquivo auditável
+      if (file.name.toLowerCase().endsWith('.docx')) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const dataUrl = e.target?.result;
+          if (!dataUrl || !curriculumTextArea) return;
+          try {
+            const resp = await fetch('/v1/intake/extract-document', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ filename: file.name, content_base64: dataUrl })
+            });
+            if (resp.ok) {
+              const parsed = await resp.json();
+              if (parsed.text) {
+                curriculumTextArea.value = parsed.text;
+                return;
+              }
+            }
+          } catch (err) {
+            console.warn('Falha ao extrair texto do DOCX:', err);
+          }
+          if (!curriculumTextArea.value.includes(file.name)) {
+            curriculumTextArea.value = `[Documento Anexado: ${file.name} (${(file.size / 1024).toFixed(1)} KB)]\n` + curriculumTextArea.value;
+          }
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
       if (curriculumTextArea && !curriculumTextArea.value.includes(file.name)) {
         curriculumTextArea.value = `[Documento Anexado: ${file.name} (${(file.size / 1024).toFixed(1)} KB)]\n` + curriculumTextArea.value;
       }

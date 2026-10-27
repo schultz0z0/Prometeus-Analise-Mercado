@@ -29,6 +29,7 @@ class PrometeusApp {
     // Sincroniza configurações persistidas no backend apenas uma vez
     store.syncBackendSettings();
     store.loadHistoricalCourses();
+    store.loadCompletedAnalyses();
   }
 
   render(state) {

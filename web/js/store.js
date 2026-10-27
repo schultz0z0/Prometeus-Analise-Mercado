@@ -106,6 +106,27 @@ class PrometeusStore {
     }
   }
 
+  async loadCompletedAnalyses() {
+    try {
+      const response = await fetch(`/v1/analyses?tenant_id=${encodeURIComponent(this.state.currentTenantId)}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      const verified = (Array.isArray(data.items) ? data.items : []).filter(
+        item => item.status === 'COMPLETED' && item.dossier && item.dossier.status === 'VERIFIED'
+      );
+      if (verified.length > 0) {
+        this.state.courses = verified;
+        if (!this.state.activeCourseId) {
+          this.state.activeCourseId = verified[0].id;
+          this.state.currentDossier = verified[0].dossier;
+        }
+        this.notify();
+      }
+    } catch (error) {
+      console.warn('Não foi possível sincronizar diagnósticos concluídos.', error);
+    }
+  }
+
   async seedInstitutionalData(reset = true) {
     try {
       const response = await fetch(`/v1/institutional/seed?tenant_id=${encodeURIComponent(this.state.currentTenantId)}&reset=${reset}`, { method: 'POST' });

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import re
+import unicodedata
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -55,11 +56,15 @@ def _urls(call: PlannedToolCall) -> list[str]:
 
 
 def _google_search_input(call: PlannedToolCall) -> dict[str, Any]:
+    country = _non_empty_string(call.parameters.get("country"), "br").lower()
+    language = _non_empty_string(call.parameters.get("language"), "pt-BR")
+    if language.lower() == "pt":
+        language = "pt-BR"
     return {
         "queries": call.query,
         "maxPagesPerQuery": max(1, math.ceil(call.max_items / 10)),
-        "countryCode": _non_empty_string(call.parameters.get("country"), "BR"),
-        "languageCode": _non_empty_string(call.parameters.get("language"), "pt"),
+        "countryCode": country,
+        "languageCode": language,
     }
 
 
@@ -85,11 +90,29 @@ def _meta_ads_input(call: PlannedToolCall) -> dict[str, Any]:
 
 
 def _linkedin_input(call: PlannedToolCall) -> dict[str, Any]:
-    locations = call.parameters.get("locations", call.parameters.get("location", ["Brazil"]))
-    if isinstance(locations, str):
-        locations = [locations]
+    raw_locations = call.parameters.get("locations", call.parameters.get("location", ["Brazil"]))
+    if isinstance(raw_locations, str):
+        raw_locations = [raw_locations]
+    if not isinstance(raw_locations, list):
+        raw_locations = ["Brazil"]
+    locations = [
+        "Brazil" if str(loc).strip().lower() in {"brasil", "br", "brazil"} else str(loc).strip()
+        for loc in raw_locations
+        if str(loc).strip()
+    ] or ["Brazil"]
+    q_lower = call.query.strip().lower()
+    if "segur" in q_lower:
+        search_query = "seguros"
+    else:
+        tokens = [
+            tok
+            for tok in re.findall(r"[A-Za-zÀ-ÿ0-9]+", call.query)
+            if len(tok) >= 4
+            and tok.lower() not in {"para", "como", "curso", "gestao", "gestão", "juridico", "jurídico"}
+        ]
+        search_query = tokens[0] if tokens else call.query
     return {
-        "searchQuery": call.query,
+        "searchQuery": search_query,
         "locations": locations,
         "maxItems": call.max_items,
     }
@@ -108,27 +131,57 @@ def _linkedin_jobs_input(call: PlannedToolCall) -> dict[str, Any]:
 
 
 def _instagram_input(call: PlannedToolCall) -> dict[str, Any]:
+    search_type = _non_empty_string(call.parameters.get("search_type"), "hashtag")
+    search_query = call.query.lstrip("#").strip()
+    if search_type == "hashtag":
+        normalized = (
+            unicodedata.normalize("NFKD", search_query)
+            .encode("ascii", "ignore")
+            .decode("ascii")
+            .lower()
+        )
+        tokens = [
+            tok
+            for tok in re.findall(r"[a-z0-9]+", normalized)
+            if tok not in {"de", "da", "do", "em", "para", "com", "pos", "mba", "curso"}
+        ]
+        if tokens:
+            search_query = tokens[0]
+        else:
+            search_query = re.sub(r"[^a-z0-9]", "", normalized) or "seguros"
     return {
-        "search": call.query,
-        "searchType": _non_empty_string(call.parameters.get("search_type"), "hashtag"),
+        "search": search_query,
+        "searchType": search_type,
         "resultsType": _non_empty_string(call.parameters.get("results_type"), "posts"),
         "resultsLimit": call.max_items,
     }
 
 
 def _tiktok_input(call: PlannedToolCall) -> dict[str, Any]:
+    section = _non_empty_string(call.parameters.get("search_section"), "/video")
+    if section in {"video", "user"}:
+        section = f"/{section}"
+    elif section not in {"", "/video", "/user"}:
+        section = "/video"
     return {
         "searchQueries": [call.query],
         "resultsPerPage": call.max_items,
-        "searchSection": _non_empty_string(call.parameters.get("search_section"), "video"),
+        "searchSection": section,
     }
 
 
 def _youtube_comments_input(call: PlannedToolCall) -> dict[str, Any]:
+    raw_sort = _non_empty_string(call.parameters.get("sort"), "TOP_COMMENTS").upper()
+    sort_map = {
+        "TOP": "TOP_COMMENTS",
+        "TOP_COMMENTS": "TOP_COMMENTS",
+        "NEWEST": "NEWEST_FIRST",
+        "NEWEST_FIRST": "NEWEST_FIRST",
+    }
     return {
         "startUrls": [{"url": url} for url in _urls(call)],
         "maxComments": call.max_items,
-        "sortCommentsBy": _non_empty_string(call.parameters.get("sort"), "top"),
+        "sortCommentsBy": sort_map.get(raw_sort, "TOP_COMMENTS"),
     }
 
 
@@ -142,11 +195,24 @@ def _reddit_input(call: PlannedToolCall) -> dict[str, Any]:
 
 
 def _google_trends_input(call: PlannedToolCall) -> dict[str, Any]:
+    raw_range = str(call.parameters.get("time_range", "")).strip()
+    valid_ranges = {
+        "",
+        "now 1-H",
+        "now 4-H",
+        "now 1-d",
+        "now 7-d",
+        "today 1-m",
+        "today 3-m",
+        "today 5-y",
+        "all",
+    }
+    time_range = raw_range if raw_range in valid_ranges else ""
     return {
         "searchTerms": [call.query],
         "maxItems": call.max_items,
         "geo": _non_empty_string(call.parameters.get("geo"), "BR"),
-        "timeRange": _non_empty_string(call.parameters.get("time_range"), "today 12-m"),
+        "timeRange": time_range,
     }
 
 

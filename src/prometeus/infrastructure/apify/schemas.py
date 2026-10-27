@@ -30,18 +30,100 @@ RECOGNIZED_DATASET_FIELDS: dict[str, frozenset[str]] = {
     "google_search": frozenset(
         {"title", "url", "link", "searchQuery", "organicResults", "paidResults"}
     ),
-    "web_crawler": frozenset({"url", "loadedUrl", "title", "text", "markdown"}),
+    "web_crawler": frozenset({"url", "loadedUrl", "title", "text", "markdown", "crawl"}),
     "meta_ads_library": frozenset(
-        {"id", "adArchiveID", "adArchiveId", "pageName", "snapshotUrl", "url"}
+        {
+            "id",
+            "ad_id",
+            "adArchiveID",
+            "adArchiveId",
+            "ad_archive_id",
+            "pageName",
+            "page_name",
+            "snapshot",
+            "snapshotUrl",
+            "url",
+        }
     ),
-    "linkedin": frozenset({"id", "linkedinUrl", "url", "name", "companyName"}),
-    "linkedin_jobs": frozenset({"id", "jobId", "jobUrl", "link", "url", "title", "positionName"}),
-    "instagram": frozenset({"id", "url", "shortCode", "caption", "ownerUsername"}),
-    "tiktok": frozenset({"id", "webVideoUrl", "url", "text", "authorMeta"}),
-    "youtube_comments": frozenset({"id", "cid", "commentId", "text", "comment", "videoId", "url"}),
-    "reddit": frozenset({"id", "url", "title", "body", "communityName"}),
+    "linkedin": frozenset(
+        {
+            "id",
+            "linkedinUrl",
+            "url",
+            "name",
+            "companyName",
+            "universalName",
+            "tagline",
+            "description",
+            "websiteUrl",
+        }
+    ),
+    "linkedin_jobs": frozenset(
+        {
+            "id",
+            "jobId",
+            "job_id",
+            "jobUrl",
+            "job_url",
+            "link",
+            "url",
+            "title",
+            "positionName",
+            "companyName",
+            "company",
+        }
+    ),
+    "instagram": frozenset(
+        {
+            "id",
+            "url",
+            "inputUrl",
+            "shortCode",
+            "caption",
+            "ownerUsername",
+            "name",
+            "postsCount",
+            "topPosts",
+            "latestPosts",
+        }
+    ),
+    "tiktok": frozenset(
+        {"id", "webVideoUrl", "url", "text", "authorMeta", "videoMeta", "diggCount", "playCount"}
+    ),
+    "youtube_comments": frozenset(
+        {
+            "id",
+            "cid",
+            "commentId",
+            "text",
+            "comment",
+            "videoId",
+            "url",
+            "pageUrl",
+            "author",
+            "title",
+            "channelName",
+            "channelUrl",
+            "channelDescription",
+            "channelId",
+            "error",
+            "note",
+        }
+    ),
+    "reddit": frozenset({"id", "url", "title", "body", "communityName", "username", "dataType"}),
     "google_trends": frozenset(
-        {"searchTerm", "keyword", "interestOverTime", "interestBySubregion", "url"}
+        {
+            "searchTerm",
+            "keyword",
+            "term",
+            "interestOverTime",
+            "interestOverTime_timelineData",
+            "interestBySubregion",
+            "relatedQueries",
+            "relatedTopics",
+            "url",
+            "inputUrlOrTerm",
+        }
     ),
     "google_analytics": frozenset({"date", "rows", "metricValues", "dimensionValues"}),
 }
