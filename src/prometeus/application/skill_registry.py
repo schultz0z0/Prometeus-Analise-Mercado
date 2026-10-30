@@ -29,12 +29,29 @@ class DomainSkill:
 
 
 class SkillRegistry:
+    CAPABILITY_SKILLS: dict[str, tuple[str, ...]] = {
+        "google_search": ("extracting-course-offers",),
+        "web_crawler": ("extracting-course-offers",),
+        "google_trends": ("researching-search-trends",),
+        "linkedin_jobs": ("researching-job-demand",),
+        "linkedin": (),
+        "instagram": (),
+        "tiktok": (),
+        "youtube_comments": (),
+        "reddit": (),
+        "meta_ads_library": (),
+        "google_analytics": (),
+    }
     ALLOWLIST: dict[str, tuple[str, ...]] = {
         "course_understanding": ("understanding-course-proposals",),
         "research_planning": ("planning-market-research",),
         "evidence_review": ("reviewing-market-evidence",),
         "curriculum_audit": ("auditing-course-curriculum",),
+        "internal_comparables": ("reviewing-market-evidence",),
+        "pricing_extraction": ("reviewing-market-evidence", "building-course-offers"),
         "dossier_synthesis": ("reviewing-market-evidence", "building-course-offers"),
+        "keyword_generation": ("planning-market-research",),
+        "bounded_judgment": (),
     }
 
     def __init__(self, root: Path | str = "skills") -> None:
@@ -43,7 +60,11 @@ class SkillRegistry:
 
     @property
     def allowed_names(self) -> set[str]:
-        return {name for names in self.ALLOWLIST.values() for name in names}
+        return {
+            name
+            for names in [*self.ALLOWLIST.values(), *self.CAPABILITY_SKILLS.values()]
+            for name in names
+        } | {"conducting-course-analysis", "operating-apify-research"}
 
     def _parse(self, name: str) -> DomainSkill:
         if name not in self.allowed_names:
@@ -86,4 +107,25 @@ class SkillRegistry:
         names = self.ALLOWLIST.get(stage)
         if names is None:
             raise SkillRegistryError(f"Estágio de skills não allowlisted: {stage}")
-        return [self.get(name) for name in names]
+        # Preserve the stage-specific entry first for compatible callers.
+        selected = [*names, "conducting-course-analysis"]
+        if stage in {"research_planning", "evidence_review"}:
+            selected.append("operating-apify-research")
+        return [self.get(name) for name in dict.fromkeys(selected)]
+
+    def for_capabilities(self, capabilities: list[str]) -> list[DomainSkill]:
+        names: list[str] = []
+        for capability in capabilities:
+            if capability not in self.CAPABILITY_SKILLS:
+                raise SkillRegistryError(f"Capability fora da allowlist de skills: {capability}")
+            names.extend(self.CAPABILITY_SKILLS[capability])
+        return [self.get(name) for name in dict.fromkeys(names)]
+
+    def instructions_for(self, stage: str, capabilities: list[str] | None = None) -> str:
+        skills = {
+            s.name: s for s in [*self.for_stage(stage), *self.for_capabilities(capabilities or [])]
+        }
+        return f"ETAPA: {stage}\n" + "\n\n".join(
+            f"SKILL: {skill.name} v{skill.version}\n{skill.instructions}"
+            for skill in skills.values()
+        )

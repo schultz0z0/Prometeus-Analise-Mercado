@@ -11,7 +11,10 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from prometeus.infrastructure.db.models import HistoricalCourseModel, HistoricalFunnelModel
-from prometeus.infrastructure.institutional.ens.dataset import ENS_HISTORICAL_PORTFOLIO
+from prometeus.infrastructure.institutional.ens.dataset import (
+    DATASET_VERSION,
+    ENS_HISTORICAL_PORTFOLIO,
+)
 
 logger = logging.getLogger("prometeus.seed_historical")
 
@@ -57,6 +60,9 @@ async def seed_historical_courses(
             course_model.status = item["status"]
             course_model.tags = item["tags"]
             course_model.target_audience = item["target_audience"]
+            course_model.family = str(item.get("family", ""))
+            course_model.curriculum_text = str(item.get("curriculum_text", ""))
+            course_model.curriculum_modules = list(item.get("curriculum_modules", []))
             course_model.updated_at = datetime.now(UTC)
             courses_updated += 1
         else:
@@ -72,6 +78,9 @@ async def seed_historical_courses(
                 status=item["status"],
                 tags=item["tags"],
                 target_audience=item["target_audience"],
+                family=str(item.get("family", "")),
+                curriculum_text=str(item.get("curriculum_text", "")),
+                curriculum_modules=list(item.get("curriculum_modules", [])),
                 created_at=datetime.now(UTC),
                 updated_at=datetime.now(UTC),
             )
@@ -81,10 +90,17 @@ async def seed_historical_courses(
 
         for fun in funnel_history:
             period = fun["period"]
-            leads = int(fun.get("leads", 0))
-            applicants = int(fun.get("applicants", 0))
-            enrolled = int(fun.get("enrolled", 0))
+            leads = int(fun.get("leads") or 0)
+            applicants = int(fun.get("applicants") or 0)
+            enrolled = int(fun.get("enrolled") or 0)
             ticket = float(fun.get("average_ticket_brl", 0.0))
+            # This seeder exclusively owns the declared synthetic ENS fixture:
+            # its tickets are full-course tuition (revenue = ticket * enrolled).
+            price_period = str(fun.get("price_period", "total"))
+            data_complete = all(
+                fun.get(key) is not None for key in ("leads", "applicants", "enrolled")
+            )
+            cohort_status = str(fun.get("status", "UNKNOWN"))
             revenue = float(fun.get("total_revenue_brl", ticket * enrolled))
 
             lead_to_app = round((applicants / leads), 4) if leads > 0 else 0.0
@@ -106,6 +122,9 @@ async def seed_historical_courses(
                 funnel_model.conversion_lead_to_enrolled = lead_to_enr
                 funnel_model.average_ticket_brl = ticket
                 funnel_model.total_revenue_brl = revenue
+                funnel_model.price_period = price_period
+                funnel_model.data_complete = data_complete
+                funnel_model.cohort_status = cohort_status
             else:
                 funnel_id = f"hf_{uuid.uuid4().hex[:16]}"
                 funnel_model = HistoricalFunnelModel(
@@ -121,6 +140,9 @@ async def seed_historical_courses(
                     conversion_lead_to_enrolled=lead_to_enr,
                     average_ticket_brl=ticket,
                     total_revenue_brl=revenue,
+                    price_period=price_period,
+                    data_complete=data_complete,
+                    cohort_status=cohort_status,
                     created_at=datetime.now(UTC),
                 )
                 session.add(funnel_model)
@@ -133,6 +155,8 @@ async def seed_historical_courses(
 
     return {
         "tenant_id": tenant_id,
+        "is_synthetic": True,
+        "dataset_version": DATASET_VERSION,
         "courses_created": courses_created,
         "courses_updated": courses_updated,
         "total_courses": len(ENS_HISTORICAL_PORTFOLIO),

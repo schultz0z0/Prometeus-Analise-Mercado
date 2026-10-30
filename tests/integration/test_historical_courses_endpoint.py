@@ -16,7 +16,7 @@ async def test_session() -> AsyncSession:
 
     session_factory = async_sessionmaker(bind=engine, expire_on_commit=False, class_=AsyncSession)
     async with session_factory() as session:
-        # Semeia os 5 cursos da ENS na sessão de teste
+        # Semeia a base sintética versionada na sessão isolada de teste.
         await seed_historical_courses(session, tenant_id="ens", reset=True)
         yield session
 
@@ -36,14 +36,16 @@ async def client(test_session: AsyncSession) -> httpx.AsyncClient:
 
 
 @pytest.mark.asyncio
-async def test_list_institutional_courses_returns_5_curated_courses(
+async def test_list_institutional_courses_returns_enriched_test_courses(
     client: httpx.AsyncClient, test_session: AsyncSession
 ) -> None:
     resp = await client.get("/v1/institutional/courses?tenant_id=ens")
     assert resp.status_code == 200
     data = resp.json()
     assert data["tenant_id"] == "ens"
-    assert data["total"] == 5
+    assert data["total"] == 33
+    assert all(c["is_synthetic"] is True for c in data["courses"])
+    assert all(c["curriculum_modules"] and c["family"] for c in data["courses"])
 
     ext_ids = [c["external_id"] for c in data["courses"]]
     assert "ENS-MBA-SEG-01" in ext_ids
@@ -85,6 +87,9 @@ async def test_successful_course_metrics(
     assert resp.status_code == 200
     course = resp.json()
     assert course["external_id"] == "ENS-MBA-SEG-01"
+    assert course["curriculum_modules"]
+    assert course["is_synthetic"] is True
+    assert course["academic_reference"]["verified_fields"] == ["name", "category"]
     assert course["status"] == "active"
 
     funnels = course["funnel_history"]
@@ -95,3 +100,5 @@ async def test_successful_course_metrics(
     assert f24["enrolled"] == 84
     assert f25["enrolled"] == 102
     assert f25["total_revenue_brl"] > f24["total_revenue_brl"]
+    assert f25["price_period"] == "total"
+    assert f25["cohort_status"] == "COMPLETED"

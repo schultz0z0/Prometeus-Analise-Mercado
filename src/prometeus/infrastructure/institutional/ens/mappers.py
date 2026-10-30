@@ -70,6 +70,15 @@ def map_ens_course(raw: dict[str, Any]) -> CanonicalCourse:
         status="active",
         target_audience=[],
         tags=[t.strip().lower() for t in category.split() if len(t) > 2],
+        family=str(clean.get("familia") or clean.get("family") or "").strip(),
+        curriculum_text=str(clean.get("ementa") or clean.get("curriculum_text") or "").strip(),
+        curriculum_modules=[
+            str(module).strip()
+            for module in (clean.get("modulos") or clean.get("curriculum_modules") or [])
+            if isinstance(module, str) and module.strip()
+        ]
+        if isinstance(clean.get("modulos") or clean.get("curriculum_modules") or [], list)
+        else [],
     )
 
 
@@ -130,6 +139,9 @@ def map_ens_matriculados(
                 average_ticket_brl=ticket,
                 total_revenue_brl=revenue,
                 acquisition_cost_brl=cac_val,
+                price_period=str(
+                    clean.get("price_period") or clean.get("periodicidade_preco") or "unknown"
+                ),
             )
 
     return matriculados_map, financial_map

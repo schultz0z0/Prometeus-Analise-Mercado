@@ -3,13 +3,13 @@
  * Orquestrador principal da aplicação SPA, roteamento e renderização reativa.
  */
 
-import { store } from './store.js?v=20261027';
-import { renderPortfolioView, bindPortfolioEvents } from './views/portfolio-view.js?v=20261027';
-import { renderIntakeView, bindIntakeEvents } from './views/intake-view.js?v=20261027';
-import { renderLiveView, bindLiveEvents } from './views/live-view.js?v=20261027';
-import { renderDossierView, bindDossierEvents } from './views/dossier-view.js?v=20261027';
-import { renderSettingsView, bindSettingsEvents } from './views/settings-view.js?v=20261027';
-import { renderEvidenceDrawer, bindEvidenceDrawerEvents } from './components/evidence-drawer.js?v=20261027';
+import { store } from './store.js?v=20261029c';
+import { renderPortfolioView, bindPortfolioEvents } from './views/portfolio-view.js?v=20261028e';
+import { renderIntakeView, bindIntakeEvents } from './views/intake-view.js?v=20261028e';
+import { renderLiveView, bindLiveEvents } from './views/live-view.js?v=20261029b';
+import { renderDossierView, bindDossierEvents } from './views/dossier-view.js?v=20261028e';
+import { renderSettingsView, bindSettingsEvents } from './views/settings-view.js?v=20261029a';
+import { renderEvidenceDrawer, bindEvidenceDrawerEvents } from './components/evidence-drawer.js?v=20261028e';
 
 class PrometeusApp {
   constructor() {
@@ -29,10 +29,19 @@ class PrometeusApp {
     // Sincroniza configurações persistidas no backend apenas uma vez
     store.syncBackendSettings();
     store.loadHistoricalCourses();
-    store.loadCompletedAnalyses();
+    const analysisId = new URL(window.location.href).searchParams.get('analysis');
+    store.loadCompletedAnalyses().then(() => {
+      if (analysisId) store.openAnalysis(analysisId);
+    });
   }
 
   render(state) {
+    // Background synchronization must not replace a form being filled in,
+    // including its file input and asynchronous document extraction handlers.
+    if (state.currentView === 'validate' && this.renderedView === 'validate' &&
+        this.renderedTenant === state.currentTenantId && this.root.querySelector('#form-validate-course')) return;
+    this.renderedView = state.currentView;
+    this.renderedTenant = state.currentTenantId;
     const currentTenant = state.tenants.find(t => t.id === state.currentTenantId) || state.tenants[0];
     const coursesCount = state.courses.length;
 

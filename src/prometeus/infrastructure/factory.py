@@ -9,11 +9,15 @@ Gerencia automaticamente:
 from __future__ import annotations
 
 import logging
+from typing import Any
 
+from prometeus.application.decision_service import DecisionService
+from prometeus.application.shadow_decision_service import ShadowDecisionService
 from prometeus.domain.configuration import AppSettings, ConfigurationError
 from prometeus.domain.ports.decision_model import DecisionModelPort
 from prometeus.domain.ports.generative_model import GenerativeModelPort
 from prometeus.infrastructure.jev.client import TypeSafeJEVClient
+from prometeus.infrastructure.jev.fake_client import FakeDecisionClient
 from prometeus.infrastructure.llm.client import (
     ChatGPTPlanGenerativeClient,
     OpenAIGenerativeClient,
@@ -71,17 +75,17 @@ def get_generative_model(settings: AppSettings | None = None) -> GenerativeModel
 def get_decision_model(settings: AppSettings | None = None) -> DecisionModelPort:
     """Retorna o motor de decisão System One.
 
-    Chaveamento 100% automático:
-    - Se TYPESAFE_API_KEY estiver configurada -> Modo Híbrido com TypeSafe JEV.
-    - Se TYPESAFE_API_KEY estiver vazia -> Modo 100% Tradicional via LLMDecisionAdapter.
+    AI_MODE=traditional sempre usa LLMDecisionAdapter, inclusive com chave JEV.
+    Somente AI_MODE=auto escolhe o modo pela presença de credencial JEV;
+    hybrid exige essa credencial. Nenhum modo delega cálculos ao modelo.
     """
     settings = settings or AppSettings()
     mode = settings.AI_MODE.strip().lower()
 
-    if mode not in {"auto", "traditional", "hybrid"}:
-        raise ConfigurationError("AI_MODE deve ser auto, traditional ou hybrid.")
+    if mode not in {"auto", "traditional", "hybrid", "shadow"}:
+        raise ConfigurationError("AI_MODE deve ser auto, traditional, hybrid ou shadow.")
 
-    if mode == "traditional":
+    if mode in {"traditional", "shadow"}:
         return LLMDecisionAdapter(generative_model=get_generative_model(settings))
 
     if mode == "hybrid" and not settings.is_jev_configured:
@@ -104,3 +108,42 @@ def get_decision_model(settings: AppSettings | None = None) -> DecisionModelPort
     )
     gen_model = get_generative_model(settings)
     return LLMDecisionAdapter(generative_model=gen_model)
+
+
+def get_shadow_decision_service(
+    settings: AppSettings | None = None,
+    session: Any = None,
+    packs_dir: str | None = None,
+) -> ShadowDecisionService:
+    """Retorna o serviço de decisão em Shadow Mode (Fase 6).
+
+    O serviço orquestra a execução primária com a LLM tradicional e a execução
+    secundária com o JEV em paralelo, capturando métricas de divergência sem risco
+    à execução principal.
+    """
+    settings = settings or AppSettings()
+    gen_model = get_generative_model(settings)
+    primary_model = LLMDecisionAdapter(generative_model=gen_model)
+
+    kwargs: dict[str, Any] = {"decision_model": primary_model, "session": session}
+    if packs_dir is not None:
+        kwargs["packs_dir"] = packs_dir
+    primary_service = DecisionService(**kwargs)
+
+    shadow_model: DecisionModelPort
+    if settings.is_jev_configured:
+        shadow_model = TypeSafeJEVClient(
+            base_url=settings.JEV_BASE_URL,
+            api_key=settings.TYPESAFE_API_KEY,
+            model=settings.JEV_MODEL,
+            timeout_seconds=float(settings.JEV_TIMEOUT_SECONDS),
+            max_retries=settings.JEV_MAX_RETRIES,
+        )
+    else:
+        shadow_model = FakeDecisionClient(model=settings.JEV_MODEL)
+
+    return ShadowDecisionService(
+        primary_service=primary_service,
+        shadow_model=shadow_model,
+        enabled=True,
+    )

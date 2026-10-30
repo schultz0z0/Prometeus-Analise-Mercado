@@ -40,12 +40,14 @@ def score_pack() -> DecisionPack:
 
 @pytest.mark.asyncio
 async def test_typesafe_client_choice_success(choice_pack: DecisionPack) -> None:
+    choice_pack.rubric={"SEGUROS_E_RESSEGUROS":"Decidir pelo domínio da formação"}
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.url.path == "/v1/judgments/choice"
         assert request.headers.get("Authorization") == "Bearer test-api-key"
         body = json.loads(request.content)
         assert body["pack_id"] == "taxonomy-v1"
         assert body["model"] == "jev-2026.1"
+        assert 'Decidir pelo domínio da formação' in body['question']
 
         return httpx.Response(
             200,

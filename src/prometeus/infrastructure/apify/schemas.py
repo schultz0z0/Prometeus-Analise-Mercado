@@ -16,6 +16,7 @@ class ApifyRunMetadata(BaseModel):
     actor_id: str
     build_number: str
     cost_usd: float = 0.0
+    incomplete_reason: str | None = None
 
 
 class ApifyExecutionResult(BaseModel):
@@ -141,6 +142,10 @@ def validate_dataset_items(capability: str, payload: Any) -> list[dict[str, Any]
     for index, item in enumerate(payload):
         if not isinstance(item, dict):
             raise ValueError(f"Item {index} de '{capability}' não é um objeto JSON.")
+        # This documented actor outcome is a diagnostic record, never a post.
+        if capability == "instagram" and item.get("error") == "no_items":
+            items.append(item)
+            continue
         if recognized and not recognized.intersection(item):
             raise ValueError(f"Item {index} de '{capability}' não possui campos reconhecidos.")
         items.append(item)

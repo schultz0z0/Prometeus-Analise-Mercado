@@ -1,0 +1,547 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-10-30T12:00:00Z",
+  "methodology": "human_gold_standard_double_review_with_adjudication",
+  "analysis_id_origin": "73501c53-cc58-47f9-8927-d9e299b4f4b5",
+  "reviewers": [
+    {
+      "id": "reviewer_ens_market",
+      "name": "Especialista ENS de Mercado e Portfólio",
+      "role": "Analista de Portfólio Educacional Segurador"
+    },
+    {
+      "id": "reviewer_data_methodology",
+      "name": "Revisor de Dados e Metodologia",
+      "role": "Especialista em Integridade Estatística e Coleta"
+    }
+  ],
+  "denominators": {
+    "total_examples": 10,
+    "unique_entities": 10,
+    "control_distribution": {
+      "positive": 3,
+      "negative": 2,
+      "adjacent": 2,
+      "false_cognate": 2,
+      "legitimate_absence": 1
+    },
+    "adjudication_status": {
+      "AGREED": 7,
+      "ADJUDICATED": 2,
+      "UNKNOWN_UNRESOLVED": 1
+    }
+  },
+  "items": [
+    {
+      "example_id": "ref-job-senior-underwriter",
+      "capture_id": "cap-linkedin-job-4481932467",
+      "entity_id": "ent-job-underwriter-sp",
+      "source_name": "apify_linkedin_jobs",
+      "source_url": "https://www.linkedin.com/jobs/view/4481932467",
+      "scope": {
+        "geography": "São Paulo, Brazil",
+        "period": "2026-Q3",
+        "language": "pt-BR"
+      },
+      "expected_critical_fields": ["title", "location", "descriptionText", "companyName"],
+      "extracted_snippets": [
+        "Responsável por subscrição de riscos complexos de ramos elementares e D&O",
+        "Necessário conhecimento avançado em regulação de sinistros e resseguro"
+      ],
+      "purpose": "competencies",
+      "utility": "direct",
+      "category_exact": "MBA",
+      "family": "Seguros e Gestão de Riscos",
+      "ambiguity_flag": false,
+      "ambiguity_reason": null,
+      "allowed_claims": [
+        "Mercado corporativo de São Paulo demanda competências de subscrição de ramos elementares e regulação de sinistros"
+      ],
+      "disallowed_claims": [
+        "Vaga comprova intenção direta de matrícula em programa de MBA"
+      ],
+      "control_type": "positive",
+      "annotations": [
+        {
+          "reviewer_id": "reviewer_ens_market",
+          "utility": "direct",
+          "purpose": "competencies",
+          "rationale": "Perfil sênior aderente à grade de MBA em Riscos da ENS. Requisitos técnicos claros.",
+          "timestamp": "2026-10-30T10:15:00Z"
+        },
+        {
+          "reviewer_id": "reviewer_data_methodology",
+          "utility": "direct",
+          "purpose": "competencies",
+          "rationale": "Snippet textual preservado integralmente, geolocalização verificada no estado de SP.",
+          "timestamp": "2026-10-30T10:30:00Z"
+        }
+      ],
+      "adjudication": {
+        "status": "AGREED",
+        "adjudicator": "none",
+        "final_utility": "direct",
+        "rationale": "Concordância plena entre especialista de mercado e especialista de dados."
+      }
+    },
+    {
+      "example_id": "ref-competitor-offer-pos-direito",
+      "capture_id": "cap-search-concorrente-fgv-01",
+      "entity_id": "ent-offer-fgv-direito-securitario",
+      "source_name": "apify_web_crawler",
+      "source_url": "https://educacao-executiva.fgv.br/cursos/pos-graduacao-direito-securitario",
+      "scope": {
+        "geography": "Brasil / Online",
+        "period": "2026-10",
+        "language": "pt-BR"
+      },
+      "expected_critical_fields": ["title", "workload_hours", "price_total", "curriculum"],
+      "extracted_snippets": [
+        "Pós-Graduação em Direito dos Seguros e Regulação - 360h",
+        "Investimento: 18 parcelas de R$ 1.150,00"
+      ],
+      "purpose": "direct_competition",
+      "utility": "direct",
+      "category_exact": "Pós-Graduação",
+      "family": "Direito Securitário",
+      "ambiguity_flag": false,
+      "ambiguity_reason": null,
+      "allowed_claims": [
+        "Oferta ativa de pós-graduação concorrente com carga horária de 360h e investimento de R$ 20.700,00"
+      ],
+      "disallowed_claims": [
+        "Preço estimado por hora-aula de curso livre"
+      ],
+      "control_type": "positive",
+      "annotations": [
+        {
+          "reviewer_id": "reviewer_ens_market",
+          "utility": "direct",
+          "purpose": "direct_competition",
+          "rationale": "Concorrente formal direto no mesmo nível lato sensu com temática sobreposta de regulação de seguros.",
+          "timestamp": "2026-10-30T10:20:00Z"
+        },
+        {
+          "reviewer_id": "reviewer_data_methodology",
+          "utility": "direct",
+          "purpose": "direct_competition",
+          "rationale": "Condição comercial e número de parcelas explícitos com data de vigência observada.",
+          "timestamp": "2026-10-30T10:45:00Z"
+        }
+      ],
+      "adjudication": {
+        "status": "AGREED",
+        "adjudicator": "none",
+        "final_utility": "direct",
+        "rationale": "Ambos os revisores confirmam evidência direta de concorrência com preço auditável."
+      }
+    },
+    {
+      "example_id": "ref-adjacent-offer-short-course",
+      "capture_id": "cap-search-extensao-fraudes-02",
+      "entity_id": "ent-offer-curso-livre-fraudes",
+      "source_name": "apify_google_search",
+      "source_url": "https://portaldecursos.com.br/investigacao-fraudes-corporativas",
+      "scope": {
+        "geography": "Brasil / Online",
+        "period": "2026-09",
+        "language": "pt-BR"
+      },
+      "expected_critical_fields": ["title", "workload_hours", "price_total"],
+      "extracted_snippets": [
+        "Workshop Intensivo de Fraudes Corporativas - 16 horas",
+        "Valor único de R$ 450,00 com certificado de participação"
+      ],
+      "purpose": "adjacent_competition",
+      "utility": "adjacent",
+      "category_exact": "Extensão / Curso Livre",
+      "family": "Compliance e Fraudes",
+      "ambiguity_flag": false,
+      "ambiguity_reason": null,
+      "allowed_claims": [
+        "Existem capacitações curtas de 16h em investigação de fraudes no formato de curso livre"
+      ],
+      "disallowed_claims": [
+        "Curso livre de 16h concorre diretamente em titulação acadêmica com MBA de 360h"
+      ],
+      "control_type": "adjacent",
+      "annotations": [
+        {
+          "reviewer_id": "reviewer_ens_market",
+          "utility": "adjacent",
+          "purpose": "adjacent_competition",
+          "rationale": "Produto substituto pontual, mas não concorre diretamente com programa de pós/MBA.",
+          "timestamp": "2026-10-30T10:35:00Z"
+        },
+        {
+          "reviewer_id": "reviewer_data_methodology",
+          "utility": "adjacent",
+          "purpose": "adjacent_competition",
+          "rationale": "Carga horária e valor não comparáveis diretamente com a cesta de preços de MBA.",
+          "timestamp": "2026-10-30T10:55:00Z"
+        }
+      ],
+      "adjudication": {
+        "status": "AGREED",
+        "adjudicator": "none",
+        "final_utility": "adjacent",
+        "rationale": "Classificação unânime como oferta adjacente/substituta."
+      }
+    },
+    {
+      "example_id": "ref-false-cognate-culinaria",
+      "capture_id": "cap-crawler-extensao-culinaria-09",
+      "entity_id": "ent-noise-culinaria",
+      "source_name": "apify_web_crawler",
+      "source_url": "https://gastronomia.exemplo.edu.br/extensao-cozinha-italiana",
+      "scope": {
+        "geography": "Brasil",
+        "period": "2026-08",
+        "language": "pt-BR"
+      },
+      "expected_critical_fields": ["title", "description"],
+      "extracted_snippets": [
+        "Curso de Extensão Universitária em Massas e Molhos Italianos Tradicionais"
+      ],
+      "purpose": "direct_competition",
+      "utility": "irrelevant",
+      "category_exact": "Extensão",
+      "family": "Gastronomia",
+      "ambiguity_flag": true,
+      "ambiguity_reason": "Capturado devido ao token isolado 'extensão' em query mal delimitada",
+      "allowed_claims": [],
+      "disallowed_claims": [
+        "Qualquer afirmação que relacione culinária ao mercado de seguros"
+      ],
+      "control_type": "false_cognate",
+      "annotations": [
+        {
+          "reviewer_id": "reviewer_ens_market",
+          "utility": "irrelevant",
+          "purpose": "direct_competition",
+          "rationale": "Falso cognato acadêmico evidente. Ruído puro.",
+          "timestamp": "2026-10-30T11:00:00Z"
+        },
+        {
+          "reviewer_id": "reviewer_data_methodology",
+          "utility": "irrelevant",
+          "purpose": "direct_competition",
+          "rationale": "Distância semântica máxima do tema de seguros; termo genérico na busca.",
+          "timestamp": "2026-10-30T11:05:00Z"
+        }
+      ],
+      "adjudication": {
+        "status": "AGREED",
+        "adjudicator": "none",
+        "final_utility": "irrelevant",
+        "rationale": "Descarte unânime como controle de falso cognato."
+      }
+    },
+    {
+      "example_id": "ref-false-cognate-predatory-law",
+      "capture_id": "cap-linkedin-job-advogado-massa",
+      "entity_id": "ent-job-advogado-contencioso-massa",
+      "source_name": "apify_linkedin_jobs",
+      "source_url": "https://www.linkedin.com/jobs/view/4499001122",
+      "scope": {
+        "geography": "Curitiba, PR",
+        "period": "2026-09",
+        "language": "pt-BR"
+      },
+      "expected_critical_fields": ["title", "descriptionText"],
+      "extracted_snippets": [
+        "Advogado Júnior para ajuizamento de ações repetitivas contra seguradoras e bancos",
+        "Metas de peticionamento de 50 ações/dia em plataforma digital"
+      ],
+      "purpose": "competencies",
+      "utility": "irrelevant",
+      "category_exact": "Graduação / OAB",
+      "family": "Direito Contencioso",
+      "ambiguity_flag": true,
+      "ambiguity_reason": "Atividade litigiosa contra seguradoras, oposta ao perfil de conformidade do MBA",
+      "allowed_claims": [
+        "Litigância em massa observada como fenômeno adverso ao mercado de seguros"
+      ],
+      "disallowed_claims": [
+        "Vaga de peticionamento em massa indica demanda por profissionais pós-graduados em seguros"
+      ],
+      "control_type": "false_cognate",
+      "annotations": [
+        {
+          "reviewer_id": "reviewer_ens_market",
+          "utility": "irrelevant",
+          "purpose": "competencies",
+          "rationale": "Litigância predatória contra seguros não é competência de egresso de MBA; é ameaça externa.",
+          "timestamp": "2026-10-30T11:10:00Z"
+        },
+        {
+          "reviewer_id": "reviewer_data_methodology",
+          "utility": "context",
+          "purpose": "sector_context",
+          "rationale": "O dado demonstra volume de ações no judiciário e pode servir como contexto da dor do setor.",
+          "timestamp": "2026-10-30T11:25:00Z"
+        }
+      ],
+      "adjudication": {
+        "status": "ADJUDICATED",
+        "adjudicator": "Diretor Metodológico ENS",
+        "final_utility": "irrelevant",
+        "rationale": "Para a finalidade de competências do currículo/empregabilidade, é irrelevante e não pode alimentar nota curricular. O fenômeno deve ser tratado em análise de risco setorial, não como indicador positivo."
+      }
+    },
+    {
+      "example_id": "ref-own-institution-meta-ad",
+      "capture_id": "cap-meta-ads-ens-gestao-01",
+      "entity_id": "ent-ad-ens-pos-graduacao-2026",
+      "source_name": "apify_meta_ads_library",
+      "source_url": "https://www.facebook.com/ads/library/?id=9988776655",
+      "scope": {
+        "geography": "Brasil",
+        "period": "2026-10",
+        "language": "pt-BR"
+      },
+      "expected_critical_fields": ["adArchiveId", "pageName", "text"],
+      "extracted_snippets": [
+        "Escola de Negócios e Seguros - Inscrições abertas para pós-graduação online",
+        "Matricule-se com condições especiais para corretores associados"
+      ],
+      "purpose": "institutional_context",
+      "utility": "context",
+      "category_exact": "Pós-Graduação",
+      "family": "Gestão de Seguros",
+      "ambiguity_flag": false,
+      "ambiguity_reason": null,
+      "allowed_claims": [
+        "A ENS mantém campanhas ativas para pós-graduação com foco em corretores associados"
+      ],
+      "disallowed_claims": [
+        "Anúncio da ENS comprova existência de concorrente externo pressionando o mercado"
+      ],
+      "control_type": "adjacent",
+      "annotations": [
+        {
+          "reviewer_id": "reviewer_ens_market",
+          "utility": "context",
+          "purpose": "institutional_context",
+          "rationale": "Anúncio próprio da instituição. Contexto essencial de portfólio interno, nunca concorrência.",
+          "timestamp": "2026-10-30T11:30:00Z"
+        },
+        {
+          "reviewer_id": "reviewer_data_methodology",
+          "utility": "context",
+          "purpose": "institutional_context",
+          "rationale": "Domínio ens.edu.br identificado pelo sanitizador e isolado de concorrentes.",
+          "timestamp": "2026-10-30T11:40:00Z"
+        }
+      ],
+      "adjudication": {
+        "status": "AGREED",
+        "adjudicator": "none",
+        "final_utility": "context",
+        "rationale": "Classificação unânime como contexto institucional da própria entidade."
+      }
+    },
+    {
+      "example_id": "ref-negative-404-link",
+      "capture_id": "cap-search-dead-link-07",
+      "entity_id": "ent-url-broken-page",
+      "source_name": "apify_google_search",
+      "source_url": "https://instituto-desativado.com.br/curso-antigo-2018",
+      "scope": {
+        "geography": "Brasil",
+        "period": "2026-10",
+        "language": "pt-BR"
+      },
+      "expected_critical_fields": ["title", "http_status"],
+      "extracted_snippets": [
+        "404 Not Found - A página solicitada não existe mais no servidor"
+      ],
+      "purpose": "direct_competition",
+      "utility": "insufficient",
+      "category_exact": "Desconhecida",
+      "family": "Nenhuma",
+      "ambiguity_flag": false,
+      "ambiguity_reason": null,
+      "allowed_claims": [],
+      "disallowed_claims": [
+        "Qualquer inferência sobre oferta ativa ou preço com base em URL 404"
+      ],
+      "control_type": "negative",
+      "annotations": [
+        {
+          "reviewer_id": "reviewer_ens_market",
+          "utility": "insufficient",
+          "purpose": "direct_competition",
+          "rationale": "Página inexistente, não permite aferir nada sobre o mercado atual.",
+          "timestamp": "2026-10-30T11:45:00Z"
+        },
+        {
+          "reviewer_id": "reviewer_data_methodology",
+          "utility": "insufficient",
+          "purpose": "direct_competition",
+          "rationale": "Status HTTP 404; conteúdo nulo de valor informativo.",
+          "timestamp": "2026-10-30T11:50:00Z"
+        }
+      ],
+      "adjudication": {
+        "status": "AGREED",
+        "adjudicator": "none",
+        "final_utility": "insufficient",
+        "rationale": "Acordo unânime em insuficiência probatória técnica."
+      }
+    },
+    {
+      "example_id": "ref-trends-predatory-lawsuit",
+      "capture_id": "cap-trends-679c794b-638a-4158-a2cd-5381a740b68d",
+      "entity_id": "ent-trend-litigancia-predatoria",
+      "source_name": "apify_google_trends",
+      "source_url": "https://trends.google.com/trends/explore?q=litigancia%20predatoria",
+      "scope": {
+        "geography": "BR",
+        "period": "2021-10 a 2026-10",
+        "language": "pt-BR"
+      },
+      "expected_critical_fields": ["interestOverTime_timelineData", "time", "value"],
+      "extracted_snippets": [
+        "Série histórica contendo 262 pontos semanais",
+        "30 semanas com valor numérico positivo maior que zero"
+      ],
+      "purpose": "learner_demand",
+      "utility": "context",
+      "category_exact": "Interesse de Busca",
+      "family": "Termos Jurídicos Setoriais",
+      "ambiguity_flag": true,
+      "ambiguity_reason": "Busca por termo setorial/jurídico não equivale à intenção de matrícula em curso",
+      "allowed_claims": [
+        "O termo 'litigância predatória' apresentou pico de interesse em 30 semanas nos últimos 5 anos"
+      ],
+      "disallowed_claims": [
+        "Picos de busca pelo termo provam demanda correspondente de alunos por MBA"
+      ],
+      "control_type": "positive",
+      "annotations": [
+        {
+          "reviewer_id": "reviewer_ens_market",
+          "utility": "context",
+          "purpose": "learner_demand",
+          "rationale": "Interesse crescente pelo problema, mas não é busca pelo curso educacional.",
+          "timestamp": "2026-10-30T11:52:00Z"
+        },
+        {
+          "reviewer_id": "reviewer_data_methodology",
+          "utility": "adjacent",
+          "purpose": "learner_demand",
+          "rationale": "Proxy válido de atenção do setor ao tema, devendo compor pilar de busca como sinal indireto.",
+          "timestamp": "2026-10-30T11:55:00Z"
+        }
+      ],
+      "adjudication": {
+        "status": "ADJUDICATED",
+        "adjudicator": "Conselho de Metodologia ENS",
+        "final_utility": "context",
+        "rationale": "Classificado como contexto de interesse setorial. Não pontua diretamente como demanda educacional sem triangulação com volume de busca específico de formação."
+      }
+    },
+    {
+      "example_id": "ref-legitimate-absence-mba-title",
+      "capture_id": "cap-google-exact-title-search-zero",
+      "entity_id": "ent-absence-niche-program",
+      "source_name": "apify_google_search",
+      "source_url": "https://www.google.com/search?q=%22MBA+em+Litig%C3%A2ncia+Predat%C3%B3ria+em+Seguros%22",
+      "scope": {
+        "geography": "Brasil",
+        "period": "2026-10",
+        "language": "pt-BR"
+      },
+      "expected_critical_fields": ["search_results_count"],
+      "extracted_snippets": [
+        "Sua pesquisa não encontrou nenhum documento correspondente"
+      ],
+      "purpose": "direct_competition",
+      "utility": "context",
+      "category_exact": "MBA",
+      "family": "Seguros e Direito",
+      "ambiguity_flag": false,
+      "ambiguity_reason": null,
+      "allowed_claims": [
+        "Nenhum programa acadêmico concorrente utiliza o título exato pesquisado"
+      ],
+      "disallowed_claims": [
+        "A ausência de concorrente com título exato significa inexistência de concorrência temática ampla"
+      ],
+      "control_type": "legitimate_absence",
+      "annotations": [
+        {
+          "reviewer_id": "reviewer_ens_market",
+          "utility": "context",
+          "purpose": "direct_competition",
+          "rationale": "Ausência legítima de produto com denominação idêntica no mercado.",
+          "timestamp": "2026-10-30T11:56:00Z"
+        },
+        {
+          "reviewer_id": "reviewer_data_methodology",
+          "utility": "context",
+          "purpose": "direct_competition",
+          "rationale": "Consulta executada corretamente com retorno formal observed_zero.",
+          "timestamp": "2026-10-30T11:58:00Z"
+        }
+      ],
+      "adjudication": {
+        "status": "AGREED",
+        "adjudicator": "none",
+        "final_utility": "context",
+        "rationale": "Concordância de ausência legítima observada."
+      }
+    },
+    {
+      "example_id": "ref-unresolved-ambiguity-portal",
+      "capture_id": "cap-crawler-noticia-sem-data",
+      "entity_id": "ent-article-portal-seguros",
+      "source_name": "apify_web_crawler",
+      "source_url": "https://portaldoscorretores.com.br/artigo-fraudes-mercado",
+      "scope": {
+        "geography": "Brasil",
+        "period": "Indeterminada / Sem data observável",
+        "language": "pt-BR"
+      },
+      "expected_critical_fields": ["publication_date", "author", "text"],
+      "extracted_snippets": [
+        "Especialistas apontam que a capacitação técnica em sinistros é essencial para o país"
+      ],
+      "purpose": "sector_context",
+      "utility": "insufficient",
+      "category_exact": "Artigo Opinativo",
+      "family": "Opinião Setorial",
+      "ambiguity_flag": true,
+      "ambiguity_reason": "Texto sem datação, autoria ou fonte primária dos dados mencionados",
+      "allowed_claims": [],
+      "disallowed_claims": [
+        "Citar o artigo como indicador quantitativo recente do mercado segurador"
+      ],
+      "control_type": "negative",
+      "annotations": [
+        {
+          "reviewer_id": "reviewer_ens_market",
+          "utility": "context",
+          "purpose": "sector_context",
+          "rationale": "Texto opinativo favorável ao tema, mas frágil sem autoria clara.",
+          "timestamp": "2026-10-30T12:00:00Z"
+        },
+        {
+          "reviewer_id": "reviewer_data_methodology",
+          "utility": "insufficient",
+          "purpose": "sector_context",
+          "rationale": "Impossível validar recorte temporal ou confiabilidade; data ausente.",
+          "timestamp": "2026-10-30T12:05:00Z"
+        }
+      ],
+      "adjudication": {
+        "status": "UNKNOWN_UNRESOLVED",
+        "adjudicator": "Conselho de Metodologia ENS",
+        "final_utility": "insufficient",
+        "rationale": "A fonte não fornece metadados temporais verificáveis. Permanece como incerteza não resolvida; desconsiderado do cálculo probatório."
+      }
+    }
+  ]
+}
+

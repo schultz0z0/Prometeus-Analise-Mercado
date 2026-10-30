@@ -64,10 +64,10 @@ export function renderIntakeView(store) {
           Ementa Proposta ou Grade Curricular
         </h2>
 
-        <input type="file" id="curriculum-file-input" accept=".pdf,.doc,.docx,.txt" style="display:none;">
+        <input type="file" id="curriculum-file-input" accept=".pdf,.docx,.md,.txt" style="display:none;">
         <div class="dropzone-box" id="dropzone-curriculum" style="cursor:pointer; transition:all 0.2s ease;">
           <div class="dropzone-icon" id="dropzone-icon">📄</div>
-          <strong id="dropzone-title" style="color:#ffffff; font-size:14px;">Clique para anexar ou arraste o arquivo da ementa (.pdf, .docx, .txt)</strong>
+          <strong id="dropzone-title" style="color:#ffffff; font-size:14px;">Clique para anexar ou arraste o arquivo da ementa (.pdf, .docx, .md, .txt)</strong>
           <span id="dropzone-desc" style="color:var(--prometeus-text-muted); font-size:12px;">Selecione o arquivo do seu computador para ser analisado</span>
           <div id="dropzone-file-badge" style="display:none; margin-top:8px; padding:4px 10px; background:rgba(16,185,129,0.15); color:#34d399; border-radius:6px; font-size:12px; font-weight:600; border:1px solid rgba(16,185,129,0.3);"></div>
         </div>
@@ -114,15 +114,21 @@ Módulo 6: Projeto Aplicado de Inteligência de Seguros (50h)</textarea>
 
         <div class="form-grid">
           <div class="form-group col-4">
-            <label class="form-label" for="course-ticket">Mensalidade Alvo (R$)</label>
-            <input type="number" id="course-ticket" class="form-input" value="980" step="10" required>
-            <span class="form-hint">Valor por mês cobrado do aluno</span>
+            <label class="form-label" for="course-ticket">Valor da Parcela (R$)</label>
+            <input type="number" id="course-ticket" class="form-input" value="980" min="0.01" step="0.01" required>
+            <span class="form-hint">Valor mensal cobrado do aluno</span>
           </div>
 
           <div class="form-group col-4">
             <label class="form-label" for="course-duration">Duração (Meses)</label>
             <input type="number" id="course-duration" class="form-input" value="12" min="1" max="48" required>
-            <span class="form-hint">Total de parcelas / meses</span>
+            <span class="form-hint">Duração acadêmica do curso</span>
+          </div>
+
+          <div class="form-group col-4">
+            <label class="form-label" for="course-installments">Número de Parcelas</label>
+            <input type="number" id="course-installments" class="form-input" min="1" max="120" placeholder="Ex: 20">
+            <span class="form-hint">Prazo de pagamento, independente da duração</span>
           </div>
 
           <div class="form-group col-4">
@@ -179,6 +185,7 @@ export function bindIntakeEvents(store, container) {
   const dropzone = container.querySelector('#dropzone-curriculum');
   const fileBadge = container.querySelector('#dropzone-file-badge');
   const curriculumTextArea = container.querySelector('#curriculum-text');
+  curriculumTextArea?.addEventListener('input', () => curriculumTextArea.setCustomValidity(''));
   let attachedFileName = null;
 
   function handleFile(file) {
@@ -194,7 +201,7 @@ export function bindIntakeEvents(store, container) {
     }
 
     // Se for arquivo de texto, carrega o conteúdo diretamente no textarea
-    if (file.name.endsWith('.txt') || file.type.startsWith('text/')) {
+    if (/\.(txt|md)$/i.test(file.name) || file.type.startsWith('text/')) {
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result && curriculumTextArea) {
@@ -204,7 +211,11 @@ export function bindIntakeEvents(store, container) {
       reader.readAsText(file);
     } else {
       // Para PDF/DOCX, avisa o usuário e prefixa a ementa com o nome do arquivo auditável
-      if (file.name.toLowerCase().endsWith('.docx')) {
+      if (/\.(pdf|docx)$/i.test(file.name)) {
+        curriculumTextArea.value = '';
+        const submit = container.querySelector('button[type="submit"]');
+        if (submit) submit.disabled = true;
+        fileBadge.textContent = `Extraindo conteúdo de ${file.name}…`;
         const reader = new FileReader();
         reader.onload = async (e) => {
           const dataUrl = e.target?.result;
@@ -219,15 +230,21 @@ export function bindIntakeEvents(store, container) {
               const parsed = await resp.json();
               if (parsed.text) {
                 curriculumTextArea.value = parsed.text;
+                fileBadge.textContent = `✓ Conteúdo extraído: ${file.name}`;
+                if (submit) submit.disabled = false;
                 return;
               }
             }
           } catch (err) {
-            console.warn('Falha ao extrair texto do DOCX:', err);
+            console.warn('Falha ao extrair texto do documento:', err);
           }
-          if (!curriculumTextArea.value.includes(file.name)) {
-            curriculumTextArea.value = `[Documento Anexado: ${file.name} (${(file.size / 1024).toFixed(1)} KB)]\n` + curriculumTextArea.value;
-          }
+          curriculumTextArea.value = '';
+          fileBadge.textContent = `Não foi possível extrair ${file.name}. Cole a ementa antes de analisar.`;
+          if (submit) submit.disabled = false;
+        };
+        reader.onerror = () => {
+          fileBadge.textContent = 'Não foi possível ler o arquivo. Cole a ementa antes de analisar.';
+          if (submit) submit.disabled = false;
         };
         reader.readAsDataURL(file);
         return;
@@ -273,6 +290,11 @@ export function bindIntakeEvents(store, container) {
   if (form) {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
+      if (!curriculumTextArea.value.trim()) {
+        curriculumTextArea.setCustomValidity('Informe a ementa ou anexe um documento com texto extraível.');
+        curriculumTextArea.reportValidity();
+        return;
+      }
       
       const payload = {
         name: container.querySelector('#course-name').value,
@@ -281,6 +303,7 @@ export function bindIntakeEvents(store, container) {
         modality: selectedModality,
         ticket: container.querySelector('#course-ticket').value,
         duration: container.querySelector('#course-duration').value,
+        installments: container.querySelector('#course-installments').value,
         curriculum: container.querySelector('#curriculum-text').value,
         audience: container.querySelector('#course-audience').value,
         competitors: container.querySelector('#course-competitors').value,

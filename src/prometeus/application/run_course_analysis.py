@@ -5,10 +5,12 @@ from __future__ import annotations
 import uuid
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import httpx
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from prometeus.application.collect_market_evidence import (
@@ -16,6 +18,7 @@ from prometeus.application.collect_market_evidence import (
     RequiredSourceBlockedError,
     ResearchToolExecutor,
 )
+from prometeus.application.collection_diagnostics import summarize_collection
 from prometeus.application.course_understanding import CourseUnderstandingService
 from prometeus.application.decision_service import DecisionService
 from prometeus.application.dossier_verifier import DossierVerifier
@@ -24,11 +27,15 @@ from prometeus.application.evidence_features import (
     EvidenceFeatureSet,
     VerifiedFeature,
 )
+from prometeus.application.internal_history import InternalHistoryService
 from prometeus.application.keywords import KeywordPipeline
 from prometeus.application.plan_course_research import (
     CourseResearchPlanner,
     ResearchPlanValidationError,
 )
+from prometeus.application.pricing_reference import build_price_reference
+from prometeus.application.qualify_market_evidence import EvidenceQualificationService
+from prometeus.application.research_sufficiency import research_gaps
 from prometeus.application.runtime_preflight import validate_runtime_preflight
 from prometeus.application.scoring_service import ScoringService
 from prometeus.application.skill_registry import SkillRegistry
@@ -37,7 +44,12 @@ from prometeus.application.synthesize_dossier import (
     DossierVerificationError,
 )
 from prometeus.domain.analyses import Analysis, AnalysisStatus, AnalysisStep
-from prometeus.domain.configuration import AppSettings, ConfigurationError
+from prometeus.domain.configuration import (
+    AppSettings,
+    ConfigurationError,
+    ScoringProfileConfig,
+    load_scoring_profile,
+)
 from prometeus.domain.dossiers import DossierStatus
 from prometeus.domain.ports.decision_model import DecisionModelPort
 from prometeus.domain.ports.generative_model import GenerativeModelPort
@@ -47,11 +59,14 @@ from prometeus.infrastructure.apify.client import ApifyError
 from prometeus.infrastructure.apify.registry import ApifyActorRegistry
 from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
 from prometeus.infrastructure.db.models import (
+    ConfigSnapshotModel,
     DossierModel,
     HistoricalCourseModel,
     HistoricalFunnelModel,
     MarketEvidenceModel,
+    ResearchPlanModel,
     ScoringResultModel,
+    ToolRunModel,
 )
 from prometeus.infrastructure.jev.client import JEVError
 
@@ -191,9 +206,18 @@ class RunCourseAnalysis:
         try:
             output = await operation()
         except Exception as exc:
+            # A failed flush poisons the session until rollback. Persist the
+            # checkpoint failure in a fresh transaction, preserving prior commits.
+            await self.session.rollback()
             existing.status = "FAILED"
             existing.finished_at = datetime.now(UTC)
-            existing.error_message = str(exc).replace("\r", " ").replace("\n", " ")[:500]
+            existing.error_message = (
+                f"database_persistence_error: {type(exc).__name__}"
+                if isinstance(exc, SQLAlchemyError)
+                else str(exc).replace("\r", " ").replace("\n", " ")[:500]
+            )
+            if isinstance(exc, DossierVerificationError) and exc.report is not None:
+                existing.output_summary = {"verification": exc.report}
             await self.repository.save(analysis)
             await self.session.commit()
             raise
@@ -282,7 +306,9 @@ class RunCourseAnalysis:
             )
         return EvidenceFeatureSet(features=features)
 
-    async def _market_features(self, analysis_id: str) -> EvidenceFeatureSet:
+    async def _market_features(
+        self, analysis_id: str, understanding: CourseUnderstanding | None = None
+    ) -> EvidenceFeatureSet:
         rows = list(
             (
                 await self.session.execute(
@@ -315,7 +341,30 @@ class RunCourseAnalysis:
                     collected_at=row.collected_at,
                 )
             )
-        return EvidenceFeatureExtractor().extract(evidences)
+        features = EvidenceFeatureExtractor(
+            geography=understanding.geography if understanding else None,
+            price_period=understanding.proposed_price_period if understanding else None,
+        ).extract(evidences)
+        # Consulta válida e vazia tem proveniência própria; falha/rejeição não equivale a zero.
+        runs = (
+            (
+                await self.session.execute(
+                    select(ToolRunModel).where(ToolRunModel.analysis_id == analysis_id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        empty_features = {"meta_ads_library": "ad_count", "linkedin_jobs": "open_jobs_count"}
+        for run in runs:
+            name = empty_features.get(run.capability)
+            if (
+                name
+                and features.get(name) is None
+                and (run.parameters or {}).get("observation_status") == "observed_empty"
+            ):
+                features.features[name] = VerifiedFeature(name, 0, [run.id], "observed_empty_query")
+        return features
 
     async def execute(self, analysis_id: str, correlation_id: str) -> Analysis:
         analysis = await self.repository.get_by_id(analysis_id)
@@ -323,6 +372,20 @@ class RunCourseAnalysis:
             raise ValueError(f"Análise não encontrada: {analysis_id}")
         if analysis.status == AnalysisStatus.COMPLETED:
             return analysis
+        snapshot = (
+            await self.session.execute(
+                select(ConfigSnapshotModel).where(
+                    ConfigSnapshotModel.analysis_id == analysis.id,
+                    ConfigSnapshotModel.tenant_id == analysis.tenant_id,
+                )
+            )
+        ).scalar_one_or_none()
+        profile = (
+            ScoringProfileConfig.model_validate(snapshot.scoring_profile_snapshot)
+            if snapshot
+            else load_scoring_profile(Path(self.settings.SCORING_PROFILE_PATH))
+        )
+        v2 = profile.historical_method == "ipd"
         if analysis.status in {AnalysisStatus.BLOCKED, AnalysisStatus.WAITING_FOR_INPUT}:
             analysis.resume(
                 correlation_id=correlation_id, reason="Retomada idempotente do workflow"
@@ -344,6 +407,10 @@ class RunCourseAnalysis:
                     "jev_enabled": report.jev_enabled,
                     "required_sources": report.required_sources,
                     "synthetic_sources": report.synthetic_sources,
+                    "guidance_snapshots": [
+                        skill.snapshot() for skill in self.skills.load_all().values()
+                    ],
+                    "scoring_profile_id": profile.profile_id,
                 }
 
             await self._checkpoint(analysis, 1, preflight)
@@ -413,6 +480,11 @@ class RunCourseAnalysis:
             plan = CourseResearchPlan.model_validate(plan_payload)
 
             async def inspect_history() -> dict[str, Any]:
+                if v2:
+                    features, audit = await InternalHistoryService(
+                        self.session, self.decisions
+                    ).build(analysis, understanding, correlation_id)
+                    return {"features": self._feature_dump(features), "audit": audit}
                 features = await self._historical_features(analysis, understanding, correlation_id)
                 return {"features": self._feature_dump(features)}
 
@@ -436,11 +508,166 @@ class RunCourseAnalysis:
             await self._checkpoint(analysis, 8, execute_tools)
 
             async def sanitize_evidence() -> dict[str, Any]:
-                market = await self._market_features(analysis.id)
+                qualifier = EvidenceQualificationService(self.session, self.decisions)
+                qualification = await qualifier.qualify(analysis, understanding, correlation_id)
+                diagnostic_runs = list(
+                    (
+                        await self.session.execute(
+                            select(ToolRunModel).where(ToolRunModel.analysis_id == analysis.id)
+                        )
+                    ).scalars()
+                )
+                diagnostic_evidence = list(
+                    (
+                        await self.session.execute(
+                            select(MarketEvidenceModel).where(
+                                MarketEvidenceModel.analysis_id == analysis.id
+                            )
+                        )
+                    ).scalars()
+                )
+                observations = summarize_collection(
+                    [
+                        {
+                            key: getattr(run, key)
+                            for key in (
+                                "id",
+                                "planned_call_id",
+                                "capability",
+                                "query",
+                                "status",
+                                "raw_items_count",
+                                "valid_items_count",
+                                "error_code",
+                                "parameters",
+                            )
+                        }
+                        for run in diagnostic_runs
+                    ],
+                    [
+                        {"tool_run_id": row.tool_run_id, "sanitized_data": row.sanitized_data}
+                        for row in diagnostic_evidence
+                    ],
+                )
+                market = await self._market_features(analysis.id, understanding)
+                gaps = research_gaps(market)
+                repair_status = "sufficient_signals" if not gaps else "no_remaining_budget"
+                plans = (
+                    (
+                        await self.session.execute(
+                            select(ResearchPlanModel).where(
+                                ResearchPlanModel.analysis_id == analysis.id
+                            )
+                        )
+                    )
+                    .scalars()
+                    .all()
+                )
+                spent = sum(item.spent_usd for item in plans)
+                remaining = max(0.0, plan.budget_limit_usd - spent)
+                # Uma rodada complementar no máximo; ID estável permite retomar sem refazer planejamento/coleta.
+                repair_id = f"{plan.id}-followup"
+                stored_repair = next((item for item in plans if item.id == repair_id), None)
+                if gaps and (remaining > 0 or stored_repair is not None):
+                    if stored_repair is not None:
+                        repair = CourseResearchPlan.model_validate(stored_repair.plan_snapshot)
+                    else:
+                        repair = await CourseResearchPlanner(
+                            self.llm, self.skills, self.settings
+                        ).plan(
+                            understanding,
+                            gaps=gaps,
+                            previous_queries=[
+                                (call.capability, call.query) for call in plan.tool_calls
+                            ],
+                            budget_limit_usd=remaining,
+                            observations=observations,
+                        )
+                        repair = repair.model_copy(update={"id": repair_id})
+                    if repair.tool_calls:
+                        await self.collector.collect(
+                            tenant_id=analysis.tenant_id,
+                            plan=repair,
+                            understanding_snapshot=understanding.model_dump(mode="json"),
+                        )
+                        qualification = await qualifier.qualify(
+                            analysis, understanding, correlation_id
+                        )
+                        market = await self._market_features(analysis.id, understanding)
+                        repair_status = (
+                            "round_limit_reached" if research_gaps(market) else "sufficient_signals"
+                        )
+                    else:
+                        repair_status = "no_new_queries"
                 merged = EvidenceFeatureSet(
                     features={**market.features, **history_features.features}
                 )
-                return {"features": self._feature_dump(merged)}
+                pricing_audit: dict[str, Any] = {}
+                if v2:
+                    rows = (
+                        (
+                            await self.session.execute(
+                                select(MarketEvidenceModel).where(
+                                    MarketEvidenceModel.analysis_id == analysis.id,
+                                    MarketEvidenceModel.evidence_type == EvidenceType.OFFER.value,
+                                )
+                            )
+                        )
+                        .scalars()
+                        .all()
+                    )
+                    pricing_audit = build_price_reference(
+                        course_title=analysis.course_name,
+                        level=understanding.level,
+                        institution_name=understanding.institution_name,
+                        institution_domains=understanding.institution_domains,
+                        internal_prices=history_payload.get("audit", {}).get("observed_prices", []),
+                        offers=[
+                            {
+                                "id": row.id,
+                                "title": row.title,
+                                "source_url": row.source_url,
+                                "sanitized_data": row.sanitized_data,
+                            }
+                            for row in rows
+                        ],
+                        installments=proposal.get("installments_count"),
+                    )
+                    pricing_audit["guidance"] = [
+                        skill.snapshot() for skill in self.skills.for_stage("pricing_extraction")
+                    ]
+                    if pricing_audit["mean_total_brl"] is not None:
+                        ids = sorted(
+                            {
+                                str(eid)
+                                for item in pricing_audit["comparables"]
+                                for eid in item["evidence_ids"]
+                                if eid
+                            }
+                        )
+                        # One-sided data is valid but has lower completeness/confidence.
+                        confidence = (
+                            0.8
+                            if pricing_audit["internal_count"] and pricing_audit["external_count"]
+                            else 0.5
+                        )
+                        merged.features["reference_mean_price_brl"] = VerifiedFeature(
+                            "reference_mean_price_brl",
+                            pricing_audit["mean_total_brl"],
+                            ids,
+                            "mean_per_comparable_course",
+                        )
+                        merged.features["pricing_confidence"] = VerifiedFeature(
+                            "pricing_confidence", confidence, ids, "pricing_source_completeness"
+                        )
+                return {
+                    "features": self._feature_dump(merged),
+                    "qualification": qualification,
+                    "remaining_gaps": research_gaps(market),
+                    "repair_status": repair_status,
+                    "pricing_audit": pricing_audit,
+                    "initial_collection_diagnostics": observations,
+                }
 
             feature_payload = await self._checkpoint(analysis, 9, sanitize_evidence)
             verified_features = self._feature_load(dict(feature_payload.get("features", {})))
@@ -464,9 +691,33 @@ class RunCourseAnalysis:
                         )
                     ).scalars()
                 )
+                evidence_rows = [
+                    row
+                    for row in evidence_rows
+                    if (row.sanitized_data or {}).get("_qualification", {}).get("accepted") is True
+                ]
+                if v2:
+                    evidence_rows = [
+                        row
+                        for row in evidence_rows
+                        if "curriculum"
+                        in (row.sanitized_data or {}).get("_qualification", {}).get("use_for", [])
+                    ]
+                evidence_ids = [row.id for row in evidence_rows]
+                if not evidence_rows:
+                    return {
+                        "decision_id": None,
+                        "score_value": None,
+                        "confidence": 0,
+                        "evidence_ids": [],
+                    }
                 result = await self.decisions.execute_judgment(
                     pack_id="syllabus-fit-v1",
                     context={
+                        "guidance": "\n".join(
+                            skill.instructions
+                            for skill in self.skills.for_stage("curriculum_audit")
+                        ),
                         "course_understanding": understanding.model_dump(mode="json"),
                         "curriculum": proposal.get("curriculum_text") or proposal.get("curriculum"),
                         "market_evidence": [
@@ -489,23 +740,41 @@ class RunCourseAnalysis:
                     "decision_id": result.id,
                     "score_value": result.score_value,
                     "confidence": result.confidence,
+                    "requires_human_review": result.requires_human_review or result.is_noul,
                     "evidence_ids": evidence_ids,
                 }
 
             judgment = await self._checkpoint(analysis, 10, semantic_judgments)
-            verified_features.features["syllabus_fit_score"] = VerifiedFeature(
-                name="syllabus_fit_score",
-                value=float(judgment["score_value"]),
-                evidence_ids=[str(judgment["decision_id"]), *judgment["evidence_ids"]],
-                method="semantic_syllabus_fit",
-            )
+            if judgment["score_value"] is not None:
+                verified_features.features["syllabus_fit_score"] = VerifiedFeature(
+                    name="syllabus_fit_score",
+                    value=float(judgment["score_value"]),
+                    evidence_ids=[str(judgment["decision_id"]), *judgment["evidence_ids"]],
+                    method="semantic_syllabus_fit",
+                )
+                if v2:
+                    ids = [str(judgment["decision_id"])]
+                    verified_features.features["syllabus_confidence"] = VerifiedFeature(
+                        "syllabus_confidence",
+                        float(judgment["confidence"]),
+                        ids,
+                        "semantic_confidence",
+                    )
+                    verified_features.features["syllabus_requires_review"] = VerifiedFeature(
+                        "syllabus_requires_review",
+                        int(bool(judgment.get("requires_human_review"))),
+                        ids,
+                        "semantic_review_gate",
+                    )
 
             async def calculate_score() -> dict[str, Any]:
                 scoring = ScoringService(session=self.session)
+                scoring._profiles_cache[profile.profile_id] = profile
                 inputs = scoring.build_pillar_inputs(
                     verified_features,
                     proposed_price_brl=understanding.proposed_price_brl,
                     proposed_price_source_id=f"course-understanding:{understanding.snapshot_hash}",
+                    profile_id=profile.profile_id,
                 )
                 result = await scoring.execute_scoring(
                     pillar_inputs=inputs,
@@ -513,6 +782,7 @@ class RunCourseAnalysis:
                     correlation_id=correlation_id,
                     is_experimental=True,
                     finalize_analysis=False,
+                    profile_id=profile.profile_id,
                 )
                 return {
                     "scoring_result_id": result.id,
@@ -543,7 +813,7 @@ class RunCourseAnalysis:
 
             async def synthesize() -> dict[str, Any]:
                 dossier = await DossierSynthesisService(
-                    self.session, self.llm, DossierVerifier()
+                    self.session, self.llm, DossierVerifier(), decisions=self.decisions
                 ).synthesize_and_verify(analysis.id)
                 return {
                     "dossier_id": dossier.id,
@@ -604,8 +874,13 @@ class RunCourseAnalysis:
             await self.session.commit()
             return analysis
         except Exception as exc:
+            await self.session.rollback()
             if analysis.status == AnalysisStatus.RUNNING:
-                analysis.fail(correlation_id=correlation_id, reason=str(exc)[:500])
+                reason = (
+                    f"database_persistence_error: {type(exc).__name__}"
+                    if isinstance(exc, SQLAlchemyError) else str(exc)[:500]
+                )
+                analysis.fail(correlation_id=correlation_id, reason=reason)
             await self.repository.save(analysis)
             await self.session.commit()
             raise

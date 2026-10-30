@@ -26,6 +26,9 @@ Esta pasta é a fonte canônica do produto. O PRD original na raiz é mantido co
 
 ## Inteligência e scoring
 
+- [Auditoria completa da inteligência de mercado ENS — 30/10/2026](implementation/reports/senior-market-intelligence-audit-2026-10-30.md)
+- [Plano de melhoria por fases — integridade, pesquisa, agentes, economia e homologação](plans/2026-10-30-senior-market-intelligence.md)
+
 - [Workflow do agente](agent/workflow.md)
 - [Catálogo de ferramentas](agent/tools-catalog.md)
 - [Contratos de decisão JEV](agent/jev-decision-contracts.md)
@@ -41,6 +44,7 @@ Esta pasta é a fonte canônica do produto. O PRD original na raiz é mantido co
 - [Evidências e proveniência](data/evidence-and-provenance.md)
 - [Retenção e qualidade](data/retention-and-quality.md)
 - [Adaptadores institucionais](integrations/institutional-adapters.md)
+- [Base histórica sintética de homologação ENS](integrations/ens-synthetic-test-data.md)
 - [Fontes externas](integrations/external-sources.md)
 - [REST, MCP e webhooks](integrations/rest-mcp-webhooks.md)
 - [Exemplos de contratos](integrations/contracts-examples.md)
@@ -56,6 +60,7 @@ Esta pasta é a fonte canônica do produto. O PRD original na raiz é mantido co
 - [Implantação em staging e operação do piloto](operations/staging-and-pilot-deployment.md)
 - [Onboarding institucional](operations/institutional-onboarding.md)
 - [Estratégia de testes](testing/test-strategy.md)
+- [Avaliação de inteligência de mercado](testing/market-intelligence-evaluation.md)
 - [Capacidade do time e processo](engineering/team-and-delivery.md)
 - [Roadmap](roadmap/roadmap.md)
 - [Gates de release](roadmap/release-gates.md)

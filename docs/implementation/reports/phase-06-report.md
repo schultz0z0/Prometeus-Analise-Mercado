@@ -1,5 +1,7 @@
 # Relatório de conclusão — Fase 06: Dossiê e Síntese Generativa
 
+> **Reabertura em 2026-10-28:** implementados contrato de apresentação v2, verificação de todos os blocos e dashboard executivo. Os resultados e a nota históricos abaixo são preservados; não homologam automaticamente o runtime atual. Ver [relatório da reabertura](market-dossier-improvements-2026-10-28.md). Redação com novas evidências reais e homologação por decisores ainda pendentes.
+
 ## Resumo executivo
 
 - **Fase:** 06 — Dossiê e Síntese Generativa

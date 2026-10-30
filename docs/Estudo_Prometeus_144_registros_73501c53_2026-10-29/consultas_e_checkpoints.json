@@ -1,0 +1,2422 @@
+{
+  "analysis_id": "73501c53-cc58-47f9-8927-d9e299b4f4b5",
+  "tenant_id": "ens",
+  "course_name": "Extensão em Fraude e Litigância predatória no mercado de seguros",
+  "status": "COMPLETED",
+  "recommendation": "INSUFFICIENT_EVIDENCE",
+  "created_at": "2026-10-29T19:52:48.987340+00:00",
+  "updated_at": "2026-10-29T20:43:02.760507+00:00",
+  "blocking": null,
+  "steps": [
+    {
+      "step_number": 1,
+      "name": "runtime_preflight",
+      "status": "COMPLETED",
+      "output_summary": {
+        "ai_mode": "traditional",
+        "jev_enabled": false,
+        "required_sources": [
+          "google_search",
+          "web_crawler",
+          "meta_ads_library",
+          "linkedin",
+          "linkedin_jobs",
+          "instagram",
+          "tiktok",
+          "youtube_comments"
+        ],
+        "synthetic_sources": [
+          "institutional_history"
+        ],
+        "guidance_snapshots": [
+          {
+            "name": "auditing-course-curriculum",
+            "version": "2.0.0",
+            "content_hash": "abb604e4cd0af945621b5ada549e1d5b765ff90566bef543ec88e0ba59193f74"
+          },
+          {
+            "name": "building-course-offers",
+            "version": "2.0.0",
+            "content_hash": "4c067b9ecced06f9f8642ab477cf81c74b5ca948f18b16c69c743689df27bf0c"
+          },
+          {
+            "name": "conducting-course-analysis",
+            "version": "1.0.0",
+            "content_hash": "6335e56859384d8351f969a9e1c990dbf25f7d44ef8ec5bd960efa73b4e35241"
+          },
+          {
+            "name": "extracting-course-offers",
+            "version": "1.0.0",
+            "content_hash": "2eafae4fa141a6039b36a30374699a91f3c3e68856639c54405538fc725f3483"
+          },
+          {
+            "name": "operating-apify-research",
+            "version": "1.0.0",
+            "content_hash": "1f0b23daefe4168244949b8c7eceb87aec72f49458004dbcad5441a16312a3cc"
+          },
+          {
+            "name": "planning-market-research",
+            "version": "3.0.0",
+            "content_hash": "d42ff163164a5d2f9fd8b0dffafb2149d852f84c6e6dea71801ac58e89680af7"
+          },
+          {
+            "name": "researching-job-demand",
+            "version": "1.0.0",
+            "content_hash": "42b1eb5c6b3a9ce0fd8d3fd3cfdec08aacb9758469cdc7a048184f99b46d2b63"
+          },
+          {
+            "name": "researching-search-trends",
+            "version": "1.0.0",
+            "content_hash": "bf4ce6981d66bc93fcf19ff19250cf3e2850492c7bf768ec9d75a03121df8dd5"
+          },
+          {
+            "name": "reviewing-market-evidence",
+            "version": "2.0.0",
+            "content_hash": "2dc665623b432de80b02ef44c41b70f89274b7338b58f9f8a330bb3e9e69f8d4"
+          },
+          {
+            "name": "understanding-course-proposals",
+            "version": "2.0.0",
+            "content_hash": "a6253b468732c5c9ad8e7ad3c035572bbafbaacbe74e077f3300a8262767f5c0"
+          }
+        ],
+        "scoring_profile_id": "portfolio-v2"
+      }
+    },
+    {
+      "step_number": 2,
+      "name": "intake_normalization",
+      "status": "COMPLETED",
+      "output_summary": {
+        "proposal": {
+          "area": "Jurídico",
+          "level": "Extensão / Aperfeiçoamento",
+          "ticket": 100,
+          "audience": "Advogados, magistrados, profissionais de seguradoras e resseguradoras, reguladores de sinistros, peritos, investigadores e profissionais de compliance, riscos, tecnologia e prevenção a fraudes. Pré-requisito: nível superior completo.",
+          "modality": "EAD Síncrono",
+          "curriculum": "Extensão em Fraude e Litigância Predatória no Mercado de Seguros: Prevenção, Investigação E Resposta Jurídica\nParceria AIDA\nCCR XXXX\nSobre o curso\nO curso tem por objetivo examinar, de forma interdisciplinar e aplicada, os fenômenos da fraude securitária e da litigância predatória ou abusiva que atingem o mercado de seguros. A proposta integra Direito do Seguro, Direito Processual Civil, Direito Penal, proteção de dados, regulação de sinistros, governança, compliance e inteligência de dados, permitindo ao participante distinguir o exercício legítimo do direito de ação de condutas artificiais, fraudulentas ou abusivas. Ao final, o aluno deverá estar apto a identificar tipologias e sinais de alerta, planejar investigações juridicamente válidas, avaliar evidências físicas e digitais, estruturar respostas administrativas e judiciais proporcionais e implementar programas de prevenção que preservem a boa-fé, o contraditório, a proteção do consumidor e o acesso à Justiça.\nPúblico-Alvo\nAdvogados, magistrados, membros do Ministério Público e da Defensoria Pública, corretores de seguros, profissionais de seguradoras, resseguradoras e insurtechs, reguladores e liquidantes de sinistros, peritos, investigadores, auditores, subscritores, atuários, profissionais de compliance, controles internos, riscos, proteção de dados, tecnologia, inteligência e prevenção a fraudes.\nPré-requisitos\nNível superior completo.\nJustificativa\nA fraude securitária compromete a mutualidade, eleva custos, afeta a precificação dos produtos, reduz a disponibilidade de coberturas e prejudica segurados de boa-fé. Paralelamente, a digitalização das relações de consumo e do processo judicial ampliou a velocidade e a escala de demandas repetitivas, criando novos desafios para diferenciar litigância de massa legítima de postulações artificiais, padronizadas ou desvinculadas da vontade real da parte. A Lei nº 15.040/2024 passou a disciplinar expressamente os efeitos da fraude praticada na reclamação de sinistro, enquanto a Recomendação CNJ nº 159/2024 e o Tema Repetitivo nº 1.198 do STJ consolidaram parâmetros recentes para a identificação e o tratamento da litigância abusiva, sem afastar as garantias do acesso à Justiça e do devido processo legal. Nesse cenário, o curso oferece formação técnica e jurídica para prevenir, detectar, investigar e responder a fraudes e abusos processuais com rigor probatório, proporcionalidade, governança e respeito aos direitos fundamentais.\nConteúdo\nAula 1: 05.11.2026 - Fundamentos da fraude securitária e da litigância abusiva\nConceitos de fraude, erro, omissão, exagero de danos, risco moral, fraude oportunista, fraude organizada e fraude interna. Distinções entre litigância de massa, litigância de má-fé, litigância abusiva, litigância predatória, assédio processual e exercício regular do direito de ação. Impactos econômicos, jurídicos, reputacionais e sociais para a mutualidade e para o sistema de Justiça. Professor Rodrigo Freitas\nAula 2: 10.11.2026 - Boa-fé, deveres contratuais e fraude na Lei nº 15.040/2024\nA boa-fé objetiva no contrato de seguro, os deveres de informação, cooperação, lealdade e mitigação do dano. Declarações inexatas na formação do contrato, agravamento do risco, causalidade, prova da intenção e consequências jurídicas da fraude praticada na reclamação de sinistro. Limites das cláusulas contratuais, proteção do consumidor e vedação de presunções genéricas de fraude. Professor Tiago Gonçalves\nAula 3: 12.11.2026 - Fraudes por ramos e produtos de seguro\nEstudo comparado de padrões recorrentes em seguros de automóvel, patrimonial, transportes, rural, pessoas, responsabilidade civil, crédito, garantia, riscos de engenharia e seguros cibernéticos. Sinistro provocado, encenação de eventos, superfaturamento, reaproveitamento de documentos, dano preexistente, multiplicidade de reclamações e manipulação da causa ou da extensão do prejuízo. Professora Adriano Scattini\nAula 4: 17.11.2026 - Regulação de sinistros e investigação juridicamente adequada\nPlanejamento da investigação, definição de hipóteses, entrevistas, inspeções, perícias, diligências e cruzamento de informações. Deveres do segurado, da seguradora, do regulador, do perito e dos prestadores. Prazos, pedidos documentais proporcionais, comunicação com o segurado, sigilo, independência técnica e elaboração de relatórios conclusivos, evitando vieses confirmatórios e acusações prematuras. Professor Paulo Rogério Hauptly\nAula 5: 24.11.2026 - Inteligência de dados, inteligência artificial e proteção de dados\nIndicadores de anomalia, análise de redes, score de risco, modelos preditivos e uso de inteligência artificial na detecção de fraude e de padrões processuais. LGPD, bases legais, minimização, compartilhamento, retenção, segurança e direitos dos titulares. Explicabilidade, auditoria, supervisão humana, prevenção de falsos positivos e proibição de atribuição automatizada de ilicitude sem validação qualificada. Professor Landulfo Ferreira\nAula 6: 26.11.2026 - Interfaces penais, administrativas, éticas e regulatórias\nFraude para recebimento de indenização, estelionato, falsidades documentais, associação criminosa, lavagem de dinheiro e fraude processual. Critérios para comunicação às autoridades, elaboração de notícia-crime e cooperação com órgãos públicos. Responsabilidade de administradores, empregados e terceiros, canais de denúncia, investigações internas, garantias individuais, segredo profissional e deveres éticos da advocacia. Professor Adriano Scattini\nAula 7: 01.12.2026 - Litigância predatória e abusiva: parâmetros normativos e jurisprudenciais\nDireito fundamental de acesso à Justiça e seus limites. Código de Processo Civil, deveres de boa-fé e cooperação, abuso do direito processual e sanções por litigância de má-fé. Recomendação CNJ nº 159/2024, listas exemplificativas de condutas e medidas de tratamento. Tema Repetitivo nº 1.198 do STJ, fundamentação, razoabilidade, demonstração do interesse de agir e verificação da autenticidade da postulação. Professora Ana Rita Petraroli\nAula 8: 03.12.2026 - Programa corporativo antifraude e oficina prática integrada:\nEstrutura de governança, papéis das linhas de defesa, comitês, políticas, matriz de riscos, protocolos de investigação, gestão de terceiros, treinamento, indicadores de efetividade e reporte à alta administração. Integração entre subscrição, sinistros, jurídico, compliance, auditoria, tecnologia e resseguro. Resolução de caso prático envolvendo fraude securitária e litigância predatória, com elaboração de plano de resposta administrativa, probatória, judicial e reputacional.\nModalidade\nOn-line ao vivo\nPeríodo\nDe 05/11 a 03/12, terças e quintas-feiras, das 19h às 21h\nDuração\n16h\nInformações\n0800 025 3322\ninscricao@ens.edu.br\nInvestimento\nxxxxx\nDescontos\nxxxxx\nCoordenação Parceria ENS x AIDA\nGUSTAVO AMADO LEÓN\nMestre e Doutor em Direito pela PUC-SP. Professor universitário. Pós-Graduado na ENS em Gestão Jurídica de Seguros e Resseguros. LLC em Direito Empresarial no Insper. Pós-Graduado em Gestão de Pessoas pela Saint Paul. Especialista em Governança, Compliance e Riscos pela Fundação Dom Cabral. Membro da AIDA Brasil. Palestrante e autor de diversos artigos acadêmicos e livros sobre seguros e resseguros, tendo como últimas publicações \"O mercado de seguros e resseguros brasileiro diante dos fatores ASG\" e \"Seguro no Brasil e os resseguradores internacionais\".\nCoordenação Acadêmica\nGUSTAVO AMADO LEÓN\nCorpo Docente\nRodrigo Freitas\nDoutorando em Direito Civil pela USP, Mestre em Direito Civil pela USP, Bacharel em Direito pela USP, Autor de livros e capítulos de livros sobre responsabilidade civil e sobre seguros, sócio de Igrejas Filgueiras Advocacia\nrodrigo@igrejasfilgueirasadv.com.br\nAna Rita Petraroli\nAna Rita Petraroli é advogada e sócia do Petraroli Advogados Associados, com atuação em Direito da Saúde, Direito do Seguro e Responsabilidade Civil. É Presidente da AIDA Brasil e Vice-Presidente da ANSP (Academia Nacional de Seguros e Previdência), com experiência na condução de demandas estratégicas, gestão jurídica e desenvolvimento de soluções para os setores de seguros e saúde suplementar.\nanarita@petraroli.com.br\nTiago Gonçalves\nAdvogado especializado em seguros, sócio do /lgcc - lobo gonçalves e costa campos advogados. Mestre em Direito (PUC-SP). Professor em cursos de pós-graduação em Direito do Seguro e Resseguro. Membro da Academia Nacional de Seguros e Previdência (ANSP) e associado à seção brasileira da AIDA. Membro efetivo das Comissões Especiais de Direito Aeronáutico e de Direito do Seguro e Resseguro da OAB/SP. Membro regional da Comissão de Direito do Seguro e Previdência Privada da Subseção da OAB - Jabaquara/Saúde. Autor de diversos artigos acadêmicos e de opinião publicados em revistas especializadas e na mídia em geral.\nPaulo Rogério Hauptly\nAdvogado sócio da   Haüptli & Sabino Advogados e Fox Regulação & Auditoria, Professor Universitário desde 2016, Especialista em Administração de Sinistro nas áreas de Marine, Financial Lines, Life, Corporate Law, White Collar Crime desde 1995. Mestre em Filosofia pela Faculdade São Bento-SP, Mestre e Doutorando em Direito pela PUC -SP, pós-graduado em empresarial com ênfase em M&A– FGV Law-SP.\nLandulfo Ferreira\nAdvogado, mestre em Direito Empresarial e pós-graduado em Direito de Empresas. Professor da PUC Minas nos cursos de Direito, Administração e Ciências Contábeis e da Escola de Negócios e Seguros (ENS). É consultor jurídico e presidente da Comissão Especial de Assuntos Jurídicos e Fiscais do SINDSEG MG/GO/MT/DF, diretor regional da Academia Nacional de Seguros e Previdência (ANSP) e diretor e vice-presidente do Conselho Empresarial de Seguros da ACMinas. Integra ainda a Seção Brasileira da AIDA e atua como diretor jurídico do Instituto Minha Vida Protegida e diretor jurídico de Novos Negócios do Carlini Advogados.\nAdriano Scattini\nAdvogado criminalista, graduado em direito pela Universidade Presbiteriana Mackenzie. Possui extensão em crimes financeiros pela Fundação Getulio Vargas (FGV) e em regulação de sinistros pela Escola de Negócios e Seguros (ENS). Especialista em Direito Penal pela Universidade de Milão (Italia). Atuante há mais de 15 anos no combate a fraudes no mercado segurador.\nadriano@zacarelli.adv.br",
+          "competitors": "FGV, Fundação Dom Cabral, Insper, PUC-Rio, USP",
+          "price_period": "monthly",
+          "duration_months": 1,
+          "_idempotency_key": "c03b741d-89af-4b97-8093-a60adc2ef623",
+          "installments_count": 12,
+          "_institution_context": {
+            "id": "ens",
+            "name": "Escola de Negócios e Seguros",
+            "domains": [
+              "ens.edu.br",
+              "enscursos.com.br"
+            ]
+          },
+          "curriculum_file_name": "Programas do Curso_Extensão Fraude e litigância predatória no mercado de seguros prevenção, investigação e resposta jurídica - AIDA.docx"
+        },
+        "course_name": "Extensão em Fraude e Litigância predatória no mercado de seguros"
+      }
+    },
+    {
+      "step_number": 3,
+      "name": "readiness_assessment",
+      "status": "COMPLETED",
+      "output_summary": {
+        "confidence": 0.99,
+        "decision_id": "cc6d6542-336f-48d1-9f78-a65c3f00904e",
+        "selected_choice": "READY"
+      }
+    },
+    {
+      "step_number": 4,
+      "name": "course_understanding",
+      "status": "COMPLETED",
+      "output_summary": {
+        "level": "Extensão / Aperfeiçoamento",
+        "summary": "Proposta da Escola de Negócios e Seguros (ENS), em parceria com a AIDA, de extensão ou aperfeiçoamento em Fraude e Litigância Predatória no Mercado de Seguros: Prevenção, Investigação e Resposta Jurídica. A oferta é EAD síncrona, ao vivo, com oito aulas e 16 horas, de 05/11 a 03/12/2026, às terças e quintas-feiras, das 19h às 21h. A duração acadêmica informada é de um mês. O pré-requisito é nível superior completo. A proposta comercial informa ticket de R$ 100 com periodicidade mensal e 12 parcelas; o investimento e os descontos constam como marcadores não preenchidos no programa. A grade aborda fundamentos e tipologias de fraude e litigância abusiva; boa-fé e Lei nº 15.040/2024; fraudes por ramo de seguro; regulação e investigação de sinistros; dados, IA e LGPD; interfaces penais e regulatórias; parâmetros do CNJ e STJ; e programa corporativo antifraude com oficina prática.",
+        "language": "pt-BR",
+        "modality": "EAD síncrono, on-line ao vivo",
+        "geography": "Brasil",
+        "created_at": "2026-10-29T19:53:12.840500Z",
+        "hypotheses": [
+          "A combinação de investigação de fraude securitária e tratamento da litigância abusiva pode orientar buscas por ofertas interdisciplinares de extensão ou aperfeiçoamento, além de cursos específicos de cada tema.",
+          "A oficina integrada e o foco em evidências, proteção de dados e garantias processuais podem ser dimensões úteis para comparar currículos e investigar necessidades profissionais."
+        ],
+        "analysis_id": "73501c53-cc58-47f9-8927-d9e299b4f4b5",
+        "course_title": "Extensão em Fraude e Litigância predatória no mercado de seguros",
+        "uncertainties": [
+          "O programa deixa investimento e descontos como marcadores não preenchidos; não informa valor total declarado, taxas ou demais condições das 12 parcelas. A duração acadêmica de um mês é independente do parcelamento.",
+          "A abrangência Brasil e o idioma pt-BR são interpretações do programa em português e de suas referências jurídicas brasileiras; o recorte geográfico de divulgação não foi explicitado.",
+          "Não foram informados critérios de avaliação, certificação, número de vagas ou política de acesso posterior às gravações, relevantes para caracterizar a experiência e comparar ofertas.",
+          "O docente da oitava aula não é identificado na grade.",
+          "A lista de instituições concorrentes não identifica cursos equivalentes nem comprova concorrência efetiva.",
+          "As afirmações jurídicas e de contexto presentes na justificativa do programa não foram verificadas nesta etapa."
+        ],
+        "schema_version": 1,
+        "duration_months": 1,
+        "subject_domains": [
+          "Direito do Seguro e mercado de seguros e resseguros",
+          "Fraude securitária e prevenção a fraudes",
+          "Litigância predatória, abusiva e Direito Processual Civil",
+          "Regulação, liquidação e investigação de sinistros",
+          "Direito Penal e investigação de ilícitos",
+          "Governança, compliance, controles internos e gestão de riscos",
+          "Inteligência de dados, inteligência artificial e proteção de dados",
+          "Direito do consumidor, boa-fé e acesso à Justiça"
+        ],
+        "institution_name": "Escola de Negócios e Seguros",
+        "target_audiences": [
+          "Advogados, magistrados e membros do Ministério Público e da Defensoria Pública",
+          "Corretores de seguros e profissionais de seguradoras, resseguradoras e insurtechs",
+          "Reguladores e liquidantes de sinistros, peritos e investigadores",
+          "Auditores, subscritores e atuários",
+          "Profissionais de compliance, controles internos, riscos e prevenção a fraudes",
+          "Profissionais de proteção de dados, tecnologia e inteligência"
+        ],
+        "learning_outcomes": [
+          "Distinguir o exercício legítimo do direito de ação de condutas artificiais, fraudulentas ou abusivas.",
+          "Identificar tipologias de fraude securitária e sinais de alerta em diferentes ramos e produtos.",
+          "Planejar investigações juridicamente válidas e avaliar evidências físicas e digitais.",
+          "Estruturar respostas administrativas e judiciais proporcionais, com rigor probatório e respeito às garantias individuais.",
+          "Aplicar critérios de proteção de dados, supervisão humana e prevenção de falsos positivos no uso de dados e inteligência artificial.",
+          "Implementar programas corporativos de prevenção a fraudes que preservem a boa-fé, o contraditório, a proteção do consumidor e o acesso à Justiça."
+        ],
+        "proposed_price_brl": 1200.0,
+        "supplied_materials": [
+          "Programa do curso: Programas do Curso_Extensão Fraude e litigância predatória no mercado de seguros prevenção, investigação e resposta jurídica - AIDA.docx",
+          "Grade de oito aulas, com datas, conteúdo e identificação dos docentes de sete aulas.",
+          "Condições comerciais estruturadas: ticket de R$ 100, periodicidade mensal e 12 parcelas.",
+          "Lista de instituições indicadas para investigação competitiva: FGV, Fundação Dom Cabral, Insper, PUC-Rio e USP."
+        ],
+        "institution_domains": [
+          "ens.edu.br",
+          "enscursos.com.br"
+        ],
+        "proposed_price_period": "total"
+      }
+    },
+    {
+      "step_number": 5,
+      "name": "keyword_entity_mapping",
+      "status": "COMPLETED",
+      "output_summary": {
+        "primary_keywords": [
+          "curso prevenção e investigação de fraudes em seguros",
+          "curso litigância predatória no mercado de seguros",
+          "extensão fraude e litigância predatória em seguros",
+          "curso antifraude em seguradoras online ao vivo",
+          "capacitação investigação de sinistros suspeitos"
+        ],
+        "negative_keywords": [],
+        "secondary_keywords": [
+          "curso regulação e liquidação de sinistros fraude",
+          "curso direito securitário nova lei de seguros 15040 2024",
+          "litigância predatória em ações de seguro cnj stj",
+          "como identificar fraude em sinistro de seguro",
+          "fraude em seguro de vida automóvel e saúde",
+          "inteligência artificial na detecção de fraudes em seguros",
+          "lgpd investigação de fraudes em seguradoras",
+          "programa corporativo antifraude para seguradoras",
+          "treinamento compliance e prevenção a fraudes em seguros",
+          "curso para advogados defesa de seguradoras contra fraudes"
+        ],
+        "evaluated_candidates": [
+          {
+            "term": "curso prevenção e investigação de fraudes em seguros",
+            "notes": "",
+            "category": "PRIMARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.98
+          },
+          {
+            "term": "curso litigância predatória no mercado de seguros",
+            "notes": "",
+            "category": "PRIMARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.99
+          },
+          {
+            "term": "extensão fraude e litigância predatória em seguros",
+            "notes": "",
+            "category": "PRIMARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.99
+          },
+          {
+            "term": "curso antifraude em seguradoras online ao vivo",
+            "notes": "",
+            "category": "PRIMARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.98
+          },
+          {
+            "term": "capacitação investigação de sinistros suspeitos",
+            "notes": "",
+            "category": "PRIMARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.92
+          },
+          {
+            "term": "curso regulação e liquidação de sinistros fraude",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.87
+          },
+          {
+            "term": "curso direito securitário nova lei de seguros 15040 2024",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "MEDIUM_RELEVANCE",
+            "confidence": 0.95
+          },
+          {
+            "term": "litigância predatória em ações de seguro cnj stj",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.98
+          },
+          {
+            "term": "como identificar fraude em sinistro de seguro",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.97
+          },
+          {
+            "term": "fraude em seguro de vida automóvel e saúde",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.9
+          },
+          {
+            "term": "inteligência artificial na detecção de fraudes em seguros",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.88
+          },
+          {
+            "term": "lgpd investigação de fraudes em seguradoras",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "MEDIUM_RELEVANCE",
+            "confidence": 0.87
+          },
+          {
+            "term": "programa corporativo antifraude para seguradoras",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "MEDIUM_RELEVANCE",
+            "confidence": 0.88
+          },
+          {
+            "term": "treinamento compliance e prevenção a fraudes em seguros",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.94
+          },
+          {
+            "term": "curso para advogados defesa de seguradoras contra fraudes",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.98
+          }
+        ]
+      }
+    },
+    {
+      "step_number": 6,
+      "name": "research_planning",
+      "status": "COMPLETED",
+      "output_summary": {
+        "id": "plan-fd18c14a0e20",
+        "questions": [
+          {
+            "id": "q-1",
+            "priority": 1,
+            "question": "Quais ofertas externas de extensão ou aperfeiçoamento abordam fraude em seguros ou litigância predatória, e como se comparam em preço, formato e conteúdo?",
+            "evidence_need": "Páginas oficiais de ofertas identificadas por instituição e categoria, com grade, duração, modalidade e preço total ou parcelas e condições observáveis. Outras categorias são contexto, não benchmark de preço."
+          },
+          {
+            "id": "q-2",
+            "priority": 1,
+            "question": "Que anunciantes externos promovem formação relacionada e quais diferenciais e públicos destacam?",
+            "evidence_need": "Anúncios educacionais identificáveis, com anunciante, texto ou destino, distinguindo a ENS, serviços de seguro e duplicatas."
+          },
+          {
+            "id": "q-3",
+            "priority": 1,
+            "question": "Quais cargos, atividades e competências relacionados a investigação de fraudes, sinistros e contencioso securitário aparecem em vagas no Brasil?",
+            "evidence_need": "Vagas identificáveis com empregador, localização e descrição de atividades ou requisitos; perfis empresariais servem apenas como contexto do ecossistema."
+          },
+          {
+            "id": "q-4",
+            "priority": 1,
+            "question": "Quais dificuldades, perguntas e termos profissionais aparecem em discussões públicas sobre fraude securitária e litigância predatória?",
+            "evidence_need": "Publicações ou comentários textuais com origem verificável e pertinência profissional; distinguir contexto de intenção de matrícula e verificar localização quando possível."
+          },
+          {
+            "id": "q-5",
+            "priority": 2,
+            "question": "Como evolui o interesse relativo por termos curtos relacionados à fraude securitária e à litigância predatória no Brasil?",
+            "evidence_need": "Séries temporais válidas por termo, região e período, distinguindo ausência de dados, falha e zero observado; índices não são volume absoluto de busca."
+          }
+        ],
+        "created_at": "2026-10-29T19:53:53.988451Z",
+        "tool_calls": [
+          {
+            "id": "call-1",
+            "query": "curso extensão fraude em seguros investigação sinistros preço",
+            "required": true,
+            "max_items": 10,
+            "rationale": "Descobrir ofertas e páginas oficiais para comparação de categoria, conteúdo e investimento.",
+            "capability": "google_search",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "URLs públicas de ofertas pertinentes, priorizando instituições distintas; trechos não comprovam preços."
+            },
+            "question_ids": [
+              "q-1"
+            ]
+          },
+          {
+            "id": "call-2",
+            "query": "curso aperfeiçoamento litigância predatória direito seguro",
+            "required": false,
+            "max_items": 10,
+            "rationale": "Descobrir alternativas jurídicas e ofertas interdisciplinares não capturadas pela busca de fraude.",
+            "capability": "google_search",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "URLs de cursos identificáveis sobre litigância predatória ou sua aplicação em seguros, com categoria verificável na origem."
+            },
+            "question_ids": [
+              "q-1"
+            ]
+          },
+          {
+            "id": "call-3",
+            "query": "Páginas oficiais de cursos de fraude securitária e litigância predatória",
+            "required": true,
+            "max_items": 7,
+            "rationale": "Confirmar nas páginas originais categoria, programa e condições comerciais das ofertas descobertas.",
+            "capability": "web_crawler",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "depends_on": [
+                "call-1",
+                "call-2"
+              ],
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Oferta e instituição identificadas; registrar categoria, grade e formato observados. Preço exige valor em BRL e condição de total ou parcelamento inequívoca."
+            },
+            "question_ids": [
+              "q-1"
+            ]
+          },
+          {
+            "id": "call-4",
+            "query": "curso fraude em seguros",
+            "required": true,
+            "max_items": 10,
+            "rationale": "Identificar anúncios educacionais externos e seu posicionamento no tema securitário.",
+            "capability": "meta_ads_library",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "time_range": "últimos 12 meses",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Anúncio com anunciante identificável e oferta de formação pertinente; separar ENS, anúncios de serviços e duplicatas."
+            },
+            "question_ids": [
+              "q-2"
+            ]
+          },
+          {
+            "id": "call-5",
+            "query": "curso litigância predatória",
+            "required": false,
+            "max_items": 10,
+            "rationale": "Cobrir a alternativa jurídica com intenção educacional diferente da pesquisa securitária.",
+            "capability": "meta_ads_library",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "time_range": "últimos 12 meses",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Criativos ou destinos verificáveis de formação pertinente, com anunciante e categoria quando observáveis."
+            },
+            "question_ids": [
+              "q-2"
+            ]
+          },
+          {
+            "id": "call-6",
+            "query": "investigação de fraudes seguros",
+            "required": true,
+            "max_items": 10,
+            "rationale": "Identificar organizações e empregadores do ecossistema profissional, sem tratá-los como vagas ou ofertas.",
+            "capability": "linkedin",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Páginas de organizações identificáveis com descrição e atuação compatível com o setor no Brasil."
+            },
+            "question_ids": [
+              "q-3"
+            ]
+          },
+          {
+            "id": "call-7",
+            "query": "analista investigação fraude seguros",
+            "required": true,
+            "max_items": 15,
+            "rationale": "Observar atividades e requisitos diretamente ligados à investigação de fraude securitária.",
+            "capability": "linkedin_jobs",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "time_range": "últimos 12 meses",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Vagas identificáveis com empregador, localização compatível e descrição pertinente; registrar vagas incompletas e duplicadas."
+            },
+            "question_ids": [
+              "q-3"
+            ]
+          },
+          {
+            "id": "call-8",
+            "query": "analista regulação sinistros seguros",
+            "required": false,
+            "max_items": 15,
+            "rationale": "Cobrir cargo e atividades adjacentes relevantes para avaliação de sinistros e evidências.",
+            "capability": "linkedin_jobs",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "time_range": "últimos 12 meses",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Vagas com identificação, local e atividades ou requisitos de regulação de sinistros; não presumir competências sem descrição."
+            },
+            "question_ids": [
+              "q-3"
+            ]
+          },
+          {
+            "id": "call-9",
+            "query": "fraudesecuritaria",
+            "required": true,
+            "max_items": 15,
+            "rationale": "Buscar publicações profissionais sobre tipologias de fraude e dificuldades de investigação.",
+            "capability": "instagram",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "time_range": "últimos 12 meses",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Posts ou comentários reais com texto pertinente e URL original; diretório de hashtag não é amostra de publicações."
+            },
+            "question_ids": [
+              "q-4"
+            ]
+          },
+          {
+            "id": "call-10",
+            "query": "como identificar fraude em sinistro",
+            "required": true,
+            "max_items": 15,
+            "rationale": "Buscar linguagem e dificuldades práticas em vídeos públicos, sem confundir visualizações com procura por formação.",
+            "capability": "tiktok",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "time_range": "últimos 12 meses",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Vídeos com URL e texto ou transcrição observada sobre atividade ou dificuldade pertinente; registrar região não comprovada."
+            },
+            "question_ids": [
+              "q-4"
+            ]
+          },
+          {
+            "id": "call-11",
+            "query": "site:youtube.com/watch fraude em seguros investigação sinistros",
+            "required": false,
+            "max_items": 10,
+            "rationale": "Descobrir vídeos reais pertinentes para coleta dependente de comentários.",
+            "capability": "google_search",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "URLs de vídeos públicos sobre investigação de fraude em seguros, não apenas canais ou páginas de busca."
+            },
+            "question_ids": [
+              "q-4"
+            ]
+          },
+          {
+            "id": "call-12",
+            "query": "Comentários sobre investigação de fraude em seguros",
+            "required": true,
+            "max_items": 15,
+            "rationale": "Examinar perguntas e dificuldades efetivamente expressas nos comentários dos vídeos descobertos.",
+            "capability": "youtube_comments",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "depends_on": [
+                "call-11"
+              ],
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Comentários textuais vinculados a vídeo descoberto e pertinentes à atividade profissional; distinguir ausência de comentários de falha de descoberta."
+            },
+            "question_ids": [
+              "q-4"
+            ]
+          },
+          {
+            "id": "call-13",
+            "query": "fraude securitária e litigância predatória",
+            "required": false,
+            "max_items": 2,
+            "rationale": "Observar séries de interesse relativo para os dois eixos, sem interpretá-las como procura por matrícula.",
+            "capability": "google_trends",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "time_range": "today 5-y",
+              "sample_scope": "capped_sample",
+              "search_terms": [
+                "fraude em seguros",
+                "litigância predatória"
+              ],
+              "sufficiency_criterion": "Série temporal com pontos válidos por termo, região e janela; registrar série ausente, hasData=false, zero e falha separadamente."
+            },
+            "question_ids": [
+              "q-5"
+            ]
+          }
+        ],
+        "analysis_id": "73501c53-cc58-47f9-8927-d9e299b4f4b5",
+        "schema_version": 1,
+        "skill_snapshots": [
+          {
+            "name": "planning-market-research",
+            "version": "3.0.0",
+            "content_hash": "d42ff163164a5d2f9fd8b0dffafb2149d852f84c6e6dea71801ac58e89680af7"
+          },
+          {
+            "name": "conducting-course-analysis",
+            "version": "1.0.0",
+            "content_hash": "6335e56859384d8351f969a9e1c990dbf25f7d44ef8ec5bd960efa73b4e35241"
+          },
+          {
+            "name": "operating-apify-research",
+            "version": "1.0.0",
+            "content_hash": "1f0b23daefe4168244949b8c7eceb87aec72f49458004dbcad5441a16312a3cc"
+          },
+          {
+            "name": "extracting-course-offers",
+            "version": "1.0.0",
+            "content_hash": "2eafae4fa141a6039b36a30374699a91f3c3e68856639c54405538fc725f3483"
+          },
+          {
+            "name": "researching-search-trends",
+            "version": "1.0.0",
+            "content_hash": "bf4ce6981d66bc93fcf19ff19250cf3e2850492c7bf768ec9d75a03121df8dd5"
+          },
+          {
+            "name": "researching-job-demand",
+            "version": "1.0.0",
+            "content_hash": "42b1eb5c6b3a9ce0fd8d3fd3cfdec08aacb9758469cdc7a048184f99b46d2b63"
+          }
+        ],
+        "budget_limit_usd": 5.0,
+        "understanding_hash": "5efebdf662f13b390efd72c90db75305050691b7878290145dae00708b66d0dd"
+      }
+    },
+    {
+      "step_number": 7,
+      "name": "institutional_history",
+      "status": "COMPLETED",
+      "output_summary": {
+        "audit": {
+          "family": "extensao",
+          "method": "ipd-family-percentile-v1",
+          "weights": {
+            "leads": 0.2,
+            "enrolled": 0.5,
+            "applicants": 0.3
+          },
+          "comparables": [
+            {
+              "name": "Extensão em Análise de Dados para Seguros",
+              "leads": 850,
+              "family": "extensao",
+              "period": "2025",
+              "reason": "Mesma família e proximidade de tema e grade",
+              "category": "Extensão Universitária",
+              "enrolled": 57,
+              "course_id": "hc_32ab4ed470ab4b3d",
+              "ipd_score": 100.0,
+              "theme_fit": 0.0581,
+              "applicants": 150,
+              "percentiles": {
+                "leads": 100.0,
+                "enrolled": 100.0,
+                "applicants": 100.0
+              },
+              "evidence_ids": [
+                "hc_32ab4ed470ab4b3d",
+                "hf_9e3bba6ba2154fd4"
+              ],
+              "selection_fit": 0.0425,
+              "curriculum_fit": 0.0135
+            },
+            {
+              "name": "Extensão em Seguros Cibernéticos",
+              "leads": 590,
+              "family": "extensao",
+              "period": "2025",
+              "reason": "Mesma família e proximidade de tema e grade",
+              "category": "Extensão Universitária",
+              "enrolled": 37,
+              "course_id": "hc_220ed76682814d0f",
+              "ipd_score": 66.67,
+              "theme_fit": 0.0581,
+              "applicants": 100,
+              "percentiles": {
+                "leads": 66.6667,
+                "enrolled": 66.6667,
+                "applicants": 66.6667
+              },
+              "evidence_ids": [
+                "hc_220ed76682814d0f",
+                "hf_9a1325ed54fe4ac8"
+              ],
+              "selection_fit": 0.0413,
+              "curriculum_fit": 0.0101
+            },
+            {
+              "name": "Regulação de Sinistros por Ramos de Seguros",
+              "leads": 520,
+              "family": "extensao",
+              "period": "2025",
+              "reason": "Mesma família e proximidade de tema e grade",
+              "category": "Extensão",
+              "enrolled": 24,
+              "course_id": "hc_6840545da078450f",
+              "ipd_score": 50.0,
+              "theme_fit": 0.0575,
+              "applicants": 76,
+              "percentiles": {
+                "leads": 55.5556,
+                "enrolled": 44.4444,
+                "applicants": 55.5556
+              },
+              "evidence_ids": [
+                "hc_6840545da078450f",
+                "hf_a944983c982648d2"
+              ],
+              "selection_fit": 0.0403,
+              "curriculum_fit": 0.0084
+            }
+          ],
+          "limitations": [],
+          "reference_n": 10,
+          "observed_prices": [
+            {
+              "name": "Extensão em Análise de Dados para Seguros",
+              "tags": [
+                "seguros",
+                "Dados do mercado de seguros",
+                "Indicadores de sinistros",
+                "Visualização e análise",
+                "Modelos de risco"
+              ],
+              "family": "extensao",
+              "period": "2025",
+              "source": "internal",
+              "category": "Extensão Universitária",
+              "currency": "BRL",
+              "course_id": "hc_32ab4ed470ab4b3d",
+              "price_brl": 3300.0,
+              "total_brl": 3300.0,
+              "evidence_ids": [
+                "hc_32ab4ed470ab4b3d",
+                "hf_9e3bba6ba2154fd4"
+              ],
+              "price_period": "total"
+            },
+            {
+              "name": "Extensão em Seguros Cibernéticos",
+              "tags": [
+                "seguros",
+                "Riscos digitais",
+                "Seguros cyber",
+                "Resposta a incidentes",
+                "Análise de fraudes"
+              ],
+              "family": "extensao",
+              "period": "2025",
+              "source": "internal",
+              "category": "Extensão Universitária",
+              "currency": "BRL",
+              "course_id": "hc_220ed76682814d0f",
+              "price_brl": 2900.0,
+              "total_brl": 2900.0,
+              "evidence_ids": [
+                "hc_220ed76682814d0f",
+                "hf_9a1325ed54fe4ac8"
+              ],
+              "price_period": "total"
+            },
+            {
+              "name": "Regulação de Sinistros por Ramos de Seguros",
+              "tags": [
+                "seguros",
+                "Regulação de sinistros",
+                "Contratos e coberturas",
+                "Liquidação por ramo",
+                "Tecnologia e análise de casos"
+              ],
+              "family": "extensao",
+              "period": "2025",
+              "source": "internal",
+              "category": "Extensão",
+              "currency": "BRL",
+              "course_id": "hc_6840545da078450f",
+              "price_brl": 5600.0,
+              "total_brl": 5600.0,
+              "evidence_ids": [
+                "hc_6840545da078450f",
+                "hf_a944983c982648d2"
+              ],
+              "price_period": "total"
+            }
+          ],
+          "skill_snapshots": [
+            {
+              "name": "reviewing-market-evidence",
+              "version": "2.0.0",
+              "content_hash": "2dc665623b432de80b02ef44c41b70f89274b7338b58f9f8a330bb3e9e69f8d4"
+            },
+            {
+              "name": "conducting-course-analysis",
+              "version": "1.0.0",
+              "content_hash": "6335e56859384d8351f969a9e1c990dbf25f7d44ef8ec5bd960efa73b4e35241"
+            }
+          ],
+          "reference_period": "2025",
+          "percentile_convention": "midrank_0_100"
+        },
+        "features": {
+          "internal_ipd_score": {
+            "name": "internal_ipd_score",
+            "value": 72.22,
+            "method": "ipd_20_30_50_family_percentile",
+            "evidence_ids": [
+              "hc_32ab4ed470ab4b3d",
+              "hf_9e3bba6ba2154fd4",
+              "hc_220ed76682814d0f",
+              "hf_9a1325ed54fe4ac8",
+              "hc_6840545da078450f",
+              "hf_a944983c982648d2"
+            ]
+          },
+          "internal_ipd_confidence": {
+            "name": "internal_ipd_confidence",
+            "value": 0.9,
+            "method": "ipd_reference_and_curriculum_completeness",
+            "evidence_ids": [
+              "hc_32ab4ed470ab4b3d",
+              "hf_9e3bba6ba2154fd4",
+              "hc_220ed76682814d0f",
+              "hf_9a1325ed54fe4ac8",
+              "hc_6840545da078450f",
+              "hf_a944983c982648d2"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "step_number": 8,
+      "name": "external_tool_execution",
+      "status": "COMPLETED",
+      "output_summary": {
+        "spent_usd": 0.162996,
+        "evidence_ids": [
+          "e7fa25ed-e683-479c-aa40-761217835bad",
+          "51adeeeb-5b26-4f3b-8b93-13157f246b77",
+          "db27bd78-9e8e-4658-8b7f-2bcee2d9db36",
+          "04322eea-7ad9-4a94-a585-f50d1b95d53d",
+          "b3b1a727-cbb9-4a7d-a398-700e129665d2",
+          "be853122-1e0f-44b1-9853-f0c3ffa6e3f3",
+          "80612adc-bb81-4dac-81a7-06266573e3f9",
+          "61360bf4-9663-45be-802d-d08a75a5ed14",
+          "4b9c4d28-291d-4996-8ab4-07645a290ea1",
+          "79e17c87-a2df-4a11-86f8-eaada16b955b",
+          "e88e9999-4d10-45a1-88e4-feec84205478",
+          "7b0927b4-5a47-46bf-8720-4090e782636c",
+          "34f8c3cd-0378-43e6-afe4-bd8a31f42461",
+          "a8e353bf-9f64-4a70-acc4-17d50a2ddcd9",
+          "10037baa-252c-4654-902c-f55998effa34",
+          "7298354b-4ebb-48c0-9293-e471fe826ec3",
+          "c8e443e2-2e78-4025-8a02-34a9e726f634",
+          "9233a84b-88f7-439e-81e0-a59e9f3c491b",
+          "4f323755-cad0-4178-b44c-5ef476064458",
+          "d976fe16-b293-481b-8311-9b8f0a4eab89",
+          "78e3a3f1-efd5-4769-aa20-5459a18f6485",
+          "fc199dae-64a8-4c79-82e0-b95f4510150d",
+          "230f0577-49c9-4047-9173-dec84d0e1251",
+          "3bbc3744-3d36-480a-a0a3-f4e2f4566fd5",
+          "3c5ca07e-7e3c-4efe-b1e0-890352b822d3",
+          "53417086-b688-438e-a337-dcb8fcc32032",
+          "e80d6608-a352-42a3-980b-0e0de77ffe14",
+          "ba5f190f-7838-4e71-924a-bd404ed8b507",
+          "3a70668b-8518-4883-8187-40e044f57e3e",
+          "2dcabbdd-d73b-40e2-acdb-a69cfa9fd5e3",
+          "73d3b446-c32b-48e7-8a73-c2ad3187027e",
+          "b344b0c3-f573-444c-b084-d750675c0f4f",
+          "aff2f5a2-92e9-440b-aa47-edb726c84b61",
+          "098f1328-269e-46a2-95d7-fb1469295bd1",
+          "e3477782-7000-4ce7-b893-e376cc872f28",
+          "124c0aef-e30d-48e7-b235-b53acc3c6a00",
+          "4cf69802-e362-428e-8741-1b21444e9cf5",
+          "185936f6-c360-4047-b76e-cbb4539bd8ac",
+          "e343904a-3c04-4c86-a3af-41ef2c365f43",
+          "c3fb5af2-2a14-4aef-b2ed-8aa86ad0126a",
+          "d43d7df5-7529-4c6b-b806-47429849e8bc",
+          "48d0fafa-2046-4c1d-8ed7-34a2683dd880",
+          "e77f2389-7759-44ce-bafd-2f892006b2da",
+          "9c01921f-a26b-4571-8888-3a31c1cdfb3e",
+          "b4cac2dc-211c-4706-b323-1394067f48f2",
+          "a2c51dbc-8e38-40ef-b7a4-b90aee536ef9",
+          "158b62ce-0d22-413f-909d-3dbf31cbab1f",
+          "e1d51615-0dda-4f4d-9d6a-1bc3d938c0d4",
+          "fe1f0019-6a5e-4d89-878a-dda6aaa4d4cb",
+          "b52eda13-7bac-4d28-b3ce-8fcc97d15f92",
+          "5cc0c5b6-6b21-4bc4-8e87-06774a4059b0",
+          "56a33aaa-e9d1-4faf-8803-c690400f225d",
+          "4cfd2c2e-d2a4-4243-9af5-84cd628b0bad",
+          "20330a19-ff1b-43f7-b2e2-9afe79d7a277",
+          "93b96909-15c7-4958-b77c-31107f3ffe1d",
+          "38eca74f-ade2-4f0b-9773-bd6ca7bf64c8",
+          "be0fbc81-2c14-41ba-a166-312df590d866",
+          "767d868e-83b6-4f94-91b0-5c2234c01f5d",
+          "f79efdd8-824d-4ea6-98f2-a293c2d761ae",
+          "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+          "bfd15bfb-3fe2-487f-89f0-4f4f7641a9ba",
+          "94e5d74c-f223-42df-a3bf-befb68365021",
+          "5aa47114-aab8-4fdc-8d52-f62ebc157d66",
+          "a0a83099-07fd-4642-adc2-03d8b98a2c8a",
+          "f1bfd3f0-dfba-4240-aa98-399c75fb85f7",
+          "d6850b83-621c-4ace-85db-56e4ead718e5",
+          "348b5272-c883-49a2-b630-3eb62a0551aa",
+          "0b9f7b56-1593-4af5-834a-8ae3e3237396",
+          "b1689aa0-4ed8-414e-8797-bf569af3dc3e",
+          "a61711e9-2575-4804-877c-33e7c71e4eb8",
+          "19b94ec0-327b-4847-bf78-7c2567144cfe",
+          "4d08278c-9805-40ef-8da7-4b0eb2255f7b",
+          "62e3b351-7454-4829-8952-d82f67e6f4e0",
+          "59c394a2-edbb-442b-83dd-eee190dcb1a6",
+          "1035163e-8090-4fd5-8d31-f87345a10032",
+          "1b057907-7f6d-491a-90e2-b6e48507904d",
+          "8c7038d3-5517-427b-ac0f-45f8e21d83ac",
+          "08167551-46f7-49e2-8039-c1f9dd687f99",
+          "38a35a51-69fc-4674-9821-dcd47ca42d3e",
+          "eb55e6d0-b445-45a6-854d-9ad1184a4d31",
+          "c65393ab-02a1-48a4-a9a5-b2399ed8daaf",
+          "8eba3944-62fb-47c4-92ff-042ea250733a",
+          "7d2218b5-85af-448c-a267-e6986d1d39e1",
+          "7f7ceaf5-4266-4849-9f1d-50986160eb6e",
+          "a9769404-0b23-4297-ae21-18af139fd9ec",
+          "eaed3c7d-d8a8-447e-81b4-7b5c1a4277f4",
+          "331c55b1-d823-4c2b-b596-0b3a75d99859",
+          "91f62ab9-4f0d-4c03-8566-0e77f2bc6620",
+          "a7e6ecce-161b-44f8-9eb4-9af5465f0939",
+          "cc476406-6ae1-4fc6-a4d7-f41ca76b94b8",
+          "c28351ea-434c-4017-94cb-a24d2c9205eb",
+          "fc9026f4-b13c-42c4-9413-aa7a5c336dec",
+          "5d5e1acb-3a4e-4cfd-a7a1-efe3009193e4",
+          "9bf67228-065f-41c6-bfc8-d8379ac4aff0",
+          "b73d44bd-2e1d-4d79-80c3-ee748b113af5",
+          "ecc210f0-a303-4292-bccd-f5981c1ae543",
+          "917ad323-f2d3-44d2-ba25-74017e2bfd43",
+          "89a4806d-c000-4fe9-bb47-d01ec47019a1",
+          "4a72ac81-8bd9-4ec4-9a10-553831db57de",
+          "bd0fe58d-233b-4ec7-8696-6ba7bcc38aa8",
+          "c5f877b7-9f5f-45a7-9bea-e447baa66702",
+          "70d70912-a902-4c3d-967c-55f44e8b459c",
+          "a8a010dd-1a8f-45b0-9595-3f4e33fb9856",
+          "d32e5382-75fb-4fcd-8a42-2ba70f9cc197",
+          "707ceb93-fb79-48d9-8900-e6e98307e326",
+          "8422f151-ca53-45c0-a95b-4220397c2c33",
+          "5d583882-3d21-434f-98b2-5dbbea86fbe8",
+          "648e1632-3a09-479d-b86e-b4f18d6f8196",
+          "d74c0624-4cc2-4124-936e-59ed7a66ffba",
+          "350d7b3b-71f0-4cb4-8a9f-3b32b8c8e042",
+          "1812d462-2dd2-49c4-99bd-411ec6532a68",
+          "1d04ce17-b0e3-4ac9-ad43-5568ded17ae8",
+          "be566535-61f1-4e57-baaf-a68a986b53b1",
+          "4a83dca7-a709-4a71-95c0-2d5ef60ace37",
+          "ce65a334-4b28-448b-ab4d-a43a674d9143",
+          "07abda83-ec65-4ffc-bf57-57c986ce2c49",
+          "679c794b-638a-4158-a2cd-5381a740b68d",
+          "a3ded491-613a-4ffd-b434-5df9f0c08b00"
+        ],
+        "research_plan_id": "plan-fd18c14a0e20",
+        "optional_failures": [
+          "call-9"
+        ],
+        "completed_call_ids": [
+          "call-1",
+          "call-2",
+          "call-3",
+          "call-4",
+          "call-5",
+          "call-6",
+          "call-7",
+          "call-8",
+          "call-10",
+          "call-11",
+          "call-12",
+          "call-13"
+        ]
+      }
+    },
+    {
+      "step_number": 9,
+      "name": "evidence_sanitization",
+      "status": "COMPLETED",
+      "output_summary": {
+        "features": {
+          "ad_count": {
+            "name": "ad_count",
+            "value": 0,
+            "method": "observed_empty_query",
+            "evidence_ids": [
+              "tool-run:plan-fd18c14a0e20-followup:call-18"
+            ]
+          },
+          "open_jobs_count": {
+            "name": "open_jobs_count",
+            "value": 16,
+            "method": "count_valid_items",
+            "evidence_ids": [
+              "19b94ec0-327b-4847-bf78-7c2567144cfe",
+              "62e3b351-7454-4829-8952-d82f67e6f4e0",
+              "20330a19-ff1b-43f7-b2e2-9afe79d7a277",
+              "f79efdd8-824d-4ea6-98f2-a293c2d761ae",
+              "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+              "bfd15bfb-3fe2-487f-89f0-4f4f7641a9ba",
+              "94e5d74c-f223-42df-a3bf-befb68365021",
+              "5aa47114-aab8-4fdc-8d52-f62ebc157d66",
+              "d6850b83-621c-4ace-85db-56e4ead718e5",
+              "348b5272-c883-49a2-b630-3eb62a0551aa",
+              "0b9f7b56-1593-4af5-834a-8ae3e3237396",
+              "a61711e9-2575-4804-877c-33e7c71e4eb8",
+              "4d08278c-9805-40ef-8da7-4b0eb2255f7b",
+              "59c394a2-edbb-442b-83dd-eee190dcb1a6",
+              "1035163e-8090-4fd5-8d31-f87345a10032",
+              "1b057907-7f6d-491a-90e2-b6e48507904d"
+            ]
+          },
+          "internal_ipd_score": {
+            "name": "internal_ipd_score",
+            "value": 72.22,
+            "method": "ipd_20_30_50_family_percentile",
+            "evidence_ids": [
+              "hc_32ab4ed470ab4b3d",
+              "hf_9e3bba6ba2154fd4",
+              "hc_220ed76682814d0f",
+              "hf_9a1325ed54fe4ac8",
+              "hc_6840545da078450f",
+              "hf_a944983c982648d2"
+            ]
+          },
+          "pricing_confidence": {
+            "name": "pricing_confidence",
+            "value": 0.5,
+            "method": "pricing_source_completeness",
+            "evidence_ids": [
+              "hc_220ed76682814d0f",
+              "hc_32ab4ed470ab4b3d",
+              "hc_6840545da078450f",
+              "hf_9a1325ed54fe4ac8",
+              "hf_9e3bba6ba2154fd4",
+              "hf_a944983c982648d2"
+            ]
+          },
+          "social_mentions_count": {
+            "name": "social_mentions_count",
+            "value": 1,
+            "method": "count_valid_items",
+            "evidence_ids": [
+              "d74c0624-4cc2-4124-936e-59ed7a66ffba"
+            ]
+          },
+          "internal_ipd_confidence": {
+            "name": "internal_ipd_confidence",
+            "value": 0.9,
+            "method": "ipd_reference_and_curriculum_completeness",
+            "evidence_ids": [
+              "hc_32ab4ed470ab4b3d",
+              "hf_9e3bba6ba2154fd4",
+              "hc_220ed76682814d0f",
+              "hf_9a1325ed54fe4ac8",
+              "hc_6840545da078450f",
+              "hf_a944983c982648d2"
+            ]
+          },
+          "reference_mean_price_brl": {
+            "name": "reference_mean_price_brl",
+            "value": 3933.33,
+            "method": "mean_per_comparable_course",
+            "evidence_ids": [
+              "hc_220ed76682814d0f",
+              "hc_32ab4ed470ab4b3d",
+              "hc_6840545da078450f",
+              "hf_9a1325ed54fe4ac8",
+              "hf_9e3bba6ba2154fd4",
+              "hf_a944983c982648d2"
+            ]
+          }
+        },
+        "pricing_audit": {
+          "method": "arithmetic_mean_per_comparable_course",
+          "currency": "BRL",
+          "excluded": [
+            {
+              "id": "b4cac2dc-211c-4706-b323-1394067f48f2",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "fc9026f4-b13c-42c4-9413-aa7a5c336dec",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "5d5e1acb-3a4e-4cfd-a7a1-efe3009193e4",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "b73d44bd-2e1d-4d79-80c3-ee748b113af5",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "c5f877b7-9f5f-45a7-9bea-e447baa66702",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "60a99269-05a8-43e2-b684-4a8af79b5673",
+              "origin": "external",
+              "reason_code": "own_institution"
+            },
+            {
+              "id": "f1359937-4ff0-4cb3-a22c-5a9dca2e5ab4",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "96156755-e05f-436a-a8e8-f65c05da5aeb",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "9e8f2c4d-e883-4733-976d-e894653abe64",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "47c2abae-a193-432c-be9e-8cb3de8a1c9b",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "9e31c4a8-ebb8-49fa-baf3-1a01c5d216a7",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "c142deca-c810-4796-b5f4-5c8e9d3c1542",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "a2c51dbc-8e38-40ef-b7a4-b90aee536ef9",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "32cff42f-7ee8-4f5b-a775-e17e5817edae",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "480fb20d-97ae-46fa-801b-5f6c31ef6f30",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "1bffc8eb-858a-45c5-984a-22f5495792cc",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "4ae79ffd-9d11-4239-ba90-8acaf1424609",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "3ec8b56b-f0eb-4974-b410-7b1a926b1f0b",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "41d036ce-c63a-411f-a91e-e081e29c132d",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "9a70f71e-ee55-45ca-b7d5-de912092de9b",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "fe3d93e0-09a0-4b52-b0ef-65600fbc954a",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "f63eb617-93e1-4fd0-9577-b8a2940fd504",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "751f3363-49fb-4d57-ba06-2b6083951df6",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "f7ed9cfb-13dd-4758-999d-45d94c001ead",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "640764f2-58a8-428e-bf93-246c9ac961c5",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "406521ae-ceb4-42c6-a5bc-0811485e58f1",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "263036d2-6294-47c9-91cf-cc93410d4b31",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "94c6d2c6-2c2a-429a-9aec-70457310ee0d",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "1f58b7ed-59e5-49ac-bf9f-8091969765e7",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "6d9191c1-4fbc-49d6-acc3-80581ed03e3f",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "44ca6987-353d-47ea-b74f-989ed1ef347b",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "3c5ca07e-7e3c-4efe-b1e0-890352b822d3",
+              "origin": "external",
+              "reason_code": "own_institution"
+            },
+            {
+              "id": "4cf69802-e362-428e-8741-1b21444e9cf5",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "185936f6-c360-4047-b76e-cbb4539bd8ac",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "e343904a-3c04-4c86-a3af-41ef2c365f43",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "c3fb5af2-2a14-4aef-b2ed-8aa86ad0126a",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "d43d7df5-7529-4c6b-b806-47429849e8bc",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "48d0fafa-2046-4c1d-8ed7-34a2683dd880",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "e77f2389-7759-44ce-bafd-2f892006b2da",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "78e3a3f1-efd5-4769-aa20-5459a18f6485",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "fc199dae-64a8-4c79-82e0-b95f4510150d",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "230f0577-49c9-4047-9173-dec84d0e1251",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "51adeeeb-5b26-4f3b-8b93-13157f246b77",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "9c01921f-a26b-4571-8888-3a31c1cdfb3e",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "04322eea-7ad9-4a94-a585-f50d1b95d53d",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "b3b1a727-cbb9-4a7d-a398-700e129665d2",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "be853122-1e0f-44b1-9853-f0c3ffa6e3f3",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "80612adc-bb81-4dac-81a7-06266573e3f9",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "61360bf4-9663-45be-802d-d08a75a5ed14",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "79e17c87-a2df-4a11-86f8-eaada16b955b",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "e88e9999-4d10-45a1-88e4-feec84205478",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "7b0927b4-5a47-46bf-8720-4090e782636c",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "34f8c3cd-0378-43e6-afe4-bd8a31f42461",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "10037baa-252c-4654-902c-f55998effa34",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "7298354b-4ebb-48c0-9293-e471fe826ec3",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "c8e443e2-2e78-4025-8a02-34a9e726f634",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "9233a84b-88f7-439e-81e0-a59e9f3c491b",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "4f323755-cad0-4178-b44c-5ef476064458",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "d976fe16-b293-481b-8311-9b8f0a4eab89",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "9bf67228-065f-41c6-bfc8-d8379ac4aff0",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "ecc210f0-a303-4292-bccd-f5981c1ae543",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "3bbc3744-3d36-480a-a0a3-f4e2f4566fd5",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "917ad323-f2d3-44d2-ba25-74017e2bfd43",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "89a4806d-c000-4fe9-bb47-d01ec47019a1",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "4a72ac81-8bd9-4ec4-9a10-553831db57de",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "bd0fe58d-233b-4ec7-8696-6ba7bcc38aa8",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "e7fa25ed-e683-479c-aa40-761217835bad",
+              "origin": "external",
+              "reason_code": "own_institution"
+            },
+            {
+              "id": "db27bd78-9e8e-4658-8b7f-2bcee2d9db36",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "4b9c4d28-291d-4996-8ab4-07645a290ea1",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            },
+            {
+              "id": "a8e353bf-9f64-4a70-acc4-17d50a2ddcd9",
+              "origin": "external",
+              "reason_code": "not_qualified"
+            }
+          ],
+          "guidance": [
+            {
+              "name": "reviewing-market-evidence",
+              "version": "2.0.0",
+              "content_hash": "2dc665623b432de80b02ef44c41b70f89274b7338b58f9f8a330bb3e9e69f8d4"
+            },
+            {
+              "name": "building-course-offers",
+              "version": "2.0.0",
+              "content_hash": "4c067b9ecced06f9f8642ab477cf81c74b5ca948f18b16c69c743689df27bf0c"
+            },
+            {
+              "name": "conducting-course-analysis",
+              "version": "1.0.0",
+              "content_hash": "6335e56859384d8351f969a9e1c990dbf25f7d44ef8ec5bd960efa73b4e35241"
+            }
+          ],
+          "comparables": [
+            {
+              "name": "Extensão em Análise de Dados para Seguros",
+              "tags": [
+                "seguros",
+                "Dados do mercado de seguros",
+                "Indicadores de sinistros",
+                "Visualização e análise",
+                "Modelos de risco"
+              ],
+              "family": "extensao",
+              "origin": "internal",
+              "period": "2025",
+              "source": "internal",
+              "category": "Extensão Universitária",
+              "currency": "BRL",
+              "course_id": "hc_32ab4ed470ab4b3d",
+              "price_brl": 3300.0,
+              "total_brl": 3300.0,
+              "evidence_ids": [
+                "hc_32ab4ed470ab4b3d",
+                "hf_9e3bba6ba2154fd4"
+              ],
+              "price_period": "total"
+            },
+            {
+              "name": "Extensão em Seguros Cibernéticos",
+              "tags": [
+                "seguros",
+                "Riscos digitais",
+                "Seguros cyber",
+                "Resposta a incidentes",
+                "Análise de fraudes"
+              ],
+              "family": "extensao",
+              "origin": "internal",
+              "period": "2025",
+              "source": "internal",
+              "category": "Extensão Universitária",
+              "currency": "BRL",
+              "course_id": "hc_220ed76682814d0f",
+              "price_brl": 2900.0,
+              "total_brl": 2900.0,
+              "evidence_ids": [
+                "hc_220ed76682814d0f",
+                "hf_9a1325ed54fe4ac8"
+              ],
+              "price_period": "total"
+            },
+            {
+              "name": "Regulação de Sinistros por Ramos de Seguros",
+              "tags": [
+                "seguros",
+                "Regulação de sinistros",
+                "Contratos e coberturas",
+                "Liquidação por ramo",
+                "Tecnologia e análise de casos"
+              ],
+              "family": "extensao",
+              "origin": "internal",
+              "period": "2025",
+              "source": "internal",
+              "category": "Extensão",
+              "currency": "BRL",
+              "course_id": "hc_6840545da078450f",
+              "price_brl": 5600.0,
+              "total_brl": 5600.0,
+              "evidence_ids": [
+                "hc_6840545da078450f",
+                "hf_a944983c982648d2"
+              ],
+              "price_period": "total"
+            }
+          ],
+          "limitations": [
+            "Sem preço externo comparável."
+          ],
+          "price_period": "total",
+          "external_count": 0,
+          "internal_count": 3,
+          "mean_total_brl": 3933.33,
+          "external_mean_brl": null,
+          "internal_mean_brl": 3933.33
+        },
+        "qualification": {
+          "accepted": 17,
+          "rejected": 127
+        },
+        "repair_status": "round_limit_reached",
+        "remaining_gaps": [
+          "Não há preço de oferta educacional comparável, com moeda e periodicidade verificadas.",
+          "Não há série de busca ou volume de pesquisa no recorte solicitado."
+        ],
+        "initial_collection_diagnostics": [
+          {
+            "query": "curso extensão fraude em seguros investigação sinistros preço",
+            "status": "SUCCEEDED",
+            "call_id": "call-1",
+            "outcome": "context_only",
+            "reasons": {
+              "Conteúdo insuficiente para determinar pertinência": 5,
+              "Contexto do setor ou da instituição; não constitui oferta concorrente verificável": 3,
+              "Conteúdo da própria instituição; preservado como contexto, sem contar como concorrência externa": 1
+            },
+            "capability": "google_search",
+            "error_code": null,
+            "raw_records": 1,
+            "sample_scope": "capped_sample",
+            "context_records": 4,
+            "rejected_records": 0,
+            "qualified_records": 0,
+            "normalized_records": 9,
+            "observation_status": "observed"
+          },
+          {
+            "query": "analista investigação fraude seguros",
+            "status": "SUCCEEDED",
+            "call_id": "call-7",
+            "outcome": "qualified_sample",
+            "reasons": {
+              "Sinal pertinente ao público e à necessidade pesquisada": 4,
+              "Conteúdo setorial ou cargo sem competências verificáveis para esta pesquisa; preservado como contexto profissional": 11
+            },
+            "capability": "linkedin_jobs",
+            "error_code": null,
+            "raw_records": 15,
+            "sample_scope": "capped_sample",
+            "context_records": 11,
+            "rejected_records": 0,
+            "qualified_records": 4,
+            "normalized_records": 15,
+            "observation_status": "observed"
+          },
+          {
+            "query": "curso aperfeiçoamento litigância predatória direito seguro",
+            "status": "SUCCEEDED",
+            "call_id": "call-2",
+            "outcome": "context_only",
+            "reasons": {
+              "Conteúdo insuficiente para determinar pertinência": 2,
+              "Contexto do setor ou da instituição; não constitui oferta concorrente verificável": 7
+            },
+            "capability": "google_search",
+            "error_code": null,
+            "raw_records": 1,
+            "sample_scope": "capped_sample",
+            "context_records": 7,
+            "rejected_records": 0,
+            "qualified_records": 0,
+            "normalized_records": 9,
+            "observation_status": "observed"
+          },
+          {
+            "query": "analista regulação sinistros seguros",
+            "status": "SUCCEEDED",
+            "call_id": "call-8",
+            "outcome": "qualified_sample",
+            "reasons": {
+              "Localização fora do escopo ou não comprovada": 2,
+              "Sinal pertinente ao público e à necessidade pesquisada": 12,
+              "Conteúdo setorial ou cargo sem competências verificáveis para esta pesquisa; preservado como contexto profissional": 1
+            },
+            "capability": "linkedin_jobs",
+            "error_code": null,
+            "raw_records": 15,
+            "sample_scope": "capped_sample",
+            "context_records": 1,
+            "rejected_records": 0,
+            "qualified_records": 12,
+            "normalized_records": 15,
+            "observation_status": "observed"
+          },
+          {
+            "query": "fraude securitária e litigância predatória",
+            "status": "SUCCEEDED",
+            "call_id": "call-13",
+            "outcome": "no_qualified_evidence",
+            "reasons": {
+              "Conteúdo insuficiente para determinar pertinência": 2
+            },
+            "capability": "google_trends",
+            "error_code": null,
+            "raw_records": 2,
+            "sample_scope": "capped_sample",
+            "context_records": 0,
+            "rejected_records": 0,
+            "qualified_records": 0,
+            "normalized_records": 2,
+            "observation_status": "observed"
+          },
+          {
+            "query": "fraudesecuritaria",
+            "status": "EMPTY",
+            "call_id": "call-9",
+            "outcome": "rejected_content",
+            "reasons": {
+              "provider_error_item": 1
+            },
+            "capability": "instagram",
+            "error_code": null,
+            "raw_records": 1,
+            "sample_scope": "capped_sample",
+            "context_records": 0,
+            "rejected_records": 1,
+            "qualified_records": 0,
+            "normalized_records": 0,
+            "observation_status": "rejected_items"
+          },
+          {
+            "query": "Páginas oficiais de cursos de fraude securitária e litigância predatória",
+            "status": "SUCCEEDED",
+            "call_id": "call-3",
+            "outcome": "context_only",
+            "reasons": {
+              "Conteúdo insuficiente para determinar pertinência": 2,
+              "Contexto do setor ou da instituição; não constitui oferta concorrente verificável": 4,
+              "Conteúdo da própria instituição; preservado como contexto, sem contar como concorrência externa": 1
+            },
+            "capability": "web_crawler",
+            "error_code": null,
+            "raw_records": 7,
+            "sample_scope": "capped_sample",
+            "context_records": 5,
+            "rejected_records": 0,
+            "qualified_records": 0,
+            "normalized_records": 7,
+            "observation_status": "observed"
+          },
+          {
+            "query": "treinamento investigação de sinistros fraude securitária curso investimento",
+            "status": "SUCCEEDED",
+            "call_id": "call-14",
+            "outcome": "context_only",
+            "reasons": {
+              "Conteúdo insuficiente para determinar pertinência": 5,
+              "Contexto do setor ou da instituição; não constitui oferta concorrente verificável": 3,
+              "Conteúdo da própria instituição; preservado como contexto, sem contar como concorrência externa": 1
+            },
+            "capability": "google_search",
+            "error_code": null,
+            "raw_records": 1,
+            "sample_scope": "capped_sample",
+            "context_records": 4,
+            "rejected_records": 0,
+            "qualified_records": 0,
+            "normalized_records": 9,
+            "observation_status": "observed"
+          },
+          {
+            "query": "curso fraude em seguros",
+            "status": "SUCCEEDED",
+            "call_id": "call-4",
+            "outcome": "context_only",
+            "reasons": {
+              "Conteúdo incompatível com o sinal educacional pesquisado": 1,
+              "Conteúdo da própria instituição; preservado como contexto, sem contar como concorrência externa": 5
+            },
+            "capability": "meta_ads_library",
+            "error_code": null,
+            "raw_records": 6,
+            "sample_scope": "capped_sample",
+            "context_records": 5,
+            "rejected_records": 0,
+            "qualified_records": 0,
+            "normalized_records": 6,
+            "observation_status": "observed"
+          },
+          {
+            "query": "como identificar fraude em sinistro",
+            "status": "SUCCEEDED",
+            "call_id": "call-10",
+            "outcome": "no_qualified_evidence",
+            "reasons": {
+              "Conteúdo incompatível com o sinal educacional pesquisado": 15
+            },
+            "capability": "tiktok",
+            "error_code": null,
+            "raw_records": 15,
+            "sample_scope": "capped_sample",
+            "context_records": 0,
+            "rejected_records": 0,
+            "qualified_records": 0,
+            "normalized_records": 15,
+            "observation_status": "observed"
+          },
+          {
+            "query": "FGV PUC curso litigância predatória extensão investimento",
+            "status": "SUCCEEDED",
+            "call_id": "call-15",
+            "outcome": "context_only",
+            "reasons": {
+              "Conteúdo insuficiente para determinar pertinência": 3,
+              "Conteúdo incompatível com o sinal educacional pesquisado": 4,
+              "Contexto do setor ou da instituição; não constitui oferta concorrente verificável": 2
+            },
+            "capability": "google_search",
+            "error_code": null,
+            "raw_records": 1,
+            "sample_scope": "capped_sample",
+            "context_records": 2,
+            "rejected_records": 0,
+            "qualified_records": 0,
+            "normalized_records": 9,
+            "observation_status": "observed"
+          },
+          {
+            "query": "curso litigância predatória",
+            "status": "SUCCEEDED",
+            "call_id": "call-5",
+            "outcome": "context_only",
+            "reasons": {
+              "Conteúdo da própria instituição; preservado como contexto, sem contar como concorrência externa": 5
+            },
+            "capability": "meta_ads_library",
+            "error_code": null,
+            "raw_records": 5,
+            "sample_scope": "capped_sample",
+            "context_records": 5,
+            "rejected_records": 0,
+            "qualified_records": 0,
+            "normalized_records": 5,
+            "observation_status": "observed"
+          },
+          {
+            "query": "site:youtube.com/watch fraude em seguros investigação sinistros",
+            "status": "SUCCEEDED",
+            "call_id": "call-11",
+            "outcome": "context_only",
+            "reasons": {
+              "Conteúdo insuficiente para determinar pertinência": 3,
+              "Contexto do setor ou da instituição; não constitui oferta concorrente verificável": 7
+            },
+            "capability": "google_search",
+            "error_code": null,
+            "raw_records": 1,
+            "sample_scope": "capped_sample",
+            "context_records": 7,
+            "rejected_records": 0,
+            "qualified_records": 0,
+            "normalized_records": 10,
+            "observation_status": "observed"
+          },
+          {
+            "query": "investigação de fraudes seguros",
+            "status": "SUCCEEDED",
+            "call_id": "call-6",
+            "outcome": "context_only",
+            "reasons": {
+              "Contexto do setor ou da instituição; não constitui oferta concorrente verificável": 10
+            },
+            "capability": "linkedin",
+            "error_code": null,
+            "raw_records": 10,
+            "sample_scope": "capped_sample",
+            "context_records": 10,
+            "rejected_records": 0,
+            "qualified_records": 0,
+            "normalized_records": 10,
+            "observation_status": "observed"
+          },
+          {
+            "query": "Comentários sobre investigação de fraude em seguros",
+            "status": "SUCCEEDED",
+            "call_id": "call-12",
+            "outcome": "qualified_sample",
+            "reasons": {
+              "Conteúdo insuficiente para determinar pertinência": 1,
+              "Sinal pertinente ao público e à necessidade pesquisada": 1,
+              "Conteúdo incompatível com o sinal educacional pesquisado": 4,
+              "Contexto de linguagem ou divulgação; não demonstra necessidade profissional específica nem volume de procura": 9
+            },
+            "capability": "youtube_comments",
+            "error_code": null,
+            "raw_records": 15,
+            "sample_scope": "capped_sample",
+            "context_records": 9,
+            "rejected_records": 0,
+            "qualified_records": 1,
+            "normalized_records": 15,
+            "observation_status": "observed"
+          },
+          {
+            "query": "Páginas oficiais descobertas de formação em investigação de sinistros e litigância predatória",
+            "status": "RUNNING",
+            "call_id": "call-16",
+            "outcome": "no_qualified_evidence",
+            "reasons": {},
+            "capability": "web_crawler",
+            "error_code": null,
+            "raw_records": 0,
+            "sample_scope": "capped_sample",
+            "context_records": 0,
+            "rejected_records": 0,
+            "qualified_records": 0,
+            "normalized_records": 0,
+            "observation_status": null
+          }
+        ]
+      }
+    },
+    {
+      "step_number": 10,
+      "name": "semantic_judgments",
+      "status": "COMPLETED",
+      "output_summary": {
+        "confidence": 0.82,
+        "decision_id": "f5c05992-01a9-4ffb-ab74-588aaec7e5b6",
+        "score_value": 78.0,
+        "evidence_ids": [
+          "19b94ec0-327b-4847-bf78-7c2567144cfe",
+          "62e3b351-7454-4829-8952-d82f67e6f4e0",
+          "20330a19-ff1b-43f7-b2e2-9afe79d7a277",
+          "f79efdd8-824d-4ea6-98f2-a293c2d761ae",
+          "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+          "bfd15bfb-3fe2-487f-89f0-4f4f7641a9ba",
+          "94e5d74c-f223-42df-a3bf-befb68365021",
+          "5aa47114-aab8-4fdc-8d52-f62ebc157d66",
+          "d6850b83-621c-4ace-85db-56e4ead718e5",
+          "348b5272-c883-49a2-b630-3eb62a0551aa",
+          "0b9f7b56-1593-4af5-834a-8ae3e3237396",
+          "a61711e9-2575-4804-877c-33e7c71e4eb8",
+          "4d08278c-9805-40ef-8da7-4b0eb2255f7b",
+          "59c394a2-edbb-442b-83dd-eee190dcb1a6",
+          "1035163e-8090-4fd5-8d31-f87345a10032",
+          "1b057907-7f6d-491a-90e2-b6e48507904d",
+          "d74c0624-4cc2-4124-936e-59ed7a66ffba"
+        ],
+        "requires_human_review": false
+      }
+    },
+    {
+      "step_number": 11,
+      "name": "verified_feature_scoring",
+      "status": "COMPLETED",
+      "output_summary": {
+        "coverage_score": 0.8,
+        "recommendation": "INSUFFICIENT_EVIDENCE",
+        "viability_score": 51.11,
+        "confidence_score": 0.6198,
+        "scoring_result_id": "e071e47f-b9d3-4f40-8525-1cf25f917ff2"
+      }
+    },
+    {
+      "step_number": 12,
+      "name": "quality_gates",
+      "status": "COMPLETED",
+      "output_summary": {
+        "gate_details": {
+          "reasons": [
+            "Confiança média insuficiente: 62.0% < 75.0%",
+            "Pilar obrigatório ausente: 'search_and_media'"
+          ],
+          "profile_id": "portfolio-v2",
+          "passed_gates": false,
+          "score_blocks": {
+            "pricing": {
+              "score": 67.43,
+              "weight": 0.1,
+              "coverage": 1.0,
+              "confidence": 0.5
+            },
+            "external": {
+              "score": 22.86,
+              "weight": 0.55,
+              "coverage": 0.6364,
+              "confidence": 0.47
+            },
+            "internal": {
+              "score": 72.22,
+              "weight": 0.2,
+              "coverage": 1.0,
+              "confidence": 0.9
+            },
+            "alignment": {
+              "score": 78.0,
+              "weight": 0.15,
+              "coverage": 1.0,
+              "confidence": 0.6753
+            }
+          },
+          "coverage_score": 0.8,
+          "observed_score": 51.11,
+          "recommendation": "INSUFFICIENT_EVIDENCE",
+          "viability_score": 51.11,
+          "confidence_score": 0.6198,
+          "weighted_contribution": 40.89,
+          "in_boundary_review_margin": false,
+          "distance_to_approved_threshold": 23.89,
+          "distance_to_adjustment_threshold": 8.89
+        },
+        "coverage_score": 0.8,
+        "recommendation": "INSUFFICIENT_EVIDENCE",
+        "confidence_score": 0.6198
+      }
+    },
+    {
+      "step_number": 13,
+      "name": "dossier_synthesis",
+      "status": "COMPLETED",
+      "output_summary": {
+        "status": "VERIFIED",
+        "dossier_id": "ead0c124-c147-449b-bddb-6869e8872f89",
+        "facts_hash": "7761d831324c2e5130258bc80691f4e3b8c9367afff5677cc4a0a890710f7a6e",
+        "model_name": "gpt-6.1-terra"
+      }
+    },
+    {
+      "step_number": 14,
+      "name": "factual_verification",
+      "status": "COMPLETED",
+      "output_summary": {
+        "status": "VERIFIED",
+        "dossier_id": "ead0c124-c147-449b-bddb-6869e8872f89",
+        "facts_hash": "7761d831324c2e5130258bc80691f4e3b8c9367afff5677cc4a0a890710f7a6e"
+      }
+    },
+    {
+      "step_number": 15,
+      "name": "publish_completion",
+      "status": "COMPLETED",
+      "output_summary": {
+        "score": 51.11,
+        "webhook": "not_configured",
+        "dossier_id": "ead0c124-c147-449b-bddb-6869e8872f89",
+        "recommendation": "INSUFFICIENT_EVIDENCE",
+        "checkpoint_persisted": true
+      }
+    }
+  ],
+  "audit_events": [
+    {
+      "from_status": null,
+      "to_status": "QUEUED",
+      "reason": "Análise aceita e enfileirada",
+      "correlation_id": "5972e202-2150-4487-9945-2a82bd65adf3",
+      "created_at": "2026-10-29T19:52:48.987340+00:00"
+    },
+    {
+      "from_status": "QUEUED",
+      "to_status": "RUNNING",
+      "reason": "Início da auditoria real",
+      "correlation_id": "5972e202-2150-4487-9945-2a82bd65adf3",
+      "created_at": "2026-10-29T19:52:52.000908+00:00"
+    },
+    {
+      "from_status": "RUNNING",
+      "to_status": "BLOCKED",
+      "reason": "Dossiê da análise 73501c53-cc58-47f9-8927-d9e299b4f4b5 não passou no gate de verificação factual",
+      "correlation_id": "e2e-recovery-20261029",
+      "created_at": "2026-10-29T20:35:04.792202+00:00"
+    },
+    {
+      "from_status": "BLOCKED",
+      "to_status": "RUNNING",
+      "reason": "Retomada idempotente do workflow",
+      "correlation_id": "e2e-reference-contract-20261029",
+      "created_at": "2026-10-29T20:39:33.419989+00:00"
+    },
+    {
+      "from_status": "RUNNING",
+      "to_status": "COMPLETED",
+      "reason": "Auditoria real concluída com dossiê verificado",
+      "correlation_id": "e2e-reference-contract-20261029",
+      "created_at": "2026-10-29T20:43:02.760507+00:00"
+    }
+  ],
+  "tool_runs": [
+    {
+      "capability": "google_search",
+      "query": "curso extensão fraude em seguros investigação sinistros preço",
+      "required": true,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "dDzGqBSgzwePj6mwU",
+      "dataset_id": "hFRZHXtvfBSH5ALMw",
+      "raw_items_count": 1,
+      "valid_items_count": 9,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T19:53:54.299999+00:00",
+      "finished_at": "2026-10-29T19:54:03.931839+00:00"
+    },
+    {
+      "capability": "google_search",
+      "query": "curso aperfeiçoamento litigância predatória direito seguro",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "Pal0x0dARcTusbfId",
+      "dataset_id": "K29Ap6KMsx7BGEruH",
+      "raw_items_count": 1,
+      "valid_items_count": 9,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T19:54:03.967208+00:00",
+      "finished_at": "2026-10-29T19:54:21.710100+00:00"
+    },
+    {
+      "capability": "web_crawler",
+      "query": "Páginas oficiais de cursos de fraude securitária e litigância predatória",
+      "required": true,
+      "provider": "apify",
+      "actor_id": "apify/website-content-crawler",
+      "actor_build": "0.3.102",
+      "status": "SUCCEEDED",
+      "run_id": "LSjR6jtECC63N0fao",
+      "dataset_id": "yDkyfDzO3YiuE3IHu",
+      "raw_items_count": 7,
+      "valid_items_count": 7,
+      "observation_status": "observed",
+      "cost_usd": 0.052947,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T19:54:21.731692+00:00",
+      "finished_at": "2026-10-29T19:56:57.286867+00:00"
+    },
+    {
+      "capability": "meta_ads_library",
+      "query": "curso fraude em seguros",
+      "required": true,
+      "provider": "apify",
+      "actor_id": "igolaizola/facebook-ad-library-scraper",
+      "actor_build": "0.0.59",
+      "status": "SUCCEEDED",
+      "run_id": "RMUg90SX2U8rIMJ96",
+      "dataset_id": "2sDcFCzDspLFjdfVV",
+      "raw_items_count": 6,
+      "valid_items_count": 6,
+      "observation_status": "observed",
+      "cost_usd": 0.0075,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T19:56:57.331666+00:00",
+      "finished_at": "2026-10-29T19:57:02.218377+00:00"
+    },
+    {
+      "capability": "meta_ads_library",
+      "query": "curso litigância predatória",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "igolaizola/facebook-ad-library-scraper",
+      "actor_build": "0.0.59",
+      "status": "SUCCEEDED",
+      "run_id": "WDQVwxe3F6d8a5QQz",
+      "dataset_id": "MJnZoLh3eXZDxqxxM",
+      "raw_items_count": 5,
+      "valid_items_count": 5,
+      "observation_status": "observed",
+      "cost_usd": 0.0,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T19:57:02.281089+00:00",
+      "finished_at": "2026-10-29T19:57:05.279568+00:00"
+    },
+    {
+      "capability": "linkedin",
+      "query": "investigação de fraudes seguros",
+      "required": true,
+      "provider": "apify",
+      "actor_id": "harvestapi/linkedin-company-search",
+      "actor_build": "0.0.21",
+      "status": "SUCCEEDED",
+      "run_id": "tqYE5jnN2M7xWQLYm",
+      "dataset_id": "9HxvZZ42dle32RIHZ",
+      "raw_items_count": 10,
+      "valid_items_count": 10,
+      "observation_status": "observed",
+      "cost_usd": 0.001,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T19:57:05.332154+00:00",
+      "finished_at": "2026-10-29T19:57:11.156403+00:00"
+    },
+    {
+      "capability": "linkedin_jobs",
+      "query": "analista investigação fraude seguros",
+      "required": true,
+      "provider": "apify",
+      "actor_id": "curious_coder/linkedin-jobs-scraper",
+      "actor_build": "1.7.18",
+      "status": "SUCCEEDED",
+      "run_id": "wITWda7goRcOKwQcq",
+      "dataset_id": "fEBEGcgZLOitelV14",
+      "raw_items_count": 15,
+      "valid_items_count": 15,
+      "observation_status": "observed",
+      "cost_usd": 0.02605,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T19:57:11.264522+00:00",
+      "finished_at": "2026-10-29T19:57:55.124345+00:00"
+    },
+    {
+      "capability": "linkedin_jobs",
+      "query": "analista regulação sinistros seguros",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "curious_coder/linkedin-jobs-scraper",
+      "actor_build": "1.7.18",
+      "status": "SUCCEEDED",
+      "run_id": "AbyDAv2O5PCmb9NjB",
+      "dataset_id": "AlowA99r1ejCPlseM",
+      "raw_items_count": 15,
+      "valid_items_count": 15,
+      "observation_status": "observed",
+      "cost_usd": 0.01605,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T19:57:55.160474+00:00",
+      "finished_at": "2026-10-29T19:58:25.288267+00:00"
+    },
+    {
+      "capability": "instagram",
+      "query": "fraudesecuritaria",
+      "required": true,
+      "provider": "apify",
+      "actor_id": "apify/instagram-scraper",
+      "actor_build": "0.0.831",
+      "status": "EMPTY",
+      "run_id": "M4RMg4Wj9hUdIgzBs",
+      "dataset_id": "YrxsKPBPeoYxMvf2X",
+      "raw_items_count": 1,
+      "valid_items_count": 0,
+      "observation_status": "rejected_items",
+      "cost_usd": 0.0,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T19:58:25.317785+00:00",
+      "finished_at": "2026-10-29T19:58:31.536458+00:00"
+    },
+    {
+      "capability": "tiktok",
+      "query": "como identificar fraude em sinistro",
+      "required": true,
+      "provider": "apify",
+      "actor_id": "clockworks/tiktok-scraper",
+      "actor_build": "0.0.625",
+      "status": "SUCCEEDED",
+      "run_id": "bE4HW0ZyY7EkIu9Px",
+      "dataset_id": "jrmcbcvMpqeZOTWuo",
+      "raw_items_count": 15,
+      "valid_items_count": 15,
+      "observation_status": "observed",
+      "cost_usd": 0.001,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T19:58:31.566300+00:00",
+      "finished_at": "2026-10-29T19:58:41.237582+00:00"
+    },
+    {
+      "capability": "google_search",
+      "query": "site:youtube.com/watch fraude em seguros investigação sinistros",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "ss9JnVtfpfLWXREux",
+      "dataset_id": "p7fNa63ThnWCX0z2P",
+      "raw_items_count": 1,
+      "valid_items_count": 10,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T19:58:41.267041+00:00",
+      "finished_at": "2026-10-29T19:59:20.742008+00:00"
+    },
+    {
+      "capability": "youtube_comments",
+      "query": "Comentários sobre investigação de fraude em seguros",
+      "required": true,
+      "provider": "apify",
+      "actor_id": "streamers/youtube-comments-scraper",
+      "actor_build": "0.0.257",
+      "status": "SUCCEEDED",
+      "run_id": "4mtRTV49ysQaYsQuM",
+      "dataset_id": "ekcXUpPfoxplIEUiS",
+      "raw_items_count": 15,
+      "valid_items_count": 15,
+      "observation_status": "observed",
+      "cost_usd": 0.05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T19:59:20.759054+00:00",
+      "finished_at": "2026-10-29T19:59:37.404562+00:00"
+    },
+    {
+      "capability": "google_trends",
+      "query": "fraude securitária e litigância predatória",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-trends-scraper",
+      "actor_build": "0.0.143",
+      "status": "SUCCEEDED",
+      "run_id": "6qyKqugHbmFWHMw81",
+      "dataset_id": "K1o7YnUkDVdP9WXij",
+      "raw_items_count": 2,
+      "valid_items_count": 2,
+      "observation_status": "observed",
+      "cost_usd": 0.008299,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T19:59:37.428757+00:00",
+      "finished_at": "2026-10-29T20:00:31.153942+00:00"
+    },
+    {
+      "capability": "google_search",
+      "query": "treinamento investigação de sinistros fraude securitária curso investimento",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "mHTeTAcD5CYChcnUK",
+      "dataset_id": "ALgPXrUYdOYTDILDT",
+      "raw_items_count": 1,
+      "valid_items_count": 9,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T20:08:40.896379+00:00",
+      "finished_at": "2026-10-29T20:09:04.632577+00:00"
+    },
+    {
+      "capability": "google_search",
+      "query": "FGV PUC curso litigância predatória extensão investimento",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "fV4OVfCq7C71h8Abj",
+      "dataset_id": "6CdNNGZWCF2gt002J",
+      "raw_items_count": 1,
+      "valid_items_count": 9,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T20:09:04.656302+00:00",
+      "finished_at": "2026-10-29T20:09:30.459233+00:00"
+    },
+    {
+      "capability": "web_crawler",
+      "query": "Páginas oficiais descobertas de formação em investigação de sinistros e litigância predatória",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/website-content-crawler",
+      "actor_build": "0.3.102",
+      "status": "SUCCEEDED",
+      "run_id": "p5gtTot6UetUzizPH",
+      "dataset_id": "qhDXUBbqxHuEAvQOu",
+      "raw_items_count": 7,
+      "valid_items_count": 7,
+      "observation_status": "observed",
+      "cost_usd": 0.029482,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T20:25:37.127208+00:00",
+      "finished_at": "2026-10-29T20:27:20.819719+00:00"
+    },
+    {
+      "capability": "google_trends",
+      "query": "Interesse em fraude em seguros e litigância predatória",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-trends-scraper",
+      "actor_build": "0.0.143",
+      "status": "PARTIAL",
+      "run_id": "jWJKJWrLg8cWYhFHL",
+      "dataset_id": "IXlsZRG5kpaG1bx9p",
+      "raw_items_count": 1,
+      "valid_items_count": 1,
+      "observation_status": "observed",
+      "cost_usd": 0.111064,
+      "error_code": "timeout",
+      "error_message": "Run Apify jWJKJWrLg8cWYhFHL não terminou após 300 consultas. Cancelamento remoto confirmado.",
+      "started_at": "2026-10-29T20:27:20.849057+00:00",
+      "finished_at": "2026-10-29T20:33:23.714320+00:00"
+    },
+    {
+      "capability": "meta_ads_library",
+      "query": "treinamento investigação de sinistros",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "igolaizola/facebook-ad-library-scraper",
+      "actor_build": "0.0.59",
+      "status": "EMPTY",
+      "run_id": "TlTUZHaW2UxMAzMXT",
+      "dataset_id": "rkcfdI7g7GKQgHM1H",
+      "raw_items_count": 0,
+      "valid_items_count": 0,
+      "observation_status": "observed_empty",
+      "cost_usd": 0.0,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T20:33:23.793223+00:00",
+      "finished_at": "2026-10-29T20:33:28.238108+00:00"
+    },
+    {
+      "capability": "meta_ads_library",
+      "query": "capacitação combate à litigância abusiva",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "igolaizola/facebook-ad-library-scraper",
+      "actor_build": "0.0.59",
+      "status": "EMPTY",
+      "run_id": "f42yiuVhFURjrQrGS",
+      "dataset_id": "eAY2DBlWDSz91JAgs",
+      "raw_items_count": 0,
+      "valid_items_count": 0,
+      "observation_status": "observed_empty",
+      "cost_usd": 0.0075,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-10-29T20:33:28.265487+00:00",
+      "finished_at": "2026-10-29T20:33:30.394155+00:00"
+    }
+  ]
+}

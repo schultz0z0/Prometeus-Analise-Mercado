@@ -1,16 +1,20 @@
 schema_version: 1
 pack_id: syllabus-fit-v1
-version: 1.0.0
+version: 2.0.0
 owner: Agência Prometeus
 decision_type: SCORE
-question: "Em uma escala de 0 a 100, qual o nível de adequação e completude dos módulos da ementa em relação às competências exigidas pelo mercado de trabalho?"
+question: "Com base apenas nas competências ou necessidades profissionais verificadas fornecidas, qual a cobertura observável da ementa declarada?"
 min_score: 0.0
 max_score: 100.0
 rubric:
-  "85-100": "Ementa moderna, prática e cobre 100% das competências críticas observadas nas vagas."
-  "70-84": "Ementa sólida com pequenas lacunas em ferramentas práticas emergentes."
-  "50-69": "Ementa excessivamente teórica ou defasada em tópicos essenciais."
-  "0-49": "Ementa desalinhada com a proposta ou com as demandas reais do mercado."
+  "85-100": "Cobertura direta e ampla das competências críticas efetivamente observadas; vínculos módulo–necessidade–evidência identificáveis e pouca lacuna material. Não implica cobertura de todo o mercado."
+  "70-84": "Boa cobertura das necessidades observadas, com lacunas específicas e atribuíveis à ementa fornecida."
+  "50-69": "Cobertura parcial das competências observadas, com lacunas materiais justificadas por evidência. Não inferir defasagem por ausência de tecnologia na consulta."
+  "0-49": "Baixa cobertura ou incompatibilidade comprovada entre ementa e necessidades observadas. Ausência de evidência não deve ser convertida em nota baixa."
 review_threshold: 0.80
 notes:
   - "Utilizado no Pilar de Syllabus Fit (peso 0.15 no scoring padrão)."
+  - "Sem competência ou necessidade verificável, retornar Noul quando suportado; caso contrário sinalizar confiança insuficiente e revisão. Não produzir nota de mercado só porque há páginas de outros cursos."
+  - "Uma oferta concorrente comprova conteúdo daquela oferta, não exigência do mercado de trabalho. Distinguir comparação pedagógica de cobertura de competências."
+  - "Usar somente módulos declarados e IDs fornecidos. Vagas revelam funções/competências e não precisam mencionar MBA; comentários devem conter necessidade profissional concreta."
+  - "Preservar confiança real e requires_human_review; código aplica gates, pesos e consolidado. Não declarar regulação validada nem chance de empregabilidade."

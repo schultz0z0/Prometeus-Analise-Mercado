@@ -3,6 +3,8 @@
 **Status:** aceito  
 **Data:** 2026-10-09
 
+**Atualização em 2026-10-27:** o [ADR-0008](0008-ai-runtime-and-chatgpt-oauth.md) substitui parcialmente esta decisão: JEV é exigido no modo híbrido e dispensado no modo tradicional. A delimitação de julgamentos atômicos e a responsabilidade do código pelos cálculos continuam válidas. A decisão original abaixo é preservada como histórico.
+
 ## Decisão
 
 Uma análise completa exige JEV. Indisponibilidade gera `BLOCKED`; nenhuma LLM substitui silenciosamente o modelo.

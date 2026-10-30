@@ -25,9 +25,14 @@ class QualityGateEvaluator:
         confidence_score: float,
         pillar_scores: dict[str, PillarScore],
         profile: ScoringProfileConfig,
+        pending_review_pillars: list[str] | None = None,
     ) -> GateEvaluation:
         """Executa a ordem de avaliação da recomendação (a primeira verdadeira vence)."""
         reasons: list[str] = []
+        if pending_review_pillars:
+            reasons.append(
+                "Julgamentos pendentes de revisão humana: " + ", ".join(pending_review_pillars)
+            )
 
         # Cálculo de distâncias aos limiares de decisão
         th_app = profile.thresholds.approved
@@ -77,6 +82,18 @@ class QualityGateEvaluator:
         # -----------------------------------------------------------------
         # Ordem 2: REQUIRES_HUMAN_REVIEW
         # -----------------------------------------------------------------
+        if pending_review_pillars:
+            return GateEvaluation(
+                recommendation=AnalysisRecommendation.REQUIRES_HUMAN_REVIEW,
+                passed_gates=False,
+                viability_score=viability_score,
+                coverage_score=coverage_score,
+                confidence_score=confidence_score,
+                reasons=reasons,
+                distance_to_approved_threshold=dist_app,
+                distance_to_adjustment_threshold=dist_adj,
+                in_boundary_review_margin=in_margin,
+            )
         # Caso A: Fronteira de decisão (zona de incerteza dentro da margem)
         if in_margin:
             reasons.append(

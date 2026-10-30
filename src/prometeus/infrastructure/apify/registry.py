@@ -58,8 +58,19 @@ def _urls(call: PlannedToolCall) -> list[str]:
 def _google_search_input(call: PlannedToolCall) -> dict[str, Any]:
     country = _non_empty_string(call.parameters.get("country"), "br").lower()
     language = _non_empty_string(call.parameters.get("language"), "pt-BR")
-    if language.lower() == "pt":
+    normalized_language = (
+        unicodedata.normalize("NFKD", language).encode("ascii", "ignore").decode().lower()
+    )
+    if normalized_language == "pt" or normalized_language.startswith("portugues"):
         language = "pt-BR"
+    else:
+        supported = "af sq sm ar az eu be bn bh bs bg ca zh-CN zh-TW hr cs da nl en eo et fo fi fr fy gl ka de el gu iw hi hu is id ia ga it ja jw kn ko la lv lt mk ms ml mt mr ne no nn oc fa pl pt-BR pt-PT pa ro ru gd sr si sk sl es su sw sv tl ta te th ti tr uk ur uz vi cy xh zu".split()
+        by_lower = {code.lower(): code for code in supported}
+        language = by_lower.get(language.lower().replace("_", "-"), "")
+        if not language:
+            raise ActorConfigurationError(
+                "A busca Google exige um código de idioma suportado, como pt-BR."
+            )
     return {
         "queries": call.query,
         "maxPagesPerQuery": max(1, math.ceil(call.max_items / 10)),
@@ -69,17 +80,25 @@ def _google_search_input(call: PlannedToolCall) -> dict[str, Any]:
 
 
 def _web_crawler_input(call: PlannedToolCall) -> dict[str, Any]:
+    max_depth = call.parameters.get("max_crawl_depth", 0)
     return {
         "startUrls": [{"url": url} for url in _urls(call)],
         "maxCrawlPages": call.max_items,
+        "maxCrawlDepth": max_depth,
         "crawlerType": "playwright:adaptive",
         "proxyConfiguration": {"useApifyProxy": True},
     }
 
 
 def _meta_ads_input(call: PlannedToolCall) -> dict[str, Any]:
+    normalized = (
+        unicodedata.normalize("NFKD", call.query).encode("ascii", "ignore").decode("ascii").lower()
+    )
+    educational = re.search(
+        r"\b(cursos?|mba|pos|graduacao|especializacao|faculdade|escola|universidade)\b", normalized
+    )
     payload: dict[str, Any] = {
-        "query": call.query,
+        "query": call.query if educational else f"curso {call.query}",
         "maxItems": call.max_items,
         "country": _non_empty_string(call.parameters.get("country"), "BR"),
         "activeStatus": _non_empty_string(call.parameters.get("active_status"), "active"),
@@ -100,17 +119,19 @@ def _linkedin_input(call: PlannedToolCall) -> dict[str, Any]:
         for loc in raw_locations
         if str(loc).strip()
     ] or ["Brazil"]
-    q_lower = call.query.strip().lower()
-    if "segur" in q_lower:
-        search_query = "seguros"
-    else:
-        tokens = [
-            tok
-            for tok in re.findall(r"[A-Za-zÀ-ÿ0-9]+", call.query)
-            if len(tok) >= 4
-            and tok.lower() not in {"para", "como", "curso", "gestao", "gestão", "juridico", "jurídico"}
-        ]
-        search_query = tokens[0] if tokens else call.query
+    search_query = call.query.strip()
+    if call.parameters.get("broaden_query") is True:
+        if "segur" in search_query.lower():
+            search_query = "seguros"
+        else:
+            tokens = [
+                tok
+                for tok in re.findall(r"[A-Za-zÀ-ÿ0-9]+", search_query)
+                if len(tok) >= 4
+                and tok.lower()
+                not in {"para", "como", "curso", "gestao", "gestão", "juridico", "jurídico"}
+            ]
+            search_query = tokens[0] if tokens else search_query
     return {
         "searchQuery": search_query,
         "locations": locations,
@@ -119,11 +140,17 @@ def _linkedin_input(call: PlannedToolCall) -> dict[str, Any]:
 
 
 def _linkedin_jobs_input(call: PlannedToolCall) -> dict[str, Any]:
+    location = _non_empty_string(call.parameters.get("location"), "Brazil")
+    if location.lower() in {"brasil", "brazil", "br"}:
+        location = "Brazil"
     payload: dict[str, Any] = {
         "keywords": call.query,
-        "location": _non_empty_string(call.parameters.get("location"), "Brasil"),
+        "location": location,
         "limitPerSource": call.max_items,
     }
+    geo_id = call.parameters.get("geo_id")
+    if isinstance(geo_id, str) and geo_id.isdigit():
+        payload["geoId"] = geo_id
     distance = call.parameters.get("distance")
     if isinstance(distance, int | float) and distance > 0:
         payload["distance"] = distance
@@ -146,9 +173,13 @@ def _instagram_input(call: PlannedToolCall) -> dict[str, Any]:
             if tok not in {"de", "da", "do", "em", "para", "com", "pos", "mba", "curso"}
         ]
         if tokens:
-            search_query = tokens[0]
+            search_query = "".join(tokens)
         else:
-            search_query = re.sub(r"[^a-z0-9]", "", normalized) or "seguros"
+            search_query = re.sub(r"[^a-z0-9]", "", normalized)
+            if not search_query:
+                raise ActorConfigurationError(
+                    "A busca de hashtag exige um termo profissional válido."
+                )
     return {
         "search": search_query,
         "searchType": search_type,
@@ -208,8 +239,16 @@ def _google_trends_input(call: PlannedToolCall) -> dict[str, Any]:
         "all",
     }
     time_range = raw_range if raw_range in valid_ranges else ""
+    terms = call.parameters.get("search_terms")
+    if not isinstance(terms, list):
+        terms = call.query.split(",")
+    terms = list(
+        dict.fromkeys(term.strip() for term in terms if isinstance(term, str) and term.strip())
+    )
+    if not terms:
+        raise ActorConfigurationError("Google Trends exige ao menos um termo de busca.")
     return {
-        "searchTerms": [call.query],
+        "searchTerms": terms[:5],
         "maxItems": call.max_items,
         "geo": _non_empty_string(call.parameters.get("geo"), "BR"),
         "timeRange": time_range,

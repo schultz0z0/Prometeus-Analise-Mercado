@@ -7,7 +7,7 @@ import json
 import uuid
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -28,7 +28,10 @@ class CourseUnderstanding(ImmutableModel):
     modality: str = ""
     geography: str = "Brasil"
     language: str = "pt-BR"
+    institution_name: str = ""
+    institution_domains: list[str] = Field(default_factory=list)
     proposed_price_brl: float | None = None
+    proposed_price_period: Literal["total", "monthly", "unknown"] = "unknown"
     duration_months: int | None = None
     supplied_materials: list[str] = Field(default_factory=list)
     uncertainties: list[str] = Field(default_factory=list)
@@ -51,11 +54,66 @@ class CourseUnderstanding(ImmutableModel):
         return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
+class ResearchTrack(StrEnum):
+    DIRECT_COMPETITORS = "direct_competitors"
+    ADJACENT_OFFERS = "adjacent_offers"
+    WORKFORCE_NEEDS = "workforce_needs"
+    EDUCATIONAL_SEARCH = "educational_search"
+    ECONOMIC_CONTEXT = "economic_context"
+    PRIMARY_INSTITUTIONAL = "primary_institutional"
+
+
 class ResearchQuestion(ImmutableModel):
     id: str = Field(default_factory=lambda: f"question-{uuid.uuid4().hex[:12]}")
     question: str
     evidence_need: str
     priority: int = Field(default=1, ge=1, le=5)
+    track: ResearchTrack = Field(default=ResearchTrack.DIRECT_COMPETITORS)
+    hypothesis: str = ""
+    counter_evidence_hypothesis: str = ""
+    expected_evidence: str = ""
+    capable_sources: list[str] = Field(default_factory=list)
+    scope_filter: str = ""
+    sample_target: int = 10
+    budget_allocated_usd: float = 0.0
+    sufficiency_criteria: str = ""
+    fallback_or_stop_rule: str = ""
+
+
+class LearnerDemandCase(ImmutableModel):
+    buyer_vs_beneficiary: Literal["same_individual", "employer_b2b", "hybrid"] = "same_individual"
+    segment_type: Literal["b2c", "b2b", "b2b2c"] = "b2c"
+    eligibility_criteria: list[str] = Field(default_factory=list)
+    training_intent_signals: list[str] = Field(default_factory=list)
+    alternatives_considered: list[str] = Field(default_factory=list)
+    barriers: list[str] = Field(default_factory=list)
+    declared_vs_behavioral_notes: str = ""
+    plausible_initial_cohort_size: int | None = None
+    funnel_reach_scenario: dict[str, Any] = Field(default_factory=dict)
+    institutional_context_sources: list[str] = Field(default_factory=list)
+    institutional_multipliers_applied: bool = False
+
+    @model_validator(mode="after")
+    def validate_macro_multipliers_prohibited(self) -> LearnerDemandCase:
+        if self.institutional_multipliers_applied:
+            raise ValueError(
+                "Regra de inteligência institucional Prometeus: dados macroeconômicos ou setoriais "
+                "(ex.: SUSEP, CNseg, RAIS) são estritamente contextuais e NUNCA devem ser aplicados "
+                "como multiplicador direto de matrículas."
+            )
+        return self
+
+
+class CurriculumMappingItem(ImmutableModel):
+    """Mapeamento curricular ponta a ponta (módulo -> aprendizado -> competência -> fonte -> gap -> ação)."""
+
+    module: str
+    learning_outcome: str = ""
+    competency_or_need: str = ""
+    evidence_source: str = ""
+    source_snippet: str = ""
+    coverage_status: Literal["covered", "partial", "gap"] = "covered"
+    recommended_action: str = ""
 
 
 class PlannedToolCall(ImmutableModel):

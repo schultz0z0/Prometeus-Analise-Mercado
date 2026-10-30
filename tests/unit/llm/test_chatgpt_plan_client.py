@@ -13,6 +13,37 @@ from prometeus.infrastructure.llm.codex_oauth import (
 )
 
 
+async def test_oauth_structured_generation_sends_strict_schema_to_responses():
+    captured = {}
+
+    def handler(request):
+        captured.update(json.loads(request.content))
+        return httpx.Response(
+            200,
+            text='data: {"type":"response.output_text.delta","delta":"{\\"ok\\":true}"}\ndata: {"type":"response.completed"}\n',
+            headers={"content-type": "text/event-stream"},
+        )
+
+    schema = {
+        "type": "object",
+        "properties": {"ok": {"type": "boolean"}},
+        "required": ["ok"],
+        "additionalProperties": False,
+    }
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http_client:
+        client = ChatGPTPlanGenerativeClient(
+            access_token="test", model="account-model", http_client=http_client
+        )
+        result = await client.generate_structured("Test", system_prompt="JSON", schema=schema)
+    assert json.loads(result) == {"ok": True}
+    assert captured["text"]["format"] == {
+        "type": "json_schema",
+        "name": "prometeus_dossier",
+        "strict": True,
+        "schema": schema,
+    }
+
+
 @pytest.mark.asyncio
 async def test_chatgpt_plan_client_uses_streaming_responses_contract() -> None:
     captured: dict[str, object] = {}

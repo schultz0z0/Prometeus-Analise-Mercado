@@ -10,6 +10,11 @@ EXPECTED_SKILLS = {
     "reviewing-market-evidence",
     "auditing-course-curriculum",
     "building-course-offers",
+    "conducting-course-analysis",
+    "operating-apify-research",
+    "researching-search-trends",
+    "researching-job-demand",
+    "extracting-course-offers",
 }
 
 
@@ -29,12 +34,18 @@ def test_registry_selects_skills_by_workflow_stage() -> None:
     registry = SkillRegistry(Path("skills"))
 
     assert [s.name for s in registry.for_stage("course_understanding")] == [
-        "understanding-course-proposals"
+        "understanding-course-proposals",
+        "conducting-course-analysis",
     ]
-    assert [s.name for s in registry.for_stage("research_planning")] == ["planning-market-research"]
+    assert [s.name for s in registry.for_stage("research_planning")] == [
+        "planning-market-research",
+        "conducting-course-analysis",
+        "operating-apify-research",
+    ]
     assert [s.name for s in registry.for_stage("dossier_synthesis")] == [
         "reviewing-market-evidence",
         "building-course-offers",
+        "conducting-course-analysis",
     ]
 
 

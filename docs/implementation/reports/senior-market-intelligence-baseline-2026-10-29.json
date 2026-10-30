@@ -1,0 +1,258 @@
+{
+  "audit_date": "2026-10-29",
+  "analysis_id": "73501c53-cc58-47f9-8927-d9e299b4f4b5",
+  "method": "offline census of saved records and field comparisons; no human gold labels or new model/Actor calls",
+  "facts_hash": "7761d831324c2e5130258bc80691f4e3b8c9367afff5677cc4a0a890710f7a6e",
+  "input_file_sha256": {
+    "COMO_ESTUDAR.md": "bafe4597e8e8304d9f971fe7f4f3dbd70153b979298eb081e5207c392a0aec06",
+    "consultas_e_checkpoints.json": "08c10765e18ffff6ad5eaaccad4f0b26aa3949ff3a4d5ad4b9a52f7a066da8a2",
+    "decisoes_registradas.json": "44de8384e1f6ee2a121e9e434ed72ca0ae41d1a8bbb3afc1aed9976bd5ba4249",
+    "dossie_publicado.json": "8aa741260e5c29fd9a8def0f3d9575caab76393f19c7bd8a1a6e36c28b94c7c0",
+    "fatos_enviados_ao_redator.json": "e5827116c2a5f4b03484420c6b7684270eb0d2a72737083ea23242527d418878",
+    "LEIA_PRIMEIRO.html": "49faa454e1fae0222cbfadf1254e18c51cee6e5f27cece01acd990441cbf72b2",
+    "manifesto.json": "a2323637cc26a2aabfe204e3eae8b647635f8d4282e7a9ffcd9714d77a281b9c",
+    "parametros_planejados_persistidos.json": "1faf7dea193a9bb16fefed33c85467ed37d07e6efc7b129d273c9878cc4ff127",
+    "registros_para_estudo.json": "1caaf6d7e2a60443525d9a24a7587185e36a6ea3d16422f279d667f2ace530a1",
+    "retornos_originais_e_higienizados.json": "13ad0f8e3ddb07e92e7710fc97324449687e00b2a65909eb26629066c1e078bb"
+  },
+  "records": 144,
+  "unique_capture_ids": 144,
+  "classification": {
+    "Contexto": 73,
+    "Excluído": 54,
+    "Indicador": 17
+  },
+  "qualification_yield": 0.11805555555555555,
+  "qualification_yield_is_model_accuracy": false,
+  "rows_over_character_budget": 20,
+  "jobs": {
+    "records": 30,
+    "descriptions_omitted_from_writer_summary": 28,
+    "qualified_descriptions_omitted": 16
+  },
+  "trends": [
+    {
+      "evidence_id": "679c794b-638a-4158-a2cd-5381a740b68d",
+      "term": "litigância predatória",
+      "points": 262,
+      "positive_points": 30,
+      "redacted_timestamps": 262,
+      "series_field_offset": 36684
+    },
+    {
+      "evidence_id": "a3ded491-613a-4ffd-b434-5df9f0c08b00",
+      "term": "fraude em seguros",
+      "points": 262,
+      "positive_points": 2,
+      "redacted_timestamps": 262,
+      "series_field_offset": 24540
+    },
+    {
+      "evidence_id": "88f8fe8d-f605-48c0-b4bc-9fa0fc06ab00",
+      "term": "litigância predatória",
+      "points": 262,
+      "positive_points": 30,
+      "redacted_timestamps": 262,
+      "series_field_offset": 36696
+    }
+  ],
+  "quality_score_1_count": 144,
+  "qualification_confidence": {
+    "min": 0.76,
+    "median": 0.97,
+    "max": 1.0,
+    "at_least_0_95": 87,
+    "at_least_0_99": 44,
+    "calibrated_against_human_gold": false
+  },
+  "persisted_decisions": {
+    "count": 186,
+    "by_pack": {
+      "readiness-v1": 1,
+      "market-relevance-v1": 144,
+      "syllabus-fit-v1": 1,
+      "evidence-support-v1": 40
+    },
+    "model_version_labels": [
+      "llm-traditional"
+    ]
+  },
+  "sources": {
+    "apify_tiktok": {
+      "reasons": {
+        "Conteúdo incompatível com o sinal educacional pesquisado": 15
+      },
+      "use_for": {},
+      "context_records": 0,
+      "accepted_records": 0,
+      "excluded_records": 15,
+      "collected_records": 15,
+      "used_in_score_records": 0
+    },
+    "apify_linkedin": {
+      "reasons": {
+        "Contexto do setor ou da instituição; não constitui oferta concorrente verificável": 10
+      },
+      "use_for": {
+        "sector_context": 10
+      },
+      "context_records": 10,
+      "accepted_records": 0,
+      "excluded_records": 0,
+      "collected_records": 10,
+      "used_in_score_records": 0
+    },
+    "apify_web_crawler": {
+      "reasons": {
+        "Conteúdo insuficiente para determinar pertinência": 3,
+        "Conteúdo incompatível com o sinal educacional pesquisado": 3,
+        "Contexto do setor ou da instituição; não constitui oferta concorrente verificável": 7,
+        "Conteúdo da própria instituição; preservado como contexto, sem contar como concorrência externa": 1
+      },
+      "use_for": {
+        "sector_context": 7,
+        "institution_context": 1
+      },
+      "context_records": 8,
+      "accepted_records": 0,
+      "excluded_records": 6,
+      "collected_records": 14,
+      "used_in_score_records": 0
+    },
+    "apify_google_search": {
+      "reasons": {
+        "Conteúdo insuficiente para determinar pertinência": 18,
+        "Conteúdo incompatível com o sinal educacional pesquisado": 4,
+        "Contexto do setor ou da instituição; não constitui oferta concorrente verificável": 22,
+        "Conteúdo da própria instituição; preservado como contexto, sem contar como concorrência externa": 2
+      },
+      "use_for": {
+        "sector_context": 22,
+        "institution_context": 2
+      },
+      "context_records": 24,
+      "accepted_records": 0,
+      "excluded_records": 22,
+      "collected_records": 46,
+      "used_in_score_records": 0
+    },
+    "apify_google_trends": {
+      "reasons": {
+        "Conteúdo insuficiente para determinar pertinência": 3
+      },
+      "use_for": {},
+      "context_records": 0,
+      "accepted_records": 0,
+      "excluded_records": 3,
+      "collected_records": 3,
+      "used_in_score_records": 0
+    },
+    "apify_linkedin_jobs": {
+      "reasons": {
+        "Localização fora do escopo ou não comprovada": 2,
+        "Conteúdo setorial ou cargo sem competências verificáveis para esta pesquisa; preservado como contexto profissional": 12
+      },
+      "use_for": {
+        "curriculum": 16,
+        "employability": 16,
+        "sector_context": 12
+      },
+      "context_records": 12,
+      "accepted_records": 16,
+      "excluded_records": 2,
+      "collected_records": 30,
+      "used_in_score_records": 16
+    },
+    "apify_meta_ads_library": {
+      "reasons": {
+        "Conteúdo incompatível com o sinal educacional pesquisado": 1,
+        "Conteúdo da própria instituição; preservado como contexto, sem contar como concorrência externa": 10
+      },
+      "use_for": {
+        "institution_context": 10
+      },
+      "context_records": 10,
+      "accepted_records": 0,
+      "excluded_records": 1,
+      "collected_records": 11,
+      "used_in_score_records": 0
+    },
+    "apify_youtube_comments": {
+      "reasons": {
+        "Conteúdo insuficiente para determinar pertinência": 1,
+        "Conteúdo incompatível com o sinal educacional pesquisado": 4,
+        "Contexto de linguagem ou divulgação; não demonstra necessidade profissional específica nem volume de procura": 9
+      },
+      "use_for": {
+        "curriculum": 1,
+        "audience_needs": 1,
+        "sector_context": 9
+      },
+      "context_records": 9,
+      "accepted_records": 1,
+      "excluded_records": 5,
+      "collected_records": 15,
+      "used_in_score_records": 1
+    }
+  },
+  "tool_runs": {
+    "count": 19,
+    "status": {
+      "SUCCEEDED": 15,
+      "EMPTY": 3,
+      "PARTIAL": 1
+    },
+    "reported_apify_cost_usd": 0.311142,
+    "not_complete_invoice_or_total_model_cost": true
+  },
+  "published_result": {
+    "status": "COMPLETED",
+    "claims": 11,
+    "score": 51.11,
+    "coverage": 0.8,
+    "confidence": 0.6198,
+    "recommendation": "INSUFFICIENT_EVIDENCE"
+  },
+  "offline_sensitivity_not_recalculated_analysis": {
+    "analysis_id": "73501c53-cc58-47f9-8927-d9e299b4f4b5",
+    "read_only": true,
+    "kind": "offline sensitivity, not a market recommendation",
+    "baseline": {
+      "confidence": 0.6198,
+      "coverage": 0.8,
+      "minimum_confidence": 0.75
+    },
+    "synthetic_input_delta": {
+      "search_and_media": {
+        "average_interest": 10,
+        "growth_trend_pct": 0,
+        "is_present": true
+      }
+    },
+    "all_six_existing_components": {
+      "coverage": 1.0,
+      "confidence": 0.597,
+      "recommendation": "INSUFFICIENT_EVIDENCE",
+      "reasons": [
+        "Confiança média insuficiente: 59.7% < 75.0%"
+      ],
+      "pillar_confidence": {
+        "internal_history": 0.9,
+        "paid_competition": 0.44,
+        "search_and_media": 0.506,
+        "employability": 0.51,
+        "syllabus_fit": 0.675,
+        "pricing": 0.5
+      }
+    },
+    "same_components_with_two_sided_price_confidence": 0.627,
+    "theoretical_with_all_optional_components": 0.8825,
+    "warning": "No database write, no LLM or Actor call; placeholder average_interest=10 and growth=0 only exercise confidence reachability. This is not proof of market demand or a recalculated dossier."
+  },
+  "limits": [
+    "one case with synthetic institutional history and test commercial inputs",
+    "reconstructed qualification input is not a historical prompt log",
+    "no precision, recall, forecast accuracy or senior analyst rating can be estimated without independent labels",
+    "capture count differs from entity count and does not estimate total market"
+  ]
+}

@@ -1,0 +1,3966 @@
+[
+  {
+    "id": "cc6d6542-336f-48d1-9f78-a65c3f00904e",
+    "pack_id": "readiness-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "READY",
+    "distribution": {
+      "READY": 0.99,
+      "NEEDS_CLARIFICATION": 0.009,
+      "INSUFFICIENT_INFORMATION": 0.001
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 19:52:57.983127+00:00"
+  },
+  {
+    "id": "76ce2542-abae-4c43-9e9e-a63029ffe9be",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.97,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.02
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "e7fa25ed-e683-479c-aa40-761217835bad"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:00:34.778352+00:00"
+  },
+  {
+    "id": "a5ae2676-7667-4043-b671-9a8db6c12006",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.88,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.88,
+      "RELEVANT": 0.06,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.05
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "51adeeeb-5b26-4f3b-8b93-13157f246b77"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:00:38.993795+00:00"
+  },
+  {
+    "id": "9fe3b4b4-7aba-43f4-9197-48dc33b6d8a1",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.91,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.02,
+      "RELEVANT": 0.06,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.91
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "db27bd78-9e8e-4658-8b7f-2bcee2d9db36"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:00:42.491828+00:00"
+  },
+  {
+    "id": "3bc5dd40-cf28-4508-a061-e46a32adde6e",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.78,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.04,
+      "RELEVANT": 0.17,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.78
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "04322eea-7ad9-4a94-a585-f50d1b95d53d"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:00:48.654423+00:00"
+  },
+  {
+    "id": "b69a477e-0788-424d-8cf9-f66993ce085a",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.89,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.07,
+      "RELEVANT": 0.04,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.89
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "b3b1a727-cbb9-4a7d-a398-700e129665d2"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:00:53.414854+00:00"
+  },
+  {
+    "id": "d9b54837-f510-4073-91b7-8418bbb6e2fd",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.94,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.94,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.03
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "be853122-1e0f-44b1-9853-f0c3ffa6e3f3"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:00:58.043916+00:00"
+  },
+  {
+    "id": "beebe335-b0e9-4e34-bf05-675adee2764f",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.87,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.87,
+      "RELEVANT": 0.04,
+      "IRRELEVANT": 0.03,
+      "INCONCLUSIVE": 0.06
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "80612adc-bb81-4dac-81a7-06266573e3f9"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:01:01.489399+00:00"
+  },
+  {
+    "id": "f2951fdc-2d84-41d9-a5c9-5a8f23e6a379",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.88,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.03,
+      "RELEVANT": 0.08,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.88
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "61360bf4-9663-45be-802d-d08a75a5ed14"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:01:05.318282+00:00"
+  },
+  {
+    "id": "c52eab4a-d9f7-494a-9bee-5df6dcbb2062",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.94,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.04,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.94
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "4b9c4d28-291d-4996-8ab4-07645a290ea1"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:01:08.642183+00:00"
+  },
+  {
+    "id": "a96c8a01-f558-4031-b1cf-455a8b8bc127",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.96,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.96,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "79e17c87-a2df-4a11-86f8-eaada16b955b"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:01:13.053996+00:00"
+  },
+  {
+    "id": "d0efbd05-fc0b-43e7-9396-0cf31b1fff91",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.76,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.76,
+      "RELEVANT": 0.16,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.07
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "e88e9999-4d10-45a1-88e4-feec84205478"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:01:17.544138+00:00"
+  },
+  {
+    "id": "c7cdb253-5da7-495e-952c-cd6a81adb544",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.96,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.03,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.96
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "7b0927b4-5a47-46bf-8720-4090e782636c"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:01:20.741928+00:00"
+  },
+  {
+    "id": "326e8656-eba3-4c0a-bfe9-956f317b0283",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.89,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.89,
+      "RELEVANT": 0.08,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.02
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "34f8c3cd-0378-43e6-afe4-bd8a31f42461"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:01:26.339209+00:00"
+  },
+  {
+    "id": "265e72fa-0f57-49a5-977a-97850cafaa80",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.93,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.93,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.04
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "a8e353bf-9f64-4a70-acc4-17d50a2ddcd9"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:01:29.871839+00:00"
+  },
+  {
+    "id": "07ab7774-7cab-452e-adf0-ec71f9892937",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.85,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.09,
+      "RELEVANT": 0.05,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.85
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "10037baa-252c-4654-902c-f55998effa34"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:01:34.296202+00:00"
+  },
+  {
+    "id": "a69d05af-3ecc-4685-b681-a17daafaa2e0",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.91,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.91,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.06
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "7298354b-4ebb-48c0-9293-e471fe826ec3"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:01:37.828910+00:00"
+  },
+  {
+    "id": "8bb49ebb-4b0d-4c97-a9e3-cda30ec6cd59",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.98,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.005,
+      "INCONCLUSIVE": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "c8e443e2-2e78-4025-8a02-34a9e726f634"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:01:41.216258+00:00"
+  },
+  {
+    "id": "77871571-326a-4a27-b3bb-3d491755ee3c",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.97,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "9233a84b-88f7-439e-81e0-a59e9f3c491b"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:01:44.543305+00:00"
+  },
+  {
+    "id": "2715e06f-a8f2-4560-9c2e-cfb0f3e23e3f",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.97,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "4f323755-cad0-4178-b44c-5ef476064458"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:01:49.238590+00:00"
+  },
+  {
+    "id": "14595a11-defb-464b-9153-58644cf5a7f2",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.91,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.91,
+      "RELEVANT": 0.06,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.02
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "d976fe16-b293-481b-8311-9b8f0a4eab89"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:01:53.876977+00:00"
+  },
+  {
+    "id": "631bfb4c-af7a-4334-b743-341d01c850b1",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.78,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.14,
+      "RELEVANT": 0.08,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.78
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "78e3a3f1-efd5-4769-aa20-5459a18f6485"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:01:58.676826+00:00"
+  },
+  {
+    "id": "33d25404-6b47-4f35-9a62-75a3d78ee907",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.99,
+      "RELEVANT": 0.005,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.004
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "fc199dae-64a8-4c79-82e0-b95f4510150d"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:02:02.041216+00:00"
+  },
+  {
+    "id": "f1448da3-190e-4e4e-81b3-430f39eedbb2",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.96,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.96,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "230f0577-49c9-4047-9173-dec84d0e1251"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:02:07.404157+00:00"
+  },
+  {
+    "id": "6b2ddde3-3076-4f05-9b37-0a5756924da0",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.94,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.04,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.94
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "3bbc3744-3d36-480a-a0a3-f4e2f4566fd5"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:02:11.083337+00:00"
+  },
+  {
+    "id": "3cd25485-6ae7-4349-a1d4-523d9f437063",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.97,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.02
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "3c5ca07e-7e3c-4efe-b1e0-890352b822d3"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:02:13.903331+00:00"
+  },
+  {
+    "id": "baa1c982-d1c0-44aa-aafa-da707f32432d",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.99,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.008
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "53417086-b688-438e-a337-dcb8fcc32032"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:02:16.863579+00:00"
+  },
+  {
+    "id": "f2271406-a241-4309-bbaf-09d5c203e467",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.98,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.018
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "e80d6608-a352-42a3-980b-0e0de77ffe14"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:02:23.058175+00:00"
+  },
+  {
+    "id": "6952c001-c1c8-494e-934a-5632c232ff8e",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.99,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.002,
+      "INCONCLUSIVE": 0.007
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "ba5f190f-7838-4e71-924a-bd404ed8b507"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:02:28.086565+00:00"
+  },
+  {
+    "id": "9e8bcf76-8fae-4de8-8fb8-e886a664b700",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.99,
+      "RELEVANT": 0.0,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "3a70668b-8518-4883-8187-40e044f57e3e"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:02:32.127915+00:00"
+  },
+  {
+    "id": "1aed1b9c-1019-4ea2-8c15-cb4a1ad608e5",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.99,
+      "RELEVANT": 0.002,
+      "IRRELEVANT": 0.002,
+      "INCONCLUSIVE": 0.006
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "2dcabbdd-d73b-40e2-acdb-a69cfa9fd5e3"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:02:35.431780+00:00"
+  },
+  {
+    "id": "e43f5c1e-e93f-4c20-be67-06adfc4dc82a",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.009,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.98,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "73d3b446-c32b-48e7-8a73-c2ad3187027e"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:02:38.560476+00:00"
+  },
+  {
+    "id": "adef9adb-2a02-45f9-92c0-ece50ffe94a9",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.99,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.008
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "b344b0c3-f573-444c-b084-d750675c0f4f"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:02:41.688889+00:00"
+  },
+  {
+    "id": "1696a9e2-9eef-4f67-a717-89d45dc65a64",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.99,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.008
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "aff2f5a2-92e9-440b-aa47-edb726c84b61"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:02:45.264098+00:00"
+  },
+  {
+    "id": "b55dd729-8505-4305-a194-0c9ec2235b35",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.99,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.003,
+      "INCONCLUSIVE": 0.006
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "098f1328-269e-46a2-95d7-fb1469295bd1"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:02:49.741685+00:00"
+  },
+  {
+    "id": "4a6defdd-fa4f-4ff8-9653-b2c29ed31a4d",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.99,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.008
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "e3477782-7000-4ce7-b893-e376cc872f28"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:02:52.751767+00:00"
+  },
+  {
+    "id": "3c1a1b86-1bfd-4bba-a611-8a22463f1f52",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.98,
+      "RELEVANT": 0.005,
+      "IRRELEVANT": 0.005,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "124c0aef-e30d-48e7-b235-b53acc3c6a00"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:02:56.254904+00:00"
+  },
+  {
+    "id": "ff1aaabc-1cb4-4ed7-aa2a-b853a8fa5fb2",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.98,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "4cf69802-e362-428e-8741-1b21444e9cf5"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:02:59.745381+00:00"
+  },
+  {
+    "id": "d2305a48-cbcd-494f-913e-d60f91b182d8",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.98,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "185936f6-c360-4047-b76e-cbb4539bd8ac"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:03:06.117398+00:00"
+  },
+  {
+    "id": "a18e3dc0-f828-422d-bb11-fa5a72b55a25",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.98,
+      "RELEVANT": 0.015,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.004
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "e343904a-3c04-4c86-a3af-41ef2c365f43"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:03:10.424484+00:00"
+  },
+  {
+    "id": "7965e477-3863-4580-a8ae-2f104af4c657",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.98,
+      "RELEVANT": 0.015,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.004
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "c3fb5af2-2a14-4aef-b2ed-8aa86ad0126a"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:03:14.156209+00:00"
+  },
+  {
+    "id": "95f7f38c-1b71-4e00-a3da-2c2a6b0a5ebc",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.99,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "d43d7df5-7529-4c6b-b806-47429849e8bc"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:03:17.560428+00:00"
+  },
+  {
+    "id": "f0419f08-ef03-4672-9070-561a5c8d5f7b",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.97,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "48d0fafa-2046-4c1d-8ed7-34a2683dd880"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:03:21.279542+00:00"
+  },
+  {
+    "id": "52f7b4a1-df9b-49d1-8916-4df34ddb0eab",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.98,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "e77f2389-7759-44ce-bafd-2f892006b2da"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:03:25.551757+00:00"
+  },
+  {
+    "id": "0f400a00-76cc-4071-8e65-4b72d837aa1d",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.99,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "9c01921f-a26b-4571-8888-3a31c1cdfb3e"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:03:30.142993+00:00"
+  },
+  {
+    "id": "ddcbc87b-e970-4a65-9ba6-7a37afe9f28b",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.98,
+      "RELEVANT": 0.015,
+      "IRRELEVANT": 0.002,
+      "INCONCLUSIVE": 0.003
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "b4cac2dc-211c-4706-b323-1394067f48f2"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:03:34.750249+00:00"
+  },
+  {
+    "id": "2ece0950-3eca-482d-a616-53be03c318ef",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.98,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "a2c51dbc-8e38-40ef-b7a4-b90aee536ef9"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:03:39.673825+00:00"
+  },
+  {
+    "id": "3e87399a-5087-470d-85d4-0aac0940ee3c",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.94,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.94,
+      "RELEVANT": 0.04,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "158b62ce-0d22-413f-909d-3dbf31cbab1f"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:03:44.190970+00:00"
+  },
+  {
+    "id": "29aad44b-11f0-4b5b-9990-71e2822f5ddd",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.96,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.96,
+      "RELEVANT": 0.03,
+      "IRRELEVANT": 0.005,
+      "INCONCLUSIVE": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "e1d51615-0dda-4f4d-9d6a-1bc3d938c0d4"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:03:47.957764+00:00"
+  },
+  {
+    "id": "82871044-3607-45ff-8fa8-941e1eb13574",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.87,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.87,
+      "RELEVANT": 0.11,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "fe1f0019-6a5e-4d89-878a-dda6aaa4d4cb"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:03:52.050043+00:00"
+  },
+  {
+    "id": "99eb1da0-c4c9-4c86-b674-d4a7b8d9aaba",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.95,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.95,
+      "RELEVANT": 0.03,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "b52eda13-7bac-4d28-b3ce-8fcc97d15f92"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:03:55.312926+00:00"
+  },
+  {
+    "id": "ac6c008e-0dc9-4e72-a4c6-de016df9d0a6",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.97,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.005,
+      "INCONCLUSIVE": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "5cc0c5b6-6b21-4bc4-8e87-06774a4059b0"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:03:59.097751+00:00"
+  },
+  {
+    "id": "01f3b6c9-34ea-435c-b80b-5e4a4000a353",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.87,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.87,
+      "RELEVANT": 0.09,
+      "IRRELEVANT": 0.03,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "56a33aaa-e9d1-4faf-8803-c690400f225d"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:04:03.530051+00:00"
+  },
+  {
+    "id": "f034a280-299c-483b-8502-524bbc510256",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.96,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.96,
+      "RELEVANT": 0.03,
+      "IRRELEVANT": 0.005,
+      "INCONCLUSIVE": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "4cfd2c2e-d2a4-4243-9af5-84cd628b0bad"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:04:08.314549+00:00"
+  },
+  {
+    "id": "89f78f94-7e5d-4ff7-aa30-b28e7a757446",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.025,
+      "RELEVANT": 0.97,
+      "IRRELEVANT": 0.002,
+      "INCONCLUSIVE": 0.003
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "20330a19-ff1b-43f7-b2e2-9afe79d7a277"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:04:11.908427+00:00"
+  },
+  {
+    "id": "b1bcd370-3f5d-4b43-ac1a-c2d08662fd15",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.84,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.84,
+      "RELEVANT": 0.14,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "93b96909-15c7-4958-b77c-31107f3ffe1d"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:04:16.935414+00:00"
+  },
+  {
+    "id": "a8e4de61-d94d-4176-a7fb-43de8b3f574d",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.97,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.005,
+      "INCONCLUSIVE": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "38eca74f-ade2-4f0b-9773-bd6ca7bf64c8"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:04:19.789045+00:00"
+  },
+  {
+    "id": "635c4336-8536-4198-837b-7bb99403aaed",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.91,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.91,
+      "RELEVANT": 0.06,
+      "IRRELEVANT": 0.02,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "be0fbc81-2c14-41ba-a166-312df590d866"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:04:23.871712+00:00"
+  },
+  {
+    "id": "330573ec-b074-4e29-8954-d2d6cbacd27b",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.94,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.94,
+      "RELEVANT": 0.05,
+      "IRRELEVANT": 0.005,
+      "INCONCLUSIVE": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "767d868e-83b6-4f94-91b0-5c2234c01f5d"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:04:27.550427+00:00"
+  },
+  {
+    "id": "12ed8bf8-d31e-4551-be9b-bb48791a98db",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.81,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.17,
+      "RELEVANT": 0.81,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "f79efdd8-824d-4ea6-98f2-a293c2d761ae"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:04:31.866764+00:00"
+  },
+  {
+    "id": "63f2ed0e-c549-4d3b-bf96-e8f259460de2",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.005,
+      "RELEVANT": 0.99,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.004
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "0c5a6c8a-7501-4dd8-9709-c263d040de1d"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:04:34.715051+00:00"
+  },
+  {
+    "id": "0ea213c1-7155-427d-8a6b-39877695b6b7",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.004,
+      "RELEVANT": 0.99,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "bfd15bfb-3fe2-487f-89f0-4f4f7641a9ba"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:04:37.483773+00:00"
+  },
+  {
+    "id": "6989d93b-a1e2-4f37-8e8c-a9c428db8be5",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.01,
+      "RELEVANT": 0.98,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "94e5d74c-f223-42df-a3bf-befb68365021"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:04:40.373577+00:00"
+  },
+  {
+    "id": "ba8017fb-c59a-4e9e-aa4f-5c83e006bf65",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.005,
+      "RELEVANT": 0.99,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.004
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "5aa47114-aab8-4fdc-8d52-f62ebc157d66"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:04:43.623981+00:00"
+  },
+  {
+    "id": "20c6b8a3-1a82-490d-9aaa-c59b6fb1d073",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.001,
+      "RELEVANT": 0.005,
+      "IRRELEVANT": 0.99,
+      "INCONCLUSIVE": 0.004
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "a0a83099-07fd-4642-adc2-03d8b98a2c8a"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:04:47.161986+00:00"
+  },
+  {
+    "id": "214fd7b1-9ac5-4c8c-b94c-ba2f9acb3beb",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.82,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.82,
+      "RELEVANT": 0.16,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "f1bfd3f0-dfba-4240-aa98-399c75fb85f7"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:04:51.147913+00:00"
+  },
+  {
+    "id": "c8d61478-1d17-41d6-b4b8-5cb1cc30cea3",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.009,
+      "RELEVANT": 0.99,
+      "IRRELEVANT": 0.0005,
+      "INCONCLUSIVE": 0.0005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "d6850b83-621c-4ace-85db-56e4ead718e5"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:04:54.169092+00:00"
+  },
+  {
+    "id": "6cebb8b8-9d40-4f39-bd9d-ef7e12500d19",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.005,
+      "RELEVANT": 0.99,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.004
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "348b5272-c883-49a2-b630-3eb62a0551aa"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:04:58.256764+00:00"
+  },
+  {
+    "id": "61ec7a31-4904-489e-8ff6-700e86a5fdc4",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.005,
+      "RELEVANT": 0.99,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.004
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "0b9f7b56-1593-4af5-834a-8ae3e3237396"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:05:01.690490+00:00"
+  },
+  {
+    "id": "d71c80d9-d747-4335-9176-bd43a6795c62",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.94,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.0,
+      "RELEVANT": 0.04,
+      "IRRELEVANT": 0.94,
+      "INCONCLUSIVE": 0.02
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "b1689aa0-4ed8-414e-8797-bf569af3dc3e"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:05:06.017193+00:00"
+  },
+  {
+    "id": "8cff706f-a090-4ff1-b462-2c4c8ffa14c8",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.005,
+      "RELEVANT": 0.99,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.004
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "a61711e9-2575-4804-877c-33e7c71e4eb8"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:05:10.479989+00:00"
+  },
+  {
+    "id": "0cb9baed-ef06-4cc8-a1c7-af5b40530a5f",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.005,
+      "RELEVANT": 0.99,
+      "IRRELEVANT": 0.002,
+      "INCONCLUSIVE": 0.003
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "19b94ec0-327b-4847-bf78-7c2567144cfe"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:05:13.529008+00:00"
+  },
+  {
+    "id": "5ec02213-fec7-4753-a922-f48ff721b48f",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.005,
+      "RELEVANT": 0.99,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.004
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "4d08278c-9805-40ef-8da7-4b0eb2255f7b"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:05:18.044119+00:00"
+  },
+  {
+    "id": "d64f90a6-683d-4d6f-9cb2-082e64184781",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.005,
+      "RELEVANT": 0.99,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.004
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "62e3b351-7454-4829-8952-d82f67e6f4e0"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:05:21.234449+00:00"
+  },
+  {
+    "id": "9e5d07a8-3ea4-47ce-a274-63cdfaf3cd80",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.005,
+      "RELEVANT": 0.99,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.004
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "59c394a2-edbb-442b-83dd-eee190dcb1a6"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:05:24.149584+00:00"
+  },
+  {
+    "id": "a2f730dc-ccc3-45ad-a85d-a2cd68a3fb77",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.005,
+      "RELEVANT": 0.99,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.004
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "1035163e-8090-4fd5-8d31-f87345a10032"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:05:27.161058+00:00"
+  },
+  {
+    "id": "5de42f7e-3b13-4abd-8bea-20a842d03509",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.005,
+      "RELEVANT": 0.99,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.004
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "1b057907-7f6d-491a-90e2-b6e48507904d"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:05:30.943725+00:00"
+  },
+  {
+    "id": "9a7ad15f-f0cd-48eb-a4c7-def794077bc8",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.004,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.99,
+      "INCONCLUSIVE": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "8c7038d3-5517-427b-ac0f-45f8e21d83ac"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:05:34.332274+00:00"
+  },
+  {
+    "id": "f38f9bcc-a79e-4ba4-a71b-061cda8ba369",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.01,
+      "RELEVANT": 0.005,
+      "IRRELEVANT": 0.98,
+      "INCONCLUSIVE": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "08167551-46f7-49e2-8039-c1f9dd687f99"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:05:40.135719+00:00"
+  },
+  {
+    "id": "6041332c-ff37-4f2e-8e20-d3ed0da0cd68",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.01,
+      "RELEVANT": 0.005,
+      "IRRELEVANT": 0.97,
+      "INCONCLUSIVE": 0.015
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "38a35a51-69fc-4674-9821-dcd47ca42d3e"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:05:44.035020+00:00"
+  },
+  {
+    "id": "125cb8d1-2c1f-45d3-a2a5-4dd24c3a70b2",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.004,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.99,
+      "INCONCLUSIVE": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "eb55e6d0-b445-45a6-854d-9ad1184a4d31"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:05:47.368040+00:00"
+  },
+  {
+    "id": "b9b555b2-c1d1-44a4-be32-cf051ed149ef",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.005,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.99,
+      "INCONCLUSIVE": 0.004
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "c65393ab-02a1-48a4-a9a5-b2399ed8daaf"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:05:50.542849+00:00"
+  },
+  {
+    "id": "c1b65dba-2530-4862-9130-69495960608c",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.006,
+      "RELEVANT": 0.002,
+      "IRRELEVANT": 0.99,
+      "INCONCLUSIVE": 0.002
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "8eba3944-62fb-47c4-92ff-042ea250733a"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:05:53.946955+00:00"
+  },
+  {
+    "id": "8e476413-21e2-43c6-b4c3-1c02d0e41b2f",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.004,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.98,
+      "INCONCLUSIVE": 0.015
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "7d2218b5-85af-448c-a267-e6986d1d39e1"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:05:57.643406+00:00"
+  },
+  {
+    "id": "944d2783-1402-4992-8440-1f8ce1ac1c6e",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.006,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.99,
+      "INCONCLUSIVE": 0.003
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "7f7ceaf5-4266-4849-9f1d-50986160eb6e"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:06:02.207653+00:00"
+  },
+  {
+    "id": "9318e975-c7dd-4eb0-a482-51aba641f157",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.009,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.98,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "a9769404-0b23-4297-ae21-18af139fd9ec"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:06:05.633059+00:00"
+  },
+  {
+    "id": "cbbd7658-69a8-436a-b5a9-12c0c8fad0d6",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.004,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.99,
+      "INCONCLUSIVE": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "eaed3c7d-d8a8-447e-81b4-7b5c1a4277f4"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:06:08.949316+00:00"
+  },
+  {
+    "id": "f3c15996-4e96-4dc9-9d9f-addaf97ad9e8",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.004,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.99,
+      "INCONCLUSIVE": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "331c55b1-d823-4c2b-b596-0b3a75d99859"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:06:14.036482+00:00"
+  },
+  {
+    "id": "fe313405-1731-459e-8357-1d763fc36e60",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.002,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.99,
+      "INCONCLUSIVE": 0.007
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "91f62ab9-4f0d-4c03-8566-0e77f2bc6620"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:06:18.837721+00:00"
+  },
+  {
+    "id": "0b29e540-73cf-4162-a99d-4ef125c0063b",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.94,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.03,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.94,
+      "INCONCLUSIVE": 0.02
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "a7e6ecce-161b-44f8-9eb4-9af5465f0939"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:06:23.131165+00:00"
+  },
+  {
+    "id": "09a4fc4f-32ec-4358-8f32-308a5995e7c2",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.007,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.99,
+      "INCONCLUSIVE": 0.002
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "cc476406-6ae1-4fc6-a4d7-f41ca76b94b8"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:06:28.979092+00:00"
+  },
+  {
+    "id": "e7169178-8473-4d82-bffc-2da067b110ac",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.01,
+      "RELEVANT": 0.0,
+      "IRRELEVANT": 0.99,
+      "INCONCLUSIVE": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "c28351ea-434c-4017-94cb-a24d2c9205eb"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:06:32.124119+00:00"
+  },
+  {
+    "id": "44735cbf-2ad9-4475-9e07-dd669137b9e8",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.88,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.88,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.1
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "fc9026f4-b13c-42c4-9413-aa7a5c336dec"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:06:35.884572+00:00"
+  },
+  {
+    "id": "60ae5ecc-c4ee-4946-82df-ee9c24051403",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.86,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.86,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.03,
+      "INCONCLUSIVE": 0.1
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "5d5e1acb-3a4e-4cfd-a7a1-efe3009193e4"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:06:39.336844+00:00"
+  },
+  {
+    "id": "c8431e39-05c8-4922-843a-b8da5af43088",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.94,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.04,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.94
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "9bf67228-065f-41c6-bfc8-d8379ac4aff0"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:06:42.462766+00:00"
+  },
+  {
+    "id": "eb4cb335-3249-48c2-86c0-40cc37452e8e",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.91,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.07,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.9
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "b73d44bd-2e1d-4d79-80c3-ee748b113af5"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:06:45.916896+00:00"
+  },
+  {
+    "id": "875b80d1-38ad-46d4-8acc-03bdb2d735cb",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.87,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.87,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.03,
+      "INCONCLUSIVE": 0.08
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "ecc210f0-a303-4292-bccd-f5981c1ae543"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:06:49.308290+00:00"
+  },
+  {
+    "id": "c21d211f-e3c8-468b-b43f-1e405f71a811",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.98,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.005,
+      "INCONCLUSIVE": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "917ad323-f2d3-44d2-ba25-74017e2bfd43"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:06:53.412784+00:00"
+  },
+  {
+    "id": "5cabfa49-7029-48b4-b1e1-d00e45c674d5",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.91,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.91,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.06
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "89a4806d-c000-4fe9-bb47-d01ec47019a1"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:06:57.980707+00:00"
+  },
+  {
+    "id": "eeb267e5-e987-43ca-b339-4aacd1e89647",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.91,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.07,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.91
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "4a72ac81-8bd9-4ec4-9a10-553831db57de"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:07:01.236410+00:00"
+  },
+  {
+    "id": "287b26ae-3f46-4c73-b219-74800e21b05d",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.84,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.84,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.02,
+      "INCONCLUSIVE": 0.13
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "bd0fe58d-233b-4ec7-8696-6ba7bcc38aa8"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:07:05.361207+00:00"
+  },
+  {
+    "id": "743345cd-e17c-42a3-b79f-4bfaea3096c5",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.82,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.82,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.1,
+      "INCONCLUSIVE": 0.07
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "c5f877b7-9f5f-45a7-9bea-e447baa66702"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:07:10.536032+00:00"
+  },
+  {
+    "id": "84dd3245-349a-468f-a77d-47fd08afbdf1",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.01,
+      "RELEVANT": 0.0,
+      "IRRELEVANT": 0.99,
+      "INCONCLUSIVE": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "70d70912-a902-4c3d-967c-55f44e8b459c"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:07:16.009549+00:00"
+  },
+  {
+    "id": "4a5ba22c-c8f3-4442-a092-e961d6f9eed5",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.88,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.88,
+      "RELEVANT": 0.03,
+      "IRRELEVANT": 0.04,
+      "INCONCLUSIVE": 0.05
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "a8a010dd-1a8f-45b0-9595-3f4e33fb9856"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:07:20.176543+00:00"
+  },
+  {
+    "id": "1a363174-1c3f-4617-b7e9-c7fde503f617",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.88,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.1,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.87
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "d32e5382-75fb-4fcd-8a42-2ba70f9cc197"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:07:24.493622+00:00"
+  },
+  {
+    "id": "66760714-d16a-42c6-8e5c-c1bebd8277ef",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.89,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.08,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.89,
+      "INCONCLUSIVE": 0.02
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "707ceb93-fb79-48d9-8900-e6e98307e326"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:07:29.308311+00:00"
+  },
+  {
+    "id": "3ee171c7-959e-4509-831f-04b634e2e22a",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.78,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.78,
+      "RELEVANT": 0.04,
+      "IRRELEVANT": 0.03,
+      "INCONCLUSIVE": 0.15
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "8422f151-ca53-45c0-a95b-4220397c2c33"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:07:33.803605+00:00"
+  },
+  {
+    "id": "abccc8ef-071b-4bc6-bd5f-8256e9175d93",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.91,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.91,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.03,
+      "INCONCLUSIVE": 0.05
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "5d583882-3d21-434f-98b2-5dbbea86fbe8"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:07:37.355161+00:00"
+  },
+  {
+    "id": "4b5384c5-0b6c-4c34-8cca-f14b122032ee",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.87,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.87,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.05,
+      "INCONCLUSIVE": 0.06
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "648e1632-3a09-479d-b86e-b4f18d6f8196"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:07:41.610455+00:00"
+  },
+  {
+    "id": "7877cae4-bd61-40db-ae77-ffd3e375fc19",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "RELEVANT",
+    "distribution": {
+      "CONTEXT": 0.02,
+      "RELEVANT": 0.97,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "d74c0624-4cc2-4124-936e-59ed7a66ffba"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:07:50.712527+00:00"
+  },
+  {
+    "id": "1ae05ed5-3aab-4467-82d4-976309da7731",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.93,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.93,
+      "RELEVANT": 0.04,
+      "IRRELEVANT": 0.02,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "350d7b3b-71f0-4cb4-8a9f-3b32b8c8e042"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:07:54.228368+00:00"
+  },
+  {
+    "id": "9df92235-e3c7-4f9c-9d2b-3dac29a9ea11",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.96,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.03,
+      "RELEVANT": 0.0,
+      "IRRELEVANT": 0.96,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "1812d462-2dd2-49c4-99bd-411ec6532a68"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:07:57.865462+00:00"
+  },
+  {
+    "id": "14a3b1a5-3096-4108-b08c-aad1b6f01ceb",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.015,
+      "RELEVANT": 0.005,
+      "IRRELEVANT": 0.98,
+      "INCONCLUSIVE": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "1d04ce17-b0e3-4ac9-ad43-5568ded17ae8"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:08:00.970874+00:00"
+  },
+  {
+    "id": "e0a1292d-fd7b-43fa-a3f0-ceac32dde5c8",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.84,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.84,
+      "RELEVANT": 0.05,
+      "IRRELEVANT": 0.02,
+      "INCONCLUSIVE": 0.09
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "be566535-61f1-4e57-baaf-a68a986b53b1"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:08:04.588525+00:00"
+  },
+  {
+    "id": "463d5378-32dd-4408-8075-926cc135a944",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.86,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.86,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.08,
+      "INCONCLUSIVE": 0.04
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "4a83dca7-a709-4a71-95c0-2d5ef60ace37"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:08:08.430591+00:00"
+  },
+  {
+    "id": "91f2fcd9-0783-466d-abc2-77d672215b50",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.78,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.78,
+      "RELEVANT": 0.03,
+      "IRRELEVANT": 0.12,
+      "INCONCLUSIVE": 0.07
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "ce65a334-4b28-448b-ab4d-a43a674d9143"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:08:13.706676+00:00"
+  },
+  {
+    "id": "fca203b6-f51b-482f-be2e-e534b0444559",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.96,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.96,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.02
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "07abda83-ec65-4ffc-bf57-57c986ce2c49"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:08:17.589758+00:00"
+  },
+  {
+    "id": "09ee0591-bbf2-480e-ac45-baa8b89bdd0a",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.999,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.001,
+      "RELEVANT": 0.0,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.999
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "679c794b-638a-4158-a2cd-5381a740b68d"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:08:21.100566+00:00"
+  },
+  {
+    "id": "daaa261e-bd00-49b9-8674-a0096fea8f20",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.005,
+      "RELEVANT": 0.002,
+      "IRRELEVANT": 0.003,
+      "INCONCLUSIVE": 0.99
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "a3ded491-613a-4ffd-b434-5df9f0c08b00"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:08:24.355654+00:00"
+  },
+  {
+    "id": "676045c8-4050-4ccd-b9fb-23d6f7698515",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.94,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.03,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.94
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "fe3d93e0-09a0-4b52-b0ef-65600fbc954a"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:24:27.086380+00:00"
+  },
+  {
+    "id": "9692f662-601f-473a-80c8-8b60719a21c0",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.99,
+      "RELEVANT": 0.005,
+      "IRRELEVANT": 0.002,
+      "INCONCLUSIVE": 0.003
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "60a99269-05a8-43e2-b684-4a8af79b5673"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:24:29.879810+00:00"
+  },
+  {
+    "id": "87c78cf4-7706-4767-bb27-bf39e5807518",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.82,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.82,
+      "RELEVANT": 0.08,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.09
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "f1359937-4ff0-4cb3-a22c-5a9dca2e5ab4"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:24:33.505270+00:00"
+  },
+  {
+    "id": "dd9f0cd1-c93e-4095-81a5-aa0029662a01",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.83,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.04,
+      "RELEVANT": 0.12,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.83
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "96156755-e05f-436a-a8e8-f65c05da5aeb"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:24:38.214672+00:00"
+  },
+  {
+    "id": "befcde33-93b4-40da-b6a5-c787d8eff609",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.88,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.08,
+      "RELEVANT": 0.04,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.88
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "9e8f2c4d-e883-4733-976d-e894653abe64"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:24:42.051264+00:00"
+  },
+  {
+    "id": "bcba13ea-b211-4bdd-88ab-402eec77ba58",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.96,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.96,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.02
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "47c2abae-a193-432c-be9e-8cb3de8a1c9b"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:24:45.791711+00:00"
+  },
+  {
+    "id": "73a982c3-84ed-4836-8753-63dc20b920b5",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.84,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.84,
+      "RELEVANT": 0.05,
+      "IRRELEVANT": 0.02,
+      "INCONCLUSIVE": 0.09
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "9e31c4a8-ebb8-49fa-baf3-1a01c5d216a7"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:24:50.202612+00:00"
+  },
+  {
+    "id": "463d12d0-9760-4972-9812-4f4a4b83c906",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.93,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.05,
+      "RELEVANT": 0.02,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.93
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "c142deca-c810-4796-b5f4-5c8e9d3c1542"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:24:53.922687+00:00"
+  },
+  {
+    "id": "aee9a593-ce1c-41f4-8b20-425b5d8c09a0",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.76,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.2,
+      "RELEVANT": 0.03,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.76
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "f63eb617-93e1-4fd0-9577-b8a2940fd504"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:24:59.307114+00:00"
+  },
+  {
+    "id": "f12220af-8437-4d91-a703-c88feb79a38c",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.91,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.07,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.91,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "32cff42f-7ee8-4f5b-a775-e17e5817edae"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:25:04.324184+00:00"
+  },
+  {
+    "id": "8ef12e93-05a7-409a-8b3c-0b6fde7b3e4b",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.92,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.06,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.92
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "751f3363-49fb-4d57-ba06-2b6083951df6"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:25:08.729429+00:00"
+  },
+  {
+    "id": "2d625edb-cced-48e2-9e97-d14773ef82fa",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.96,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.96,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.02
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "480fb20d-97ae-46fa-801b-5f6c31ef6f30"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:25:13.462098+00:00"
+  },
+  {
+    "id": "b9b67b63-c6c7-416b-9765-8a11f00a7a4a",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.003,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.99,
+      "INCONCLUSIVE": 0.006
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "1bffc8eb-858a-45c5-984a-22f5495792cc"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:25:17.363628+00:00"
+  },
+  {
+    "id": "f2d2fdb8-111d-4e98-85c0-21eee1ed557b",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.96,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.03,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.96,
+      "INCONCLUSIVE": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "4ae79ffd-9d11-4239-ba90-8acaf1424609"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:25:21.132780+00:00"
+  },
+  {
+    "id": "90aa4afa-e0b0-469e-b569-d7259705bc89",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.91,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.06,
+      "RELEVANT": 0.03,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.91
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "3ec8b56b-f0eb-4974-b410-7b1a926b1f0b"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:25:24.384529+00:00"
+  },
+  {
+    "id": "937389c0-8beb-4872-bf6d-f2f3d122c7a8",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.02,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.97
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "f7ed9cfb-13dd-4758-999d-45d94c001ead"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:25:28.799539+00:00"
+  },
+  {
+    "id": "feb4113e-832c-4c96-9a6a-bb224ef589c4",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.98,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "41d036ce-c63a-411f-a91e-e081e29c132d"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:25:33.438124+00:00"
+  },
+  {
+    "id": "ff630b4f-7e58-4468-b9c2-8e4319d055ff",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.96,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.02,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.96,
+      "INCONCLUSIVE": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "9a70f71e-ee55-45ca-b7d5-de912092de9b"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:25:37.024775+00:00"
+  },
+  {
+    "id": "c9534239-7dc1-4e61-a0ab-9baf3f9b10c2",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.88,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.88,
+      "RELEVANT": 0.07,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.04
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "44ca6987-353d-47ea-b74f-989ed1ef347b"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:33:35.703070+00:00"
+  },
+  {
+    "id": "62661631-f828-4c23-8828-567d9d53d3d8",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.99,
+      "RELEVANT": 0.005,
+      "IRRELEVANT": 0.002,
+      "INCONCLUSIVE": 0.003
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "640764f2-58a8-428e-bf93-246c9ac961c5"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:33:39.766211+00:00"
+  },
+  {
+    "id": "d8e7daf1-a5a1-4f76-908e-5231cdb802db",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.96,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.03,
+      "RELEVANT": 0.01,
+      "IRRELEVANT": 0.96,
+      "INCONCLUSIVE": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "406521ae-ceb4-42c6-a5bc-0811485e58f1"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:33:43.900591+00:00"
+  },
+  {
+    "id": "7a53cdb5-2ded-45eb-bc76-6e458369afac",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.028,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.97,
+      "INCONCLUSIVE": 0.001
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "263036d2-6294-47c9-91cf-cc93410d4b31"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:33:50.562324+00:00"
+  },
+  {
+    "id": "90a54cb3-4bc2-4284-adb1-93ed40226005",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.91,
+    "is_noul": false,
+    "selected_choice": "CONTEXT",
+    "distribution": {
+      "CONTEXT": 0.91,
+      "RELEVANT": 0.05,
+      "IRRELEVANT": 0.01,
+      "INCONCLUSIVE": 0.03
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "94c6d2c6-2c2a-429a-9aec-70457310ee0d"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:33:54.260140+00:00"
+  },
+  {
+    "id": "cd4716e7-4eab-42ce-9d17-912054a95c99",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "IRRELEVANT",
+    "distribution": {
+      "CONTEXT": 0.01,
+      "RELEVANT": 0.0,
+      "IRRELEVANT": 0.99,
+      "INCONCLUSIVE": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "1f58b7ed-59e5-49ac-bf9f-8091969765e7"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:33:57.120455+00:00"
+  },
+  {
+    "id": "21ed0f02-003f-41ff-9665-333766808396",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.008,
+      "RELEVANT": 0.001,
+      "IRRELEVANT": 0.001,
+      "INCONCLUSIVE": 0.99
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "6d9191c1-4fbc-49d6-acc3-80581ed03e3f"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:34:00.425238+00:00"
+  },
+  {
+    "id": "77bcbbc2-23b7-415d-a994-eeadeea68bee",
+    "pack_id": "market-relevance-v1",
+    "decision_type": "CHOICE",
+    "confidence": 1.0,
+    "is_noul": false,
+    "selected_choice": "INCONCLUSIVE",
+    "distribution": {
+      "CONTEXT": 0.0,
+      "RELEVANT": 0.0,
+      "IRRELEVANT": 0.0,
+      "INCONCLUSIVE": 1.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "88f8fe8d-f605-48c0-b4bc-9fa0fc06ab00"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:34:04.354856+00:00"
+  },
+  {
+    "id": "f5c05992-01a9-4ffb-ab74-588aaec7e5b6",
+    "pack_id": "syllabus-fit-v1",
+    "decision_type": "SCORE",
+    "confidence": 0.82,
+    "is_noul": false,
+    "selected_choice": null,
+    "distribution": {},
+    "score_value": 78.0,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "19b94ec0-327b-4847-bf78-7c2567144cfe",
+      "62e3b351-7454-4829-8952-d82f67e6f4e0",
+      "20330a19-ff1b-43f7-b2e2-9afe79d7a277",
+      "f79efdd8-824d-4ea6-98f2-a293c2d761ae",
+      "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+      "bfd15bfb-3fe2-487f-89f0-4f4f7641a9ba",
+      "94e5d74c-f223-42df-a3bf-befb68365021",
+      "5aa47114-aab8-4fdc-8d52-f62ebc157d66",
+      "d6850b83-621c-4ace-85db-56e4ead718e5",
+      "348b5272-c883-49a2-b630-3eb62a0551aa",
+      "0b9f7b56-1593-4af5-834a-8ae3e3237396",
+      "a61711e9-2575-4804-877c-33e7c71e4eb8",
+      "4d08278c-9805-40ef-8da7-4b0eb2255f7b",
+      "59c394a2-edbb-442b-83dd-eee190dcb1a6",
+      "1035163e-8090-4fd5-8d31-f87345a10032",
+      "1b057907-7f6d-491a-90e2-b6e48507904d",
+      "d74c0624-4cc2-4124-936e-59ed7a66ffba"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:34:10.504773+00:00"
+  },
+  {
+    "id": "d3d24e52-b983-4d87-9dce-0ef77fb89fc5",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 1.0,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 1.0,
+      "SUGGESTIVE": 0.0,
+      "UNSUPPORTED": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "scoring_result"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:40:14.529973+00:00"
+  },
+  {
+    "id": "8490a3be-6932-4cde-802c-8230cbf321a3",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.01,
+      "UNSUPPORTED": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "provided_proposal"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:40:17.360185+00:00"
+  },
+  {
+    "id": "d73eeb78-75dc-4453-a6a1-07da5cc4f2b5",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 1.0,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 1.0,
+      "SUGGESTIVE": 0.0,
+      "UNSUPPORTED": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "pricing_reference",
+      "institutional_history"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:40:19.775371+00:00"
+  },
+  {
+    "id": "15df2680-a36d-4dd0-906e-600ee85a454b",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 1.0,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 1.0,
+      "SUGGESTIVE": 0.0,
+      "UNSUPPORTED": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "institutional_history"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:40:23.053725+00:00"
+  },
+  {
+    "id": "28287f51-3ed2-4155-9927-88b945112d40",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.009,
+      "UNSUPPORTED": 0.001
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "0c5a6c8a-7501-4dd8-9709-c263d040de1d"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:40:26.202977+00:00"
+  },
+  {
+    "id": "4790e6f5-bca2-44ac-baaa-35a988575d93",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "SUGGESTIVE",
+    "distribution": {
+      "OBSERVED": 0.01,
+      "SUGGESTIVE": 0.99,
+      "UNSUPPORTED": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "scoring_result",
+      "f5c05992-01a9-4ffb-ab74-588aaec7e5b6",
+      "provided_proposal",
+      "0c5a6c8a-7501-4dd8-9709-c263d040de1d"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:40:31.493113+00:00"
+  },
+  {
+    "id": "35db3549-5c25-4add-9a14-d3a3c1717601",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.008,
+      "UNSUPPORTED": 0.002
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "tool-run:plan-fd18c14a0e20-followup:call-18",
+      "tool-run:plan-fd18c14a0e20-followup:call-19"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:40:34.036222+00:00"
+  },
+  {
+    "id": "2da0701c-78c1-41b4-9b6a-f7033d0c3fa8",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.009,
+      "UNSUPPORTED": 0.001
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "scoring_result"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:40:36.806437+00:00"
+  },
+  {
+    "id": "65be6c19-4b65-47b7-9552-c7701ee609e7",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.005,
+      "UNSUPPORTED": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "d74c0624-4cc2-4124-936e-59ed7a66ffba"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:40:39.758506+00:00"
+  },
+  {
+    "id": "d20477b7-4d6d-4d80-ad30-1025c5eb3f33",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.008,
+      "UNSUPPORTED": 0.002
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "scoring_result"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:40:42.993304+00:00"
+  },
+  {
+    "id": "96f51242-0988-4e7c-9379-1fd8dab8c61a",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.009,
+      "UNSUPPORTED": 0.001
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "provided_proposal",
+      "53417086-b688-438e-a337-dcb8fcc32032",
+      "4f323755-cad0-4178-b44c-5ef476064458",
+      "640764f2-58a8-428e-bf93-246c9ac961c5"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:40:46.545215+00:00"
+  },
+  {
+    "id": "edfef392-80f8-4606-a82d-1e960d132bf2",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.97,
+      "SUGGESTIVE": 0.025,
+      "UNSUPPORTED": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "scoring_result",
+      "provided_proposal",
+      "pricing_reference",
+      "institutional_history",
+      "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+      "f5c05992-01a9-4ffb-ab74-588aaec7e5b6"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:40:50.559523+00:00"
+  },
+  {
+    "id": "d9dd4b40-0627-442e-938e-e9903c672562",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.009,
+      "UNSUPPORTED": 0.001
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "scoring_result",
+      "provided_proposal",
+      "pricing_reference",
+      "institutional_history"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:40:55.067133+00:00"
+  },
+  {
+    "id": "e53fb662-f0d2-45d3-84ac-6dd66c50759e",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.89,
+    "is_noul": false,
+    "selected_choice": "SUGGESTIVE",
+    "distribution": {
+      "OBSERVED": 0.1,
+      "SUGGESTIVE": 0.89,
+      "UNSUPPORTED": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "provided_proposal",
+      "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+      "scoring_result",
+      "f5c05992-01a9-4ffb-ab74-588aaec7e5b6",
+      "d74c0624-4cc2-4124-936e-59ed7a66ffba"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:40:59.796445+00:00"
+  },
+  {
+    "id": "0a8f4f51-927c-475a-a4df-999f77587b54",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.98,
+      "SUGGESTIVE": 0.015,
+      "UNSUPPORTED": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "provided_proposal",
+      "pricing_reference",
+      "institutional_history",
+      "tool-run:plan-fd18c14a0e20-followup:call-18",
+      "tool-run:plan-fd18c14a0e20-followup:call-19",
+      "scoring_result",
+      "53417086-b688-438e-a337-dcb8fcc32032",
+      "4f323755-cad0-4178-b44c-5ef476064458",
+      "640764f2-58a8-428e-bf93-246c9ac961c5"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:41:02.821754+00:00"
+  },
+  {
+    "id": "19934944-8f23-4b44-aee2-0875869759c7",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.94,
+    "is_noul": false,
+    "selected_choice": "SUGGESTIVE",
+    "distribution": {
+      "OBSERVED": 0.02,
+      "SUGGESTIVE": 0.94,
+      "UNSUPPORTED": 0.04
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "provided_proposal",
+      "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+      "scoring_result",
+      "f5c05992-01a9-4ffb-ab74-588aaec7e5b6"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:41:07.760344+00:00"
+  },
+  {
+    "id": "4d58c233-efe4-4863-96d8-5e4a63e5caf6",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "UNSUPPORTED",
+    "distribution": {
+      "OBSERVED": 0.01,
+      "SUGGESTIVE": 0.02,
+      "UNSUPPORTED": 0.97
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "provided_proposal",
+      "pricing_reference",
+      "institutional_history"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:41:11.979063+00:00"
+  },
+  {
+    "id": "1ed4ae30-5212-48cb-8de1-a70159377127",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "UNSUPPORTED",
+    "distribution": {
+      "OBSERVED": 0.01,
+      "SUGGESTIVE": 0.02,
+      "UNSUPPORTED": 0.97
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "tool-run:plan-fd18c14a0e20-followup:call-18",
+      "tool-run:plan-fd18c14a0e20-followup:call-19",
+      "scoring_result",
+      "provided_proposal",
+      "53417086-b688-438e-a337-dcb8fcc32032",
+      "4f323755-cad0-4178-b44c-5ef476064458",
+      "640764f2-58a8-428e-bf93-246c9ac961c5"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:41:16.662437+00:00"
+  },
+  {
+    "id": "0d366384-8777-4019-bb15-ec1cc0d63171",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "SUGGESTIVE",
+    "distribution": {
+      "OBSERVED": 0.005,
+      "SUGGESTIVE": 0.99,
+      "UNSUPPORTED": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "scoring_result",
+      "pricing_reference",
+      "institutional_history"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:41:20.767811+00:00"
+  },
+  {
+    "id": "96a1649a-a6fe-482c-9249-1e35a0b97322",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "SUGGESTIVE",
+    "distribution": {
+      "OBSERVED": 0.01,
+      "SUGGESTIVE": 0.97,
+      "UNSUPPORTED": 0.02
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "provided_proposal",
+      "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+      "scoring_result",
+      "f5c05992-01a9-4ffb-ab74-588aaec7e5b6",
+      "d74c0624-4cc2-4124-936e-59ed7a66ffba"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:41:23.804694+00:00"
+  },
+  {
+    "id": "83188716-1c0a-4fd0-8381-1dfe196ce418",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "SUGGESTIVE",
+    "distribution": {
+      "OBSERVED": 0.02,
+      "SUGGESTIVE": 0.97,
+      "UNSUPPORTED": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "provided_proposal",
+      "pricing_reference",
+      "institutional_history",
+      "53417086-b688-438e-a337-dcb8fcc32032",
+      "4f323755-cad0-4178-b44c-5ef476064458",
+      "640764f2-58a8-428e-bf93-246c9ac961c5"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:41:27.473108+00:00"
+  },
+  {
+    "id": "1e2a1f48-6f6d-4add-a67f-223c418cd697",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.005,
+      "UNSUPPORTED": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "scoring_result"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:41:53.588838+00:00"
+  },
+  {
+    "id": "c2af0388-f78a-498d-bb38-14acc837393b",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.005,
+      "UNSUPPORTED": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "provided_proposal"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:41:57.974953+00:00"
+  },
+  {
+    "id": "401c7c60-c9d6-4be2-b583-5979826e84db",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 1.0,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 1.0,
+      "SUGGESTIVE": 0.0,
+      "UNSUPPORTED": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "pricing_reference",
+      "institutional_history"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:42:00.875618+00:00"
+  },
+  {
+    "id": "e56829f9-6733-4640-beab-11e5aa96ce3a",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.005,
+      "UNSUPPORTED": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "institutional_history"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:42:03.894662+00:00"
+  },
+  {
+    "id": "ac14347e-afa2-4150-b6d5-9f848562e762",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.009,
+      "UNSUPPORTED": 0.001
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "0c5a6c8a-7501-4dd8-9709-c263d040de1d"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:42:06.783737+00:00"
+  },
+  {
+    "id": "1b3661dd-03b5-494a-83ee-525936c6dd6d",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "SUGGESTIVE",
+    "distribution": {
+      "OBSERVED": 0.02,
+      "SUGGESTIVE": 0.98,
+      "UNSUPPORTED": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "scoring_result",
+      "f5c05992-01a9-4ffb-ab74-588aaec7e5b6",
+      "provided_proposal",
+      "0c5a6c8a-7501-4dd8-9709-c263d040de1d"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:42:12.662010+00:00"
+  },
+  {
+    "id": "5109a271-113a-4bed-8d01-6c8b202b0c9c",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.009,
+      "UNSUPPORTED": 0.001
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "tool-run:plan-fd18c14a0e20-followup:call-18",
+      "tool-run:plan-fd18c14a0e20-followup:call-19"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:42:15.460876+00:00"
+  },
+  {
+    "id": "63cd03f0-bf3c-4532-81a5-c730d10c2c3e",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.009,
+      "UNSUPPORTED": 0.001
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "scoring_result"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:42:19.371146+00:00"
+  },
+  {
+    "id": "5409cb10-3f91-4b1b-b415-0c6883414d26",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.009,
+      "UNSUPPORTED": 0.001
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "d74c0624-4cc2-4124-936e-59ed7a66ffba"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:42:22.549328+00:00"
+  },
+  {
+    "id": "b7246b25-3a6b-4b53-902c-ff0d787a4b76",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.009,
+      "UNSUPPORTED": 0.001
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "scoring_result"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:42:25.691523+00:00"
+  },
+  {
+    "id": "9d0c431d-eaec-4a06-ab91-ec36be5c1424",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.01,
+      "UNSUPPORTED": 0.0
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "provided_proposal",
+      "53417086-b688-438e-a337-dcb8fcc32032",
+      "4f323755-cad0-4178-b44c-5ef476064458",
+      "640764f2-58a8-428e-bf93-246c9ac961c5"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:42:29.003941+00:00"
+  },
+  {
+    "id": "675084dc-67da-46b3-a2fd-7f954418b7ca",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.92,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.92,
+      "SUGGESTIVE": 0.07,
+      "UNSUPPORTED": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "scoring_result",
+      "provided_proposal",
+      "pricing_reference",
+      "institutional_history",
+      "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+      "f5c05992-01a9-4ffb-ab74-588aaec7e5b6"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:42:33.540968+00:00"
+  },
+  {
+    "id": "842e92bf-a845-495e-b3ef-be8eab4d416a",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.99,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.99,
+      "SUGGESTIVE": 0.009,
+      "UNSUPPORTED": 0.001
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "scoring_result",
+      "provided_proposal",
+      "pricing_reference",
+      "institutional_history"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:42:36.672705+00:00"
+  },
+  {
+    "id": "6af9e4b3-f34f-4b89-8b32-510ce94ac253",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.86,
+    "is_noul": false,
+    "selected_choice": "SUGGESTIVE",
+    "distribution": {
+      "OBSERVED": 0.13,
+      "SUGGESTIVE": 0.86,
+      "UNSUPPORTED": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "provided_proposal",
+      "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+      "scoring_result",
+      "f5c05992-01a9-4ffb-ab74-588aaec7e5b6",
+      "d74c0624-4cc2-4124-936e-59ed7a66ffba"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:42:43.981067+00:00"
+  },
+  {
+    "id": "9233ead8-194a-4465-9d1a-46d00888892b",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "OBSERVED",
+    "distribution": {
+      "OBSERVED": 0.98,
+      "SUGGESTIVE": 0.015,
+      "UNSUPPORTED": 0.005
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "provided_proposal",
+      "pricing_reference",
+      "institutional_history",
+      "tool-run:plan-fd18c14a0e20-followup:call-18",
+      "tool-run:plan-fd18c14a0e20-followup:call-19",
+      "scoring_result",
+      "53417086-b688-438e-a337-dcb8fcc32032",
+      "4f323755-cad0-4178-b44c-5ef476064458",
+      "640764f2-58a8-428e-bf93-246c9ac961c5"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:42:48.277361+00:00"
+  },
+  {
+    "id": "539a68ae-a889-4628-9837-160819d088e9",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.96,
+    "is_noul": false,
+    "selected_choice": "SUGGESTIVE",
+    "distribution": {
+      "OBSERVED": 0.02,
+      "SUGGESTIVE": 0.96,
+      "UNSUPPORTED": 0.02
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "provided_proposal",
+      "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+      "scoring_result",
+      "f5c05992-01a9-4ffb-ab74-588aaec7e5b6"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:42:51.583014+00:00"
+  },
+  {
+    "id": "835524a8-6a7e-4f8a-9ffc-9ec921cd75dc",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.98,
+    "is_noul": false,
+    "selected_choice": "SUGGESTIVE",
+    "distribution": {
+      "OBSERVED": 0.01,
+      "SUGGESTIVE": 0.98,
+      "UNSUPPORTED": 0.01
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "scoring_result",
+      "pricing_reference",
+      "institutional_history"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:42:54.924628+00:00"
+  },
+  {
+    "id": "bdcb6272-e121-4662-bc59-8906d5ae0617",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "SUGGESTIVE",
+    "distribution": {
+      "OBSERVED": 0.01,
+      "SUGGESTIVE": 0.97,
+      "UNSUPPORTED": 0.02
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "provided_proposal",
+      "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+      "scoring_result",
+      "f5c05992-01a9-4ffb-ab74-588aaec7e5b6",
+      "d74c0624-4cc2-4124-936e-59ed7a66ffba"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:42:59.761803+00:00"
+  },
+  {
+    "id": "5544fcc7-e083-4d16-9522-497bda5755af",
+    "pack_id": "evidence-support-v1",
+    "decision_type": "CHOICE",
+    "confidence": 0.97,
+    "is_noul": false,
+    "selected_choice": "SUGGESTIVE",
+    "distribution": {
+      "OBSERVED": 0.01,
+      "SUGGESTIVE": 0.97,
+      "UNSUPPORTED": 0.02
+    },
+    "score_value": null,
+    "requires_human_review": false,
+    "evidence_ids": [
+      "provided_proposal",
+      "53417086-b688-438e-a337-dcb8fcc32032",
+      "4f323755-cad0-4178-b44c-5ef476064458",
+      "640764f2-58a8-428e-bf93-246c9ac961c5"
+    ],
+    "model_version": "llm-traditional",
+    "created_at": "2026-10-29 20:43:02.658469+00:00"
+  }
+]

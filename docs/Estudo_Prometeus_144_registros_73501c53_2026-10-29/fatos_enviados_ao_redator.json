@@ -1,0 +1,1479 @@
+{
+  "facts_hash": "7761d831324c2e5130258bc80691f4e3b8c9367afff5677cc4a0a890710f7a6e",
+  "facts": [
+    {
+      "evidence_id": "scoring_result",
+      "source_type": "computed_scoring",
+      "title": "Resultado consolidado calculado e definições metodológicas",
+      "key_metrics": {
+        "recommendation": "INSUFFICIENT_EVIDENCE",
+        "viability_score": 51.11,
+        "coverage_score": 0.8,
+        "coverage_percent": 80.0,
+        "confidence_score": 0.6198,
+        "confidence_percent": 61.98,
+        "scoring_experimental": true,
+        "pillar_scores": {
+          "pricing": 67.43,
+          "syllabus_fit": 78.0,
+          "employability": 53.33,
+          "internal_history": 72.22,
+          "paid_competition": 0.0,
+          "search_and_media": 0.0
+        },
+        "pillar_details": {
+          "pricing": {
+            "weight": 0.1,
+            "features": {
+              "confidence": 0.5,
+              "is_present": true,
+              "evidence_ids": [
+                "course-understanding:5efebdf662f13b390efd72c90db75305050691b7878290145dae00708b66d0dd",
+                "hc_220ed76682814d0f",
+                "hc_32ab4ed470ab4b3d",
+                "hc_6840545da078450f",
+                "hf_9a1325ed54fe4ac8",
+                "hf_9e3bba6ba2154fd4",
+                "hf_a944983c982648d2"
+              ],
+              "feature_provenance": {
+                "confidence": [
+                  "hc_220ed76682814d0f",
+                  "hc_32ab4ed470ab4b3d",
+                  "hc_6840545da078450f",
+                  "hf_9a1325ed54fe4ac8",
+                  "hf_9e3bba6ba2154fd4",
+                  "hf_a944983c982648d2"
+                ],
+                "proposed_price_brl": [
+                  "course-understanding:5efebdf662f13b390efd72c90db75305050691b7878290145dae00708b66d0dd"
+                ],
+                "market_median_price_brl": [
+                  "hc_220ed76682814d0f",
+                  "hc_32ab4ed470ab4b3d",
+                  "hc_6840545da078450f",
+                  "hf_9a1325ed54fe4ac8",
+                  "hf_9e3bba6ba2154fd4",
+                  "hf_a944983c982648d2"
+                ]
+              },
+              "proposed_price_brl": 1200.0,
+              "market_median_price_brl": 3933.33
+            },
+            "pillar_id": "pricing",
+            "raw_score": 67.43,
+            "confidence": 0.5,
+            "is_present": true,
+            "missing_reason": null
+          },
+          "syllabus_fit": {
+            "weight": 0.15,
+            "features": {
+              "confidence": 0.82,
+              "is_present": true,
+              "evidence_ids": [
+                "f5c05992-01a9-4ffb-ab74-588aaec7e5b6",
+                "19b94ec0-327b-4847-bf78-7c2567144cfe",
+                "62e3b351-7454-4829-8952-d82f67e6f4e0",
+                "20330a19-ff1b-43f7-b2e2-9afe79d7a277",
+                "f79efdd8-824d-4ea6-98f2-a293c2d761ae",
+                "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+                "bfd15bfb-3fe2-487f-89f0-4f4f7641a9ba",
+                "94e5d74c-f223-42df-a3bf-befb68365021",
+                "5aa47114-aab8-4fdc-8d52-f62ebc157d66",
+                "d6850b83-621c-4ace-85db-56e4ead718e5",
+                "348b5272-c883-49a2-b630-3eb62a0551aa",
+                "0b9f7b56-1593-4af5-834a-8ae3e3237396",
+                "a61711e9-2575-4804-877c-33e7c71e4eb8",
+                "4d08278c-9805-40ef-8da7-4b0eb2255f7b",
+                "59c394a2-edbb-442b-83dd-eee190dcb1a6",
+                "1035163e-8090-4fd5-8d31-f87345a10032",
+                "1b057907-7f6d-491a-90e2-b6e48507904d",
+                "d74c0624-4cc2-4124-936e-59ed7a66ffba"
+              ],
+              "feature_provenance": {
+                "syllabus_fit_score": [
+                  "f5c05992-01a9-4ffb-ab74-588aaec7e5b6",
+                  "19b94ec0-327b-4847-bf78-7c2567144cfe",
+                  "62e3b351-7454-4829-8952-d82f67e6f4e0",
+                  "20330a19-ff1b-43f7-b2e2-9afe79d7a277",
+                  "f79efdd8-824d-4ea6-98f2-a293c2d761ae",
+                  "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+                  "bfd15bfb-3fe2-487f-89f0-4f4f7641a9ba",
+                  "94e5d74c-f223-42df-a3bf-befb68365021",
+                  "5aa47114-aab8-4fdc-8d52-f62ebc157d66",
+                  "d6850b83-621c-4ace-85db-56e4ead718e5",
+                  "348b5272-c883-49a2-b630-3eb62a0551aa",
+                  "0b9f7b56-1593-4af5-834a-8ae3e3237396",
+                  "a61711e9-2575-4804-877c-33e7c71e4eb8",
+                  "4d08278c-9805-40ef-8da7-4b0eb2255f7b",
+                  "59c394a2-edbb-442b-83dd-eee190dcb1a6",
+                  "1035163e-8090-4fd5-8d31-f87345a10032",
+                  "1b057907-7f6d-491a-90e2-b6e48507904d",
+                  "d74c0624-4cc2-4124-936e-59ed7a66ffba"
+                ]
+              },
+              "syllabus_fit_score": 78.0
+            },
+            "pillar_id": "syllabus_fit",
+            "raw_score": 78.0,
+            "confidence": 0.675,
+            "is_present": true,
+            "missing_reason": null
+          },
+          "employability": {
+            "weight": 0.15,
+            "features": {
+              "is_present": true,
+              "evidence_ids": [
+                "19b94ec0-327b-4847-bf78-7c2567144cfe",
+                "62e3b351-7454-4829-8952-d82f67e6f4e0",
+                "20330a19-ff1b-43f7-b2e2-9afe79d7a277",
+                "f79efdd8-824d-4ea6-98f2-a293c2d761ae",
+                "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+                "bfd15bfb-3fe2-487f-89f0-4f4f7641a9ba",
+                "94e5d74c-f223-42df-a3bf-befb68365021",
+                "5aa47114-aab8-4fdc-8d52-f62ebc157d66",
+                "d6850b83-621c-4ace-85db-56e4ead718e5",
+                "348b5272-c883-49a2-b630-3eb62a0551aa",
+                "0b9f7b56-1593-4af5-834a-8ae3e3237396",
+                "a61711e9-2575-4804-877c-33e7c71e4eb8",
+                "4d08278c-9805-40ef-8da7-4b0eb2255f7b",
+                "59c394a2-edbb-442b-83dd-eee190dcb1a6",
+                "1035163e-8090-4fd5-8d31-f87345a10032",
+                "1b057907-7f6d-491a-90e2-b6e48507904d"
+              ],
+              "open_jobs_count": 16,
+              "feature_provenance": {
+                "open_jobs_count": [
+                  "19b94ec0-327b-4847-bf78-7c2567144cfe",
+                  "62e3b351-7454-4829-8952-d82f67e6f4e0",
+                  "20330a19-ff1b-43f7-b2e2-9afe79d7a277",
+                  "f79efdd8-824d-4ea6-98f2-a293c2d761ae",
+                  "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+                  "bfd15bfb-3fe2-487f-89f0-4f4f7641a9ba",
+                  "94e5d74c-f223-42df-a3bf-befb68365021",
+                  "5aa47114-aab8-4fdc-8d52-f62ebc157d66",
+                  "d6850b83-621c-4ace-85db-56e4ead718e5",
+                  "348b5272-c883-49a2-b630-3eb62a0551aa",
+                  "0b9f7b56-1593-4af5-834a-8ae3e3237396",
+                  "a61711e9-2575-4804-877c-33e7c71e4eb8",
+                  "4d08278c-9805-40ef-8da7-4b0eb2255f7b",
+                  "59c394a2-edbb-442b-83dd-eee190dcb1a6",
+                  "1035163e-8090-4fd5-8d31-f87345a10032",
+                  "1b057907-7f6d-491a-90e2-b6e48507904d"
+                ]
+              }
+            },
+            "pillar_id": "employability",
+            "raw_score": 53.33,
+            "confidence": 0.51,
+            "is_present": true,
+            "missing_reason": null
+          },
+          "internal_history": {
+            "weight": 0.2,
+            "features": {
+              "ipd_score": 72.22,
+              "confidence": 0.9,
+              "is_present": true,
+              "evidence_ids": [
+                "hc_32ab4ed470ab4b3d",
+                "hf_9e3bba6ba2154fd4",
+                "hc_220ed76682814d0f",
+                "hf_9a1325ed54fe4ac8",
+                "hc_6840545da078450f",
+                "hf_a944983c982648d2"
+              ],
+              "feature_provenance": {
+                "ipd_score": [
+                  "hc_32ab4ed470ab4b3d",
+                  "hf_9e3bba6ba2154fd4",
+                  "hc_220ed76682814d0f",
+                  "hf_9a1325ed54fe4ac8",
+                  "hc_6840545da078450f",
+                  "hf_a944983c982648d2"
+                ],
+                "confidence": [
+                  "hc_32ab4ed470ab4b3d",
+                  "hf_9e3bba6ba2154fd4",
+                  "hc_220ed76682814d0f",
+                  "hf_9a1325ed54fe4ac8",
+                  "hc_6840545da078450f",
+                  "hf_a944983c982648d2"
+                ]
+              }
+            },
+            "pillar_id": "internal_history",
+            "raw_score": 72.22,
+            "confidence": 0.9,
+            "is_present": true,
+            "missing_reason": null
+          },
+          "paid_competition": {
+            "weight": 0.2,
+            "features": {
+              "ad_count": 0,
+              "is_present": true,
+              "evidence_ids": [
+                "tool-run:plan-fd18c14a0e20-followup:call-18"
+              ],
+              "feature_provenance": {
+                "ad_count": [
+                  "tool-run:plan-fd18c14a0e20-followup:call-18"
+                ]
+              }
+            },
+            "pillar_id": "paid_competition",
+            "raw_score": 0.0,
+            "confidence": 0.44,
+            "is_present": true,
+            "missing_reason": null
+          },
+          "search_and_media": {
+            "weight": 0.2,
+            "features": {},
+            "pillar_id": "search_and_media",
+            "raw_score": 0.0,
+            "confidence": 0.0,
+            "is_present": false,
+            "missing_reason": "Nenhuma feature verificada mínima para o pilar"
+          }
+        }
+      },
+      "summary": "Resultado calculado em código, não aprovação institucional. INSUFFICIENT_EVIDENCE significa evidências insuficientes para recomendar lançamento. O índice de viabilidade usa escala de zero a cem; não é probabilidade de sucesso nem projeção ou garantia de retorno financeiro. Cobertura de evidências é a soma ponderada das dimensões com dados, não a parcela do mercado pesquisado. Confiança analítica mede a qualidade do suporte da análise, não a probabilidade de sucesso do curso. O índice é experimental e sujeito a calibração. Limitações: Índice experimental, ainda sujeito a calibração; não é probabilidade de sucesso nem projeção de retorno financeiro. | Histórico institucional de teste com dados sintéticos, usado apenas como comparação; não comprova demanda real. | Item excluído da base factual: Conteúdo insuficiente para determinar pertinência | Item excluído da base factual: Conteúdo incompatível com o sinal educacional pesquisado | Item excluído da base factual: Localização fora do escopo ou não comprovada | Interesse de busca e tendência: Não foram obtidos dados verificados suficientes para esta dimensão. | Instagram: A fonte não retornou conteúdo utilizável para esta pesquisa. | Google Trends: Consulta interrompida; somente os itens recuperados e verificados podem ser usados. | Sem preço externo comparável.",
+      "source_url": null
+    },
+    {
+      "evidence_id": "e7fa25ed-e683-479c-aa40-761217835bad",
+      "source_type": "OFFER",
+      "title": "Regulação de Sinistros por Ramos de Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:54:03.890582+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Regulação de Sinistros por Ramos de Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — O curso abordará a interpretação dos clausulados contratuais por ramo de seguro, os deveres legais e regulatórios das partes, o impacto da Lei 15.040/2024, os ...",
+      "source_url": "https://ens.edu.br/pos/regulacao-de-sinistros-por-ramos-de-seguros"
+    },
+    {
+      "evidence_id": "51adeeeb-5b26-4f3b-8b93-13157f246b77",
+      "source_type": "OFFER",
+      "title": "CVG-SP forma a primeira turma do curso de prevenção à ...",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:54:03.890638+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: CVG-SP forma a primeira turma do curso de prevenção à ... — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Segundo o instrutor Thyago Klemp, o curso alia uma abordagem técnica e prática ao tema da fraude em seguros de pessoas, proporcionando uma visão ...",
+      "source_url": "https://www.instagram.com/p/DS2ZmnSEQeJ/"
+    },
+    {
+      "evidence_id": "be853122-1e0f-44b1-9853-f0c3ffa6e3f3",
+      "source_type": "OFFER",
+      "title": "Verbo Jurídico - Pós-Graduação em DIREITO SECURITÁRIO",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:54:03.890836+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Verbo Jurídico - Pós-Graduação em DIREITO SECURITÁRIO — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — O curso desenvolve habilidades para: leitura técnica de apólices, gerenciamento e regulação de sinistros, análise de coberturas e exclusões, prevenção a fraudes ...",
+      "source_url": "https://www.verbojuridico.com.br/pos-graduacoes-a-distancia-ead/pos-graduacao-em-direito-securitario-com-enfase-em-contratos-de-seguros-e-gestao-de-riscos/"
+    },
+    {
+      "evidence_id": "80612adc-bb81-4dac-81a7-06266573e3f9",
+      "source_type": "OFFER",
+      "title": "Curso Grátis e Online de Analista de Sinistros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:54:03.890871+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Curso Grátis e Online de Analista de Sinistros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — O Curso Grátis de Analista de Sinistros é indicado para interessados em adquirir conhecimentos introdutórios sobre seguros, sinistros, análise documental, ...",
+      "source_url": "https://onlinecursosgratuitos.com.br/curso/profissoes/analista-de-sinistros"
+    },
+    {
+      "evidence_id": "79e17c87-a2df-4a11-86f8-eaada16b955b",
+      "source_type": "OFFER",
+      "title": "Litigância Predatória: inscrições para assessores e ...",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:54:21.692866+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Litigância Predatória: inscrições para assessores e ... — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — 7 de out. de 2026 — A capacitação será realizada presencialmente, entre os dias 19 e 21 de outubro, na Esmagis-MT, em Cuiabá, com carga horária total de 20 horas- ...",
+      "source_url": "https://www.tjmt.jus.br/noticias/2026/10/litigancia-predatoria-inscricoes-para-assessores-e-servidores"
+    },
+    {
+      "evidence_id": "e88e9999-4d10-45a1-88e4-feec84205478",
+      "source_type": "OFFER",
+      "title": "EJUS - CURSO: \"LITIGÂNCIA PREDATÓRIA",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:54:21.692893+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: EJUS - CURSO: \"LITIGÂNCIA PREDATÓRIA — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Aulas teórico-expositivas, estudos de casos e de decisões judiciais, com apoio em slides, envio de apostila/artigos aos alunos, e possibilidade de envio de ...",
+      "source_url": "https://www.tjsp.jus.br/app/sige/cursos/ejus/inscricao/78c01312-2626-43df-925d-389145764d78"
+    },
+    {
+      "evidence_id": "34f8c3cd-0378-43e6-afe4-bd8a31f42461",
+      "source_type": "OFFER",
+      "title": "CJF abre inscrições para curso sobre litigância abusiva*",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:54:21.692926+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: CJF abre inscrições para curso sobre litigância abusiva* — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — 27 de jul. de 2026 — O curso tem como objetivo qualificar magistrados para identificar, prevenir e enfrentar práticas de litigância abusiva e predatória nas unidades ...",
+      "source_url": "https://www.trf2.jus.br/jf2/aviso-jf2/2026/cjf-abre-inscricoes-para-curso-sobre-litigancia-abusiva"
+    },
+    {
+      "evidence_id": "a8e353bf-9f64-4a70-acc4-17d50a2ddcd9",
+      "source_type": "OFFER",
+      "title": "EJAP promove curso sobre abuso do direito de ação e ...",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:54:21.692940+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: EJAP promove curso sobre abuso do direito de ação e ... — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — 7 de nov. de 2025 — A formação teve como objetivo contribuir para a implementação de estratégias de gestão da litigiosidade e aprimorar o enfrentamento das práticas ...",
+      "source_url": "https://www.jusbrasil.com.br/noticias/ejap-promove-curso-sobre-abuso-do-direito-de-acao-e-estrategias-para-enfrentamento-da-litigancia-predatoria/5284858033"
+    },
+    {
+      "evidence_id": "7298354b-4ebb-48c0-9293-e471fe826ec3",
+      "source_type": "OFFER",
+      "title": "Combate à Litigância Predatória: Estratégias para ...",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:54:21.692970+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Combate à Litigância Predatória: Estratégias para ... — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Litigância predatória: aprenda a combater práticas abusivas e desafios no direito contemporâneo de forma eficaz.",
+      "source_url": "https://legale.com.br/blog/combate-a-litigancia-predatoria-estrategias-para-advogados/"
+    },
+    {
+      "evidence_id": "c8e443e2-2e78-4025-8a02-34a9e726f634",
+      "source_type": "OFFER",
+      "title": "Propostas estruturais para combater a Litigância Predatória",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:54:21.692983+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Propostas estruturais para combater a Litigância Predatória — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — 28 de mar. de 2025 — IASP reúne 200 pessoas em sua sede para debate com profissionais do direito e do jurídico corporativo em busca de soluções contra práticas ...",
+      "source_url": "https://iasp.org.br/propostas-estruturais-para-combater-a-litigancia-predatoria/"
+    },
+    {
+      "evidence_id": "9233a84b-88f7-439e-81e0-a59e9f3c491b",
+      "source_type": "OFFER",
+      "title": "Litigância Predatória na Justiça Brasileira: evidências e ...",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:54:21.692999+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Litigância Predatória na Justiça Brasileira: evidências e ... — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Apresentação de trabalhos acadêmicos e discussão por membros do Judiciário brasileiro sobre o problema da litigância predatória, as evidências recentes ...",
+      "source_url": "https://www.insper.edu.br/content/insper-portal/pt/eventos/2024/09/litigancia-predatoria-na-justica-brasileira-evidencias-e-consequencias.html"
+    },
+    {
+      "evidence_id": "4f323755-cad0-4178-b44c-5ef476064458",
+      "source_type": "OFFER",
+      "title": "Instagram CVG-SP forma a primeira turma do curso de prevenção à fraude Atento à dinâmica do mercado de riscos pessoais e às novas demandas dos profissionais da área, o CVG-SP criou o inédito curso online “Treinamento em Prevenção à Fraude no Mercado de Seg",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:56:57.237222+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Instagram CVG-SP forma a primeira turma do curso de prevenção à fraude Atento à dinâmica do mercado de riscos pessoais e às novas demandas dos profissionais da área, o CVG-SP criou o inédito curso online “Treinamento em Prevenção à Fraude no Mercado de Seg — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Instagram CVG-SP forma a primeira turma do curso de prevenção à fraude Atento à dinâmica do mercado de riscos pessoais e às novas demandas dos profissionais da área, o CVG-SP criou o inédito curso online “Treinamento em Prevenção à Fraude no Mercado de Seguros de Pessoas”. Aplicado no formato webinar, com aulas ao vivo e interativas, o novo curso formou a sua primeira turma em dezembro, com aulas ministradas no período noturno, totalizando 10 horas/aulas. Ministrado pelo advogado Thyago Klemp, que acumula mais de 20 anos de experiência na área de seguros e já atuou na defesa das maiores seguradoras do país, o curso tem por objetivo capacitar os alunos para identificar, compreender e combater fraudes no mercado de seguros de pessoas. Com enfoque no arcabouço jurídico aplicável, o curso oferece análise de casos práticos e estratégias de mitigação de riscos institucionais Segundo o instrutor Thyago Klemp, o curso alia uma abordagem técnica e prática ao tema da fraude em seguros de pessoas, proporcionando uma visão completa dos impactos econômicos e jurídicos, bem como das soluções disponíveis para mitigação e prevenção. “A ênfase no estudo de casos reais e nas estratégias específicas prepara os alunos para atuar de forma eficiente, ética e fundamentada no combate à fraude no mercado securitário”, diz. Leia a matéria completa e conheça o depoimento dos alunos no link da bio, em \"Todas as Matérias/ Notícias Publicadas\" #TreinamentoPrevencaoFraudeSeguroPessoas #CursosCVGSP #ThyagoKlemp",
+      "source_url": "https://www.instagram.com/p/DS2ZmnSEQeJ/"
+    },
+    {
+      "evidence_id": "d976fe16-b293-481b-8311-9b8f0a4eab89",
+      "source_type": "OFFER",
+      "title": "Finaci - Analista de Sinistros Competências Gerais Ao concluir o curso de Qualificação Profissional Técnica de Nível Médio de Analista de Sinistros o aluno deverá desenvolver as seguintes competências gerais: - Análise e Regulação de Sinistros: Capacidade",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:56:57.237455+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Finaci - Analista de Sinistros Competências Gerais Ao concluir o curso de Qualificação Profissional Técnica de Nível Médio de Analista de Sinistros o aluno deverá desenvolver as seguintes competências gerais: - Análise e Regulação de Sinistros: Capacidade — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Finaci - Analista de Sinistros Competências Gerais Ao concluir o curso de Qualificação Profissional Técnica de Nível Médio de Analista de Sinistros o aluno deverá desenvolver as seguintes competências gerais: - Análise e Regulação de Sinistros: Capacidade de analisar documentos, laudos e informações para apurar as causas e as circunstâncias de um sinistro. O objetivo é determinar a cobertura da apólice e o valor da indenização. Isso inclui a habilidade de identificar e investigar possíveis fraudes. - Conhecimento em Legislação e Normas: Entendimento das leis e regulamentos do mercado de seguros, especialmente as normas da SUSEP (Superintendência de Seguros Privados). O profissional precisa saber como as regras afetam a análise de cada caso. - Operação de Sistemas: Proficiência no uso de sistemas e softwares específicos do setor de seguros. Isso inclui ferramentas de gestão de sinistros, orçamentação e análise de dados para agilizar o processo de regulação. - Elaboração de Documentos: Habilidade de redigir relatórios técnicos, pareceres e outros documentos de forma clara e objetiva, registrando todas as etapas da análise do sinistro. - Cálculo e Negociação: Conhecimento para calcular indenizações e negociar com segurados, prestadores de serviço e terceiros. - Atenção aos Detalhes: Capacidade de ser minucioso na análise de cada documento e informação. Em sinistros, um pequeno detalhe pode mudar todo o resultado da análise. - Pensamento Crítico e Tomada de Decisão: Habilidade para avaliar informações complexas, identificar inconsistências e tomar decisões lógicas e éticas, mesmo em situações de pressão. - Comunicação Efetiva: Capacidade de se comunicar de forma clara, tanto por escrito quanto oralmente, com clientes, corretores, peritos e outros profissionais. É crucial para explicar o processo de análise e negociar soluções.",
+      "source_url": "https://inaci.com.br/cursos/educacao-a-distancia/extensao/analista-de-sinistros"
+    },
+    {
+      "evidence_id": "fc199dae-64a8-4c79-82e0-b95f4510150d",
+      "source_type": "OFFER",
+      "title": "Pós-Graduação em DIREITO SECURITÁRIO: PRÁTICA EM DIREITO DOS SEGUROS E RESSEGUROS a distância EAD Reconhecimento Cursos reconhecidos pelo MEC. Tradicional São mais de 20 anos no mercado. Qualidade Videoaulas com os melhores professores. Prático Estude no s",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:56:57.239339+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Pós-Graduação em DIREITO SECURITÁRIO: PRÁTICA EM DIREITO DOS SEGUROS E RESSEGUROS a distância EAD Reconhecimento Cursos reconhecidos pelo MEC. Tradicional São mais de 20 anos no mercado. Qualidade Videoaulas com os melhores professores. Prático Estude no s — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Pós-Graduação em DIREITO SECURITÁRIO: PRÁTICA EM DIREITO DOS SEGUROS E RESSEGUROS a distância EAD Reconhecimento Cursos reconhecidos pelo MEC. Tradicional São mais de 20 anos no mercado. Qualidade Videoaulas com os melhores professores. Prático Estude no seu tempo e onde quiser. SOBRE O CURSO O mercado de seguros e resseguros envolve relações contratuais complexas, regulação específica e demandas que exigem conhecimento jurídico especializado, especialmente diante das recentes mudanças no marco legal do setor. A Pós-Graduação em Direito Securitário com ênfase na Prática em Direito dos Seguros e Resseguros prepara o profissional para atuar com contratos de seguro e resseguro, regulação e liquidação de sinistros, responsabilidade civil, relações de consumo, arbitragem, contencioso securitário e questões regulatórias, reunindo os principais aspectos jurídicos e práticos da área. O curso de Pós-Graduação em Direito Securitário: Prática em Direito dos Seguros e Resseguros tem como objetivo consolidar conhecimentos teórico-práticos para profissionais interessados no setor segurador, com atuação precípua em temas relacionados à Responsabilidade Civil, de modo a colaborar de forma densa e contemporânea, para este segmento que vem se tornando cada vez mais importante na economia do nosso País. Assim, o curso tem o objetivo de promover a atualização e capacitação de novas habilidades para exercer um lugar de destaque no setor de seguros. Imediato 360 h/a 490 APRENDA COM AUTORIDADES DA ÁREA Alan Moreira Lopes – Advogado, Mestre Adilson José Campoy - Advogado, especialista em Direito dos Seguros e integrante do Conselho da AIDA – Associação Internacional de Direito de Seguro – Seção brasileira. Daniela Paschoal - Advogada, especialista em Seguros, Previdência e Gestão de Riscos, professora, escritora e Mestre em Gestão de Negócios. Felipe Borba - Advogado, Presidente da Comissão de Direito Securitário na OAB/DF, possui mais de 10 anos de experiência na advocacia securitária, Administrador Judicial na Vara de Falências, Recuperações Judiciais e Litígios Empresariais do DF. Gabriel Pedro Moreira Damasceno – Advogado, Mestre em Direito Internacional Contemporâneo. Ildebrando Neres Junior – Administrador, com experiência na área de Probabilidade e Estatística Ivy Cassa – Advogada, Mestra e especialista em Seguros e Previdência Privada. Juliana Santos da Cunha - Advogada, especialista em Direito dos Seguros e Vice-presidente da Comissão de Direito Securitário da OAB/DF. Lucas Ferreira Lima – Doutor em Desenvolvimento Econômico Marcio Malfatti - Advogado, especialista em Direito dos Seguros, Ouvidor da Berkley Seguros e Vice-Presidente do Grupo de Trabalho CILA de Seguro de Crédito e Caução. Conheça alguns dos grandes nomes da Verbo Matheus Carvalho Procurador da Fazenda Sauvei Lai Promotor de Justiça do MPRJ Alexandre Salim Promotor de Justiça Emerson Castelo Branco Defensor Público Maria Berenice Dias Advogada Luiz Augusto Filizzola D'Urso Advogado Daniel Amorim",
+      "source_url": "https://www.verbojuridico.com.br/pos-graduacoes-a-distancia-ead/pos-graduacao-em-direito-securitario-com-enfase-em-contratos-de-seguros-e-gestao-de-riscos/"
+    },
+    {
+      "evidence_id": "230f0577-49c9-4047-9173-dec84d0e1251",
+      "source_type": "OFFER",
+      "title": "Curso Grátis e Online de Analista de Sinistros | Online Cursos Gratuitos Analista de Sinistros Gratuito (5.0) Nivel de habilidade Básico Carga horária 10 a 120 Horas Modalidade Online Módulos 15 Compartilhe: Descrição O curso de Analista de Sinistros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:56:57.239536+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Curso Grátis e Online de Analista de Sinistros | Online Cursos Gratuitos Analista de Sinistros Gratuito (5.0) Nivel de habilidade Básico Carga horária 10 a 120 Horas Modalidade Online Módulos 15 Compartilhe: Descrição O curso de Analista de Sinistros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Curso Grátis e Online de Analista de Sinistros | Online Cursos Gratuitos Analista de Sinistros Gratuito (5.0) Nivel de habilidade Básico Carga horária 10 a 120 Horas Modalidade Online Módulos 15 Compartilhe: Descrição O curso de Analista de Sinistros apresenta os principais fundamentos do contrato de seguro, a estrutura do mercado segurador brasileiro e o papel do analista no processo de regulação. O aluno conhecerá conceitos como risco, sinistro, coberturas, exclusões e avaliação de danos, com base na legislação vigente e nas normas da SUSEP. Durante o curso, serão abordadas as etapas do processo de sinistro, desde a comunicação inicial até a emissão do parecer técnico. O conteúdo também aprofunda temas como documentos exigidos, laudos periciais, cadeia de custódia, ética profissional, sistemas de monitoramento e a relação entre seguradoras, corretores e segurados. Para quem é indicado o Curso Analista de Sinistros? O Curso Grátis de Analista de Sinistros é indicado para interessados em adquirir conhecimentos introdutórios sobre seguros, sinistros, análise documental, responsabilidade técnica e funcionamento do setor segurador. Conteúdo programático Módulo 1: Fundamentos do seguro e do sinistro Módulo 2: Estrutura do mercado segurador brasileiro Módulo 3: O papel do analista de sinistros Módulo 4: Tipos de sinistros e classificações técnicas Módulo 5: Comunicação e abertura de sinistros Módulo 6: Procedimentos de regulação de sinistros Módulo 7: Documentação e provas nos processos de sinistro Módulo 8: Análise técnica e laudos periciais Módulo 9: Normas legais aplicáveis aos sinistros Módulo 10: Sinistros em seguros patrimoniais Módulo 11: Sinistros em seguros de automóveis Módulo 12: Sinistros em seguros de vida e acidentes pessoais Módulo 13: Gestão de fraudes em sinistros Módulo 14: Ferramentas tecnológicas e sistemas de análise Referências Bibliográficas Cursos similares Gratuito Básico Assistente de Eventos Gratuito Básico Analista de Educação Básica Gratuito Básico Maqueiro Esportista Gratuito Básico Recepcionista de Academia Gratuito Básico Copeira Hospitalar Gratuito Básico Agente de Aeroportos Classificação do curso JM João Manoel Costa Fonseca (5.00) JP Jonathan Pereira Souza de Queiroz (5.00) DG Daniel Garcia Aires (5.00) show....muito bommmm..... Nosso certificado Abaixo apresentamos o nosso modelo de certificado. Este é o modelo padrão para todos os cursos do site. O que muda são os dados do aluno e os do curso que ele concluiu.",
+      "source_url": "https://onlinecursosgratuitos.com.br/curso/profissoes/analista-de-sinistros"
+    },
+    {
+      "evidence_id": "3c5ca07e-7e3c-4efe-b1e0-890352b822d3",
+      "source_type": "OFFER",
+      "title": "Regulação de Sinistros por Ramos de Seguros Especialista Anna Paixão Gerente de Sinistros e Jurídico da Junto Seguros e Vice-presidente do Grupo Nacional de Trabalho de Seguro Garantia da Associação Internacional de Direito de Seguros – AIDA Brasil. Advoga",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:56:57.240129+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Regulação de Sinistros por Ramos de Seguros Especialista Anna Paixão Gerente de Sinistros e Jurídico da Junto Seguros e Vice-presidente do Grupo Nacional de Trabalho de Seguro Garantia da Associação Internacional de Direito de Seguros – AIDA Brasil. Advoga — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Regulação de Sinistros por Ramos de Seguros Especialista Anna Paixão Gerente de Sinistros e Jurídico da Junto Seguros e Vice-presidente do Grupo Nacional de Trabalho de Seguro Garantia da Associação Internacional de Direito de Seguros – AIDA Brasil. Advogada, com MBA em Gestão Jurídica em Contratos de Seguros e Inovação pela ENS, especialização em Direito Processual Civil pela FUMEC e formação executiva em liderança e estratégia pelo INSPER. Advogada Christiane Furck Advogada - Especialista em Direito Contratual, Consumidor, Seguros e Resseguros. Coordenadora e Professora na ESA - Escola Superior da Advocacia - ESA- OAB-SP. Presidente da Comissão de Direito Securitário da OAB - Subseção Lapa. Professora na Conhecer Seguros. Advogado Cláudio Furtado Advogado formado - PUC/RS, especialista em Processo Civil - PUC/RS, Contratos e Responsabilidade Civil -UNISINOS/RS e em Direito do Seguro - Fundação do Ministério Público/RS, Membro da AIDA/Brasil (Associação Internacional de Direito do Seguro) e da Comissão de Direito de Seguro da OAB/RS Especialista Dárcio Mota Presidente do Grupo Nacional de Trabalho em Seguro de Transportes da Associação Internacional de Direito do Seguro – AIDA. Professor Fabio Jun Gobara Mais de 10 anos de vivência no Seguro Garantia, com passagens por seguradoras líderes do mercado, tendo atuado nas áreas de Sinistros e Jurídico. Especialista Felipe Bastos É Bacharel em Direito pela Universidade do Estado do Rio de Janeiro – UERJ e Mestre em Direito (LL.M.) pela University of Virginia School of Law, nos Estados Unidos, onde se graduou com honras acadêmicas (summa cum laude). Advogado Inaldo Bezerra Mestre em Direitos Difusos e Coletivos pela PUC-SP, presidente do Grupo de Trabalho de Relações de Consumo da AIDA e membro das comissões de saúde e direito securitário da OAB. Sócio do escritório Pellon & Associados. Advogado Juliano Rodrigues Ferrer Advogado graduado pela PUC/RS, possui MBA em Gestão Jurídica de Seguro e Resseguro pela ENS. É Presidente do Grupo Nacional de Trabalho de Agronegócio e Seguros, integrante da Comissão de Seguros e Previdência Complementar da OAB/RS, membro da Cátedra de Agronegócio da ANSP. Mestre em Direito Civil - USP Márcia Cicarelli Advogada com forte atuação em casos de alta complexidade em todos os ramos do segmento de Seguros, trabalhando como consultora e parecerista em contratos, operações, desenvolvimento de produtos e regulação de sinistro. Advogada Mariana Menescal Bacharel em direito pela Pontifícia Universidade Católica do Rio de Janeiro (2004) e pós-graduada em Direito Societário pelo IBMEC – Instituto Brasileiro de Mercado de Capitais de São Paulo (2008). Especialista Mauricio Szpiz Experiência de trinta anos na área de seguros e resseguros. Bacharel em Administração de Empresas – Faculdade Cândido Mendes – Centro (Rio de Janeiro) – 1995. Engenheiro Civil – Universidade Veiga de Almeida (Rio de Janeiro) – 2002. Doutor em Direito Pery Saraiva Neto Foi Diretor Acadêmico e Presidente do Gr",
+      "source_url": "https://ens.edu.br/pos/regulacao-de-sinistros-por-ramos-de-seguros"
+    },
+    {
+      "evidence_id": "53417086-b688-438e-a337-dcb8fcc32032",
+      "source_type": "PAID_COMPETITION",
+      "title": "Escola de Negócios e Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "currency": "",
+        "collected_at": "2026-10-29T19:57:02.173336+00:00"
+      },
+      "summary": "Evidência de mercado tipo PAID_COMPETITION: Escola de Negócios e Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação.",
+      "source_url": "https://enscursos.com.br/?utm_source=meta_ads&utm_medium={{campaign.name}}&utm_campaign=campanha_extensao/#extensao"
+    },
+    {
+      "evidence_id": "e80d6608-a352-42a3-980b-0e0de77ffe14",
+      "source_type": "PAID_COMPETITION",
+      "title": "Escola de Negócios e Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "currency": "",
+        "collected_at": "2026-10-29T19:57:02.173496+00:00"
+      },
+      "summary": "Evidência de mercado tipo PAID_COMPETITION: Escola de Negócios e Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação.",
+      "source_url": "https://enscursos.com.br/?utm_source=meta_ads&utm_medium={{campaign.name}}&utm_campaign=campanha_extensao/#extensao"
+    },
+    {
+      "evidence_id": "ba5f190f-7838-4e71-924a-bd404ed8b507",
+      "source_type": "PAID_COMPETITION",
+      "title": "Escola de Negócios e Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "currency": "",
+        "collected_at": "2026-10-29T19:57:02.173657+00:00"
+      },
+      "summary": "Evidência de mercado tipo PAID_COMPETITION: Escola de Negócios e Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação.",
+      "source_url": "https://enscursos.com.br/?utm_source=meta_ads&utm_medium={{campaign.name}}&utm_campaign=campanha_extensao/#extensao"
+    },
+    {
+      "evidence_id": "3a70668b-8518-4883-8187-40e044f57e3e",
+      "source_type": "PAID_COMPETITION",
+      "title": "Escola de Negócios e Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "currency": "",
+        "collected_at": "2026-10-29T19:57:02.173778+00:00"
+      },
+      "summary": "Evidência de mercado tipo PAID_COMPETITION: Escola de Negócios e Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação.",
+      "source_url": "https://enscursos.com.br/?utm_source=meta_ads&utm_medium={{campaign.name}}&utm_campaign=campanha_extensao/#extensao"
+    },
+    {
+      "evidence_id": "2dcabbdd-d73b-40e2-acdb-a69cfa9fd5e3",
+      "source_type": "PAID_COMPETITION",
+      "title": "Escola de Negócios e Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "currency": "",
+        "collected_at": "2026-10-29T19:57:02.173886+00:00"
+      },
+      "summary": "Evidência de mercado tipo PAID_COMPETITION: Escola de Negócios e Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação.",
+      "source_url": "https://enscursos.com.br/?utm_source=meta_ads&utm_medium={{campaign.name}}&utm_campaign=campanha_extensao/#extensao"
+    },
+    {
+      "evidence_id": "b344b0c3-f573-444c-b084-d750675c0f4f",
+      "source_type": "PAID_COMPETITION",
+      "title": "Escola de Negócios e Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "currency": "",
+        "collected_at": "2026-10-29T19:57:05.223180+00:00"
+      },
+      "summary": "Evidência de mercado tipo PAID_COMPETITION: Escola de Negócios e Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação.",
+      "source_url": "https://enscursos.com.br/?utm_source=meta_ads&utm_medium={{campaign.name}}&utm_campaign=campanha_extensao/#extensao"
+    },
+    {
+      "evidence_id": "aff2f5a2-92e9-440b-aa47-edb726c84b61",
+      "source_type": "PAID_COMPETITION",
+      "title": "Escola de Negócios e Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "currency": "",
+        "collected_at": "2026-10-29T19:57:05.223333+00:00"
+      },
+      "summary": "Evidência de mercado tipo PAID_COMPETITION: Escola de Negócios e Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação.",
+      "source_url": "https://enscursos.com.br/?utm_source=meta_ads&utm_medium={{campaign.name}}&utm_campaign=campanha_extensao/#extensao"
+    },
+    {
+      "evidence_id": "098f1328-269e-46a2-95d7-fb1469295bd1",
+      "source_type": "PAID_COMPETITION",
+      "title": "Escola de Negócios e Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "currency": "",
+        "collected_at": "2026-10-29T19:57:05.223478+00:00"
+      },
+      "summary": "Evidência de mercado tipo PAID_COMPETITION: Escola de Negócios e Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação.",
+      "source_url": "https://enscursos.com.br/?utm_source=meta_ads&utm_medium={{campaign.name}}&utm_campaign=campanha_extensao/#extensao"
+    },
+    {
+      "evidence_id": "e3477782-7000-4ce7-b893-e376cc872f28",
+      "source_type": "PAID_COMPETITION",
+      "title": "Escola de Negócios e Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "currency": "",
+        "collected_at": "2026-10-29T19:57:05.223593+00:00"
+      },
+      "summary": "Evidência de mercado tipo PAID_COMPETITION: Escola de Negócios e Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação.",
+      "source_url": "https://enscursos.com.br/?utm_source=meta_ads&utm_medium={{campaign.name}}&utm_campaign=campanha_extensao/#extensao"
+    },
+    {
+      "evidence_id": "124c0aef-e30d-48e7-b235-b53acc3c6a00",
+      "source_type": "PAID_COMPETITION",
+      "title": "Escola de Negócios e Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "currency": "",
+        "collected_at": "2026-10-29T19:57:05.223701+00:00"
+      },
+      "summary": "Evidência de mercado tipo PAID_COMPETITION: Escola de Negócios e Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação.",
+      "source_url": "https://enscursos.com.br/?utm_source=meta_ads&utm_medium={{campaign.name}}&utm_campaign=campanha_extensao/#extensao"
+    },
+    {
+      "evidence_id": "4cf69802-e362-428e-8741-1b21444e9cf5",
+      "source_type": "OFFER",
+      "title": "Yelum Seguradora, antiga Liberty Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:57:11.050247+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Yelum Seguradora, antiga Liberty Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Esta empresa foi incorporada ao Grupo HDI. Página inativa.",
+      "source_url": "https://www.linkedin.com/company/yelum-seguradora/"
+    },
+    {
+      "evidence_id": "185936f6-c360-4047-b76e-cbb4539bd8ac",
+      "source_type": "OFFER",
+      "title": "Seguros Unimed",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:57:11.050775+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Seguros Unimed — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Somos a Seguradora do Sistema Unimed! Se é Unimed, é seguro! A Seguros Unimed é o grupo segurador e braço financeiro do sistema de cooperativas médicas Unimed, presente em todo o país. Com uma trajetória de 35 anos no mercado, atendemos a 6 milhões de segurados nos segmentos de Saúde, Odontologia, Vida, Previdência e Ramos Elementares – voltados a Seguros Patrimoniais e de Responsabilidade Civil Profissional. Desde 2019, atuamos também na gestão de recursos financeiros para o sistema cooperativo, com a criação da InvestCoop Asset Management. Atualmente, contamos com mais de 1,8 mil colaboradores diretos e indiretos, Matriz e Central de Relacionamento em São Paulo, além de 21 escritórios regionais pelo país. Também possuímos um hub de inovação: o Stormia, que fomenta a cultura e o conhecimento sobre o assunto para os nossos colaboradores e Sistema Unimed, além de disseminar práticas de inovação e intraempreededorismo.",
+      "source_url": "https://www.linkedin.com/company/segurosunimed/"
+    },
+    {
+      "evidence_id": "e343904a-3c04-4c86-a3af-41ef2c365f43",
+      "source_type": "OFFER",
+      "title": "Junto Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:57:11.051429+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Junto Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Somos a Junto Seguros, pioneira em Seguro Garantia e um dos principais players em Fiança Locatícia no Brasil. Especialista em soluções para empresas, já atendemos mais de 100 mil companhias e emitimos mais de 2 milhões de apólices.",
+      "source_url": "https://www.linkedin.com/company/juntoseguros/"
+    },
+    {
+      "evidence_id": "c3fb5af2-2a14-4aef-b2ed-8aa86ad0126a",
+      "source_type": "OFFER",
+      "title": "Youse Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:57:11.051944+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Youse Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — A vida é uma aventura. E pode ser melhor ainda se você explorar o mundo sentindo-se confiante e dono da própria história. Somos a Youse, uma plataforma de venda de seguros 100% online. Acreditamos em um novo tipo de seguro: o que tem a cara e a personalidade dos nossos clientes. Nascemos para oferecer proteção com tecnologia, simplicidade e sem blá blá blá ou complicação e com um time de experts à sua disposição, 24h por dia, 7 dias por semana. Youse. Seguro do seu jeito. Seguro no seu tempo. Seguro tipo vc.",
+      "source_url": "https://www.linkedin.com/company/youseseguros/"
+    },
+    {
+      "evidence_id": "d43d7df5-7529-4c6b-b806-47429849e8bc",
+      "source_type": "OFFER",
+      "title": "Sompo Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:57:11.052427+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Sompo Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Sompo Seguros S.A is a subsidiary of Sompo International, the company responsible for the insurance and reinsurance operations of the Sompo Holdings Group outside Japan. The company has a specialized team and a diversified portfolio of insurance products and services to guarantee protection with excellent insurance and risk management solutions. Its Wide range of products includes Corporate Insurance in lines as Marine, Commercial Multiple Peril, Financial Lines & Casualty, Bid Bond, Court Bond, Engineering Risks, Specified Risks & All Risks, Oil & Gas, Crop Funding & Yield, Mobile & Stationery Equipments and Rural Pledge Equipments.",
+      "source_url": "https://www.linkedin.com/company/sompo-seguros/"
+    },
+    {
+      "evidence_id": "48d0fafa-2046-4c1d-8ed7-34a2683dd880",
+      "source_type": "OFFER",
+      "title": "Icatu Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:57:11.053596+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Icatu Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — A Icatu Seguros é especializada em Seguros de Vida, Previdência, Capitalização, Administração de Recursos e Administração de Benefícios. Oferecemos produtos e serviços para pessoas em busca de segurança e realização financeira em cada fase da vida. Somos especializados na comercialização de produtos através de parcerias e do mercado empresarial. São mais de 30 parceiros comerciais e cerca de 9.000 empresas clientes. Administramos ativos e recursos de terceiros que ultrapassam a soma de R$ 7 bilhões e com mais de 69 fundos sob gestão própria, figuramos no topo dos mais importantes rankings financeiros nacionais.",
+      "source_url": "https://www.linkedin.com/company/icatu-seguros/"
+    },
+    {
+      "evidence_id": "e77f2389-7759-44ce-bafd-2f892006b2da",
+      "source_type": "OFFER",
+      "title": "Alper Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:57:11.054066+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Alper Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Para proteger tudo que mais importa é preciso ter ao seu lado pessoas em quem você possa confiar. Por isso a Alper é uma das maiores corretoras de seguros do país. Aqui, você conta com um time de especialistas que trabalha sempre em busca de soluções para garantir as melhores alternativas e opções em proteção para você e sua empresa. É através de informações, estudos aprofundados e conhecimento amplo dos nossos especialistas que nós orientamos você a tomar as melhores decisões. Conte com a gente. Conte com a Alper.",
+      "source_url": "https://www.linkedin.com/company/alper-seguros/"
+    },
+    {
+      "evidence_id": "9c01921f-a26b-4571-8888-3a31c1cdfb3e",
+      "source_type": "OFFER",
+      "title": "Bradesco Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:57:11.054601+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Bradesco Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — A Bradesco Seguros nasceu da aquisição da antiga “Atlântica Boavista” pelo Bradesco (controlador) em 1983. É líder do mercado segurador nacional com atuação multilinha - segmentos de seguros, capitalização e previdência complementar aberta. Atua em âmbito nacional com presença em todas as regiões do Brasil. Possui mais de 200 dependências e os serviços também estão disponíveis nas agências do Bradesco e por intermédio de corretores cadastrados. Possui cerca de 7.000 empregados e sua matriz está no município de Barueri. Ficha técnica Razão social: Bradesco Seguros S.A. Tipo: Empresa de capital fechado Slogan: “Com Você. Sempre.” Indústria: Serviços Financeiros Fundação: 1983 Sede: São Paulo, Brasil Proprietário(s): Bradesco Presidente: Ivan Luiz Gontijo Júnior Empregados/Funcionários: 7.000 Produtos: Seguros, capitalização e previdência complementar aberta Ativos: R$ 319,3 bilhões (2021) Lucro: R$ 5,3 bilhões (2021) Faturamento: R$ 81,8 bilhões (2021) Website oficial: bradescoseguros.com.br Empresas pertencentes a Bradesco Seguros · Bradesco Auto/RE Companhia de Seguros S.A. · Bradesco Capitalização S.A. · Bradesco Saúde S.A. · Bradesco Vida e Previdência S.A. · BSP Empreendimentos Imobiliários · MEDISERVICE · Bradesco Dental · MULTIPENSIONS",
+      "source_url": "https://www.linkedin.com/company/bradesco-seguros/"
+    },
+    {
+      "evidence_id": "b4cac2dc-211c-4706-b323-1394067f48f2",
+      "source_type": "OFFER",
+      "title": "Minuto Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:57:11.055022+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Minuto Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — A Minuto Seguros é uma corretora de seguros online que vai muito além da agilidade e da praticidade. Aqui, seu tempo e suas conquistas são valorizados por todos nós, pois nos colocamos em seu lugar a cada momento e juntos encontramos o melhor caminho. Nosso site oferece uma navegação segura, simples e intuitiva para que você tenha liberdade de pesquisa e escolha e nossos consultores de seguros garantem um atendimento personalizado, respaldados por ampla experiência de mercado e genuíno interesse em ajudá-lo. Com a Minuto Seguros, você experimenta a verdadeira união entre a praticidade virtual com o comprometimento e o respeito do nosso atendimento real, porque oferecemos uma consultoria específica para entender suas necessidades e indicar o melhor tipo de seguro para cada bem e situação, há mais de 20 anos. Com uma equipe apaixonada pelo que faz, estamos preparados para apoiar nossos clientes na hora da contratação de um seguro e oferecer proteção e bem-estar no momento em que necessitarem de ajuda profissional. O amplo conhecimento deste mercado nos possibilita uma atuação pró-ativa e positiva, colaborando com a excelência de nossos resultados e satisfação de todos, equipe e cliente.",
+      "source_url": "https://www.linkedin.com/company/minuto-seguros/"
+    },
+    {
+      "evidence_id": "a2c51dbc-8e38-40ef-b7a4-b90aee536ef9",
+      "source_type": "OFFER",
+      "title": "AIG Seguros Brasil",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:57:11.056020+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: AIG Seguros Brasil — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Bem-vindo à página AIG Brasil. Aqui, você encontrará as atualizações mais importantes e recentes da AIG no Brasil em português. A AIG atua em mais de 200 países e jurisdições ajudando pessoas e empresas a se desenvolverem e aproveitarem as oportunidades, identificando e gerenciando riscos. Há mais de 70 anos no Brasil, oferecemos aos clientes experiência profissional e entendimento sobre riscos, para que possam prosperar em um mundo em constante mudança e tomar as decisões confiáveis que lhes permitam estar mais seguros. Oferecemos soluções em seguros para empresas e pessoas físicas. Para pessoas jurídicas, a AIG oferece seguros de Responsabilidade Civil; Riscos Ambientais; Linhas Financeiras, com destaque para D&O, riscos cibernéticos e gestão de crises; Riscos de Transporte; Riscos para Equipamentos de linhas amarela e verde; Patrimonial e Crédito. Já no segmento de pessoas físicas além de Seguro Viagem Corporativo, a AIG é referência mundial em seguros de Acidentes Pessoais. Garantido por AIG Seguros Brasil S/A. CNPJ 33.040.981/0001-50 | Central de Atendimento AIG 24 horas: 0800 726 6130 / Atendimento AIG a Deficientes Auditivos: 0800 724 0149 | Ouvidoria (2ª a 6ª, das 9h às 18h): 0800 724 02 19 / Ouvidoria - Atendimento a Deficientes Auditivos e de fala (2ª a 6ª, das 9h às 18h): 0800 200 1244. | Nº Processo SUSEP – Confira em aig.com.br/seguros | O registro deste plano na SUSEP não implica, por parte da Autarquia, incentivo ou recomendação a sua comercialização",
+      "source_url": "https://www.linkedin.com/showcase/aig-brasil/"
+    },
+    {
+      "evidence_id": "158b62ce-0d22-413f-909d-3dbf31cbab1f",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Prevençao a Fraudes Senior",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:57:55.087074+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Prevençao a Fraudes Senior — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — companyName=XP Inc., location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-preven%C3%A7ao-a-fraudes-senior-at-xp-inc-4472078882?position=15&pageNum=0&refId=GvRP06Fk1sBJXFIKmpoiUA%3D%3D&trackingId=uxG6rujb1ccUmgbA1Yuy%2FA%3D%3D"
+    },
+    {
+      "evidence_id": "e1d51615-0dda-4f4d-9d6a-1bc3d938c0d4",
+      "source_type": "JOB_MARKET",
+      "title": "Consultor de Atendimento Bilíngue - Antifraude",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:57:55.087141+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Consultor de Atendimento Bilíngue - Antifraude — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — companyName=RH Ser Consultoria Empresarial, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/consultor-de-atendimento-bil%C3%ADngue-antifraude-at-rh-ser-consultoria-empresarial-4454289805?position=14&pageNum=0&refId=GvRP06Fk1sBJXFIKmpoiUA%3D%3D&trackingId=wVgWWunLF%2F3rqZbQ5PDaBQ%3D%3D"
+    },
+    {
+      "evidence_id": "fe1f0019-6a5e-4d89-878a-dda6aaa4d4cb",
+      "source_type": "JOB_MARKET",
+      "title": "Fraud Data Analyst",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "location": "Brazil",
+        "collected_at": "2026-10-29T19:57:55.087331+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Fraud Data Analyst — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — companyName=Incognia, location=Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/fraud-data-analyst-at-incognia-4483138532?position=13&pageNum=0&refId=GvRP06Fk1sBJXFIKmpoiUA%3D%3D&trackingId=5PQNLrBaeQW2gjSbvbH2KA%3D%3D"
+    },
+    {
+      "evidence_id": "b52eda13-7bac-4d28-b3ce-8fcc97d15f92",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Investigação de Fraudes Sênior",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "location": "Brazil",
+        "collected_at": "2026-10-29T19:57:55.087444+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Investigação de Fraudes Sênior — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — companyName=Riachuelo, location=Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-investiga%C3%A7%C3%A3o-de-fraudes-s%C3%AAnior-at-riachuelo-4481940033?position=11&pageNum=0&refId=GvRP06Fk1sBJXFIKmpoiUA%3D%3D&trackingId=IklFP4ym8vk3OYF%2BbsCqBg%3D%3D"
+    },
+    {
+      "evidence_id": "5cc0c5b6-6b21-4bc4-8e87-06774a4059b0",
+      "source_type": "JOB_MARKET",
+      "title": "Consultor de Atendimento - Prevenção de Fraudes (Bilíngue)",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:57:55.087499+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Consultor de Atendimento - Prevenção de Fraudes (Bilíngue) — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — companyName=RH Ser Consultoria Empresarial, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/consultor-de-atendimento-preven%C3%A7%C3%A3o-de-fraudes-bil%C3%ADngue-at-rh-ser-consultoria-empresarial-4464577786?position=9&pageNum=0&refId=GvRP06Fk1sBJXFIKmpoiUA%3D%3D&trackingId=9KI6TwW%2BEvPZ82QHRTD6wA%3D%3D"
+    },
+    {
+      "evidence_id": "56a33aaa-e9d1-4faf-8803-c690400f225d",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Prevenção a Fraudes Sênior",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:57:55.087719+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Prevenção a Fraudes Sênior — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — companyName=FUTURO, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-preven%C3%A7%C3%A3o-a-fraudes-s%C3%AAnior-at-futuro-4458446212?position=12&pageNum=0&refId=GvRP06Fk1sBJXFIKmpoiUA%3D%3D&trackingId=uPCKVmvY7ypE4DUoLbZgww%3D%3D"
+    },
+    {
+      "evidence_id": "4cfd2c2e-d2a4-4243-9af5-84cd628b0bad",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Prevenção a Fraudes",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:57:55.087795+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Prevenção a Fraudes — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — companyName=Beltis, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-preven%C3%A7%C3%A3o-a-fraudes-at-beltis-4471590074?position=10&pageNum=0&refId=GvRP06Fk1sBJXFIKmpoiUA%3D%3D&trackingId=kUV4gG6xShDseWhz4ZbZfg%3D%3D"
+    },
+    {
+      "evidence_id": "20330a19-ff1b-43f7-b2e2-9afe79d7a277",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Risco Pleno",
+      "key_metrics": {
+        "location": "Barueri, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:57:55.087923+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Risco Pleno — companyName=Porto, location=Barueri, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-risco-pleno-at-porto-4473505207?position=8&pageNum=0&refId=GvRP06Fk1sBJXFIKmpoiUA%3D%3D&trackingId=sUcjUpLdVRRGXupLe1jpeQ%3D%3D"
+    },
+    {
+      "evidence_id": "93b96909-15c7-4958-b77c-31107f3ffe1d",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Fraudes Junior - Foco em Dados",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "location": "Curitiba, Paraná, Brazil",
+        "collected_at": "2026-10-29T19:57:55.087973+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Fraudes Junior - Foco em Dados — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — companyName=Grupo Senff, location=Curitiba, Paraná, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-fraudes-junior-foco-em-dados-at-grupo-senff-4482128751?position=6&pageNum=0&refId=GvRP06Fk1sBJXFIKmpoiUA%3D%3D&trackingId=JEYTTlmXqsuOLeNbZiNyrA%3D%3D"
+    },
+    {
+      "evidence_id": "38eca74f-ade2-4f0b-9773-bd6ca7bf64c8",
+      "source_type": "JOB_MARKET",
+      "title": "Assistente de Fraudes",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "location": "Curitiba, Paraná, Brazil",
+        "collected_at": "2026-10-29T19:57:55.088022+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Assistente de Fraudes — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — companyName=Grupo Senff, location=Curitiba, Paraná, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/assistente-de-fraudes-at-grupo-senff-4482137359?position=3&pageNum=0&refId=GvRP06Fk1sBJXFIKmpoiUA%3D%3D&trackingId=OvQj%2B2E4BPGe54MbhoYgew%3D%3D"
+    },
+    {
+      "evidence_id": "be0fbc81-2c14-41ba-a166-312df590d866",
+      "source_type": "JOB_MARKET",
+      "title": "ANALISTA DE DADOS SR - PREVENÇÃO A FRAUDE",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "location": "Sorocaba, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:57:55.088163+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: ANALISTA DE DADOS SR - PREVENÇÃO A FRAUDE — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — companyName=Afinz, location=Sorocaba, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-dados-sr-preven%C3%A7%C3%A3o-a-fraude-at-afinz-4480693972?position=7&pageNum=0&refId=GvRP06Fk1sBJXFIKmpoiUA%3D%3D&trackingId=aZRLadH0lz1rPhGYGupOxQ%3D%3D"
+    },
+    {
+      "evidence_id": "767d868e-83b6-4f94-91b0-5c2234c01f5d",
+      "source_type": "JOB_MARKET",
+      "title": "ANALISTA DE ANTIFRAUDE SÊNIOR | BELO HORIZONTE/MG",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "location": "Belo Horizonte, Minas Gerais, Brazil",
+        "collected_at": "2026-10-29T19:57:55.088492+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: ANALISTA DE ANTIFRAUDE SÊNIOR | BELO HORIZONTE/MG — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — companyName=Localiza&Co, location=Belo Horizonte, Minas Gerais, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-antifraude-s%C3%AAnior-belo-horizonte-mg-at-localiza-co-4480024731?position=5&pageNum=0&refId=GvRP06Fk1sBJXFIKmpoiUA%3D%3D&trackingId=TQowXOHmCi9vXosu8vuP7w%3D%3D"
+    },
+    {
+      "evidence_id": "f79efdd8-824d-4ea6-98f2-a293c2d761ae",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Inteligência Antifraude Jr. (Patrimonial e Logística)",
+      "key_metrics": {
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:57:55.088683+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Inteligência Antifraude Jr. (Patrimonial e Logística) — companyName=GIF International, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-intelig%C3%AAncia-antifraude-jr-patrimonial-e-log%C3%ADstica-at-gif-international-4481806988?position=4&pageNum=0&refId=GvRP06Fk1sBJXFIKmpoiUA%3D%3D&trackingId=bF1yEjYvYtSsojOj6hRwPg%3D%3D"
+    },
+    {
+      "evidence_id": "0c5a6c8a-7501-4dd8-9709-c263d040de1d",
+      "source_type": "JOB_MARKET",
+      "title": "Analista Sênior de Investigação de Sinistros e Prevenção à Fraude",
+      "key_metrics": {
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:57:55.088778+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista Sênior de Investigação de Sinistros e Prevenção à Fraude — companyName=GIF International, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-s%C3%AAnior-de-investiga%C3%A7%C3%A3o-de-sinistros-e-preven%C3%A7%C3%A3o-%C3%A0-fraude-at-gif-international-4470152525?position=1&pageNum=0&refId=GvRP06Fk1sBJXFIKmpoiUA%3D%3D&trackingId=2N2eV8kWg4EEuTPsg87MlA%3D%3D"
+    },
+    {
+      "evidence_id": "bfd15bfb-3fe2-487f-89f0-4f4f7641a9ba",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Prevenção a Fraude Pleno",
+      "key_metrics": {
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:57:55.088947+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Prevenção a Fraude Pleno — companyName=AIG, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-preven%C3%A7%C3%A3o-a-fraude-pleno-at-aig-4479179220?position=2&pageNum=0&refId=GvRP06Fk1sBJXFIKmpoiUA%3D%3D&trackingId=LMlHP2f%2FHQ%2BkEdzGCu3HWA%3D%3D"
+    },
+    {
+      "evidence_id": "94e5d74c-f223-42df-a3bf-befb68365021",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Sinistros",
+      "key_metrics": {
+        "location": "Porto Alegre, Rio Grande do Sul, Brazil",
+        "collected_at": "2026-10-29T19:58:25.254259+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Sinistros — companyName=Grupo Apisul, location=Porto Alegre, Rio Grande do Sul, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-sinistros-at-grupo-apisul-4462413720?position=12&pageNum=0&refId=fTrTpiSY2gZG0wan4Au9OA%3D%3D&trackingId=SBAYtFn21%2FxnYeGh38YRtA%3D%3D"
+    },
+    {
+      "evidence_id": "5aa47114-aab8-4fdc-8d52-f62ebc157d66",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Seguros (Foco em Sinistros) | Central Brasil Corretora de Seguros",
+      "key_metrics": {
+        "location": "Chapecó, Santa Catarina, Brazil",
+        "collected_at": "2026-10-29T19:58:25.254776+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Seguros (Foco em Sinistros) | Central Brasil Corretora de Seguros — companyName=Cresol Cooperativa, location=Chapecó, Santa Catarina, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-seguros-foco-em-sinistros-central-brasil-corretora-de-seguros-at-cresol-cooperativa-4482581000?position=14&pageNum=0&refId=fTrTpiSY2gZG0wan4Au9OA%3D%3D&trackingId=riNUR9y14Cb5DkC5TTFIfw%3D%3D"
+    },
+    {
+      "evidence_id": "f1bfd3f0-dfba-4240-aa98-399c75fb85f7",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Subscrição de Vida Junior",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:58:25.254942+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Subscrição de Vida Junior — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — companyName=Brasilseg, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-subscri%C3%A7%C3%A3o-de-vida-junior-at-brasilseg-4480084948?position=15&pageNum=0&refId=fTrTpiSY2gZG0wan4Au9OA%3D%3D&trackingId=TFMV%2FxdnG360TVXnCIE2Kw%3D%3D"
+    },
+    {
+      "evidence_id": "d6850b83-621c-4ace-85db-56e4ead718e5",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Sinistros RE Pleno (Responsabilidade Civil)",
+      "key_metrics": {
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:58:25.255210+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Sinistros RE Pleno (Responsabilidade Civil) — companyName=Tokio Marine Seguradora, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-sinistros-re-pleno-responsabilidade-civil-at-tokio-marine-seguradora-4443230230?position=11&pageNum=0&refId=fTrTpiSY2gZG0wan4Au9OA%3D%3D&trackingId=HyKkSjNG%2FSpLvK%2Fb%2Fwiz1g%3D%3D"
+    },
+    {
+      "evidence_id": "348b5272-c883-49a2-b630-3eb62a0551aa",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Sinistro Pleno (Vida/Pessoas)",
+      "key_metrics": {
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:58:25.255315+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Sinistro Pleno (Vida/Pessoas) — companyName=Kev Seguros, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-sinistro-pleno-vida-pessoas-at-kev-seguros-4469920674?position=9&pageNum=0&refId=fTrTpiSY2gZG0wan4Au9OA%3D%3D&trackingId=65fZ%2FXFJdDADl8tBkoYohQ%3D%3D"
+    },
+    {
+      "evidence_id": "0b9f7b56-1593-4af5-834a-8ae3e3237396",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Sinistro | Júnior",
+      "key_metrics": {
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:58:25.255549+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Sinistro | Júnior — companyName=Akad Seguros, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-sinistro-j%C3%BAnior-at-akad-seguros-4481993570?position=10&pageNum=0&refId=fTrTpiSY2gZG0wan4Au9OA%3D%3D&trackingId=VoKjMN%2B0JrUgMt2XCGS%2Brg%3D%3D"
+    },
+    {
+      "evidence_id": "a61711e9-2575-4804-877c-33e7c71e4eb8",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Sinistro SR. (Property)",
+      "key_metrics": {
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:58:25.255658+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Sinistro SR. (Property) — companyName=Lockton, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-sinistro-sr-property-at-lockton-4476351331?position=8&pageNum=0&refId=fTrTpiSY2gZG0wan4Au9OA%3D%3D&trackingId=JIXmmGcLgU819yunRY8uUw%3D%3D"
+    },
+    {
+      "evidence_id": "19b94ec0-327b-4847-bf78-7c2567144cfe",
+      "source_type": "JOB_MARKET",
+      "title": "ANALISTA DE SINISTROS JR",
+      "key_metrics": {
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:58:25.255790+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: ANALISTA DE SINISTROS JR — companyName=Hero Seguros, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-sinistros-jr-at-hero-seguros-4479356829?position=6&pageNum=0&refId=fTrTpiSY2gZG0wan4Au9OA%3D%3D&trackingId=CmDFypZrcPctK%2BiSTXdGPQ%3D%3D"
+    },
+    {
+      "evidence_id": "4d08278c-9805-40ef-8da7-4b0eb2255f7b",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Sinistros",
+      "key_metrics": {
+        "location": "Maringá, Paraná, Brazil",
+        "collected_at": "2026-10-29T19:58:25.255876+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Sinistros — companyName=Sancor Seguros Brasil, location=Maringá, Paraná, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-sinistros-at-sancor-seguros-brasil-4472558142?position=4&pageNum=0&refId=fTrTpiSY2gZG0wan4Au9OA%3D%3D&trackingId=ffj9nyonJoAKr23MTgnxhg%3D%3D"
+    },
+    {
+      "evidence_id": "62e3b351-7454-4829-8952-d82f67e6f4e0",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Regulação de Sinistro Automóvel Pleno",
+      "key_metrics": {
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:58:25.255938+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Regulação de Sinistro Automóvel Pleno — companyName=Pier Seguradora, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-regula%C3%A7%C3%A3o-de-sinistro-autom%C3%B3vel-pleno-at-pier-seguradora-4465169820?position=1&pageNum=0&refId=fTrTpiSY2gZG0wan4Au9OA%3D%3D&trackingId=SP6a4h0wgcNzUan9R4soDw%3D%3D"
+    },
+    {
+      "evidence_id": "59c394a2-edbb-442b-83dd-eee190dcb1a6",
+      "source_type": "JOB_MARKET",
+      "title": "Analista Sinistros Auto Pl",
+      "key_metrics": {
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:58:25.256056+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista Sinistros Auto Pl — companyName=Seguros SURA, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-sinistros-auto-pl-at-seguros-sura-4473397947?position=3&pageNum=0&refId=fTrTpiSY2gZG0wan4Au9OA%3D%3D&trackingId=nbkM7zr09HhTNbnj7%2F0B5Q%3D%3D"
+    },
+    {
+      "evidence_id": "1035163e-8090-4fd5-8d31-f87345a10032",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Regulação de Sinistro Automóvel Sênior",
+      "key_metrics": {
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:58:25.256125+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Regulação de Sinistro Automóvel Sênior — companyName=Pier Seguradora, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-regula%C3%A7%C3%A3o-de-sinistro-autom%C3%B3vel-s%C3%AAnior-at-pier-seguradora-4465161791?position=2&pageNum=0&refId=fTrTpiSY2gZG0wan4Au9OA%3D%3D&trackingId=y0B%2BK07GwNamLiWo8SsJyQ%3D%3D"
+    },
+    {
+      "evidence_id": "1b057907-7f6d-491a-90e2-b6e48507904d",
+      "source_type": "JOB_MARKET",
+      "title": "Analista de Sinistros PL - Linhas Financeiras (Garantia Judicial).",
+      "key_metrics": {
+        "location": "São Paulo, São Paulo, Brazil",
+        "collected_at": "2026-10-29T19:58:25.256280+00:00"
+      },
+      "summary": "Evidência de mercado tipo JOB_MARKET: Analista de Sinistros PL - Linhas Financeiras (Garantia Judicial). — companyName=FF Seguros, location=São Paulo, São Paulo, Brazil",
+      "source_url": "https://br.linkedin.com/jobs/view/analista-de-sinistros-pl-linhas-financeiras-garantia-judicial-at-ff-seguros-4477080359?position=5&pageNum=0&refId=fTrTpiSY2gZG0wan4Au9OA%3D%3D&trackingId=6%2Fzj9XiSpB8Y8j%2FTQgN9rQ%3D%3D"
+    },
+    {
+      "evidence_id": "fc9026f4-b13c-42c4-9413-aa7a5c336dec",
+      "source_type": "OFFER",
+      "title": "Tentativas de fraude contra seguradoras aumentam e 27% das ...",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:59:20.728413+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Tentativas de fraude contra seguradoras aumentam e 27% das ... — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação.",
+      "source_url": "https://www.youtube.com/watch?v=ZkJevb_TNw8"
+    },
+    {
+      "evidence_id": "5d5e1acb-3a4e-4cfd-a7a1-efe3009193e4",
+      "source_type": "OFFER",
+      "title": "Fantástico: Golpe do seguro",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:59:20.728436+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Fantástico: Golpe do seguro — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação.",
+      "source_url": "https://www.youtube.com/watch?v=W1EPxNlotP0"
+    },
+    {
+      "evidence_id": "ecc210f0-a303-4292-bccd-f5981c1ae543",
+      "source_type": "OFFER",
+      "title": "Como automatizar a gestão de sinistros com Agentes de IA no- ...",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:59:20.728580+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Como automatizar a gestão de sinistros com Agentes de IA no- ... — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação.",
+      "source_url": "https://www.youtube.com/watch?v=eN2_2ia7A8o"
+    },
+    {
+      "evidence_id": "917ad323-f2d3-44d2-ba25-74017e2bfd43",
+      "source_type": "OFFER",
+      "title": "Operação mira fraude contra seguradora do RJ | CNN ARENA",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:59:20.728593+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Operação mira fraude contra seguradora do RJ | CNN ARENA — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação.",
+      "source_url": "https://www.youtube.com/watch?v=f2EiTQNt46c"
+    },
+    {
+      "evidence_id": "89a4806d-c000-4fe9-bb47-d01ec47019a1",
+      "source_type": "OFFER",
+      "title": "95 - Sinistro em Foco: Dificuldades de Atendimento, Fraudes e ...",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:59:20.728610+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: 95 - Sinistro em Foco: Dificuldades de Atendimento, Fraudes e ... — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — O atendimento em casos de sinistro é sempre um desafio no setor de seguros! Como as empresas enfrentam dificuldades de atendimento, lidam com fraudes e ...",
+      "source_url": "https://m.youtube.com/watch?v=J6IPVphnOLw"
+    },
+    {
+      "evidence_id": "bd0fe58d-233b-4ec7-8696-6ba7bcc38aa8",
+      "source_type": "OFFER",
+      "title": "IA avança no setor segurador, mas impacto financeiro ainda é ...",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:59:20.728633+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: IA avança no setor segurador, mas impacto financeiro ainda é ... — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação.",
+      "source_url": "https://www.youtube.com/watch?v=t9HLdYesVfQ"
+    },
+    {
+      "evidence_id": "c5f877b7-9f5f-45a7-9bea-e447baa66702",
+      "source_type": "OFFER",
+      "title": "Entenda os Seguros Obrigatórios para o Transporte Rodoviário ...",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:59:20.728644+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Entenda os Seguros Obrigatórios para o Transporte Rodoviário ... — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação.",
+      "source_url": "https://www.youtube.com/watch?v=1ca6SUuM4ec"
+    },
+    {
+      "evidence_id": "a8a010dd-1a8f-45b0-9595-3f4e33fb9856",
+      "source_type": "SOCIAL_VOICE",
+      "title": "O Novo Golpe dos Seguros? (E como Seguradoras participam...)",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:59:37.386473+00:00"
+      },
+      "summary": "Evidência de mercado tipo SOCIAL_VOICE: O Novo Golpe dos Seguros? (E como Seguradoras participam...) — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Quando perdi meus pais num acidente de carro, para poder pegar um seguro de vida que eles tinham fiquei literalmente 1 ano coletando documentos, indo no detran, caixa econômica, advogados, seguradora, policia civil, IML, cartório. enfim, era tanta burocracia que dava vontade de desistir.",
+      "source_url": "https://www.youtube.com/watch?v=P0Mh4rnZcYU"
+    },
+    {
+      "evidence_id": "8422f151-ca53-45c0-a95b-4220397c2c33",
+      "source_type": "SOCIAL_VOICE",
+      "title": "O Novo Golpe dos Seguros? (E como Seguradoras participam...)",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:59:37.386569+00:00"
+      },
+      "summary": "Evidência de mercado tipo SOCIAL_VOICE: O Novo Golpe dos Seguros? (E como Seguradoras participam...) — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Um conhecido meu desceu pro litoral curtiu a semana e na hora de subir sabotou o carro e chamou a seguradora para não gastar com gasolina e pedagio.",
+      "source_url": "https://www.youtube.com/watch?v=P0Mh4rnZcYU"
+    },
+    {
+      "evidence_id": "5d583882-3d21-434f-98b2-5dbbea86fbe8",
+      "source_type": "SOCIAL_VOICE",
+      "title": "O Novo Golpe dos Seguros? (E como Seguradoras participam...)",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:59:37.386595+00:00"
+      },
+      "summary": "Evidência de mercado tipo SOCIAL_VOICE: O Novo Golpe dos Seguros? (E como Seguradoras participam...) — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Malandros dando golpes em malandros.",
+      "source_url": "https://www.youtube.com/watch?v=P0Mh4rnZcYU"
+    },
+    {
+      "evidence_id": "648e1632-3a09-479d-b86e-b4f18d6f8196",
+      "source_type": "SOCIAL_VOICE",
+      "title": "O Novo Golpe dos Seguros? (E como Seguradoras participam...)",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:59:37.386621+00:00"
+      },
+      "summary": "Evidência de mercado tipo SOCIAL_VOICE: O Novo Golpe dos Seguros? (E como Seguradoras participam...) — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — é por isso que é tão comum as pessoas usarem aquelas dash cam nos carros, em outros países, justamente pra ter como prova contra a maland4gem da galera kk",
+      "source_url": "https://www.youtube.com/watch?v=P0Mh4rnZcYU"
+    },
+    {
+      "evidence_id": "d74c0624-4cc2-4124-936e-59ed7a66ffba",
+      "source_type": "SOCIAL_VOICE",
+      "title": "O Novo Golpe dos Seguros? (E como Seguradoras participam...)",
+      "key_metrics": {
+        "collected_at": "2026-10-29T19:59:37.386663+00:00"
+      },
+      "summary": "Evidência de mercado tipo SOCIAL_VOICE: O Novo Golpe dos Seguros? (E como Seguradoras participam...) — Trabalhei na maior seguradora do Brasil, fui \"inspetor de sinisttos\", e posso garantir, existem centenas de diferentes tipos de fraudes contra seguradoras, e, todos esses golpes só não são divulgados para não dar idéia à criminoso... Quanto às seguradoras, não conheço nenhum caso onde a própria seguradora participe dos golpes, mas sim, ALGUNS FUNCIONÁRIOS PARTICIPAM, isso é sabido, sempre ocorreu. E se eu disser que pelo menos 1/3 dos carros \"roubados\"no Brasil na verdade foi golpe do proprietário contra a seguradora? Isso mesmo, um terço, mas, boa parte as seguradoras conseguem provar que foi fraude e muitos até são presos, mas também não divulgam, o que eu acho que deveria ser feito, pois isso talvez ajudasse a inibir golpistas, que, não vendo fraudadores sendo punidos, sentem-se seguros para aplicar esse tipo de golpe. E não, não vão conseguir acabar com isso, os criminosos sempre darão um jeito. Quanto mais investirem contra os criminosos, mais se aprimorarão e criarão várias outras maneiras de fraudar. Lembrem-se que no Brasil, até aqueles que criam as leis ao mesmo tempo criam \"antídotos\", e, VENDEM para os interessados em não serem atingidos por aquelas leis, ou seja, políticos e autoridades brasileiras são especislistas em jogar dos dois lados, a criar dificuldades para vender facilidades. Abraço",
+      "source_url": "https://www.youtube.com/watch?v=P0Mh4rnZcYU"
+    },
+    {
+      "evidence_id": "350d7b3b-71f0-4cb4-8a9f-3b32b8c8e042",
+      "source_type": "SOCIAL_VOICE",
+      "title": "O Novo Golpe dos Seguros? (E como Seguradoras participam...)",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:59:37.386695+00:00"
+      },
+      "summary": "Evidência de mercado tipo SOCIAL_VOICE: O Novo Golpe dos Seguros? (E como Seguradoras participam...) — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Em 2013, meu marido sofreu um acidente de carro (sem gravidade e sem vítimas) numa rua de SP e a seguradora deu \"perda total\" no veículo. Depois de alguns anos, pesquisando a placa do carro, ficamos sabendo que estava circulando normalmente no estado do Paraná!",
+      "source_url": "https://www.youtube.com/watch?v=P0Mh4rnZcYU"
+    },
+    {
+      "evidence_id": "be566535-61f1-4e57-baaf-a68a986b53b1",
+      "source_type": "SOCIAL_VOICE",
+      "title": "O Novo Golpe dos Seguros? (E como Seguradoras participam...)",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:59:37.386776+00:00"
+      },
+      "summary": "Evidência de mercado tipo SOCIAL_VOICE: O Novo Golpe dos Seguros? (E como Seguradoras participam...) — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Já presenciei fraudes da seguradora e um escritório de seguros contra um consumidor",
+      "source_url": "https://www.youtube.com/watch?v=P0Mh4rnZcYU"
+    },
+    {
+      "evidence_id": "4a83dca7-a709-4a71-95c0-2d5ef60ace37",
+      "source_type": "SOCIAL_VOICE",
+      "title": "O Novo Golpe dos Seguros? (E como Seguradoras participam...)",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:59:37.386804+00:00"
+      },
+      "summary": "Evidência de mercado tipo SOCIAL_VOICE: O Novo Golpe dos Seguros? (E como Seguradoras participam...) — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Outro aspecto desse mercado de seguros de carros é que aparentemente as seguradoras 'incentivam' as matérias sobre roubo e furto de carros nos jornais, incentivando mais pessoas a fazerem seguro, aumentando o que os clientes entendem como um valor razoável pelo prêmio e como efeito colateral incentivando ladrões a praticarem os crimes.",
+      "source_url": "https://www.youtube.com/watch?v=P0Mh4rnZcYU"
+    },
+    {
+      "evidence_id": "ce65a334-4b28-448b-ab4d-a43a674d9143",
+      "source_type": "SOCIAL_VOICE",
+      "title": "O Novo Golpe dos Seguros? (E como Seguradoras participam...)",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:59:37.386830+00:00"
+      },
+      "summary": "Evidência de mercado tipo SOCIAL_VOICE: O Novo Golpe dos Seguros? (E como Seguradoras participam...) — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — O problema e que se você compra um carro com fraudes mesmo sem saber você se lasca Mas quem te vendeu fica impunemente Livre pra continuar",
+      "source_url": "https://www.youtube.com/watch?v=P0Mh4rnZcYU"
+    },
+    {
+      "evidence_id": "07abda83-ec65-4ffc-bf57-57c986ce2c49",
+      "source_type": "SOCIAL_VOICE",
+      "title": "O Novo Golpe dos Seguros? (E como Seguradoras participam...)",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T19:59:37.386857+00:00"
+      },
+      "summary": "Evidência de mercado tipo SOCIAL_VOICE: O Novo Golpe dos Seguros? (E como Seguradoras participam...) — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Elementar é conhecimento puro",
+      "source_url": "https://www.youtube.com/watch?v=P0Mh4rnZcYU"
+    },
+    {
+      "evidence_id": "60a99269-05a8-43e2-b684-4a8af79b5673",
+      "source_type": "OFFER",
+      "title": "Regulação de Sinistros por Ramos de Seguros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T20:09:04.613409+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Regulação de Sinistros por Ramos de Seguros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — O curso é recomendado para profissionais que buscam conhecer as peculiaridades do processo de regulação de sinistros dividido por ramos de seguros no Brasil, ...",
+      "source_url": "https://ens.edu.br/pos/regulacao-de-sinistros-por-ramos-de-seguros"
+    },
+    {
+      "evidence_id": "f1359937-4ff0-4cb3-a22c-5a9dca2e5ab4",
+      "source_type": "OFFER",
+      "title": "Cursos – Sindicato dos Securitários do Estado de São Paulo",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T20:09:04.613430+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Cursos – Sindicato dos Securitários do Estado de São Paulo — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Funcionários de corretoras e seguradoras, estudantes de direito, administração, atuária ou economia, com conhecimento básico em responsabilidade civil. Local:.",
+      "source_url": "https://securitariosp.org.br/curso/"
+    },
+    {
+      "evidence_id": "47c2abae-a193-432c-be9e-8cb3de8a1c9b",
+      "source_type": "OFFER",
+      "title": "Verbo Jurídico - Pós-Graduação em DIREITO SECURITÁRIO",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T20:09:04.613476+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Verbo Jurídico - Pós-Graduação em DIREITO SECURITÁRIO — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — O curso é indicado a bacharéis em Direito e profissionais que atuam ou desejam atuar no mercado de seguros e resseguros, como: Advogados, pareceristas e ...",
+      "source_url": "https://www.verbojuridico.com.br/pos-graduacoes-a-distancia-ead/pos-graduacao-em-direito-securitario-com-enfase-em-contratos-de-seguros-e-gestao-de-riscos/"
+    },
+    {
+      "evidence_id": "9e31c4a8-ebb8-49fa-baf3-1a01c5d216a7",
+      "source_type": "OFFER",
+      "title": "Curso Grátis e Online de Analista de Sinistros",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T20:09:04.613490+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Curso Grátis e Online de Analista de Sinistros — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — O aluno conhecerá conceitos como risco, sinistro, coberturas, exclusões e avaliação de danos, com base na legislação vigente e nas normas da SUSEP. Durante o ...",
+      "source_url": "https://onlinecursosgratuitos.com.br/curso/profissoes/analista-de-sinistros"
+    },
+    {
+      "evidence_id": "480fb20d-97ae-46fa-801b-5f6c31ef6f30",
+      "source_type": "OFFER",
+      "title": "Reflexões sobre a litigância predatória",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T20:09:30.442412+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Reflexões sobre a litigância predatória — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — 6 de ago. de 2024 — O evento explorará o estudo e prática da litigância sob o viés de como as partes tomam decisões de processar, recorrer, fazer acordos tendo em ...",
+      "source_url": "https://direitosp.fgv.br/eventos/reflexoes-sobre-litigancia-predatoria"
+    },
+    {
+      "evidence_id": "41d036ce-c63a-411f-a91e-e081e29c132d",
+      "source_type": "OFFER",
+      "title": "Notícias",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T20:09:30.442489+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Notícias — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — 9 de ago. de 2024 — O evento reuniu representantes da magistratura, da academia, da advocacia e de empresas para compartilhar experiências e reflexões que ...",
+      "source_url": "https://direitosp.fgv.br/noticias/fgv-direito-sp-debate-alternativas-para-lidar-com-explosao-litigancia-predatoria-seus-efeitos"
+    },
+    {
+      "evidence_id": "44ca6987-353d-47ea-b74f-989ed1ef347b",
+      "source_type": "OFFER",
+      "title": "Curso de Investigação e Prevenção de Fraudes Corporativas Sobre o Curso Aprenda as ferramentas necessárias na gestão corporativa e análise de tendências mercadológicas, contabilidade, controladoria e auditoria. Aproveite! Confira abaixo a primeira aula do",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T20:27:20.770507+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Curso de Investigação e Prevenção de Fraudes Corporativas Sobre o Curso Aprenda as ferramentas necessárias na gestão corporativa e análise de tendências mercadológicas, contabilidade, controladoria e auditoria. Aproveite! Confira abaixo a primeira aula do — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Curso de Investigação e Prevenção de Fraudes Corporativas Sobre o Curso Aprenda as ferramentas necessárias na gestão corporativa e análise de tendências mercadológicas, contabilidade, controladoria e auditoria. Aproveite! Confira abaixo a primeira aula do curso Diferenciais É ideal para quem busca praticidade, autonomia e comodidade! Com aulas 100% online, o aluno pode estudar onde, quando e como quiser. Outra vantagem é que o aluno pode conciliar seus estudos sem alterar ou abrir mão de outras atividades do dia a dia. Todas as aulas estão disponíveis no ambiente de aprendizagem 24 horas por dia, nos 7 dias da semana. *Após o término do curso, as aulas ficarão disponíveis para os estudantes durante 3 meses. Aproveite essa oportunidade para revisar o conteúdo quando necessário. *Profissionais da área contábil, este curso vale pontos em sua certificação. Nós apoiamos o Pacto Global A Trevisan Escola de Negócios faz parte do Pacto Global das Nações Unidas, uma iniciativa que mobiliza empresas ao redor do mundo para adotar e promover práticas sustentáveis. O Pacto Global é fundamentado em 10 princípios universais nas áreas de direitos humanos, trabalho, meio ambiente e anticorrupção, pautados em normas reconhecidas internacionalmente, como a Declaração Universal dos Direitos Humanos e a Convenção da OIT sobre os direitos fundamentais no trabalho. O curso Investigação, Identificação e Tratamento de Fraudes, contribui com os seguintes Objetivos de Desenvolvimento Sustentável (ODS) da ONU: Conteúdo do curso Conteúdo do Curso Os elementos da fraude Os tipos de fraudadores e suas fraudes Prevenção as fraudes Detecção e tratamento de fraudes Legislação aplicada Coleta e análise de dados I Coleta e análise de dados II Coleta e análise de dados III Coleta e análise de dados IIII Coleta e análise de dados IIIII Entrevistas Forenses Reportando os resultados histórias de sucesso Depoimentos Rodrigo Tanji Ex-estudante do MBA Executivo em Gestão e Marketing Esportivo Sou eternamente grato à Trevisan e aos professores! Tenho muito a agradecer por todo o conhecimento que transmitiram e por todas as trocas ENG que nós tivemos. Todos os professores são extremamente receptivos e bons ouvintes e também aprendem com os alunos. Acho isso incrível! Natália Lima Ex-estudante do MBA em Perícia Contábil e do MBA em Gestão Financeira e Controladoria Através da Trevisan obtive mais uma conquista, meu CRC. No início do MBA em Perícia Contábil fiz o curso preparatório para o CRC, fui aprovada com quase 90% de aproveitamento. Deixo aqui o meu \"muito obrigada\" a todos os profissionais da Trevisan! Perguntas Frequentes Você poderá utilizar a certificação do curso como crédito (dispensa da disciplina) nos MBAs: Gestão Financeira, Compliance e Riscos Compliance e Investigação de Fraudes Você pode adquirir o curso diretamente em nosso site. Basta clicar no botão “Comprar” ou “Matricule-se agora”. Se preferir, pode solicitar atendimento em nosso chat com um de nossos especialistas. Ace",
+      "source_url": "https://trevisan.edu.br/cursos/investigacao-identificacao-e-tratamento-de-fraudes-2/"
+    },
+    {
+      "evidence_id": "640764f2-58a8-428e-bf93-246c9ac961c5",
+      "source_type": "OFFER",
+      "title": "Reflexões sobre a litigância predatória Sobre o Evento A FGV Direito SP convida a todas e todos para evento com o objetivo de debater a litigância predatória e seus efeitos, sob uma perspectiva do Direito e da Economia. O sistema de Justiça brasileiro está",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T20:27:20.770656+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Reflexões sobre a litigância predatória Sobre o Evento A FGV Direito SP convida a todas e todos para evento com o objetivo de debater a litigância predatória e seus efeitos, sob uma perspectiva do Direito e da Economia. O sistema de Justiça brasileiro está — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Reflexões sobre a litigância predatória Sobre o Evento A FGV Direito SP convida a todas e todos para evento com o objetivo de debater a litigância predatória e seus efeitos, sob uma perspectiva do Direito e da Economia. O sistema de Justiça brasileiro está entre os mais caros do mundo e com grande desafio de eficiência na sua prestação de serviços à população, havendo recomendações da necessidade de tratamento do tema sob a ótica das políticas públicas baseadas em evidências e, portanto, a partir de uma leitura multidisciplinar. O evento explorará o estudo e prática da litigância sob o viés de como as partes tomam decisões de processar, recorrer, fazer acordos tendo em conta a estrutura de incentivos hoje existentes, inclusive a partir da própria jurisprudência. Programação 9h30 – Abertura Luciano Timm, professor da FGV Direito SP, sócio do Carvalho Machado e Timm Advogados Ana Paula Nani, professora de Direito da ESPM e advogada em contencioso empresarial 10h – Mesa Redonda Maria Rita Rebello Pinho Dias, juíza da Vara de Falências e Recuperações Judiciais da Capital do Tribunal de Justiça de São Paulo (TJSP) Renato Chagas Machado, gerente executivo jurídico da Diretoria Jurídica do Banco do Brasil Murilo Meneghetti Nassif, senior legal manager na Sanofi Humberto Chiesi, Legal Director of Dispute Resolution da Latin America na Mercado Livre Thomas Conti, economista e cientista de dados, e professor do Insper 11h20 – Perguntas Local Rua Dr. Plínio Barreto, 365, Auditório, Bela Vista São Paulo - SP Receba as novidades da FGV Direito SP Nosso website coleta informações do seu dispositivo e da sua navegação e utiliza tecnologias como cookies para armazená-las e permitir funcionalidades como: melhorar o funcionamento técnico das páginas, mensurar a audiência do website e oferecer produtos e serviços relevantes por meio de anúncios personalizados. Para mais informações, acesse o nosso Aviso de Cookies e o nosso Aviso de Privacidade.",
+      "source_url": "https://direitosp.fgv.br/eventos/reflexoes-sobre-litigancia-predatoria"
+    },
+    {
+      "evidence_id": "94c6d2c6-2c2a-429a-9aec-70457310ee0d",
+      "source_type": "OFFER",
+      "title": "Cursos – Sindicato dos Securitários do Estado de São Paulo Início Cursos COMERCIALIZAÇÃO DE SEGUROS DE TRANSPORTES E RCV- Período de Inscrição: AGUARDAR Carga Horária: 20 horas aulas Perfil do Participante: Conhecimentos básicos dos Seguros da carteira",
+      "key_metrics": {
+        "evidence_role": "context_only",
+        "collected_at": "2026-10-29T20:27:20.771485+00:00"
+      },
+      "summary": "Evidência de mercado tipo OFFER: Cursos – Sindicato dos Securitários do Estado de São Paulo Início Cursos COMERCIALIZAÇÃO DE SEGUROS DE TRANSPORTES E RCV- Período de Inscrição: AGUARDAR Carga Horária: 20 horas aulas Perfil do Participante: Conhecimentos básicos dos Seguros da carteira — Contexto do setor; não é oferta concorrente nem comprovação de demanda pela formação. — Cursos – Sindicato dos Securitários do Estado de São Paulo Início Cursos COMERCIALIZAÇÃO DE SEGUROS DE TRANSPORTES E RCV- Período de Inscrição: AGUARDAR Carga Horária: 20 horas aulas Perfil do Participante: Conhecimentos básicos dos Seguros da carteira de Transportes. Objetivo: Desenvolver a capacidade para comercializar seguros de transportes embarcador (TN, TI, TE), RCTR-C e RC-DC, conhecendo os fatores mais importantes para a negociação desta carteira. Local: Avenida Nove de Julho, 40 – 14º andar, Bela Vista SP – CEP 01312-000 (referência – metrô Anhangabaú saída à direita da Rua Formosa, em frente ao terminal Bandeira). Período: AGUARDAR Dia/Horário: AULAS PRESENCIAIS - Investimento: Valor Único: Associado Contribuinte: Dependente, Estagiário/Aprendiz, Securitário Desempregado que foi associado nos últimos 06(seis) meses: Securitário com pagamento em dia da Contribuição Assistencial: Securitário Terceirizado: Para obter certificado: 100% de frequência e nota mínima 6,0 Conteúdo Programático: Conceitos Básicos dos Seguros da carteira de Transportes; Prêmios e Critérios de Taxação e Taxas Referenciais para Seguros da Carteira de Transportes; Aspectos Gerais da Comercialização dos Seguros da Carteira de Transportes; Técnicas de Negociação focada na Carteira de Seguros de Transportes. Obs: Para inscrição envie: Nome completo, CPF, Empresa e CNPJ para [EMAIL_REDACTED] CURSO BÁSICO DE D&O Período de Inscrição: AGUARDAR Carga Horária: 28 ( vinte e oito) horas aulas Perfil do Participante: Funcionários de corretoras e seguradoras, estudantes de direito, administração, atuária ou economia, com conhecimento básico em responsabilidade civil. Local: na Avenida Nove de Julho, 40 – 14º andar, Bela Vista SP (referência – metrô Anhangabaú saída à direita da Rua Formosa, em frente ao terminal Bandeira). Período: Dia/Horário: AULAS PRESENCIAIS: Investimento: Valor Único: Associado Contribuinte: Dependente, Estagiário/Aprendiz, Securitário Desempregado que foi associado nos últimos 06(seis) meses: Securitário com pagamento em dia da Contribuição Assistencial: Securitário Terceirizado: Para obter certificado: 100 % Frequência e nota mínima 6,0 Conteúdo Programático: Objetivo do Seguro, Questionário de Risco, Tipos Societários, Atividades Restritas, Análise das Informações Financeiras – Balanços e Demonstrativo de Resultados, Definição de Pessoa Segurada, Segurado x Sociedade, Base de Contratação, Âmbito de Cobertura, Retroatividade, Prazos, Principais Coberturas, Exclusões, Cláusulas Particulares, Mercado de D&O (Seguradoras x Produtos x Apetite) e Portais Obs: Para inscrição envie para e-mail [EMAIL_REDACTED] Nome completo, CPF, Empresa e CNPJ CONTAS MÉDICAS - Período de Inscrição: a definir Carga Horária: 24 horas aulas Perfil do Participante: A TODOS OS OPERADORES, TÉCNICOS DIVERSOS, ANALISTAS DE CONTAS MÉDICAS, ANALISTAS DE SINISTROS, FATURISTAS E CORRELATOS. FUNCIONÁRIOS DE SEGURADORAS OU ENTIDADES MÉDICAS E INTERESSADOS EM SUA FORMAÇÃO PLENA. FUNCIONÁRIOS ",
+      "source_url": "https://securitariosp.org.br/curso/"
+    },
+    {
+      "evidence_id": "cc6d6542-336f-48d1-9f78-a65c3f00904e",
+      "source_type": "semantic_decision",
+      "title": "Julgamento semântico readiness-v1",
+      "key_metrics": {
+        "confidence": 0.99
+      },
+      "summary": "Julgamento readiness-v1 (CHOICE): escolha=READY, score=None",
+      "source_url": null
+    },
+    {
+      "evidence_id": "f5c05992-01a9-4ffb-ab74-588aaec7e5b6",
+      "source_type": "semantic_decision",
+      "title": "Julgamento semântico syllabus-fit-v1",
+      "key_metrics": {
+        "confidence": 0.82,
+        "score_value": 78.0
+      },
+      "summary": "Julgamento syllabus-fit-v1 (SCORE): escolha=None, score=78.0",
+      "source_url": null
+    },
+    {
+      "evidence_id": "tool-run:plan-fd18c14a0e20-followup:call-18",
+      "source_type": "query_observation",
+      "title": "Consulta sem resultados em Meta Ads",
+      "key_metrics": {
+        "observed_count": 0
+      },
+      "summary": "Consulta 'treinamento investigação de sinistros' concluída sem resultados no escopo solicitado. Não comprova ausência de demanda.",
+      "source_url": null
+    },
+    {
+      "evidence_id": "tool-run:plan-fd18c14a0e20-followup:call-19",
+      "source_type": "query_observation",
+      "title": "Consulta sem resultados em Meta Ads",
+      "key_metrics": {
+        "observed_count": 0
+      },
+      "summary": "Consulta 'capacitação combate à litigância abusiva' concluída sem resultados no escopo solicitado. Não comprova ausência de demanda.",
+      "source_url": null
+    },
+    {
+      "evidence_id": "provided_proposal",
+      "source_type": "provided_proposal",
+      "title": "Proposta fornecida: Extensão em Fraude e Litigância predatória no mercado de seguros",
+      "key_metrics": {
+        "ticket": 100,
+        "duration_months": 1,
+        "installments_count": 12,
+        "total_price_brl": 1200.0
+      },
+      "summary": "Informações declaradas pela instituição; não são validação externa. {\"area\": \"Jurídico\", \"level\": \"Extensão / Aperfeiçoamento\", \"ticket\": 100, \"audience\": \"Advogados, magistrados, profissionais de seguradoras e resseguradoras, reguladores de sinistros, peritos, investigadores e profissionais de compliance, riscos, tecnologia e prevenção a fraudes. Pré-requisito: nível superior completo.\", \"modality\": \"EAD Síncrono\", \"competitors\": \"FGV, Fundação Dom Cabral, Insper, PUC-Rio, USP\", \"price_period\": \"monthly\", \"duration_months\": 1, \"installments_count\": 12, \"_institution_context\": {\"id\": \"ens\", \"name\": \"Escola de Negócios e Seguros\", \"domains\": [\"ens.edu.br\", \"enscursos.com.br\"]}, \"curriculum_file_name\": \"Programas do Curso_Extensão Fraude e litigância predatória no mercado de seguros prevenção, investigação e resposta jurídica - AIDA.docx\", \"total_price_brl\": 1200.0}\nEmenta fornecida: Extensão em Fraude e Litigância Predatória no Mercado de Seguros: Prevenção, Investigação E Resposta Jurídica Parceria AIDA CCR XXXX Sobre o curso O curso tem por objetivo examinar, de forma interdisciplinar e aplicada, os fenômenos da fraude securitária e da litigância predatória ou abusiva que atingem o mercado de seguros. A proposta integra Direito do Seguro, Direito Processual Civil, Direito Penal, proteção de dados, regulação de sinistros, governança, compliance e inteligência de dados, permitindo ao participante distinguir o exercício legítimo do direito de ação de condutas artificiais, fraudulentas ou abusivas. Ao final, o aluno deverá estar apto a identificar tipologias e sinais de alerta, planejar investigações juridicamente válidas, avaliar evidências físicas e digitais, estruturar respostas administrativas e judiciais proporcionais e implementar programas de prevenção que preservem a boa-fé, o contraditório, a proteção do consumidor e o acesso à Justiça. Público-Alvo Advogados, magistrados, membros do Ministério Público e da Defensoria Pública, corretores de seguros, profissionais de seguradoras, resseguradoras e insurtechs, reguladores e liquidantes de sinistros, peritos, investigadores, auditores, subscritores, atuários, profissionais de compliance, controles internos, riscos, proteção de dados, tecnologia, inteligência e prevenção a fraudes. Pré-requisitos Nível superior completo. Justificativa A fraude securitária compromete a mutualidade, eleva custos, afeta a precificação dos produtos, reduz a disponibilidade de coberturas e prejudica segurados de boa-fé. Paralelamente, a digitalização das relações de consumo e do processo judicial ampliou a velocidade e a escala de demandas repetitivas, criando novos desafios para diferenciar litigância de massa legítima de postulações artificiais, padronizadas ou desvinculadas da vontade real da parte. A Lei nº 15.040/2024 passou a disciplinar expressamente os efeitos da fraude praticada na reclamação de sinistro, enquanto a Recomendação CNJ nº 159/2024 e o Tema Repetitivo nº 1.198 do STJ consolidaram parâmetros recentes para a identificação e o tratamento da litigância abusiva, sem afastar as garantias do acesso à Justiça e do devido processo legal. Nesse cenário, o curso oferece formação técnica e jurídica para prevenir, detectar, investigar e responder a fraudes e abusos processuais com rigor probatório, proporcionalidade, governança e respeito aos direitos fundamentais. Conteúdo Aula 1: 05.11.2026 - Fundamentos da fraude securitária e da litigância abusiva Conceitos de fraude, erro, omissão, exagero de danos, risco moral, fraude oportunista, fraude organizada e fraude interna. Distinções entre litigância de massa, litigância de má-fé, litigância abusiva, litigância predatória, assédio processual e exercício regular do direito de ação. Impactos econômicos, jurídicos, reputacionais e sociais para a mutualidade e para o sistema de Justiça. Professor Rodrigo Freitas Aula 2: 10.11.2026 - Boa-fé, deveres contratuais e fraude na Lei nº 15.040/2024 A boa-fé objetiva no contrato de seguro, os deveres de informação, cooperação, lealdade e mitigação do dano. Declarações inexatas na formação do contrato, agravamento do risco, causalidade, prova da intenção e consequências jurídicas da fraude praticada na reclamação de sinistro. Limites das cláusulas contratuais, proteção do consumidor e vedação de presunções genéricas de fraude. Professor Tiago Gonçalves Aula 3: 12.11.2026 - Fraudes por ramos e produtos de seguro Estudo comparado de padrões recorrentes em seguros de automóvel, patrimonial, transportes, rural, pessoas, responsabilidade civil, crédito, garantia, riscos de engenharia e seguros cibernéticos. Sinistro provocado, encenação de eventos, superfaturamento, reaproveitamento de documentos, dano preexistente, multiplicidade de reclamações e manipulação da causa ou da extensão do prejuízo. Professora Adriano Scattini Aula 4: 17.11.2026 - Regulação de sinistros e investigação juridicamente adequada Planejamento da investigação, definição de hipóteses, entrevistas, inspeções, perícias, diligências e cruzamento de informações. Deveres do segurado, da seguradora, do regulador, do perito e dos prestadores. Prazos, pedidos documentais proporcionais, comunicação com o segurado, sigilo, independência técnica e elaboração de relatórios conclusivos, evitando vieses confirmatórios e acusações prematuras. Professor Paulo Rogério Hauptly Aula 5: 24.11.2026 - Inteligência de dados, inteligência artificial e proteção de dados Indicadores de anomalia, análise de redes, score de risco, modelos preditivos e uso de inteligência artificial na detecção de fraude e de padrões processuais. LGPD, bases legais, minimização, compartilhamento, retenção, segurança e direitos dos titulares. Explicabilidade, auditoria, supervisão humana, prevenção de falsos positivos e proibição de atribuição automatizada de ilicitude sem validação qualificada. Professor Landulfo Ferreira Aula 6: 26.11.2026 - Interfaces penais, administrativas, éticas e regulatórias Fraude para recebimento de indenização, estelionato, falsidades documentais, associação criminosa, lavagem de dinheiro e fraude processual. Critérios para comunicação às autoridades, elaboração de notícia-crime e cooperação com órgãos públicos. Responsabilidade de administradores, empregados e terceiros, canais de denúncia, investigações internas, garantias individuais, segredo profissional e deveres éticos da advocacia. Professor Adriano Scattini Aula 7: 01.12.2026 - Litigância predatória e abusiva: parâmetros normativos e jurisprudenciais Direito fundamental de acesso à Justiça e seus limites. Código de Processo Civil, deveres de boa-fé e cooperação, abuso do direito processual e sanções por litigância de má-fé. Recomendação CNJ nº 159/2024, listas exemplificativas de condutas e medidas de tratamento. Tema Repetitivo nº 1.198 do STJ, fundamentação, razoabilidade, demonstração do interesse de agir e verificação da autenticidade da postulação. Professora Ana Rita Petraroli Aula 8: 03.12.2026 - Programa corporativo antifraude e oficina prática integrada: Estrutura de governança, papéis das linhas de defesa, comitês, políticas, matriz de riscos, protocolos de investigação, gestão de terceiros, treinamento, indicadores de efetividade e reporte à alta administração. Integração entre subscrição, sinistros, jurídico, compliance, auditoria, tecnologia e resseguro. Resolução de caso prático envolvendo fraude securitária e litigância predatória, com elaboração de plano de resposta administrativa, probatória, judicial e reputacional. Modalidade On-line ao vivo Período De 05/11 a 03/12, terças e quintas-feiras, das 19h às 21h Duração 16h Informações 0800 025 3322 [EMAIL_REDACTED] Investimento xxxxx Descontos xxxxx Coordenação Parceria ENS x AIDA GUSTAVO AMADO LEÓN Mestre e Doutor em Direito pela PUC-SP. Professor universitário. Pós-Graduado na ENS em Gestão Jurídica de Seguros e Resseguros. LLC em Direito Empresarial no Insper. Pós-Graduado em Gestão de Pessoas pela Saint Paul. Especialista em Governança, Compliance e Riscos pela Fundação Dom Cabral. Membro da AIDA Brasil. Palestrante e autor de diversos artigos acadêmicos e livros sobre seguros e resseguros, tendo como últimas publicações \"O mercado de seguros e resseguros brasileiro diante dos fatores ASG\" e \"Seguro no Brasil e os resseguradores internacionais\". Coordenação Acadêmica GUSTAVO AMADO LEÓN Corpo Docente Rodrigo Freitas Doutorando em Direito Civil pela USP, Mestre em Direito Civil pela USP, Bacharel em Direito pela USP, Autor de livros e capítulos de livros sobre responsabilidade civil e sobre seguros, sócio de Igrejas Filgueiras Advocacia [EMAIL_REDACTED] Ana Rita Petraroli Ana Rita Petraroli é advogada e sócia do Petraroli Advogados Associados, com atuação em Direito da Saúde, Direito do Seguro e Responsabilidade Civil. É Presidente da AIDA Brasil e Vice-Presidente da ANSP (Academia Nacional de Seguros e Previdência), com experiência na condução de demandas estratégicas, gestão jurídica e desenvolvimento de soluções para os setores de seguros e saúde suplementar. [EMAIL_REDACTED] Tiago Gonçalves Advogado especializado em seguros, sócio do /lgcc - lobo gonçalves e costa campos advogados. Mestre em Direito (PUC-SP). Professor em cursos de pós-graduação em Direito do Seguro e Resseguro. Membro da Academia Nacional de Seguros e Previdência (ANSP) e associado à seção brasileira da AIDA. Membro efetivo das Comissões Especiais de Direito Aeronáutico e de Direito do Seguro e Resseguro da OAB/SP. Membro regional da Comissão de Direito do Seguro e Previdência Privada da Subseção da OAB - Jabaquara/Saúde. Autor de diversos artigos acadêmicos e de opinião publicados em revistas especializadas e na mídia em geral. Paulo Rogério Hauptly Advogado sócio da Haüptli & Sabino Advogados e Fox Regulação & Auditoria, Professor Universitário desde 2016, Especialista em Administração de Sinistro nas áreas de Marine, Financial Lines, Life, Corporate Law, White Collar Crime desde 1995. Mestre em Filosofia pela Faculdade São Bento-SP, Mestre e Doutorando em Direito pela PUC -SP, pós-graduado em empresarial com ênfase em M&A– FGV Law-SP. Landulfo Ferreira Advogado, mestre em Direito Empresarial e pós-graduado em Direito de Empresas. Professor da PUC Minas nos cursos de Direito, Administração e Ciências Contábeis e da Escola de Negócios e Seguros (ENS). É consultor jurídico e presidente da Comissão Especial de Assuntos Jurídicos e Fiscais do SINDSEG MG/GO/MT/DF, diretor regional da Academia Nacional de Seguros e Previdência (ANSP) e diretor e vice-presidente do Conselho Empresarial de Seguros da ACMinas. Integra ainda a Seção Brasileira da AIDA e atua como diretor jurídico do Instituto Minha Vida Protegida e diretor jurídico de Novos Negócios do Carlini Advogados. Adriano Scattini Advogado criminalista, graduado em direito pela Universidade Presbiteriana Mackenzie. Possui extensão em crimes financeiros pela Fundação Get",
+      "source_url": null
+    },
+    {
+      "evidence_id": "institutional_history",
+      "source_type": "institutional_history",
+      "title": "Comparação com histórico institucional",
+      "key_metrics": {
+        "data_nature": "synthetic",
+        "comparables_count": 3,
+        "reference_count": 10,
+        "reference_period": "2025",
+        "family": "extensao",
+        "comparables": [
+          {
+            "name": "Extensão em Análise de Dados para Seguros",
+            "leads": 850,
+            "family": "extensao",
+            "period": "2025",
+            "reason": "Mesma família e proximidade de tema e grade",
+            "category": "Extensão Universitária",
+            "enrolled": 57,
+            "course_id": "hc_32ab4ed470ab4b3d",
+            "ipd_score": 100.0,
+            "theme_fit": 0.0581,
+            "applicants": 150,
+            "percentiles": {
+              "leads": 100.0,
+              "enrolled": 100.0,
+              "applicants": 100.0
+            },
+            "evidence_ids": [
+              "hc_32ab4ed470ab4b3d",
+              "hf_9e3bba6ba2154fd4"
+            ],
+            "selection_fit": 0.0425,
+            "curriculum_fit": 0.0135
+          },
+          {
+            "name": "Extensão em Seguros Cibernéticos",
+            "leads": 590,
+            "family": "extensao",
+            "period": "2025",
+            "reason": "Mesma família e proximidade de tema e grade",
+            "category": "Extensão Universitária",
+            "enrolled": 37,
+            "course_id": "hc_220ed76682814d0f",
+            "ipd_score": 66.67,
+            "theme_fit": 0.0581,
+            "applicants": 100,
+            "percentiles": {
+              "leads": 66.6667,
+              "enrolled": 66.6667,
+              "applicants": 66.6667
+            },
+            "evidence_ids": [
+              "hc_220ed76682814d0f",
+              "hf_9a1325ed54fe4ac8"
+            ],
+            "selection_fit": 0.0413,
+            "curriculum_fit": 0.0101
+          },
+          {
+            "name": "Regulação de Sinistros por Ramos de Seguros",
+            "leads": 520,
+            "family": "extensao",
+            "period": "2025",
+            "reason": "Mesma família e proximidade de tema e grade",
+            "category": "Extensão",
+            "enrolled": 24,
+            "course_id": "hc_6840545da078450f",
+            "ipd_score": 50.0,
+            "theme_fit": 0.0575,
+            "applicants": 76,
+            "percentiles": {
+              "leads": 55.5556,
+              "enrolled": 44.4444,
+              "applicants": 55.5556
+            },
+            "evidence_ids": [
+              "hc_6840545da078450f",
+              "hf_a944983c982648d2"
+            ],
+            "selection_fit": 0.0403,
+            "curriculum_fit": 0.0084
+          }
+        ],
+        "limitations": [
+          "A comparação não comprova demanda ou conversão real da nova oferta."
+        ],
+        "internal_ipd_score": 72.22,
+        "internal_ipd_confidence": 0.9,
+        "score_scale_maximum": 100
+      },
+      "summary": "Histórico institucional sintético de teste. Registra os cursos comparados e a família de referência; não comprova demanda ou conversão real da nova oferta. {'family': 'extensao', 'method': 'ipd-family-percentile-v1', 'weights': {'leads': 0.2, 'enrolled': 0.5, 'applicants': 0.3}, 'comparables': [{'name': 'Extensão em Análise de Dados para Seguros', 'leads': 850, 'family': 'extensao', 'period': '2025', 'reason': 'Mesma família e proximidade de tema e grade', 'category': 'Extensão Universitária', 'enrolled': 57, 'course_id': 'hc_32ab4ed470ab4b3d', 'ipd_score': 100.0, 'theme_fit': 0.0581, 'applicants': 150, 'percentiles': {'leads': 100.0, 'enrolled': 100.0, 'applicants': 100.0}, 'evidence_ids': ['hc_32ab4ed470ab4b3d', 'hf_9e3bba6ba2154fd4'], 'selection_fit': 0.0425, 'curriculum_fit': 0.0135}, {'name': 'Extensão em Seguros Cibernéticos', 'leads': 590, 'family': 'extensao', 'period': '2025', 'reason': 'Mesma família e proximidade de tema e grade', 'category': 'Extensão Universitária', 'enrolled': 37, 'course_id': 'hc_220ed76682814d0f', 'ipd_score': 66.67, 'theme_fit': 0.0581, 'applicants': 100, 'percentiles': {'leads': 66.6667, 'enrolled': 66.6667, 'applicants': 66.6667}, 'evidence_ids': ['hc_220ed76682814d0f', 'hf_9a1325ed54fe4ac8'], 'selection_fit': 0.0413, 'curriculum_fit': 0.0101}, {'name': 'Regulação de Sinistros por Ramos de Seguros', 'leads': 520, 'family': 'extensao', 'period': '2025', 'reason': 'Mesma família e proximidade de tema e grade', 'category': 'Extensão', 'enrolled': 24, 'course_id': 'hc_6840545da078450f', 'ipd_score': 50.0, 'theme_fit': 0.0575, 'applicants': 76, 'percentiles': {'leads': 55.5556, 'enrolled': 44.4444, 'applicants': 55.5556}, 'evidence_ids': ['hc_6840545da078450f', 'hf_a944983c982648d2'], 'selection_fit': 0.0403, 'curriculum_fit': 0.0084}], 'limitations': [], 'reference_n': 10, 'observed_prices': [{'name': 'Extensão em Análise de Dados para Seguros', 'tags': ['seguros', 'Dados do mercado de seguros', 'Indicadores de sinistros', 'Visualização e análise', 'Modelos de risco'], 'family': 'extensao', 'period': '2025', 'source': 'internal', 'category': 'Extensão Universitária', 'currency': 'BRL', 'course_id': 'hc_32ab4ed470ab4b3d', 'price_brl': 3300.0, 'total_brl': 3300.0, 'evidence_ids': ['hc_32ab4ed470ab4b3d', 'hf_9e3bba6ba2154fd4'], 'price_period': 'total'}, {'name': 'Extensão em Seguros Cibernéticos', 'tags': ['seguros', 'Riscos digitais', 'Seguros cyber', 'Resposta a incidentes', 'Análise de fraudes'], 'family': 'extensao', 'period': '2025', 'source': 'internal', 'category': 'Extensão Universitária', 'currency': 'BRL', 'course_id': 'hc_220ed76682814d0f', 'price_brl': 2900.0, 'total_brl': 2900.0, 'evidence_ids': ['hc_220ed76682814d0f', 'hf_9a1325ed54fe4ac8'], 'price_period': 'total'}, {'name': 'Regulação de Sinistros por Ramos de Seguros', 'tags': ['seguros', 'Regulação de sinistros', 'Contratos e coberturas', 'Liquidação por ramo', 'Tecnologia e análise de casos'], 'family': 'extensao', 'period': '2025', 'source': 'internal', 'category': 'Extensão', 'currency': 'BRL', 'course_id': 'hc_6840545da078450f', 'price_brl': 5600.0, 'total_brl': 5600.0, 'evidence_ids': ['hc_6840545da078450f', 'hf_a944983c982648d2'], 'price_period': 'total'}], 'skill_snapshots': [{'name': 'reviewing-market-evidence', 'version': '2.0.0', 'content_hash': '2dc665623b432de80b02ef44c41b70f89274b7338b58f9f8a330bb3e9e69f8d4'}, {'name': 'conducting-course-analysis', 'version': '1.0.0', 'content_hash': '6335e56859384d8351f969a9e1c990dbf25f7d44ef8ec5bd960efa73b4e35241'}], 'reference_period': '2025', 'percentile_convention': 'midrank_0_100'}",
+      "source_url": null
+    },
+    {
+      "evidence_id": "hc_32ab4ed470ab4b3d",
+      "source_type": "institutional_history",
+      "title": "Extensão em Análise de Dados para Seguros",
+      "key_metrics": {
+        "total_price_brl": 3300.0
+      },
+      "summary": "Preço total histórico interno observado; mesma categoria e tema.",
+      "source_url": null
+    },
+    {
+      "evidence_id": "hf_9e3bba6ba2154fd4",
+      "source_type": "institutional_history",
+      "title": "Extensão em Análise de Dados para Seguros",
+      "key_metrics": {
+        "total_price_brl": 3300.0
+      },
+      "summary": "Preço total histórico interno observado; mesma categoria e tema.",
+      "source_url": null
+    },
+    {
+      "evidence_id": "hc_220ed76682814d0f",
+      "source_type": "institutional_history",
+      "title": "Extensão em Seguros Cibernéticos",
+      "key_metrics": {
+        "total_price_brl": 2900.0
+      },
+      "summary": "Preço total histórico interno observado; mesma categoria e tema.",
+      "source_url": null
+    },
+    {
+      "evidence_id": "hf_9a1325ed54fe4ac8",
+      "source_type": "institutional_history",
+      "title": "Extensão em Seguros Cibernéticos",
+      "key_metrics": {
+        "total_price_brl": 2900.0
+      },
+      "summary": "Preço total histórico interno observado; mesma categoria e tema.",
+      "source_url": null
+    },
+    {
+      "evidence_id": "hc_6840545da078450f",
+      "source_type": "institutional_history",
+      "title": "Regulação de Sinistros por Ramos de Seguros",
+      "key_metrics": {
+        "total_price_brl": 5600.0
+      },
+      "summary": "Preço total histórico interno observado; mesma categoria e tema.",
+      "source_url": null
+    },
+    {
+      "evidence_id": "hf_a944983c982648d2",
+      "source_type": "institutional_history",
+      "title": "Regulação de Sinistros por Ramos de Seguros",
+      "key_metrics": {
+        "total_price_brl": 5600.0
+      },
+      "summary": "Preço total histórico interno observado; mesma categoria e tema.",
+      "source_url": null
+    },
+    {
+      "evidence_id": "pricing_reference",
+      "source_type": "computed_pricing",
+      "title": "Referência de preços comparáveis",
+      "key_metrics": {
+        "reference_mean_total_brl": 3933.33,
+        "internal_count": 3,
+        "external_count": 0
+      },
+      "summary": "Média aritmética por curso comparável com investimento total em BRL, calculada em código. Origem e condições: [{'name': 'Extensão em Análise de Dados para Seguros', 'tags': ['seguros', 'Dados do mercado de seguros', 'Indicadores de sinistros', 'Visualização e análise', 'Modelos de risco'], 'family': 'extensao', 'origin': 'internal', 'period': '2025', 'source': 'internal', 'category': 'Extensão Universitária', 'currency': 'BRL', 'course_id': 'hc_32ab4ed470ab4b3d', 'price_brl': 3300.0, 'total_brl': 3300.0, 'evidence_ids': ['hc_32ab4ed470ab4b3d', 'hf_9e3bba6ba2154fd4'], 'price_period': 'total'}, {'name': 'Extensão em Seguros Cibernéticos', 'tags': ['seguros', 'Riscos digitais', 'Seguros cyber', 'Resposta a incidentes', 'Análise de fraudes'], 'family': 'extensao', 'origin': 'internal', 'period': '2025', 'source': 'internal', 'category': 'Extensão Universitária', 'currency': 'BRL', 'course_id': 'hc_220ed76682814d0f', 'price_brl': 2900.0, 'total_brl': 2900.0, 'evidence_ids': ['hc_220ed76682814d0f', 'hf_9a1325ed54fe4ac8'], 'price_period': 'total'}, {'name': 'Regulação de Sinistros por Ramos de Seguros', 'tags': ['seguros', 'Regulação de sinistros', 'Contratos e coberturas', 'Liquidação por ramo', 'Tecnologia e análise de casos'], 'family': 'extensao', 'origin': 'internal', 'period': '2025', 'source': 'internal', 'category': 'Extensão', 'currency': 'BRL', 'course_id': 'hc_6840545da078450f', 'price_brl': 5600.0, 'total_brl': 5600.0, 'evidence_ids': ['hc_6840545da078450f', 'hf_a944983c982648d2'], 'price_period': 'total'}]",
+      "source_url": null
+    }
+  ]
+}

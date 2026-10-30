@@ -4,6 +4,39 @@ info:
   summary: Inteligência para Produtos Educacionais
   version: 0.1.0
 paths:
+  /v1/auth/chatgpt/models:
+    get:
+      summary: Listar modelos da conta ChatGPT conectada
+      description: Consulta o catálogo real e renova a sessão quando necessário, sem executar inferência. Não retorna tokens.
+      responses:
+        '200':
+          description: Catálogo público da conta
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [models, selected_model]
+                properties:
+                  selected_model:
+                    type: string
+                  models:
+                    type: array
+                    items:
+                      type: object
+                      required: [slug, display_name]
+                      properties:
+                        slug:
+                          type: string
+                        display_name:
+                          type: string
+                        supported_reasoning_efforts:
+                          type: array
+                          items:
+                            type: string
+        '401':
+          description: Conta não conectada ou sem uso direto autorizado
+        '502':
+          description: Falha na sessão ou catálogo indisponível
   /v1/analyses:
     post:
       summary: Submeter nova análise de mercado
@@ -169,6 +202,7 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Get Dossier V1 Analyses  Analysis Id  Dossier Get
+                description: Dossiê verificado, scoring e evidências; inclui schema_version, executive_summary_claim_ids, highlights e limitations da apresentação v2. Dossiês anteriores usam os defaults compatíveis.
         '422':
           description: Validation Error
           content:

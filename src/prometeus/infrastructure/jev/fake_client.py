@@ -8,6 +8,7 @@ from prometeus.domain.ports.decision_model import (
     DecisionModelPort,
     DecisionPack,
     DecisionResult,
+    ModelIdentity,
 )
 
 
@@ -21,12 +22,17 @@ class FakeDecisionClient(DecisionModelPort):
         simulate_noul: bool = False,
         canned_choices: dict[str, str] | None = None,
         canned_scores: dict[str, float] | None = None,
+        model: str = "jev-fake-v1",
     ) -> None:
         self.default_confidence = default_confidence
         self.simulate_unavailable = simulate_unavailable
         self.simulate_noul = simulate_noul
         self.canned_choices = canned_choices or {}
         self.canned_scores = canned_scores or {}
+        self.model = model
+
+    def model_identity(self) -> ModelIdentity:
+        return ModelIdentity(provider=type(self).__name__, model=self.model, mode="fake")
 
     async def execute_choice(
         self,

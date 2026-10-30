@@ -225,11 +225,15 @@ class ScoringCalculator:
 
             # Despacho determinístico por pilar
             if pillar_key == PillarType.INTERNAL_HISTORY:
-                raw, conf = self.compute_internal_history(
-                    comparable_fit_score=inputs.get("comparable_fit_score"),
-                    conversion_rate=inputs.get("conversion_rate"),
-                    enrollments_count=inputs.get("enrollments_count"),
-                )
+                if profile.historical_method == "ipd":
+                    raw = self._clamp(float(inputs.get("ipd_score", 0)))
+                    conf = self._clamp(float(inputs.get("confidence", 0)), 0, 1)
+                else:
+                    raw, conf = self.compute_internal_history(
+                        comparable_fit_score=inputs.get("comparable_fit_score"),
+                        conversion_rate=inputs.get("conversion_rate"),
+                        enrollments_count=inputs.get("enrollments_count"),
+                    )
             elif pillar_key == PillarType.PAID_COMPETITION:
                 raw, conf = self.compute_paid_competition(
                     ad_count=inputs.get("ad_count"),
@@ -273,6 +277,8 @@ class ScoringCalculator:
                 raw = self._clamp(float(inputs["raw_score"]))
                 conf = self._clamp(float(inputs["confidence"]), 0.0, 1.0)
 
+            if profile.historical_method == "ipd" and inputs.get("confidence") is not None:
+                conf = min(conf, self._clamp(float(inputs["confidence"]), 0, 1))
             if conf <= 0.0:
                 pillar_scores[pillar_key] = PillarScore(
                     pillar_id=pillar_key,
@@ -308,7 +314,11 @@ class ScoringCalculator:
                 sum(p.weighted_confidence for p in present_pillars) / coverage_score, 4
             )
             # Viability score V: soma das contribuições ponderadas reais
-            viability_score = round(weighted_sum, 2)
+            viability_score = (
+                partial_score
+                if profile.aggregation_mode == "observed_mean"
+                else round(weighted_sum, 2)
+            )
         else:
             partial_score = 0.0
             confidence_score = 0.0

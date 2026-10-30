@@ -1,5 +1,13 @@
 # Relatório de conclusão — Fase 04: Dados Externos de Mercado
 
+## Atualização de continuidade — 2026-10-28
+
+Falhas individuais de coleta agora concluem o plano como `PARTIAL` e não interrompem o workflow. Fontes prioritárias continuam planejadas, mas a ausência limita cobertura/recomendação. Falhas e metadados rejeitados aparecem como lacunas auditáveis. Retomada reutiliza consultas terminais sem repetir cobranças. O painel não encerra o acompanhamento após cinco minutos e recupera falhas transitórias de conexão.
+
+Regressões cobrem falha de fonte prioritária com execução das seguintes, dataset vazio, retomada sem cobrança repetida, dossiê com limitação explícita e polling além de cinco minutos com timeout por requisição. Homologação real do MBA Gestão Avançada de Seguros em andamento.
+
+> **Reabertura em 2026-10-28:** implementadas correções de integridade e pesquisa qualificada após auditoria de uma análise real. Os resultados e a nota históricos abaixo são preservados; não homologam automaticamente o runtime atual. Ver [relatório da reabertura](market-dossier-improvements-2026-10-28.md). Nova coleta real e homologação de qualidade ainda pendentes.
+
 ## Resumo executivo
 
 - **Fase:** 04 — Dados Externos de Mercado

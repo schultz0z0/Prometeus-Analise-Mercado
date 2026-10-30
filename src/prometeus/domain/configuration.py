@@ -28,6 +28,7 @@ class ConfigurationError(DomainError):
 class TenantInstitution(BaseModel):
     id: str
     display_name: str
+    domains: list[str] = Field(default_factory=list)
     locale: str = "pt-BR"
     timezone: str = "America/Sao_Paulo"
     currency: str = "BRL"
@@ -88,6 +89,8 @@ class ScoringProfileConfig(BaseModel):
     schema_version: int = 1
     profile_id: str
     status: str = "hypothesis"
+    aggregation_mode: str = "weighted_sum"
+    historical_method: str = "legacy"
     weights: dict[str, float]
     gates: ScoringGates = Field(default_factory=ScoringGates)
     thresholds: ScoringThresholds = Field(default_factory=ScoringThresholds)
@@ -96,6 +99,10 @@ class ScoringProfileConfig(BaseModel):
 
     @model_validator(mode="after")
     def validate_weights_and_pillars(self) -> ScoringProfileConfig:
+        if self.aggregation_mode not in {"weighted_sum", "observed_mean"}:
+            raise ConfigurationError("Modo de agregação de scoring inválido.")
+        if self.historical_method not in {"legacy", "ipd"}:
+            raise ConfigurationError("Método de histórico inválido.")
         # Validação 1: Soma dos pesos deve ser exatamente 1.0
         total_weight = sum(self.weights.values())
         if not math.isclose(total_weight, 1.0, abs_tol=1e-5):
@@ -143,7 +150,9 @@ class AppSettings(BaseSettings):
     EVIDENCE_STORAGE_PATH: str = "var/evidence"
 
     # JEV / TypeSafe AI (Motor de Decisão System One - Opcional / Modo Híbrido)
-    AI_MODE: str = "auto"  # auto, traditional, hybrid
+    AI_MODE: str = "auto"  # auto, traditional, hybrid, shadow
+    JEV_NON_INFERIORITY_THRESHOLD: float = 0.90
+    SHADOW_DECISION_MODE: bool = False
     JEV_MODEL: str = "jev-latest"
     JEV_TIMEOUT_SECONDS: int = 15
     JEV_MAX_RETRIES: int = 2
@@ -191,7 +200,7 @@ class AppSettings(BaseSettings):
 
     INSTITUTION_ID: str = "ens"
     INSTITUTION_CONFIG_PATH: str = "config/tenants/ens.example.yaml"
-    SCORING_PROFILE_PATH: str = "config/scoring/default-v1.example.yaml"
+    SCORING_PROFILE_PATH: str = "config/scoring/portfolio-v2.yaml"
 
     SERVICE_API_KEYS: str = ""
     SHADOW_MODE: bool = False

@@ -41,11 +41,11 @@ class RuntimePreflightReport:
 
 def _effective_ai_mode(settings: AppSettings, errors: list[PreflightIssue]) -> str:
     requested = settings.AI_MODE.strip().lower()
-    if requested not in {"auto", "traditional", "hybrid"}:
+    if requested not in {"auto", "traditional", "hybrid", "shadow"}:
         errors.append(
             PreflightIssue(
                 code="ai_mode_invalid",
-                message="AI_MODE deve ser auto, traditional ou hybrid.",
+                message="AI_MODE deve ser auto, traditional, hybrid ou shadow.",
             )
         )
         return requested

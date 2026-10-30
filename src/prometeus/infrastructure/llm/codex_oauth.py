@@ -9,7 +9,7 @@ import os
 import secrets
 import time
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
@@ -26,6 +26,7 @@ DIRECT_USAGE_SCOPE = "chatgpt.tokens.use.direct"
 DYNAMIC_CLIENT_ID = "dynamic_agent_client"
 DEFAULT_REDIRECT_URI = "http://127.0.0.1:1455/auth/callback"
 DEFAULT_HOST_ID_PATH = Path("var/chatgpt/host-id")
+REASONING_EFFORTS = frozenset({"none", "minimal", "low", "medium", "high", "xhigh", "max"})
 
 
 @dataclass(frozen=True)
@@ -151,6 +152,29 @@ class ChatGPTCredentialStore:
     def clear(self) -> None:
         if self.path.is_file():
             self.path.unlink()
+
+    def select_model(self, model: str, *, expected_subject: str) -> ChatGPTCredentials:
+        """Change only model selection, preserving the latest rotating token pair."""
+        current = self.load()
+        if current is None or current.subject != expected_subject:
+            raise RuntimeError("A conta ChatGPT mudou durante a seleção. Atualize os modelos.")
+        self.save(replace(current, selected_model=model))
+        return current
+
+    def restore_model_selection(
+        self, previous: ChatGPTCredentials, *, failed_selection: str
+    ) -> None:
+        """Rollback only our selection if the same account still has it active."""
+        current = self.load()
+        if (
+            current is not None
+            and current.subject == previous.subject
+            and current.client_id == previous.client_id
+            and current.selected_model == failed_selection
+        ):
+            # A refresh may have rotated the credential pair since selection.
+            # Never write the previous snapshot's token or account fields back.
+            self.save(replace(current, selected_model=previous.selected_model))
 
 
 _pending_states: dict[str, PkceEntry] = {}
@@ -371,7 +395,7 @@ async def list_chatgpt_models(
     *,
     base_url: str = OPENAI_RESOURCE,
     http_client: httpx.AsyncClient | None = None,
-) -> list[dict[str, str]]:
+) -> list[dict[str, Any]]:
     """Obtém o catálogo real da conta e mantém apenas modelos exibíveis."""
     client = http_client or httpx.AsyncClient(timeout=30.0)
     close_client = http_client is None
@@ -388,10 +412,24 @@ async def list_chatgpt_models(
 
     models = data.get("models", []) if isinstance(data, dict) else []
     return [
-        {"slug": str(item["slug"]), "display_name": str(item.get("display_name") or item["slug"])}
+        public_chatgpt_model(item)
         for item in models
         if isinstance(item, dict)
         and item.get("visibility") == "list"
         and isinstance(item.get("slug"), str)
-        and item["slug"]
+        and item["slug"].strip()
     ]
+
+
+def public_chatgpt_model(item: dict[str, Any]) -> dict[str, Any]:
+    """Expose only picker metadata; never forward arbitrary provider fields."""
+    public: dict[str, Any] = {
+        "slug": str(item["slug"]),
+        "display_name": str(item.get("display_name") or item["slug"]),
+    }
+    efforts = item.get("supported_reasoning_efforts")
+    if isinstance(efforts, list):
+        public["supported_reasoning_efforts"] = [
+            effort for effort in efforts if isinstance(effort, str) and effort in REASONING_EFFORTS
+        ]
+    return public

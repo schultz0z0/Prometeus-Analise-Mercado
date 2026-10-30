@@ -2,6 +2,7 @@ schema_version: 1
 institution:
   id: ens
   display_name: Escola de Negócios e Seguros
+  domains: [ens.edu.br, enscursos.com.br]
   locale: pt-BR
   timezone: America/Sao_Paulo
   currency: BRL
@@ -17,7 +18,7 @@ features:
 adapters:
   institutional: ens
 profiles:
-  scoring: default-v1
+  scoring: portfolio-v2
   retention: ens-pending-approval
 webhooks:
   events:

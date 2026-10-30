@@ -56,6 +56,10 @@ class GateEvaluation(BaseModel):
     coverage_score: float
     confidence_score: float
     reasons: list[str] = Field(default_factory=list)
+    weighted_contribution: float | None = None
+    observed_score: float | None = None
+    score_blocks: dict[str, Any] = Field(default_factory=dict)
+    profile_id: str = "default-v1"
     distance_to_approved_threshold: float = 0.0
     distance_to_adjustment_threshold: float = 0.0
     in_boundary_review_margin: bool = False

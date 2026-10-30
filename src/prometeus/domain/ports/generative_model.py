@@ -7,6 +7,7 @@ reutilizável na Fase 04 (Keywords TOOL-01) e na Fase 06 (Dossiê).
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 from prometeus.domain.dossiers import DossierFacts, DossierOutput
 
@@ -35,6 +36,16 @@ class GenerativeModelPort(ABC):
         """Executa geração textual livre com restrições e telemetria."""
         pass
 
+    async def generate_structured(
+        self,
+        prompt: str,
+        *,
+        schema: dict[str, Any],
+        system_prompt: str | None = None,
+    ) -> str:
+        """Porta compatível com fakes; provedores reais impõem schema no transporte."""
+        return await self.generate_text(prompt, system_prompt=system_prompt)
+
     @abstractmethod
     async def synthesize_dossier(
         self,
@@ -42,4 +53,15 @@ class GenerativeModelPort(ABC):
         prompt_version: str = "dossier-v1",
     ) -> DossierOutput:
         """Sintetiza dossiê executivo estruturado a partir de fatos aprovados (TOOL-14)."""
+        pass
+
+    @abstractmethod
+    async def revise_dossier(
+        self,
+        facts: DossierFacts,
+        draft: DossierOutput | dict[str, Any],
+        verification_report: dict[str, Any],
+        prompt_version: str = "dossier-v1",
+    ) -> DossierOutput:
+        """Revisa a redação recusada com os mesmos fatos; não concede publicação."""
         pass

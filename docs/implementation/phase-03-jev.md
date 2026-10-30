@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Integrar o JEV como dependência obrigatória e provar a qualidade de cada julgamento delimitado. Implementa as etapas 03 (readiness com JEV) e 09 (julgamentos semânticos com JEV) do [workflow](../agent/workflow.md), além de dar suporte aos decision packs usados nas etapas 04, 06 e 13.
+Integrar o JEV como dependência do modo híbrido e provar a qualidade de cada julgamento delimitado. Conforme o [ADR-0008](../architecture/adr/0008-ai-runtime-and-chatgpt-oauth.md), o modo tradicional executa os mesmos contratos semânticos pela LLM tradicional. Implementa prontidão e julgamentos semânticos do [workflow](../agent/workflow.md), além de dar suporte aos decision packs de palavras-chave, histórico e verificação. Fórmulas e recomendação consolidada permanecem em código nos dois modos.
 
 ## Gate de release relacionado
 

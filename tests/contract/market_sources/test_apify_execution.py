@@ -176,9 +176,17 @@ async def test_execute_raises_structured_error_for_terminal_actor_failure() -> N
 
 
 @pytest.mark.asyncio
-async def test_execute_times_out_if_actor_never_reaches_terminal_state() -> None:
+@pytest.mark.parametrize("abort_status", [200, 503])
+async def test_execute_times_out_if_actor_never_reaches_terminal_state(abort_status: int) -> None:
+    aborted = []
+
     def handler(request: httpx.Request) -> httpx.Response:
         status = "RUNNING"
+        if request.url.path.endswith("/abort"):
+            aborted.append(request.url.path)
+            status = "ABORTED"
+            if abort_status == 503:
+                return httpx.Response(503, json={"error": "provider unavailable"})
         return httpx.Response(
             201 if request.method == "POST" else 200,
             json={
@@ -193,10 +201,13 @@ async def test_execute_times_out_if_actor_never_reaches_terminal_state() -> None
 
     client = make_client(handler, max_poll_attempts=2)
     try:
-        with pytest.raises(ApifyTimeoutError, match="run-slow"):
+        with pytest.raises(ApifyTimeoutError, match="run-slow") as exc_info:
             await client.execute(google_call(), max_total_charge_usd=0.25)
     finally:
         await client.aclose()
+    assert aborted == ["/v2/actor-runs/run-slow/abort"]
+    assert exc_info.value.run_id == "run-slow"
+    assert ("não confirmado" in str(exc_info.value)) is (abort_status == 503)
 
 
 @pytest.mark.asyncio

@@ -25,6 +25,8 @@ secrets/
 /logs/
 /artifacts/
 /var/
+/output/playwright/
+/.playwright-cli/
 *.sqlite3
 
 # IDE and OS

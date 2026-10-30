@@ -16,6 +16,9 @@ def make_settings() -> AppSettings:
     return AppSettings(
         _env_file=None,
         APIFY_REQUIRED_SOURCES="google_search,meta_ads_library,linkedin_jobs",
+        APIFY_ACTOR_GOOGLE_SEARCH="apify/google-search-scraper@0.0.474",
+        APIFY_ACTOR_META_AD_LIBRARY="igolaizola/facebook-ad-library-scraper@0.0.59",
+        APIFY_ACTOR_LINKEDIN_JOBS="curious_coder/linkedin-jobs-scraper@1.7.18",
         APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS=4.5,
     )
 

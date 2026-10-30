@@ -68,3 +68,23 @@ Cada sub-score terá especificação própria com features, transformação, lim
 ## Versionamento
 
 O `scoring_profile_id` identifica pesos, fórmulas, normalizações, obrigatoriedade de pilares e limiares. Análises antigas nunca são recalculadas sem criar uma nova versão.
+
+## Perfil portfolio-v2 — 2026-10-28
+
+Novas análises usam `config/scoring/portfolio-v2.yaml`, congelado no snapshot da análise. `default-v1` permanece disponível para reproduzir análises anteriores. Os pesos e limiares continuam hipóteses, sem backtest comercial.
+
+O histórico usa a família da formação (Pós/MBA, graduação, extensão etc.), a última janela encerrada e completa e até três cursos próximos por tema e grade. Se a grade não existe, a seleção registra a limitação e não alega comparação curricular. A distribuição de referência inclui todos os cursos elegíveis da mesma família/janela; os três comparáveis não são toda a distribuição.
+
+```text
+percentil = 100 × (quantidade abaixo + (quantidade empatada − 1)/2) / (n − 1)
+IPD_curso = 0,20 × percentil_leads + 0,30 × percentil_inscrições + 0,50 × percentil_matrículas
+H = média dos IPDs dos comparáveis selecionados
+```
+
+Menos de três cursos de referência, funil inconsistente ou ausência de ofertas completas e encerradas impede o IPD. Confiança é limitada pelo tamanho da referência e presença de grades. Registros legados sem status de fechamento ou unidade de preço permanecem desconhecidos; a migração não inventa esses metadados.
+
+A referência de preço é a média aritmética de um preço total verificável por curso comparável, interno ou externo, de mesmo tema e categoria. O relatório separa médias e quantidades por origem. Não há ponderação automática de 50% por origem. Preços próprios não contam como concorrentes, taxas não são preço do curso e duração acadêmica não determina parcelas. Múltiplos totais sem atribuição inequívoca ficam ambíguos mesmo se um prazo coincide; a página permanece disponível para os outros usos.
+
+O score principal é o `partial_score` observado, normalizado pela cobertura, identificado como provisório quando os gates falham. A contribuição ponderada permanece na auditoria. Cobertura, confiança e recomendação continuam independentes: nota parcial alta não autoriza lançamento. Blocos exibidos: interno 20%, mercado externo 55%, aderência 15% e preço misto 10%. Um sinal não é somado novamente nos blocos finais.
+
+Confiança e pedido explícito de revisão da decisão curricular chegam ao scoring. Uma decisão que exige revisão não passa a ser um pilar coberto automaticamente.

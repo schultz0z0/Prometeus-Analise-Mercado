@@ -111,6 +111,7 @@ async def test_progress_exposes_safe_tool_provenance_and_blocking_reason(
             "dataset_id": "dataset-id",
             "raw_items_count": 12,
             "valid_items_count": 9,
+            "observation_status": None,
             "cost_usd": 0.13,
             "error_code": "http_500",
             "error_message": "Falha sanitizada",

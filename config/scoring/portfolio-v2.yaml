@@ -1,0 +1,27 @@
+schema_version: 2
+profile_id: portfolio-v2
+status: hypothesis
+aggregation_mode: observed_mean
+historical_method: ipd
+weights:
+  internal_history: 0.20
+  paid_competition: 0.20
+  search_and_media: 0.20
+  employability: 0.15
+  syllabus_fit: 0.15
+  pricing: 0.10
+gates:
+  minimum_coverage: 0.80
+  minimum_confidence: 0.75
+thresholds:
+  approved: 75
+  approved_with_adjustments: 60
+  boundary_review_margin: 3
+required_pillars:
+  - internal_history
+  - search_and_media
+notes:
+  - IPD 20/30/50 por família, com até três comparáveis; não é probabilidade de matrículas.
+  - Score observado normalizado separado de cobertura e contribuição ponderada.
+  - Preço médio por curso comparável interno/externo com total e condição verificados.
+  - Hipótese não calibrada; o gate de evidência insuficiente prevalece sobre a nota.

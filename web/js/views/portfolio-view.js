@@ -1,6 +1,7 @@
 /**
  * VIEW: Minhas Análises & Portfólio de Cursos (com Base Histórica da ENS)
  */
+import { safeUrl, escapeHtml } from '../dossier-format.js';
 
 function getTierBadge(tier) {
   switch (tier) {
@@ -52,7 +53,7 @@ export function renderPortfolioView(store) {
       <div class="view-title-row">
         <div>
           <h1 class="view-title">Inteligência de Mercado & Portfólio da IES</h1>
-          <p class="view-subtitle">Consulte a base histórica oficial da <strong>ENS</strong> (ofertas de 2 anos por curso) e compare com diagnósticos de viabilidade de novos cursos.</p>
+          <p class="view-subtitle">Consulte a base histórica de teste da <strong>ENS</strong>, com dados sintéticos de 2024 e 2025, e compare com diagnósticos de viabilidade de novos cursos.</p>
         </div>
         <button class="prometeus-btn-primary" id="btn-goto-validate" style="font-size:14px; padding:12px 22px;">
           <span>✦ Validar Novo Curso</span>
@@ -76,7 +77,7 @@ export function renderPortfolioView(store) {
         <div class="prometeus-card">
           <div style="font-size:12px; text-transform:uppercase; color:var(--prometeus-text-muted); font-weight:600; letter-spacing:0.05em;">Cursos Analisados</div>
           <div class="metric-big-highlight">${historical.length} cursos</div>
-          <div style="font-size:12px; color:var(--prometeus-text-secondary);">5 segmentos distintos de Seguros</div>
+          <div style="font-size:12px; color:var(--prometeus-text-secondary);">${new Set(historical.map(c => c.family).filter(Boolean)).size} famílias de formação · dados sintéticos</div>
         </div>
 
         <div class="prometeus-card">
@@ -138,6 +139,7 @@ export function renderPortfolioView(store) {
                       </div>
                       <strong style="color:#ffffff; font-size:14px; display:block; margin-top:2px;">${c.name}</strong>
                       <span style="font-size:12px; color:var(--prometeus-text-muted);">${c.category} • ${c.segment || c.category}</span>
+                      ${safeUrl(c.academic_reference?.source_url) ? `<div style="font-size:12px; margin-top:6px;"><a href="${escapeHtml(safeUrl(c.academic_reference.source_url))}" target="_blank" rel="noopener noreferrer">Nome e categoria: fonte ENS</a><span style="color:var(--prometeus-text-muted);"> · Indicadores e preços simulados</span></div>` : ''}
                     </td>
                     <td>
                       <span style="font-size:13px; color:var(--prometeus-text-secondary);">${c.modality}</span>
@@ -303,7 +305,7 @@ export function bindPortfolioEvents(store, container) {
     reseedBtn.addEventListener('click', async () => {
       reseedBtn.textContent = 'Sincronizando...';
       reseedBtn.disabled = true;
-      const ok = await store.seedInstitutionalData(true);
+      const ok = await store.seedInstitutionalData(false);
       if (ok) {
         alert('Base histórica da ENS sincronizada com sucesso no PostgreSQL!');
       } else {

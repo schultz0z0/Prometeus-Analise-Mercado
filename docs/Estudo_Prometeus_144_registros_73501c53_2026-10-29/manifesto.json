@@ -1,0 +1,135 @@
+{
+  "analysis_id": "73501c53-cc58-47f9-8927-d9e299b4f4b5",
+  "exported_at": "2026-10-29T20:56:02.966338+00:00",
+  "read_only": true,
+  "facts_hash": "7761d831324c2e5130258bc80691f4e3b8c9367afff5677cc4a0a890710f7a6e",
+  "statistics": {
+    "records": 144,
+    "classes": {
+      "Contexto": 73,
+      "Excluído": 54,
+      "Indicador": 17
+    },
+    "over_14000_characters": 20,
+    "score_direct": 17,
+    "claims_direct": 5,
+    "by_source": {
+      "apify_tiktok": {
+        "reasons": {
+          "Conteúdo incompatível com o sinal educacional pesquisado": 15
+        },
+        "use_for": {},
+        "context_records": 0,
+        "accepted_records": 0,
+        "excluded_records": 15,
+        "collected_records": 15,
+        "used_in_score_records": 0
+      },
+      "apify_linkedin": {
+        "reasons": {
+          "Contexto do setor ou da instituição; não constitui oferta concorrente verificável": 10
+        },
+        "use_for": {
+          "sector_context": 10
+        },
+        "context_records": 10,
+        "accepted_records": 0,
+        "excluded_records": 0,
+        "collected_records": 10,
+        "used_in_score_records": 0
+      },
+      "apify_web_crawler": {
+        "reasons": {
+          "Conteúdo insuficiente para determinar pertinência": 3,
+          "Conteúdo incompatível com o sinal educacional pesquisado": 3,
+          "Contexto do setor ou da instituição; não constitui oferta concorrente verificável": 7,
+          "Conteúdo da própria instituição; preservado como contexto, sem contar como concorrência externa": 1
+        },
+        "use_for": {
+          "sector_context": 7,
+          "institution_context": 1
+        },
+        "context_records": 8,
+        "accepted_records": 0,
+        "excluded_records": 6,
+        "collected_records": 14,
+        "used_in_score_records": 0
+      },
+      "apify_google_search": {
+        "reasons": {
+          "Conteúdo insuficiente para determinar pertinência": 18,
+          "Conteúdo incompatível com o sinal educacional pesquisado": 4,
+          "Contexto do setor ou da instituição; não constitui oferta concorrente verificável": 22,
+          "Conteúdo da própria instituição; preservado como contexto, sem contar como concorrência externa": 2
+        },
+        "use_for": {
+          "sector_context": 22,
+          "institution_context": 2
+        },
+        "context_records": 24,
+        "accepted_records": 0,
+        "excluded_records": 22,
+        "collected_records": 46,
+        "used_in_score_records": 0
+      },
+      "apify_google_trends": {
+        "reasons": {
+          "Conteúdo insuficiente para determinar pertinência": 3
+        },
+        "use_for": {},
+        "context_records": 0,
+        "accepted_records": 0,
+        "excluded_records": 3,
+        "collected_records": 3,
+        "used_in_score_records": 0
+      },
+      "apify_linkedin_jobs": {
+        "reasons": {
+          "Localização fora do escopo ou não comprovada": 2,
+          "Conteúdo setorial ou cargo sem competências verificáveis para esta pesquisa; preservado como contexto profissional": 12
+        },
+        "use_for": {
+          "curriculum": 16,
+          "employability": 16,
+          "sector_context": 12
+        },
+        "context_records": 12,
+        "accepted_records": 16,
+        "excluded_records": 2,
+        "collected_records": 30,
+        "used_in_score_records": 16
+      },
+      "apify_meta_ads_library": {
+        "reasons": {
+          "Conteúdo incompatível com o sinal educacional pesquisado": 1,
+          "Conteúdo da própria instituição; preservado como contexto, sem contar como concorrência externa": 10
+        },
+        "use_for": {
+          "institution_context": 10
+        },
+        "context_records": 10,
+        "accepted_records": 0,
+        "excluded_records": 1,
+        "collected_records": 11,
+        "used_in_score_records": 0
+      },
+      "apify_youtube_comments": {
+        "reasons": {
+          "Conteúdo insuficiente para determinar pertinência": 1,
+          "Conteúdo incompatível com o sinal educacional pesquisado": 4,
+          "Contexto de linguagem ou divulgação; não demonstra necessidade profissional específica nem volume de procura": 9
+        },
+        "use_for": {
+          "curriculum": 1,
+          "audience_needs": 1,
+          "sector_context": 9
+        },
+        "context_records": 9,
+        "accepted_records": 1,
+        "excluded_records": 5,
+        "collected_records": 15,
+        "used_in_score_records": 1
+      }
+    }
+  }
+}

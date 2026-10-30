@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from prometeus.application.collect_market_evidence import (
     CollectMarketEvidenceService,
-    RequiredSourceBlockedError,
 )
 from prometeus.domain.analyses import Analysis
 from prometeus.domain.configuration import AppSettings
@@ -149,7 +148,7 @@ async def test_collection_persists_tool_run_and_only_sanitized_deduplicated_evid
 
 
 @pytest.mark.asyncio
-async def test_required_source_failure_is_persisted_and_blocks_the_analysis(
+async def test_required_source_failure_is_persisted_and_other_sources_continue(
     db_session: AsyncSession,
 ) -> None:
     await create_analysis(db_session)
@@ -157,21 +156,29 @@ async def test_required_source_failure_is_persisted_and_blocks_the_analysis(
         id="plan-blocked",
         analysis_id="analysis-real",
         understanding_hash="b" * 64,
-        tool_calls=[call("jobs", "linkedin_jobs")],
+        tool_calls=[call("jobs", "linkedin_jobs"), call("google", "google_search")],
     )
     executor = StubExecutor(
         {
             "jobs": ApifyActorFailedError(
                 run_id="apify-failed", status="FAILED", message="provider failure"
-            )
+            ),
+            "google": result(
+                "google", "google_search", [{"title": "Curso", "url": "https://example.edu/curso"}]
+            ),
         }
     )
     service = CollectMarketEvidenceService(db_session, executor, registry())
 
-    with pytest.raises(RequiredSourceBlockedError, match="jobs"):
-        await service.collect(tenant_id="ens", plan=plan)
+    outcome = await service.collect(tenant_id="ens", plan=plan)
+    assert outcome.blocking_failures == []
+    assert outcome.optional_failures == ["jobs"]
+    assert outcome.completed_call_ids == ["google"]
+    assert executor.calls == ["jobs", "google"]
 
-    run = (await db_session.execute(select(ToolRunModel))).scalar_one()
+    run = (
+        await db_session.execute(select(ToolRunModel).where(ToolRunModel.planned_call_id == "jobs"))
+    ).scalar_one()
     assert run.status == "FAILED"
     assert run.error_code == "provider_error"
     assert run.error_message is not None
@@ -179,7 +186,7 @@ async def test_required_source_failure_is_persisted_and_blocks_the_analysis(
 
 
 @pytest.mark.asyncio
-async def test_required_empty_dataset_is_observed_and_blocks_without_fake_evidence(
+async def test_required_empty_dataset_is_observed_without_blocking_or_fake_evidence(
     db_session: AsyncSession,
 ) -> None:
     await create_analysis(db_session)
@@ -194,8 +201,9 @@ async def test_required_empty_dataset_is_observed_and_blocks_without_fake_eviden
     )
     service = CollectMarketEvidenceService(db_session, executor, registry())
 
-    with pytest.raises(RequiredSourceBlockedError, match="google-empty"):
-        await service.collect(tenant_id="ens", plan=plan)
+    outcome = await service.collect(tenant_id="ens", plan=plan)
+    assert outcome.blocking_failures == []
+    assert outcome.completed_call_ids == ["google-empty"]
 
     run = (await db_session.execute(select(ToolRunModel))).scalar_one()
     evidence_count = len((await db_session.execute(select(MarketEvidenceModel))).scalars().all())
@@ -239,7 +247,8 @@ async def test_optional_failure_is_reported_and_completed_call_is_not_charged_tw
     assert first.optional_failures == ["jobs-optional"]
     assert second.completed_call_ids == ["google-ok"]
     assert executor.calls.count("google-ok") == 1
-    assert executor.calls.count("jobs-optional") == 2
+    assert executor.calls.count("jobs-optional") == 1
+    assert second.optional_failures == ["jobs-optional"]
 
 
 @pytest.mark.asyncio
@@ -275,6 +284,9 @@ async def test_url_dependent_calls_use_urls_discovered_by_prior_search(
                 ]
             else:
                 items = [{"title": planned.id, "url": planned.parameters["urls"][0]}]
+                if planned.capability == "youtube_comments":
+                    items[0]["text"] = "Quero aprender gestão de seguros."
+                    items[0]["commentId"] = "real-comment"
             return result(planned.id, planned.capability, items, cost_usd=0.01)
 
     executor = ResolvingExecutor()

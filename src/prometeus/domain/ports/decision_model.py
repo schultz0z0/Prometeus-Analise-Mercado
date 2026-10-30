@@ -6,6 +6,7 @@ estrito do SDK do fornecedor (ADR-0003).
 
 from __future__ import annotations
 
+import math
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -14,6 +15,76 @@ from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
+
+
+def validate_probability(value: Any, field_name: str = "confidence") -> float:
+    """Valida probabilidade estrita: não booleano, número finito entre 0.0 e 1.0."""
+    if isinstance(value, bool):
+        raise ValueError(f"'{field_name}' não pode ser um booleano.")
+    if value is None:
+        raise ValueError(f"'{field_name}' é obrigatório.")
+    try:
+        val = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"'{field_name}' deve ser um número válido: {exc}") from exc
+    if not math.isfinite(val):
+        raise ValueError(f"'{field_name}' deve ser um número finito.")
+    if not (0.0 <= val <= 1.0):
+        raise ValueError(f"'{field_name}' deve estar entre 0.0 e 1.0.")
+    return val
+
+
+def validate_finite_number(
+    value: Any,
+    field_name: str,
+    min_val: float,
+    max_val: float,
+) -> float:
+    """Valida número finito estrito dentro da escala permitida."""
+    if isinstance(value, bool):
+        raise ValueError(f"'{field_name}' não pode ser um booleano.")
+    if value is None:
+        raise ValueError(f"'{field_name}' é obrigatório.")
+    try:
+        val = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"'{field_name}' deve ser um número válido: {exc}") from exc
+    if not math.isfinite(val):
+        raise ValueError(f"'{field_name}' deve ser um número finito.")
+    if not (min_val <= val <= max_val):
+        raise ValueError(f"O {field_name} {val} está fora da escala {min_val}..{max_val}.")
+    return val
+
+
+def validate_choice_selection(choice: Any, allowed_options: list[str], pack_id: str) -> str:
+    """Valida que choice é string não vazia e pertence às opções permitidas do pack."""
+    if not choice or not isinstance(choice, str):
+        raise ValueError(f"A resposta de decisão não contém 'selected_choice' válido para o pack '{pack_id}'.")
+    choice_str = choice.strip()
+    if choice_str not in allowed_options:
+        raise ValueError(
+            f"A LLM retornou a opção não permitida '{choice_str}' para o pack '{pack_id}'."
+        )
+    return choice_str
+
+
+def validate_distribution(
+    distribution: Any, allowed_options: list[str]
+) -> dict[str, float]:
+    """Valida distribuição: dicionário com chaves permitidas, probabilidades válidas e soma coerente."""
+    if not isinstance(distribution, dict):
+        raise ValueError("A resposta estruturada não contém 'distribution' válido.")
+    cleaned: dict[str, float] = {}
+    for key, prob in distribution.items():
+        key_str = str(key).strip()
+        if key_str not in allowed_options:
+            raise ValueError(f"Opção desconhecida '{key_str}' na distribuição de probabilidades.")
+        cleaned[key_str] = validate_probability(prob, f"distribuição[{key_str}]")
+    if cleaned:
+        total = sum(cleaned.values())
+        if not math.isclose(total, 1.0, abs_tol=0.15):
+            raise ValueError(f"A soma da distribuição de probabilidades ({total:.3f}) é inválida.")
+    return cleaned
 
 
 class DecisionType(StrEnum):
@@ -135,8 +206,30 @@ class DecisionResult:
         )
 
 
+@dataclass(frozen=True)
+class ModelIdentity:
+    """Identidade configurada do executor de decisões, usada em cache e auditoria.
+
+    ``mode`` distingue ``traditional_llm``, ``jev`` e executores de teste (``fake``).
+    O modelo efetivo de cada tentativa é registrado separadamente pela telemetria.
+    """
+
+    provider: str
+    model: str
+    mode: str
+
+
 class DecisionModelPort(ABC):
     """Porta agnóstica para motores de julgamento JEV."""
+
+    def model_identity(self) -> ModelIdentity:
+        """Identidade configurada; adaptadores devem sobrescrever com valores reais."""
+        return ModelIdentity(provider=type(self).__name__, model="unknown", mode="unknown")
+
+    def component_versions(self, pack_id: str, context: dict[str, Any]) -> dict[str, str]:
+        """Versões de prompt/parser/orientação aplicadas pelo adaptador, sem segredos."""
+        del pack_id, context
+        return {}
 
     @abstractmethod
     async def execute_choice(

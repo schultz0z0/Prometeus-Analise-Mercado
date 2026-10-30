@@ -4,6 +4,20 @@ from prometeus.application.sanitization import EvidenceSanitizer
 from prometeus.domain.ports.market_sources import EvidenceType, MarketEvidence
 
 
+def test_redaction_expansion_respects_title_storage_limit_and_preserves_payload() -> None:
+    title = "a" * 244 + " 12345678900"
+    evidence = MarketEvidence.create(
+        analysis_id="title-expansion", evidence_type=EvidenceType.OFFER,
+        source_name="web", source_url="https://example.org/curso", collector="crawler",
+        title=title[:256], raw_payload={"text": title + " Conteúdo completo preservado."},
+    )
+    cleaned = EvidenceSanitizer().process_and_deduplicate([evidence])[0]
+    assert len(cleaned.title) <= 256
+    assert "[CPF_REDACTED]" in cleaned.sanitized_data["text"]
+    assert cleaned.sanitized_data["text"].endswith("Conteúdo completo preservado.")
+    assert cleaned.raw_payload == evidence.raw_payload
+
+
 def test_sanitizer_neutralizes_prompt_injections() -> None:
     sanitizer = EvidenceSanitizer()
 

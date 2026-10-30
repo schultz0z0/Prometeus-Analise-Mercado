@@ -25,6 +25,10 @@ export function renderLiveView(store) {
   const toolRuns = job.toolRuns || [];
   const totalCost = toolRuns.reduce((sum, run) => sum + Number(run.cost_usd || 0), 0);
   const blockingReason = job.blocking?.reason || job.error;
+  const sourceLabels = {instagram:'Instagram',linkedin_jobs:'LinkedIn Jobs',linkedin:'LinkedIn',google_search:'Busca Google',web_crawler:'Páginas da web',meta_ads_library:'Biblioteca de anúncios Meta',tiktok:'TikTok',youtube_comments:'Comentários do YouTube',google_trends:'Google Trends'};
+  const sourceGaps = toolRuns.filter(run => ['FAILED', 'EMPTY', 'PARTIAL'].includes(run.status));
+  const verification = steps.find(step => step.output_summary?.verification)?.output_summary.verification;
+  const revisingDossier = job.status === 'RUNNING' && steps.some(step => step.output_summary?.dossier_revision?.status === 'RUNNING');
 
   return `
     <div class="view-header">
@@ -39,6 +43,9 @@ export function renderLiveView(store) {
     </div>
 
     ${blockingReason ? `<div class="prometeus-card" style="border-color:#ef4444;margin-bottom:20px;"><strong>Processamento interrompido</strong><p>${escapeHtml(blockingReason)}</p></div>` : ''}
+    ${verification?.issues?.length ? `<div class="prometeus-card" role="status" style="margin-bottom:20px;"><strong>${revisingDossier ? 'Revisando a redação do dossiê' : 'O texto do dossiê precisa de revisão'}</strong><p>${revisingDossier ? 'A análise continua com os dados já coletados. O texto será validado novamente antes da publicação.' : 'O resultado não foi publicado. A validação encontrou estes problemas:'}</p><ul>${verification.issues.map(issue => `<li>${escapeHtml(issue.message)}${issue.text_excerpt ? `<blockquote>${escapeHtml(issue.text_excerpt)}</blockquote>` : ''}</li>`).join('')}</ul></div>` : ''}
+    ${job.connectionWarning ? `<div class="prometeus-card" role="status" style="margin-bottom:20px;"><p>${escapeHtml(job.connectionWarning)}</p></div>` : ''}
+    ${sourceGaps.length ? `<div class="prometeus-card" role="status" style="border-color:#d99d35;margin-bottom:20px;"><strong>Coleta com dados parciais</strong><p>A análise usa as evidências disponíveis. Estas lacunas serão informadas no dossiê e consideradas na recomendação:</p><ul>${sourceGaps.map(run => `<li>${escapeHtml(sourceLabels[run.capability] || run.capability)}: ${run.status === 'PARTIAL' ? 'consulta interrompida com retorno parcial; itens recuperados sujeitos à validação' : run.status === 'FAILED' ? 'falha na consulta' : run.observation_status === 'observed_empty' ? 'consulta concluída sem resultados' : 'nenhum conteúdo utilizável'} — ${escapeHtml(run.query)}${run.error_message ? ` (${escapeHtml(run.error_message)})` : ''}.</li>`).join('')}</ul><p>Uma lacuna de coleta não comprova ausência de demanda.</p></div>` : ''}
 
     <div class="prometeus-card" style="margin-bottom:24px;">
       <div style="font-size:15px;font-weight:600;color:#fff;margin-bottom:14px;">Pipeline canônico — ${steps.length}/15 checkpoints registrados</div>

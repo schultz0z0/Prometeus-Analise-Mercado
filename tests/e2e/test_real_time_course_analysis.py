@@ -22,7 +22,9 @@ from prometeus.infrastructure.apify.client import ApifyError
 from prometeus.infrastructure.apify.registry import ApifyActorRegistry
 from prometeus.infrastructure.apify.schemas import ApifyExecutionResult, ApifyRunMetadata
 from prometeus.infrastructure.db.models import (
+    AnalysisModel,
     Base,
+    DecisionResultModel,
     DossierModel,
     HistoricalCourseModel,
     HistoricalFunnelModel,
@@ -55,6 +57,7 @@ class WorkflowLLM(FakeGenerativeModel):
                     "language": "pt-BR",
                     "proposed_price_brl": 14000,
                     "duration_months": 12,
+                    "proposed_price_period": "total",
                     "supplied_materials": ["ementa"],
                     "uncertainties": [],
                     "hypotheses": [],
@@ -165,7 +168,7 @@ class RecordedToolExecutor:
         max_total_charge_usd: float,
     ) -> ApifyExecutionResult:
         self.calls.append(call.capability)
-        if call.capability == self.fail_capability:
+        if self.fail_capability == "*" or call.capability == self.fail_capability:
             raise ApifyError("falha externa controlada")
         spec = self.registry.require(call.capability)
         items = {
@@ -174,6 +177,7 @@ class RecordedToolExecutor:
                     "title": "Pós em Dados para Seguros",
                     "url": "https://concorrente.example/curso",
                     "price_brl": 15000,
+                    "price_period": "total",
                 }
             ],
             "meta_ads_library": [
@@ -189,6 +193,7 @@ class RecordedToolExecutor:
                     "title": "Analista de Dados em Seguros",
                     "jobUrl": "https://linkedin.example/job-1",
                     "salary_median_brl": 11000,
+                    "location": "São Paulo, SP, Brazil",
                 }
             ],
             "instagram": [
@@ -245,8 +250,9 @@ async def session() -> AsyncSession:
     await engine.dispose()
 
 
-async def seed_analysis_and_history(session: AsyncSession) -> str:
-    created = await CreateAnalysisUseCase(session).execute(
+async def seed_analysis_and_history(session: AsyncSession, settings=None) -> str:
+    settings=settings or workflow_settings().model_copy(update={'SCORING_PROFILE_PATH':'config/scoring/default-v1.example.yaml'})
+    created = await CreateAnalysisUseCase(session, settings=settings).execute(
         CreateAnalysisCommand(
             tenant_id="ens",
             course_name="Pós em Dados Aplicados a Seguros",
@@ -254,6 +260,7 @@ async def seed_analysis_and_history(session: AsyncSession) -> str:
                 "curriculum_text": "Dados, riscos, Python e modelos preditivos",
                 "target_audience": "Analistas de seguros",
                 "ticket": 14000,
+                "price_period": "total",
             },
             idempotency_key="real-workflow-e2e",
             correlation_id="corr-create",
@@ -292,6 +299,39 @@ async def seed_analysis_and_history(session: AsyncSession) -> str:
 
 
 @pytest.mark.asyncio
+async def test_database_flush_failure_persists_failed_checkpoint_and_analysis(session):
+    from sqlalchemy.exc import IntegrityError
+
+    from prometeus.infrastructure.db.models import AnalysisModel
+
+    analysis_id = await seed_analysis_and_history(session)
+    settings = workflow_settings()
+    registry = ApifyActorRegistry.from_settings(settings)
+    llm = WorkflowLLM()
+    workflow = RunCourseAnalysis(
+        session=session, settings=settings, llm=llm,
+        decision_model=LLMDecisionAdapter(llm),
+        tool_executor=RecordedToolExecutor(registry), registry=registry,
+    )
+    original_checkpoint = workflow._checkpoint
+
+    async def failing_checkpoint(analysis, step_number, operation):
+        async def broken_flush():
+            session.add(AnalysisModel(id="invalid-row"))
+            await session.flush()
+            return {}
+        return await original_checkpoint(analysis, step_number, broken_flush)
+
+    workflow._checkpoint = failing_checkpoint
+    with pytest.raises(IntegrityError):
+        await workflow.execute(analysis_id, "corr-database-failure")
+    reloaded = await workflow.repository.get_by_id(analysis_id)
+    assert reloaded.status == AnalysisStatus.FAILED
+    assert reloaded.steps[-1].status == "FAILED"
+    assert "invalid-row" not in reloaded.steps[-1].error_message
+
+
+@pytest.mark.asyncio
 async def test_full_workflow_uses_persisted_real_source_contracts_and_resumes_idempotently(
     session: AsyncSession,
 ) -> None:
@@ -323,6 +363,18 @@ async def test_full_workflow_uses_persisted_real_source_contracts_and_resumes_id
     assert scoring.pillar_scores["paid_competition"]["features"]["evidence_ids"]
     dossier = (await session.execute(select(DossierModel))).scalar_one()
     assert dossier.status == "VERIFIED"
+    decisions = (
+        (
+            await session.execute(
+                select(DecisionResultModel).where(
+                    DecisionResultModel.pack_id == "market-relevance-v1"
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert len(decisions) == 5
 
     repeated = await use_case.execute(analysis_id, "corr-resume")
 
@@ -332,14 +384,16 @@ async def test_full_workflow_uses_persisted_real_source_contracts_and_resumes_id
 
 
 @pytest.mark.asyncio
-async def test_required_external_source_failure_blocks_without_score_or_dossier(
+@pytest.mark.parametrize("failed_source", ["meta_ads_library", "*"])
+async def test_external_source_failure_completes_with_partial_evidence_and_disclosure(
     session: AsyncSession,
+    failed_source: str,
 ) -> None:
     analysis_id = await seed_analysis_and_history(session)
     settings = workflow_settings()
     registry = ApifyActorRegistry.from_settings(settings)
     llm = WorkflowLLM()
-    executor = RecordedToolExecutor(registry, fail_capability="meta_ads_library")
+    executor = RecordedToolExecutor(registry, fail_capability=failed_source)
     use_case = RunCourseAnalysis(
         session=session,
         settings=settings,
@@ -351,7 +405,86 @@ async def test_required_external_source_failure_blocks_without_score_or_dossier(
 
     result = await use_case.execute(analysis_id, "corr-blocked")
 
-    assert result.status == AnalysisStatus.BLOCKED
-    assert result.recommendation is None
-    assert await session.scalar(select(func.count()).select_from(ScoringResultModel)) == 0
-    assert await session.scalar(select(func.count()).select_from(DossierModel)) == 0
+    assert result.status == AnalysisStatus.COMPLETED
+    assert result.recommendation is not None
+    if failed_source == "*":
+        assert result.recommendation == "INSUFFICIENT_EVIDENCE"
+    assert await session.scalar(select(func.count()).select_from(ScoringResultModel)) == 1
+    assert await session.scalar(select(func.count()).select_from(DossierModel)) == 1
+    assert "instagram" in executor.calls  # Fonte posterior à falha também executou.
+    dossier = (await session.execute(select(DossierModel))).scalar_one()
+    assert any(
+        "Meta Ads" in item and "não pôde ser concluída" in item
+        for item in dossier.presentation["limitations"]
+    )
+
+
+async def test_research_repair_has_one_round_and_cumulative_budget_on_resume(session):
+    class RepairLLM(WorkflowLLM):
+        async def generate_text(self, prompt, system_prompt=None, temperature=0.2):
+            if (
+                "Allowlist de capabilities" in prompt
+                and "Consultas já realizadas, não repetir: []" not in prompt
+            ):
+                return json.dumps(
+                    {
+                        "questions": [],
+                        "tool_calls": [
+                            {
+                                "id": "repair-search",
+                                "capability": "google_search",
+                                "query": "seguros MBA investimento total",
+                                "required": False,
+                                "rationale": "Confrontar preços",
+                                "max_items": 5,
+                            }
+                        ],
+                    }
+                )
+            return await super().generate_text(prompt, system_prompt, temperature)
+
+    analysis_id = await seed_analysis_and_history(session)
+    row = await session.get(AnalysisModel, analysis_id)
+    row.proposal_data = {**row.proposal_data, "price_period": "unknown"}
+    await session.commit()
+    settings = workflow_settings()
+    registry = ApifyActorRegistry.from_settings(settings)
+    llm = RepairLLM()
+    executor = RecordedToolExecutor(registry)
+    use_case = RunCourseAnalysis(
+        session=session,
+        settings=settings,
+        llm=llm,
+        decision_model=LLMDecisionAdapter(llm),
+        tool_executor=executor,
+        registry=registry,
+    )
+    result = await use_case.execute(analysis_id, "repair")
+    assert result.status == AnalysisStatus.COMPLETED
+    assert await session.scalar(select(func.count()).select_from(ResearchPlanModel)) == 2
+    assert len(executor.calls) == 6
+    assert await session.scalar(select(func.sum(ToolRunModel.cost_usd))) == pytest.approx(0.06)
+    await use_case.execute(analysis_id, "repair-resume")
+    assert len(executor.calls) == 6
+    assert await session.scalar(select(func.sum(ToolRunModel.cost_usd))) == pytest.approx(0.06)
+
+
+async def test_portfolio_v2_persists_internal_pricing_and_evidence_audit_without_faking_history(session):
+    settings=workflow_settings().model_copy(update={'SCORING_PROFILE_PATH':'config/scoring/portfolio-v2.yaml'})
+    analysis_id=await seed_analysis_and_history(session,settings)
+    registry=ApifyActorRegistry.from_settings(settings)
+    llm=WorkflowLLM()
+    executor=RecordedToolExecutor(registry)
+    result=await RunCourseAnalysis(session=session,settings=settings,llm=llm,decision_model=LLMDecisionAdapter(llm),tool_executor=executor,registry=registry).execute(analysis_id,'v2')
+    assert result.status==AnalysisStatus.COMPLETED
+    score=(await session.execute(select(ScoringResultModel))).scalar_one()
+    assert score.profile_id=='portfolio-v2'
+    assert score.gate_details['profile_id']=='portfolio-v2'
+    assert score.pillar_scores['internal_history']['is_present'] is False
+    dossier=(await session.execute(select(DossierModel))).scalar_one()
+    audit=dossier.presentation['analysis_audit']
+    assert 'internal' in audit and 'pricing' in audit and 'evidence' in audit
+    assert audit['internal']['limitations']
+    assert audit['evidence']['collected_records']==5
+    assert len(executor.calls) == 5
+    assert await session.scalar(select(func.sum(ToolRunModel.cost_usd))) == pytest.approx(0.05)

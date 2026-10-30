@@ -45,6 +45,37 @@ def test_registry_contains_only_explicitly_configured_pinned_actors() -> None:
         registry.require("linkedin_jobs")
 
 
+def test_google_normalizes_portuguese_description_instead_of_sending_prose_as_locale():
+    registry = ApifyActorRegistry.from_settings(configured_settings())
+    payload = registry.build_input(
+        PlannedToolCall(
+            id="locale",
+            capability="google_search",
+            query="MBA seguros",
+            rationale="teste",
+            parameters={
+                "country": "BR",
+                "language": "Português; disciplinas ministradas em português",
+            },
+        )
+    )
+    assert payload["languageCode"] == "pt-BR"
+
+
+def test_google_rejects_unknown_language_before_paid_execution():
+    registry = ApifyActorRegistry.from_settings(configured_settings())
+    with pytest.raises(ActorConfigurationError, match="idioma"):
+        registry.build_input(
+            PlannedToolCall(
+                id="locale",
+                capability="google_search",
+                query="MBA",
+                rationale="teste",
+                parameters={"language": "nonsense locale"},
+            )
+        )
+
+
 @pytest.mark.parametrize(
     "actor_ref",
     [
@@ -93,10 +124,49 @@ def test_registry_builds_actor_specific_inputs_without_forwarding_unknown_parame
     }
     assert jobs == {
         "keywords": "subscritor inteligência artificial",
-        "location": "Brasil",
+        "location": "Brazil",
         "distance": 50,
         "limitPerSource": 40,
     }
+
+
+def test_jobs_location_alias_and_explicit_geo_id_use_official_actor_fields() -> None:
+    registry = ApifyActorRegistry.from_settings(configured_settings())
+    jobs = registry.build_input(
+        PlannedToolCall(
+            capability="linkedin_jobs",
+            query="Advogado de Seguros",
+            rationale="vagas nacionais",
+            parameters={"location": "BR", "geo_id": "106057199"},
+        )
+    )
+    assert jobs["location"] == "Brazil"
+    assert jobs["geoId"] == "106057199"
+
+
+def test_meta_ads_search_includes_educational_intent_without_rewriting_existing_intent() -> None:
+    registry = ApifyActorRegistry.from_settings(configured_settings())
+
+    def build(query: str) -> str:
+        return registry.build_input(
+            PlannedToolCall(
+                capability="meta_ads_library", query=query, rationale="concorrentes educacionais"
+            )
+        )["query"]
+
+    assert build("direito securitário") == "curso direito securitário"
+    assert build("MBA seguros") == "MBA seguros"
+
+
+def test_instagram_preserves_niche_in_hashtag_instead_of_only_first_word() -> None:
+    registry = ApifyActorRegistry.from_settings(configured_settings())
+    payload = registry.build_input(
+        PlannedToolCall(
+            capability="instagram", query="Direito Securitário", rationale="voz profissional"
+        )
+    )
+    assert payload["search"] == "direitosecuritario"
+    assert payload["searchType"] == "hashtag"
 
 
 def test_url_based_actor_requires_urls_from_the_validated_plan() -> None:

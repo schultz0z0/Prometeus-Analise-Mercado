@@ -1,0 +1,423 @@
+{
+  "tool-run:plan-fd18c14a0e20:call-1": {
+    "query": "curso extensão fraude em seguros investigação sinistros preço",
+    "provider_run_id": "dDzGqBSgzwePj6mwU",
+    "dataset_id": "hFRZHXtvfBSH5ALMw",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "sample_scope": "capped_sample",
+      "resolved_urls": [],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed",
+      "dataset_total_items": 0,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "URLs públicas de ofertas pertinentes, priorizando instituições distintas; trechos não comprovam preços."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20:call-7": {
+    "query": "analista investigação fraude seguros",
+    "provider_run_id": "wITWda7goRcOKwQcq",
+    "dataset_id": "fEBEGcgZLOitelV14",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "time_range": "últimos 12 meses",
+      "sample_scope": "capped_sample",
+      "resolved_urls": [],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed",
+      "dataset_total_items": 13,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "Vagas identificáveis com empregador, localização compatível e descrição pertinente; registrar vagas incompletas e duplicadas."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20:call-2": {
+    "query": "curso aperfeiçoamento litigância predatória direito seguro",
+    "provider_run_id": "Pal0x0dARcTusbfId",
+    "dataset_id": "K29Ap6KMsx7BGEruH",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "sample_scope": "capped_sample",
+      "resolved_urls": [],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed",
+      "dataset_total_items": 0,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "URLs de cursos identificáveis sobre litigância predatória ou sua aplicação em seguros, com categoria verificável na origem."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20:call-8": {
+    "query": "analista regulação sinistros seguros",
+    "provider_run_id": "AbyDAv2O5PCmb9NjB",
+    "dataset_id": "AlowA99r1ejCPlseM",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "time_range": "últimos 12 meses",
+      "sample_scope": "capped_sample",
+      "resolved_urls": [],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed",
+      "dataset_total_items": 11,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "Vagas com identificação, local e atividades ou requisitos de regulação de sinistros; não presumir competências sem descrição."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20:call-13": {
+    "query": "fraude securitária e litigância predatória",
+    "provider_run_id": "6qyKqugHbmFWHMw81",
+    "dataset_id": "K1o7YnUkDVdP9WXij",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "time_range": "today 5-y",
+      "sample_scope": "capped_sample",
+      "search_terms": [
+        "fraude em seguros",
+        "litigância predatória"
+      ],
+      "resolved_urls": [],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed",
+      "dataset_total_items": 2,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "Série temporal com pontos válidos por termo, região e janela; registrar série ausente, hasData=false, zero e falha separadamente."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20-followup:call-18": {
+    "query": "treinamento investigação de sinistros",
+    "provider_run_id": "TlTUZHaW2UxMAzMXT",
+    "dataset_id": "rkcfdI7g7GKQgHM1H",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "sample_scope": "capped_sample",
+      "resolved_urls": [],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed_empty",
+      "dataset_total_items": 0,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "Anúncio identificável de formação pertinente, com anunciante externo e texto ou destino verificável; deduplicar e separar serviços e anúncios próprios."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20:call-9": {
+    "query": "fraudesecuritaria",
+    "provider_run_id": "M4RMg4Wj9hUdIgzBs",
+    "dataset_id": "YrxsKPBPeoYxMvf2X",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "time_range": "últimos 12 meses",
+      "sample_scope": "capped_sample",
+      "resolved_urls": [],
+      "rejected_items": [
+        {
+          "reason": "provider_error_item",
+          "raw_json": "{\"error\": \"no_items\", \"errorDescription\": \"Empty or private data for provided input\"}"
+        }
+      ],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "rejected_items",
+      "dataset_total_items": 0,
+      "rejected_items_count": 1,
+      "sufficiency_criterion": "Posts ou comentários reais com texto pertinente e URL original; diretório de hashtag não é amostra de publicações."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20:call-3": {
+    "query": "Páginas oficiais de cursos de fraude securitária e litigância predatória",
+    "provider_run_id": "LSjR6jtECC63N0fao",
+    "dataset_id": "yDkyfDzO3YiuE3IHu",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "depends_on": [
+        "call-1",
+        "call-2"
+      ],
+      "sample_scope": "capped_sample",
+      "resolved_urls": [
+        "https://ens.edu.br/pos/regulacao-de-sinistros-por-ramos-de-seguros",
+        "https://www.instagram.com/p/DS2ZmnSEQeJ/",
+        "https://www.amlreputacional.com.br/capacitacao/fraudes-em-seguros/",
+        "https://inaci.com.br/cursos/educacao-a-distancia/extensao/analista-de-sinistros",
+        "https://www.inteligenciaprivada.com/investigadordesinistros",
+        "https://www.verbojuridico.com.br/pos-graduacoes-a-distancia-ead/pos-graduacao-em-direito-securitario-com-enfase-em-contratos-de-seguros-e-gestao-de-riscos/",
+        "https://onlinecursosgratuitos.com.br/curso/profissoes/analista-de-sinistros"
+      ],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed",
+      "dataset_total_items": 7,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "Oferta e instituição identificadas; registrar categoria, grade e formato observados. Preço exige valor em BRL e condição de total ou parcelamento inequívoca."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20-followup:call-16": {
+    "query": "Páginas oficiais descobertas de formação em investigação de sinistros e litigância predatória",
+    "provider_run_id": "p5gtTot6UetUzizPH",
+    "dataset_id": "qhDXUBbqxHuEAvQOu",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "depends_on": [
+        "call-14",
+        "call-15"
+      ],
+      "sample_scope": "capped_sample",
+      "resolved_urls": [
+        "https://securitariosp.org.br/curso/",
+        "https://corporatesolutions.swissre.com/dam/jcr:c8c9e31d-68c6-4b85-aeab-567ffd8bf6b6/treinamento_antifraude.2021-09-01-22-07-28.pdf",
+        "https://trevisan.edu.br/cursos/investigacao-identificacao-e-tratamento-de-fraudes-2/",
+        "https://direitosp.fgv.br/noticias/extensao-litigancia-estrategica-direitos-humanos-fgv-direito-sp-esta-com-inscricoes-abertas",
+        "https://direitosp.fgv.br/extensao",
+        "https://direitosp.fgv.br/eventos/reflexoes-sobre-litigancia-predatoria",
+        "https://portal.fgv.br/noticias/fgv-disponibiliza-curso-gratuito-voltado-para-curricularizacao-da-extensao"
+      ],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed",
+      "dataset_total_items": 7,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "Oferta externa identificada com preço em BRL e total ou quantidade e valor de parcelas explícitos; registrar preço ausente ou ambíguo sem inferir total."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20-followup:call-14": {
+    "query": "treinamento investigação de sinistros fraude securitária curso investimento",
+    "provider_run_id": "mHTeTAcD5CYChcnUK",
+    "dataset_id": "ALgPXrUYdOYTDILDT",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "sample_scope": "capped_sample",
+      "resolved_urls": [],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed",
+      "dataset_total_items": 0,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "URLs oficiais de ofertas identificáveis; confirmar categoria, conteúdo e preço na página original, sem tratar o trecho como preço validado."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20:call-4": {
+    "query": "curso fraude em seguros",
+    "provider_run_id": "RMUg90SX2U8rIMJ96",
+    "dataset_id": "2sDcFCzDspLFjdfVV",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "time_range": "últimos 12 meses",
+      "sample_scope": "capped_sample",
+      "resolved_urls": [],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed",
+      "dataset_total_items": 0,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "Anúncio com anunciante identificável e oferta de formação pertinente; separar ENS, anúncios de serviços e duplicatas."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20:call-10": {
+    "query": "como identificar fraude em sinistro",
+    "provider_run_id": "bE4HW0ZyY7EkIu9Px",
+    "dataset_id": "jrmcbcvMpqeZOTWuo",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "time_range": "últimos 12 meses",
+      "sample_scope": "capped_sample",
+      "resolved_urls": [],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed",
+      "dataset_total_items": 15,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "Vídeos com URL e texto ou transcrição observada sobre atividade ou dificuldade pertinente; registrar região não comprovada."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20-followup:call-15": {
+    "query": "FGV PUC curso litigância predatória extensão investimento",
+    "provider_run_id": "fV4OVfCq7C71h8Abj",
+    "dataset_id": "6CdNNGZWCF2gt002J",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "sample_scope": "capped_sample",
+      "resolved_urls": [],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed",
+      "dataset_total_items": 0,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "URLs oficiais de ofertas pertinentes com categoria e condições comerciais verificáveis; ofertas jurídicas sem relação com seguros permanecem comparáveis apenas com ressalvas."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20:call-5": {
+    "query": "curso litigância predatória",
+    "provider_run_id": "WDQVwxe3F6d8a5QQz",
+    "dataset_id": "MJnZoLh3eXZDxqxxM",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "time_range": "últimos 12 meses",
+      "sample_scope": "capped_sample",
+      "resolved_urls": [],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed",
+      "dataset_total_items": 0,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "Criativos ou destinos verificáveis de formação pertinente, com anunciante e categoria quando observáveis."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20-followup:call-19": {
+    "query": "capacitação combate à litigância abusiva",
+    "provider_run_id": "f42yiuVhFURjrQrGS",
+    "dataset_id": "eAY2DBlWDSz91JAgs",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "sample_scope": "capped_sample",
+      "resolved_urls": [],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed_empty",
+      "dataset_total_items": 0,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "Anúncio de formação externa identificável sobre litigância abusiva; registrar pertinência ao seguro e categoria quando observadas."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20:call-11": {
+    "query": "site:youtube.com/watch fraude em seguros investigação sinistros",
+    "provider_run_id": "ss9JnVtfpfLWXREux",
+    "dataset_id": "p7fNa63ThnWCX0z2P",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "sample_scope": "capped_sample",
+      "resolved_urls": [],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed",
+      "dataset_total_items": 0,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "URLs de vídeos públicos sobre investigação de fraude em seguros, não apenas canais ou páginas de busca."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20:call-6": {
+    "query": "investigação de fraudes seguros",
+    "provider_run_id": "tqYE5jnN2M7xWQLYm",
+    "dataset_id": "9HxvZZ42dle32RIHZ",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "sample_scope": "capped_sample",
+      "resolved_urls": [],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed",
+      "dataset_total_items": 0,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "Páginas de organizações identificáveis com descrição e atuação compatível com o setor no Brasil."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20:call-12": {
+    "query": "Comentários sobre investigação de fraude em seguros",
+    "provider_run_id": "4mtRTV49ysQaYsQuM",
+    "dataset_id": "ekcXUpPfoxplIEUiS",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "depends_on": [
+        "call-11"
+      ],
+      "sample_scope": "capped_sample",
+      "resolved_urls": [
+        "https://www.youtube.com/watch?v=ZkJevb_TNw8",
+        "https://www.youtube.com/watch?v=W1EPxNlotP0",
+        "https://www.youtube.com/watch?v=P0Mh4rnZcYU",
+        "https://www.youtube.com/watch?v=V-Q1URiSyPc",
+        "https://www.youtube.com/watch?v=eN2_2ia7A8o",
+        "https://www.youtube.com/watch?v=f2EiTQNt46c",
+        "https://m.youtube.com/watch?v=J6IPVphnOLw",
+        "https://www.youtube.com/watch?v=2M-BoDiPbtU",
+        "https://www.youtube.com/watch?v=t9HLdYesVfQ",
+        "https://www.youtube.com/watch?v=1ca6SUuM4ec"
+      ],
+      "rejected_items": [],
+      "provider_status": "SUCCEEDED",
+      "observation_status": "observed",
+      "dataset_total_items": 44,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "Comentários textuais vinculados a vídeo descoberto e pertinentes à atividade profissional; distinguir ausência de comentários de falha de descoberta."
+    }
+  },
+  "tool-run:plan-fd18c14a0e20-followup:call-17": {
+    "query": "Interesse em fraude em seguros e litigância predatória",
+    "provider_run_id": "jWJKJWrLg8cWYhFHL",
+    "dataset_id": "IXlsZRG5kpaG1bx9p",
+    "parameters": {
+      "geo": "BR",
+      "country": "BR",
+      "language": "pt-BR",
+      "location": "Brazil",
+      "time_range": "today 5-y",
+      "sample_scope": "capped_sample",
+      "search_terms": [
+        "fraude em seguros",
+        "litigância predatória",
+        "sinistro de seguro"
+      ],
+      "resolved_urls": [],
+      "rejected_items": [],
+      "provider_status": "ABORTED",
+      "observation_status": "observed",
+      "dataset_total_items": 1,
+      "rejected_items_count": 0,
+      "sufficiency_criterion": "Séries com termo, Brasil, intervalo e pontos temporais válidos; excluir pontos parciais e hasData=false e tratar sinistro como proxy setorial."
+    }
+  }
+}

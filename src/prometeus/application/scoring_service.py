@@ -50,7 +50,7 @@ class ScoringService:
 
         for input_name, feature_name in mapping.items():
             feature: VerifiedFeature | None = feature_set.get(feature_name)
-            if feature is None:
+            if feature is None or not feature.evidence_ids:
                 continue
             values[input_name] = feature.value
             provenance[input_name] = list(feature.evidence_ids)
@@ -77,6 +77,7 @@ class ScoringService:
         *,
         proposed_price_brl: float | None = None,
         proposed_price_source_id: str | None = None,
+        profile_id: str = "default-v1",
     ) -> dict[str, dict[str, Any]]:
         """Mapeia somente features verificadas para o contrato do scoring.
 
@@ -133,6 +134,32 @@ class ScoringService:
                 required_any={"market_median_price_brl"},
             ),
         }
+
+        if self.get_profile(profile_id).historical_method == "ipd":
+            pillars["internal_history"] = self._pillar_from_features(
+                feature_set,
+                {"ipd_score": "internal_ipd_score", "confidence": "internal_ipd_confidence"},
+                required_any={"ipd_score"},
+            )
+            pillars["pricing"] = self._pillar_from_features(
+                feature_set,
+                {
+                    "market_median_price_brl": "reference_mean_price_brl",
+                    "confidence": "pricing_confidence",
+                },
+                required_any={"market_median_price_brl"},
+            )
+            fit = pillars["syllabus_fit"]
+            confidence = feature_set.get("syllabus_confidence")
+            review = feature_set.get("syllabus_requires_review")
+            if confidence is not None:
+                fit["confidence"] = confidence.value
+            if review is not None and review.value:
+                fit["is_present"] = False
+                fit["requires_human_review"] = True
+                fit["missing_reason"] = (
+                    "Julgamento curricular requer revisão por confiança insuficiente."
+                )
 
         pricing = pillars["pricing"]
         if proposed_price_brl is None or proposed_price_source_id is None:
@@ -196,6 +223,42 @@ class ScoringService:
             confidence_score=conf_score,
             pillar_scores=pillar_scores,
             profile=profile,
+            pending_review_pillars=[
+                name
+                for name, inputs in pillar_inputs.items()
+                if inputs.get("requires_human_review") is True
+            ],
+        )
+        blocks: dict[str, Any] = {}
+        for block, names in {
+            "internal": ["internal_history"],
+            "external": ["paid_competition", "search_and_media", "employability"],
+            "alignment": ["syllabus_fit"],
+            "pricing": ["pricing"],
+        }.items():
+            selected = [pillar_scores[name] for name in names if name in pillar_scores]
+            present = [pillar for pillar in selected if pillar.is_present]
+            block_weight = sum(p.weight for p in selected)
+            covered = sum(p.weight for p in present)
+            blocks[block] = {
+                "score": round(sum(p.weighted_score for p in present) / covered, 2)
+                if covered
+                else None,
+                "coverage": round(covered / block_weight, 4) if block_weight else 0,
+                "weight": block_weight,
+                "confidence": round(sum(p.weighted_confidence for p in present) / covered, 4)
+                if covered
+                else 0,
+            }
+        gate_eval = gate_eval.model_copy(
+            update={
+                "weighted_contribution": round(
+                    sum(p.weighted_score for p in pillar_scores.values()), 2
+                ),
+                "observed_score": part_score,
+                "score_blocks": blocks,
+                "profile_id": profile_id,
+            }
         )
 
         analysis_id = analysis.id if analysis else "standalone-scoring"

@@ -29,3 +29,11 @@ As tools são capacidades do domínio, não chamadas diretas de fornecedor. Cada
 - Actor IDs são configuração pinada por deployment após avaliação.
 - Saídas brutas são convertidas para contratos internos antes do uso.
 - Cada execução externa cria `tool_run` com Actor/build, timestamps, custo, dataset e erro seguro.
+
+## Contratos por fonte v3
+
+`application/tool_capabilities.py` registra, para as onze capacidades configuradas, objetivo, estratégia de consulta, campos esperados, finalidade da evidência, critérios de aceitação/rejeição, diagnóstico, recuperação e limites de amostragem. Os schemas do fornecedor permanecem no registry Apify pinado; orientação semântica não modifica permissões ou schema de entrada.
+
+Vagas alimentam empregabilidade e competências; empresas são contexto; posts/comentários sustentam dores e linguagem; anúncios externos indicam concorrência educacional; busca descobre páginas; crawler confirma ofertas; Trends oferece índice relativo com série válida. Nenhuma dessas contagens comprova matrículas. Um erro de ferramenta gera lacuna individual, preservando o restante do fluxo e os dados úteis.
+
+Trends aceita termos independentes e geo/idioma canônicos, conforme o [schema oficial do Actor](https://apify.com/apify/google-trends-scraper/input-schema). Restrições explícitas de estado/cidade são preservadas. Falha ou série vazia não equivale a interesse zero. A recuperação continua limitada ao orçamento e à rodada autorizada; não há substituição silenciosa por um novo Actor sem validar contrato.

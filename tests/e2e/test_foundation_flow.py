@@ -1,17 +1,4 @@
-from collections.abc import AsyncGenerator
-from typing import Any
-
-import pytest
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-
-from prometeus.domain.analyses import Analysis
-from prometeus.domain.configuration import AppSettings
-from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
-from prometeus.infrastructure.db.models import Base
-from prometeus.workers.tasks import WORKFLOW_STEPS, execute_workflow_steps
-
-
-@pytest.fixture
+from collections.abc import AsyncGeneratorfrom typing import Anyimport pytestfrom sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_enginefrom prometeus.domain.analyses import Analysisfrom prometeus.domain.configuration import AppSettingsfrom prometeus.infrastructure.db.analysis_repository import AnalysisRepositoryfrom prometeus.infrastructure.db.models import Basefrom prometeus.workers.tasks import WORKFLOW_STEPS, execute_workflow_steps@pytest.fixture
 async def e2e_session() -> AsyncGenerator[AsyncSession, None]:
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
     async with engine.begin() as connection:

@@ -1,7 +1,7 @@
 """Script de Semeadura da Base Histórica Canônica da ENS (Escola de Negócios e Seguros).
 
 Popula as tabelas `historical_courses` e `historical_funnel_records` no PostgreSQL
-com 5 cursos sintéticos de alta fidelidade em segmentos distintos da ENS e ofertas de 2 anos (2024 e 2025).
+com 33 cursos de teste e 66 ofertas simuladas de 2024 e 2025.
 
 Uso:
     python scripts/seed_historical_data.py [--tenant ens] [--reset]

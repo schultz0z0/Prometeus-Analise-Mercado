@@ -57,7 +57,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       INSTITUTION_ID: ens
       INSTITUTION_CONFIG_PATH: config/tenants/ens.example.yaml
-      SCORING_PROFILE_PATH: config/scoring/default-v1.example.yaml
+      SCORING_PROFILE_PATH: config/scoring/portfolio-v2.yaml
       JEV_MODEL: ${JEV_MODEL:-jev-v1.2.0}
       SHADOW_MODE: ${SHADOW_MODE:-false}
       KILL_SWITCH_ACTIVE: ${KILL_SWITCH_ACTIVE:-false}
@@ -98,7 +98,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       INSTITUTION_ID: ens
       INSTITUTION_CONFIG_PATH: config/tenants/ens.example.yaml
-      SCORING_PROFILE_PATH: config/scoring/default-v1.example.yaml
+      SCORING_PROFILE_PATH: config/scoring/portfolio-v2.yaml
       JEV_MODEL: ${JEV_MODEL:-jev-v1.2.0}
       SHADOW_MODE: ${SHADOW_MODE:-false}
       KILL_SWITCH_ACTIVE: ${KILL_SWITCH_ACTIVE:-false}
@@ -106,11 +106,11 @@ services:
       - prometeus_internal
       - prometeus_public
     healthcheck:
-      test: ["CMD-SHELL", "celery -A prometeus.workers.tasks.celery_app inspect ping --timeout 5"]
+      test: ["CMD-SHELL", "celery -A prometeus.workers.tasks.celery_app inspect ping --destination celery@$$HOSTNAME --timeout 2"]
       interval: 20s
-      timeout: 10s
+      timeout: 20s
       retries: 3
-      start_period: 20s
+      start_period: 40s
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,3 +1,5 @@
+from typing import Any
+
 from prometeus.domain.dossiers import (
     ClaimType,
     DossierClaim,
@@ -71,6 +73,15 @@ class FakeGenerativeModel(GenerativeModelPort):
             raise ConnectionError("Falha simulada na API generativa")
 
         return self.canned_text
+
+    async def revise_dossier(
+        self,
+        facts: DossierFacts,
+        draft: DossierOutput | dict[str, Any],
+        verification_report: dict[str, Any],
+        prompt_version: str = "dossier-v1",
+    ) -> DossierOutput:
+        return await self.synthesize_dossier(facts, prompt_version)
 
     async def synthesize_dossier(
         self,

@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MarketIntelligenceReferenceLabelSchema",
+  "type": "object",
+  "required": [
+    "example_id",
+    "capture_id",
+    "entity_id",
+    "source_name",
+    "source_url",
+    "scope",
+    "expected_critical_fields",
+    "extracted_snippets",
+    "purpose",
+    "utility",
+    "category_exact",
+    "family",
+    "ambiguity_flag",
+    "allowed_claims",
+    "disallowed_claims",
+    "control_type",
+    "annotations",
+    "adjudication"
+  ],
+  "properties": {
+    "example_id": {
+      "type": "string",
+      "pattern": "^ref-[a-z0-9-]+$"
+    },
+    "capture_id": {
+      "type": "string"
+    },
+    "entity_id": {
+      "type": "string"
+    },
+    "source_name": {
+      "type": "string"
+    },
+    "source_url": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "object",
+      "required": ["geography", "period", "language"],
+      "properties": {
+        "geography": { "type": "string" },
+        "period": { "type": "string" },
+        "language": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "expected_critical_fields": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "extracted_snippets": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "purpose": {
+      "type": "string",
+      "enum": [
+        "direct_competition",
+        "adjacent_competition",
+        "pricing",
+        "competencies",
+        "employability",
+        "learner_demand",
+        "institutional_context",
+        "sector_context"
+      ]
+    },
+    "utility": {
+      "type": "string",
+      "enum": [
+        "direct",
+        "adjacent",
+        "context",
+        "irrelevant",
+        "insufficient"
+      ]
+    },
+    "category_exact": {
+      "type": "string"
+    },
+    "family": {
+      "type": "string"
+    },
+    "ambiguity_flag": {
+      "type": "boolean"
+    },
+    "ambiguity_reason": {
+      "type": ["string", "null"]
+    },
+    "allowed_claims": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "disallowed_claims": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "control_type": {
+      "type": "string",
+      "enum": [
+        "positive",
+        "negative",
+        "adjacent",
+        "false_cognate",
+        "legitimate_absence"
+      ]
+    },
+    "annotations": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["reviewer_id", "utility", "purpose", "rationale", "timestamp"],
+        "properties": {
+          "reviewer_id": {
+            "type": "string",
+            "enum": ["reviewer_ens_market", "reviewer_data_methodology"]
+          },
+          "utility": {
+            "type": "string",
+            "enum": ["direct", "adjacent", "context", "irrelevant", "insufficient"]
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "rationale": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "adjudication": {
+      "type": "object",
+      "required": ["status", "adjudicator", "final_utility", "rationale"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["AGREED", "ADJUDICATED", "UNKNOWN_UNRESOLVED"]
+        },
+        "adjudicator": {
+          "type": "string"
+        },
+        "final_utility": {
+          "type": "string",
+          "enum": ["direct", "adjacent", "context", "irrelevant", "insufficient"]
+        },
+        "rationale": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
+

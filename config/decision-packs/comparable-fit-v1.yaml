@@ -1,16 +1,20 @@
 schema_version: 1
 pack_id: comparable-fit-v1
-version: 1.0.0
+version: 2.0.0
 owner: Agência Prometeus
 decision_type: SCORE
 question: "Em uma escala de 0 a 100, qual o grau de comparabilidade histórica entre o curso de referência da instituição e a nova proposta?"
 min_score: 0.0
 max_score: 100.0
 rubric:
-  "90-100": "Curso idêntico ou versão anterior direta."
-  "70-89": "Mesma macroárea com público e carga horária semelhantes."
-  "40-69": "Tema correlato com modalidade ou ticket substancialmente diferente."
-  "0-39": "Curso incomparável sem relevância para balizamento de conversão."
+  "90-100": "Mesma família, tema central, público e cobertura curricular documentada; curso idêntico ou versão anterior direta com proveniência."
+  "70-89": "Mesma família e tema próximo, com módulos ou competências semelhantes quando as grades são fornecidas. Registrar diferenças observadas."
+  "40-69": "Tema adjacente ou semelhança baseada apenas em nome/tags; grade ausente impede alegar proximidade curricular comprovada."
+  "0-39": "Família incompatível ou conteúdo/público sem proximidade suficiente. Não compensar incompatibilidade com volume de leads ou matrícula."
 review_threshold: 0.75
 notes:
   - "Utilizado na Etapa 06 (Histórico) para selecionar comparáveis internos."
+  - "Selecionar até três comparáveis adequados; não preencher três por obrigação. Código filtra instituição/família e mantém origem, janela e limitações."
+  - "A similaridade seleciona referências; não é IPD nem score de demanda. Percentis por família e fórmula 20% leads, 30% inscrições, 50% matrículas são calculados em código."
+  - "Grade histórica ausente é limitação observada, não autorização para reconstruir currículo por conhecimento prévio."
+  - "Não misturar famílias educacionais para normalizar demanda; não usar os três selecionados como se fossem toda a distribuição de referência."

@@ -1,17 +1,21 @@
 schema_version: 1
 pack_id: evidence-support-v1
-version: 1.0.0
+version: 1.1.0
 owner: Agência Prometeus
 decision_type: CHOICE
-question: "O item de evidência coletado oferece suporte empírico à afirmação proposta?"
+question: "As fontes citadas sustentam exatamente a afirmação e seu grau de certeza, respeitando a natureza de cada registro?"
 options:
   - OBSERVED
   - SUGGESTIVE
   - UNSUPPORTED
 rubric:
-  OBSERVED: "Evidência direta, factual e verificável sustentando o claim sem inferência."
+  OBSERVED: "Descrição direta e fiel do registro citado: proposta declarada, histórico institucional identificado (inclusive sintético), cálculo feito em código ou coleta externa. Observado significa que a informação consta nessa fonte; não transforma simulação ou proposta em prova de demanda real."
   SUGGESTIVE: "Evidência indireta ou indício que corrobora a hipótese com razoabilidade."
   UNSUPPORTED: "Evidência não corrobora, contradiz ou não se aplica ao claim avaliado."
 review_threshold: 0.75
 notes:
   - "Utilizado na validação factual das claims do dossiê (Etapa 13)."
+  - "Verifique cada afirmação em relação à finalidade e natureza da fonte. É válido descrever quantos cursos sintéticos foram comparados, período e tamanho da família de referência quando esses campos constam do histórico citado."
+  - "A ressalva de que uma base sintética não demonstra demanda ou conversão real é um limite metodológico da fonte, não uma alegação de ausência de mercado."
+  - "Histórico sintético NÃO sustenta matrícula, conversão ou demanda real, aprovação de lançamento, retorno garantido ou resultados futuros da nova oferta."
+  - "Não exija uma fonte externa para atestar o que foi declarado numa proposta ou calculado em código. Exija fonte externa quando a afirmação se refere à realidade do mercado."

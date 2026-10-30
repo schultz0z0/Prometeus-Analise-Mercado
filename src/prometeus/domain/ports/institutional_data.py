@@ -23,6 +23,9 @@ class CanonicalCourse:
     status: str = "active"  # active, archived, draft
     target_audience: list[str] = field(default_factory=list)
     tags: list[str] = field(default_factory=list)
+    family: str = ""
+    curriculum_text: str = ""
+    curriculum_modules: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -58,6 +61,7 @@ class FinancialMetrics:
     average_ticket_brl: float
     total_revenue_brl: float
     acquisition_cost_brl: float | None = None
+    price_period: str = "unknown"
 
 
 @dataclass

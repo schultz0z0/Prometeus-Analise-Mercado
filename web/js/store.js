@@ -111,7 +111,8 @@ class PrometeusStore {
       const response = await fetch(`/v1/analyses?tenant_id=${encodeURIComponent(this.state.currentTenantId)}`);
       if (!response.ok) return;
       const data = await response.json();
-      const verified = (Array.isArray(data.items) ? data.items : []).filter(
+      this.analysisCatalog = Array.isArray(data.items) ? data.items : [];
+      const verified = this.analysisCatalog.filter(
         item => item.status === 'COMPLETED' && item.dossier && item.dossier.status === 'VERIFIED'
       );
       if (verified.length > 0) {
@@ -127,7 +128,7 @@ class PrometeusStore {
     }
   }
 
-  async seedInstitutionalData(reset = true) {
+  async seedInstitutionalData(reset = false) {
     try {
       const response = await fetch(`/v1/institutional/seed?tenant_id=${encodeURIComponent(this.state.currentTenantId)}&reset=${reset}`, { method: 'POST' });
       if (!response.ok) return false;
@@ -154,6 +155,7 @@ class PrometeusStore {
       this.updateSettings(this.state.currentTenantId, {
         gen_llm_provider: settings.gen_llm_provider || '',
         gen_llm_model: settings.gen_llm_model || '',
+        ...(['openai', 'openrouter'].includes(settings.gen_llm_provider) ? { api_llm_model: settings.gen_llm_model || '' } : {}),
         gen_llm_reasoning_effort: settings.gen_llm_reasoning_effort || '',
         chatgpt_oauth_connected: Boolean(settings.chatgpt_oauth_connected),
         chatgpt_oauth_email: settings.chatgpt_oauth_email || '',
@@ -169,6 +171,59 @@ class PrometeusStore {
       console.warn('Configuração do backend indisponível.', error);
     } finally {
       this._syncingBackendSettings = false;
+    }
+  }
+
+  async loadChatGPTModels(force = false) {
+    if (this._chatgptModelRequest) return this._chatgptModelRequest;
+    if (!force && this.chatgptModelsCatalog?.status === 'ready') return this.chatgptModelsCatalog;
+    this.chatgptModelsCatalog = { status: 'loading', models: [], error: '' };
+    this._chatgptModelRequest = (async () => {
+      try {
+        const response = await fetch('/v1/auth/chatgpt/models');
+        const body = await response.json();
+        if (!response.ok) throw new Error(typeof body.detail === 'string' ? body.detail : `HTTP ${response.status}`);
+        const models = (Array.isArray(body.models) ? body.models : []).filter(model => typeof model.slug === 'string' && model.slug);
+        if (!models.length) throw new Error('A conta não retornou modelos disponíveis. Atualize a lista.');
+        this.chatgptModelsCatalog = { status: 'ready', models, error: '', selected_model: body.selected_model || '' };
+      } catch (error) {
+        this.chatgptModelsCatalog = { status: 'error', models: [], error: error.message || 'Não foi possível consultar os modelos da conta.' };
+      } finally {
+        this._chatgptModelRequest = null;
+      }
+      return this.chatgptModelsCatalog;
+    })();
+    return this._chatgptModelRequest;
+  }
+
+  async openAnalysis(analysisId) {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(analysisId || '')) return false;
+    const controller = new AbortController();
+    const deadline = setTimeout(() => controller.abort(), 15000);
+    try {
+      const response = await fetch(`/v1/analyses/${encodeURIComponent(analysisId)}`, {signal: controller.signal});
+      if (!response.ok) return false;
+      const data = await response.json();
+      if (data.tenant_id !== this.state.currentTenantId) return false;
+      this.state.liveJob = {
+        id: data.analysis_id, name: data.course_name, status: data.status,
+        created_at: data.created_at, steps: data.steps || [], toolRuns: data.tool_runs || [],
+        blocking: data.blocking || null, error: data.blocking?.reason || null,
+        logs: [`[${nowLabel()}] Acompanhamento reaberto a partir dos checkpoints persistidos.`]
+      };
+      this.state.currentView = 'live';
+      this.notify();
+      const catalogCourse = this.analysisCatalog?.find(item => item.id === analysisId);
+      this.pollAnalysisStatus(analysisId, {
+        name: data.course_name, area: catalogCourse?.area, level: catalogCourse?.level,
+        modality: catalogCourse?.modality, ticket: catalogCourse?.ticket,
+        duration: catalogCourse?.duration_months
+      });
+      return true;
+    } catch (error) {
+      return false;
+    } finally {
+      clearTimeout(deadline);
     }
   }
 
@@ -193,13 +248,14 @@ class PrometeusStore {
       tenant_id: this.state.currentTenantId,
       proposal_data: {
         curriculum: courseInput.curriculum || '',
-        curriculum_text: courseInput.curriculum || '',
         curriculum_file_name: courseInput.curriculum_file_name || '',
         area: courseInput.area || '',
         level: courseInput.level || '',
         modality: courseInput.modality || '',
         ticket: numericOrNull(courseInput.ticket),
+        price_period: courseInput.price_period || 'monthly',
         duration_months: numericOrNull(courseInput.duration),
+        installments_count: numericOrNull(courseInput.installments),
         audience: courseInput.audience || '',
         competitors: courseInput.competitors || ''
       }
@@ -215,6 +271,9 @@ class PrometeusStore {
       const data = await response.json();
       job.id = data.analysis_id;
       job.status = data.status;
+      const url = new URL(window.location.href);
+      url.searchParams.set('analysis', job.id);
+      window.history.replaceState(null, '', url);
       job.logs.push(`[${nowLabel()}] Análise ${job.id} aceita e enviada ao worker.`);
       this.notify();
       this.pollAnalysisStatus(job.id, courseInput);
@@ -227,20 +286,25 @@ class PrometeusStore {
   }
 
   pollAnalysisStatus(analysisId, courseInput) {
-    let attempts = 0;
+    let pending = false;
     const logged = new Set();
     const poll = setInterval(async () => {
-      attempts += 1;
       const job = this.state.liveJob;
       if (!job || job.id !== analysisId) return clearInterval(poll);
+      if (pending) return;
+      pending = true;
+      const controller = new AbortController();
+      const deadline = setTimeout(() => controller.abort(), 15000);
       try {
-        const response = await fetch(`/v1/analyses/${analysisId}`);
+        const response = await fetch(`/v1/analyses/${analysisId}`, {signal: controller.signal});
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         job.status = data.status;
         job.steps = data.steps || [];
         job.toolRuns = data.tool_runs || [];
         job.blocking = data.blocking || null;
+        job.connectionWarning = null;
+        job.error = null;
         job.steps.forEach(step => {
           const key = `${step.step_number}:${step.status}`;
           if (!logged.has(key)) {
@@ -250,32 +314,27 @@ class PrometeusStore {
         });
         this.notify();
         if (data.status === 'COMPLETED') {
+          await this.completeRealAnalysis(analysisId, data, courseInput, controller.signal);
           clearInterval(poll);
-          await this.completeRealAnalysis(analysisId, data, courseInput);
         } else if (['BLOCKED', 'FAILED', 'WAITING_FOR_INPUT', 'CANCELLED'].includes(data.status)) {
           clearInterval(poll);
           job.error = data.blocking?.reason || `Processamento encerrado em ${data.status}.`;
           job.logs.push(`[${nowLabel()}] ${job.error}`);
           this.notify();
-        } else if (attempts >= 150) {
-          clearInterval(poll);
-          job.status = 'TIMEOUT';
-          job.error = 'O processamento continua sem confirmação de conclusão. Consulte novamente a análise.';
-          this.notify();
         }
       } catch (error) {
-        if (attempts >= 150) {
-          clearInterval(poll);
-          job.status = 'CONNECTION_ERROR';
-          job.error = `Não foi possível consultar o backend: ${error.message}`;
-          this.notify();
-        }
+        job.connectionWarning = `Não foi possível atualizar o progresso: ${error.message}. Tentaremos novamente automaticamente.`;
+        this.notify();
+      } finally {
+        clearTimeout(deadline);
+        pending = false;
       }
     }, 2000);
   }
 
-  async completeRealAnalysis(analysisId, analysisData, courseInput) {
-    const response = await fetch(`/v1/analyses/${analysisId}/dossier`);
+  async completeRealAnalysis(analysisId, analysisData, courseInput, signal) {
+    const response = await fetch(`/v1/analyses/${analysisId}/dossier`, {signal});
+    if (response.status >= 500 || response.status === 429) throw new Error(`Dossiê temporariamente indisponível (HTTP ${response.status})`);
     if (!response.ok) {
       this.state.liveJob.status = 'FAILED';
       this.state.liveJob.error = `Análise concluída sem dossiê verificável (HTTP ${response.status}).`;

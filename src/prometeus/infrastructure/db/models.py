@@ -130,6 +130,12 @@ class AnalysisModel(Base):
         cascade="all, delete-orphan",
         order_by="WebhookDeliveryModel.created_at",
     )
+    execution_envelopes: Mapped[list[ExecutionEnvelopeModel]] = relationship(
+        "ExecutionEnvelopeModel",
+        back_populates="analysis",
+        cascade="all, delete-orphan",
+        order_by="ExecutionEnvelopeModel.started_at",
+    )
 
     __table_args__ = (Index("ix_analyses_tenant_created", "tenant_id", "created_at"),)
 
@@ -221,6 +227,13 @@ class HistoricalCourseModel(Base):
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
     tags: Mapped[list[str]] = mapped_column(JsonType, nullable=False, default=list)
     target_audience: Mapped[list[str]] = mapped_column(JsonType, nullable=False, default=list)
+    family: Mapped[str] = mapped_column(String(64), nullable=False, default="", server_default="")
+    curriculum_text: Mapped[str] = mapped_column(
+        Text, nullable=False, default="", server_default=""
+    )
+    curriculum_modules: Mapped[list[str]] = mapped_column(
+        JsonType, nullable=False, default=list, server_default="[]"
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
@@ -265,6 +278,15 @@ class HistoricalFunnelModel(Base):
     conversion_lead_to_enrolled: Mapped[float] = mapped_column(nullable=False, default=0.0)
     average_ticket_brl: Mapped[float | None] = mapped_column(nullable=True)
     total_revenue_brl: Mapped[float | None] = mapped_column(nullable=True)
+    price_period: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="unknown", server_default="unknown"
+    )
+    data_complete: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
+    cohort_status: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="UNKNOWN", server_default="UNKNOWN"
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
@@ -495,6 +517,9 @@ class DossierModel(Base):
     executive_summary: Mapped[str] = mapped_column(Text, nullable=False)
     sections: Mapped[list[dict[str, Any]]] = mapped_column(JsonType, nullable=False, default=list)
     claims: Mapped[list[dict[str, Any]]] = mapped_column(JsonType, nullable=False, default=list)
+    presentation: Mapped[dict[str, Any]] = mapped_column(
+        JsonType, nullable=False, default=dict, server_default="{}"
+    )
     cost_usd: Mapped[float] = mapped_column(nullable=False, default=0.0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
@@ -593,3 +618,53 @@ class WebhookDeliveryModel(Base):
     )
 
     __table_args__ = (Index("ix_webhook_event_status", "event_id", "status"),)
+
+
+class ExecutionEnvelopeModel(Base):
+    """Tabela de envelopes de execução por tentativa (auditoria de qualidade e replay)."""
+
+    __tablename__ = "execution_envelopes"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    analysis_id: Mapped[str | None] = mapped_column(
+        String(64), ForeignKey("analyses.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    tenant_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    stage: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    operation: Mapped[str] = mapped_column(String(64), nullable=False)
+    attempt: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    input_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    cache_key: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    source_ids: Mapped[list[str]] = mapped_column(JsonType, nullable=False, default=list)
+    component_versions: Mapped[dict[str, Any]] = mapped_column(JsonType, nullable=False, default=dict)
+    provider: Mapped[str] = mapped_column(String(64), nullable=False)
+    configured_model: Mapped[str] = mapped_column(String(64), nullable=False)
+    model: Mapped[str] = mapped_column(String(64), nullable=False)
+    mode: Mapped[str] = mapped_column(String(32), nullable=False)
+    outcome: Mapped[str] = mapped_column(String(32), nullable=False)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    finished_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    duration_ms: Mapped[float] = mapped_column(nullable=False)
+    usage: Mapped[dict[str, Any] | None] = mapped_column(JsonType, nullable=True)
+    cost_status: Mapped[str] = mapped_column(String(32), nullable=False, default="UNAVAILABLE")
+    cost_usd: Mapped[float | None] = mapped_column(nullable=True)
+    cost_source: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    provider_attempts: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    decision_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    result_kind: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    error_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    schema_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+
+    analysis: Mapped[AnalysisModel | None] = relationship(
+        "AnalysisModel", back_populates="execution_envelopes"
+    )
+
+    __table_args__ = (
+        Index("ix_execution_envelopes_analysis_stage", "analysis_id", "stage"),
+        Index("ix_execution_envelopes_cache", "cache_key"),
+    )
+

@@ -73,6 +73,11 @@ class CreateAnalysisUseCase:
 
         # 3. Cria a raiz de agregação do domínio (ADR-0005: status=QUEUED, recommendation=None)
         proposal_with_idempotency = dict(command.proposal_data)
+        institution=tenant_config.model_dump().get("institution",{})
+        proposal_with_idempotency["_institution_context"]={
+            "id":command.tenant_id,"name":institution.get("display_name",command.tenant_id),
+            "domains":institution.get("domains",[]),
+        }
         proposal_with_idempotency["_idempotency_key"] = command.idempotency_key
 
         analysis = Analysis.create(

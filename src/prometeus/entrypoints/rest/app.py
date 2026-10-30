@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import html
 import io
@@ -23,6 +24,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response, 
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from pypdf import PdfReader
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,6 +33,7 @@ from prometeus.application.create_analysis import (
     CreateAnalysisCommand,
     CreateAnalysisUseCase,
 )
+from prometeus.application.runtime_preflight import validate_runtime_preflight
 from prometeus.domain.analyses import Analysis, AnalysisStatus, DomainError
 from prometeus.domain.configuration import AppSettings, ConfigurationError
 from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
@@ -50,12 +53,15 @@ from prometeus.infrastructure.llm.client import ChatGPTPlanGenerativeClient
 from prometeus.infrastructure.llm.codex_oauth import (
     DIRECT_USAGE_SCOPE,
     DYNAMIC_CLIENT_ID,
+    REASONING_EFFORTS,
     ChatGPTCredentials,
     ChatGPTCredentialStore,
     build_chatgpt_auth_url,
     exchange_chatgpt_code,
     get_verifier_for_state,
     list_chatgpt_models,
+    public_chatgpt_model,
+    refresh_chatgpt_tokens,
 )
 from prometeus.observability.logging import (
     correlation_id_ctx,
@@ -283,7 +289,7 @@ def _extract_docx_text(raw_bytes: bytes) -> str:
 
 @app.post(
     "/v1/intake/extract-document",
-    summary="Extrair texto estruturado de arquivo .docx ou .txt para o formulário de intake",
+    summary="Extrair texto de PDF, DOCX ou TXT para o formulário de intake",
 )
 async def extract_intake_document(payload: ExtractDocumentRequest) -> dict[str, str]:
     try:
@@ -293,7 +299,25 @@ async def extract_intake_document(payload: ExtractDocumentRequest) -> dict[str, 
         raise HTTPException(status_code=400, detail=f"Arquivo base64 inválido: {exc}") from exc
 
     fname = payload.filename.lower()
-    if fname.endswith(".docx"):
+    if len(raw_bytes) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="O documento deve ter até 10 MB.")
+    if fname.endswith(".pdf"):
+        try:
+            reader = PdfReader(io.BytesIO(raw_bytes))
+            if reader.is_encrypted or len(reader.pages) > 100:
+                raise ValueError("PDF protegido ou com mais de 100 páginas.")
+            extracted = "\n".join(page.extract_text() or "" for page in reader.pages).strip()
+        except Exception as exc:
+            raise HTTPException(
+                status_code=400,
+                detail="Não foi possível ler o PDF. Use um PDF válido, sem senha, com até 100 páginas.",
+            ) from exc
+        if not extracted:
+            raise HTTPException(
+                status_code=422,
+                detail="O PDF não contém texto extraível. Cole a ementa no formulário ou use um documento com texto selecionável.",
+            )
+    elif fname.endswith(".docx"):
         try:
             extracted = _extract_docx_text(raw_bytes)
         except Exception as exc:
@@ -342,17 +366,28 @@ async def list_analyses(
                 "facts_hash": dossier.facts_hash,
                 "status": dossier.status,
                 "executive_summary": dossier.executive_summary,
+                "schema_version": (dossier.presentation or {}).get("schema_version", 1),
+                "executive_summary_claim_ids": (dossier.presentation or {}).get(
+                    "executive_summary_claim_ids", []
+                ),
+                "highlights": (dossier.presentation or {}).get("highlights", {}),
+                "limitations": (dossier.presentation or {}).get("limitations", []),
+                "analysis_audit": (dossier.presentation or {}).get("analysis_audit", {}),
+        "three_fold_review": (dossier.presentation or {}).get("three_fold_review"),
                 "sections": dossier.sections,
                 "claims": dossier.claims,
                 "cost_usd": dossier.cost_usd,
                 "created_at": dossier.created_at.isoformat(),
                 "scoring": {
                     "viability_score": scoring.viability_score,
+                    "profile_id": scoring.profile_id,
+                    "partial_score": scoring.partial_score,
                     "coverage_score": scoring.coverage_score,
                     "confidence_score": scoring.confidence_score,
                     "recommendation": scoring.recommendation,
                     "pillar_scores": scoring.pillar_scores,
                     "gate_details": scoring.gate_details,
+                    "is_experimental": scoring.is_experimental,
                 },
                 "evidences": [
                     {
@@ -471,6 +506,7 @@ async def get_analysis(
                 "dataset_id": run.dataset_id,
                 "raw_items_count": run.raw_items_count,
                 "valid_items_count": run.valid_items_count,
+                "observation_status": (run.parameters or {}).get("observation_status"),
                 "cost_usd": run.cost_usd,
                 "error_code": run.error_code,
                 "error_message": run.error_message,
@@ -629,17 +665,28 @@ async def get_dossier(
         "facts_hash": dossier.facts_hash,
         "status": dossier.status,
         "executive_summary": dossier.executive_summary,
+        "schema_version": (dossier.presentation or {}).get("schema_version", 1),
+        "executive_summary_claim_ids": (dossier.presentation or {}).get(
+            "executive_summary_claim_ids", []
+        ),
+        "highlights": (dossier.presentation or {}).get("highlights", {}),
+        "limitations": (dossier.presentation or {}).get("limitations", []),
+        "analysis_audit": (dossier.presentation or {}).get("analysis_audit", {}),
+        "three_fold_review": (dossier.presentation or {}).get("three_fold_review"),
         "sections": dossier.sections,
         "claims": dossier.claims,
         "cost_usd": dossier.cost_usd,
         "created_at": dossier.created_at.isoformat(),
         "scoring": {
             "viability_score": scoring.viability_score,
+            "profile_id": scoring.profile_id,
+            "partial_score": scoring.partial_score,
             "coverage_score": scoring.coverage_score,
             "confidence_score": scoring.confidence_score,
             "recommendation": scoring.recommendation,
             "pillar_scores": scoring.pillar_scores,
             "gate_details": scoring.gate_details,
+            "is_experimental": scoring.is_experimental,
         }
         if scoring
         else None,
@@ -871,7 +918,11 @@ async def list_institutional_courses(
 
     from prometeus.infrastructure.institutional.ens.dataset import ENS_HISTORICAL_PORTFOLIO
 
-    dataset_map = {item["external_id"]: item for item in ENS_HISTORICAL_PORTFOLIO}
+    dataset_map = (
+        {item["external_id"]: item for item in ENS_HISTORICAL_PORTFOLIO}
+        if tenant_id == "ens"
+        else {}
+    )
 
     results = []
     for c in courses:
@@ -919,6 +970,9 @@ async def list_institutional_courses(
                     "enrolled": f.enrolled,
                     "ticket": f.average_ticket_brl or 0.0,
                     "average_ticket_brl": f.average_ticket_brl or 0.0,
+                    "price_period": f.price_period,
+                    "data_complete": f.data_complete,
+                    "cohort_status": f.cohort_status,
                     "revenue": f.total_revenue_brl or 0.0,
                     "total_revenue_brl": f.total_revenue_brl or 0.0,
                     "status": "CANCELLED_LOW_QUORUM" if is_cancelled else "COMPLETED",
@@ -944,6 +998,15 @@ async def list_institutional_courses(
             "quorum_min": quorum_min,
             "tags": c.tags or [],
             "target_audience": c.target_audience or [],
+            "family": c.family,
+            "curriculum_text": c.curriculum_text,
+            "curriculum_modules": c.curriculum_modules or [],
+            "is_synthetic": meta.get("is_synthetic", False),
+            "dataset_version": meta.get("dataset_version"),
+            "academic_reference": meta.get("academic_reference"),
+            "curriculum_origin": meta.get("curriculum_origin"),
+            "funnel_origin": meta.get("funnel_origin"),
+            "price_origin": meta.get("price_origin"),
             "metrics_summary": {
                 "total_periods": len(funnels),
                 "total_leads": total_leads,
@@ -989,7 +1052,7 @@ async def get_institutional_course_detail(
         from prometeus.infrastructure.institutional.ens.dataset import ENS_HISTORICAL_PORTFOLIO
 
         found = next((c for c in ENS_HISTORICAL_PORTFOLIO if c["external_id"] == external_id), None)
-        if found:
+        if found and tenant_id == "ens":
             return found
         raise HTTPException(
             status_code=404, detail=f"Curso histórico '{external_id}' não encontrado."
@@ -1002,6 +1065,14 @@ async def get_institutional_course_detail(
     )
     funnels = (await session.execute(stmt_f)).scalars().all()
 
+    from prometeus.infrastructure.institutional.ens.dataset import ENS_HISTORICAL_PORTFOLIO
+
+    meta = (
+        next((c for c in ENS_HISTORICAL_PORTFOLIO if c["external_id"] == external_id), {})
+        if tenant_id == "ens"
+        else {}
+    )
+
     return {
         "id": course.id,
         "external_id": course.external_id,
@@ -1012,6 +1083,15 @@ async def get_institutional_course_detail(
         "status": course.status,
         "tags": course.tags or [],
         "target_audience": course.target_audience or [],
+        "family": course.family,
+        "curriculum_text": course.curriculum_text,
+        "curriculum_modules": course.curriculum_modules or [],
+        "is_synthetic": meta.get("is_synthetic", False),
+        "dataset_version": meta.get("dataset_version"),
+        "academic_reference": meta.get("academic_reference"),
+        "curriculum_origin": meta.get("curriculum_origin"),
+        "funnel_origin": meta.get("funnel_origin"),
+        "price_origin": meta.get("price_origin"),
         "funnel_history": [
             {
                 "period": f.period,
@@ -1022,6 +1102,9 @@ async def get_institutional_course_detail(
                 "conversion_applicant_to_enrolled": f.conversion_applicant_to_enrolled,
                 "conversion_lead_to_enrolled": f.conversion_lead_to_enrolled,
                 "average_ticket_brl": f.average_ticket_brl,
+                "price_period": f.price_period,
+                "data_complete": f.data_complete,
+                "cohort_status": f.cohort_status,
                 "total_revenue_brl": f.total_revenue_brl,
             }
             for f in funnels
@@ -1089,7 +1172,6 @@ def _persist_env_updates(updates: dict[str, str]) -> None:
     for key, value in updates.items():
         if key not in found_keys:
             new_lines.append(f"{key}={value}")
-        os.environ[key] = value
     content = "\n".join(new_lines) + "\n"
     written = False
     temporary: Path | None = None
@@ -1112,11 +1194,16 @@ def _persist_env_updates(updates: dict[str, str]) -> None:
             env_path.write_text(content, encoding="utf-8")
         except OSError as exc:
             logger.warning("Falha ao gravar arquivo de configuração %s: %s", env_path, exc)
+            raise HTTPException(
+                status_code=500, detail="Não foi possível persistir a configuração."
+            ) from exc
+    os.environ.update(updates)
 
 
 @app.get("/v1/settings", summary="Obter configurações ativas de IA e conectores")
 async def get_settings() -> dict[str, Any]:
     settings = AppSettings()
+    runtime = validate_runtime_preflight(settings)
     oauth_credentials = ChatGPTCredentialStore(settings.CHATGPT_CREDENTIALS_PATH).load()
 
     def mask(val: str) -> str:
@@ -1128,8 +1215,12 @@ async def get_settings() -> dict[str, Any]:
 
     return {
         "gen_llm_provider": settings.GEN_LLM_PROVIDER,
-        "gen_llm_model": settings.GEN_LLM_MODEL,
-        "gen_llm_reasoning_effort": settings.GEN_LLM_REASONING_EFFORT or "none",
+        "gen_llm_model": (
+            oauth_credentials.selected_model
+            if oauth_credentials and settings.GEN_LLM_PROVIDER in {"chatgpt_oauth", "codex"}
+            else settings.GEN_LLM_MODEL
+        ),
+        "gen_llm_reasoning_effort": settings.GEN_LLM_REASONING_EFFORT or "",
         "chatgpt_access_token_masked": mask(settings.CHATGPT_ACCESS_TOKEN),
         "chatgpt_oauth_connected": bool(oauth_credentials and oauth_credentials.has_direct_usage),
         "chatgpt_oauth_email": oauth_credentials.email if oauth_credentials else None,
@@ -1139,9 +1230,11 @@ async def get_settings() -> dict[str, Any]:
         "jev_model": settings.JEV_MODEL,
         "is_jev_configured": settings.is_jev_configured,
         "is_traditional_llm_configured": settings.is_traditional_llm_configured,
+        "ai_mode": runtime.ai_mode,
+        "jev_enabled": runtime.jev_enabled,
         "mode": (
             "HYBRID (JEV System One + LLM Tradicional)"
-            if settings.is_jev_configured
+            if runtime.jev_enabled
             else "100% TRADITIONAL (LLM assume decisões e textos)"
         ),
         "apify_token_masked": mask(settings.APIFY_TOKEN),
@@ -1151,13 +1244,44 @@ async def get_settings() -> dict[str, Any]:
 
 @app.post("/v1/settings", summary="Atualizar configurações de IA e conectores via app")
 async def update_settings_endpoint(payload: SettingsUpdateRequest) -> dict[str, Any]:
+    settings = AppSettings()
+    provider = payload.gen_llm_provider or settings.GEN_LLM_PROVIDER
+    if payload.gen_llm_provider is not None and provider not in {
+        "openai",
+        "openrouter",
+        "chatgpt_oauth",
+    }:
+        raise HTTPException(status_code=422, detail="Provedor de LLM não suportado.")
+    selected_credentials: ChatGPTCredentials | None = None
+    model = payload.gen_llm_model.strip() if payload.gen_llm_model is not None else None
+    effort = payload.gen_llm_reasoning_effort
+    if effort is not None and effort not in REASONING_EFFORTS and effort != "":
+        raise HTTPException(status_code=422, detail="Nível de raciocínio não suportado.")
+    if model is not None and not model:
+        raise HTTPException(status_code=422, detail="Selecione um modelo válido.")
+    if provider in {"chatgpt_oauth", "codex"} and (model is not None or effort is not None):
+        selected_credentials, catalog = await _chatgpt_account_catalog(settings)
+        model = model or selected_credentials.selected_model
+        selected = next((item for item in catalog if item["slug"] == model), None)
+        if selected is None:
+            raise HTTPException(
+                status_code=422,
+                detail="O modelo selecionado não está disponível nesta conta ChatGPT. Atualize a lista de modelos.",
+            )
+        effective_effort = effort if effort is not None else settings.GEN_LLM_REASONING_EFFORT
+        supported = selected.get("supported_reasoning_efforts")
+        if effective_effort and isinstance(supported, list) and effective_effort not in supported:
+            raise HTTPException(
+                status_code=422,
+                detail="O nível de raciocínio selecionado não é suportado por este modelo.",
+            )
     updates: dict[str, str] = {}
     if payload.gen_llm_provider is not None:
         if payload.gen_llm_provider not in {"openai", "openrouter", "chatgpt_oauth"}:
             raise HTTPException(status_code=422, detail="Provedor de LLM não suportado.")
         updates["GEN_LLM_PROVIDER"] = payload.gen_llm_provider
-    if payload.gen_llm_model is not None:
-        updates["GEN_LLM_MODEL"] = payload.gen_llm_model
+    if model is not None:
+        updates["GEN_LLM_MODEL"] = model
     if payload.gen_llm_reasoning_effort is not None:
         updates["GEN_LLM_REASONING_EFFORT"] = payload.gen_llm_reasoning_effort
     if payload.openai_api_key is not None and not payload.openai_api_key.startswith("••••"):
@@ -1173,7 +1297,23 @@ async def update_settings_endpoint(payload: SettingsUpdateRequest) -> dict[str, 
     if payload.apify_max_charge is not None:
         updates["APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS"] = str(payload.apify_max_charge)
 
-    _persist_env_updates(updates)
+    previous_credentials: ChatGPTCredentials | None = None
+    credential_store = ChatGPTCredentialStore(settings.CHATGPT_CREDENTIALS_PATH)
+    if selected_credentials is not None and model is not None:
+        try:
+            previous_credentials = credential_store.select_model(
+                model, expected_subject=selected_credentials.subject
+            )
+        except RuntimeError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from None
+    try:
+        _persist_env_updates(updates)
+    except Exception:
+        if previous_credentials is not None:
+            credential_store.restore_model_selection(
+                previous_credentials, failed_selection=str(model)
+            )
+        raise
     logger.info("Configurações atualizadas com sucesso via REST API /v1/settings.")
     return {"status": "SUCCESS", "message": "Configurações salvas com sucesso no Prometeus."}
 
@@ -1183,6 +1323,56 @@ async def update_settings_endpoint(payload: SettingsUpdateRequest) -> dict[str, 
 # Utiliza o protocolo oficial PKCE S256 com Client ID app_EMoamEEZ73f0CkXaXp7hrann
 # e suporte a autorização oficial OpenAI e simulação rápida em staging.
 # =============================================================================
+
+_chatgpt_catalog_lock = asyncio.Lock()
+
+
+async def _chatgpt_account_catalog(
+    settings: AppSettings,
+) -> tuple[ChatGPTCredentials, list[dict[str, Any]]]:
+    async with _chatgpt_catalog_lock:
+        store = ChatGPTCredentialStore(settings.CHATGPT_CREDENTIALS_PATH)
+        credentials = store.load()
+        if credentials is None or not credentials.has_direct_usage:
+            raise HTTPException(
+                status_code=401,
+                detail="Conecte sua conta ChatGPT para consultar os modelos disponíveis.",
+            )
+        if credentials.expires_at <= time.time() + 60:
+            try:
+                credentials = await refresh_chatgpt_tokens(credentials)
+                store.save(credentials)
+            except Exception as exc:
+                logger.warning("Falha ao renovar sessão ChatGPT: %s", type(exc).__name__)
+                raise HTTPException(
+                    status_code=502,
+                    detail="Não foi possível renovar a sessão ChatGPT. Tente atualizar a lista novamente.",
+                ) from None
+        try:
+            catalog = await list_chatgpt_models(credentials.access_token)
+            models = [
+                public_chatgpt_model(item)
+                for item in catalog
+                if isinstance(item, dict) and item.get("slug")
+            ]
+        except Exception as exc:
+            logger.warning("Falha ao consultar catálogo ChatGPT: %s", type(exc).__name__)
+            raise HTTPException(
+                status_code=502,
+                detail="Não foi possível consultar os modelos da conta ChatGPT. Tente atualizar a lista novamente.",
+            ) from None
+        if not models:
+            raise HTTPException(
+                status_code=502,
+                detail="A conta ChatGPT não retornou modelos disponíveis. Tente atualizar a lista novamente.",
+            )
+        return credentials, models
+
+
+@app.get("/v1/auth/chatgpt/models", summary="Listar modelos disponíveis na conta ChatGPT conectada")
+async def chatgpt_oauth_models() -> dict[str, Any]:
+    credentials, models = await _chatgpt_account_catalog(AppSettings())
+    return {"models": models, "selected_model": credentials.selected_model}
 
 
 @app.get("/v1/auth/chatgpt/url", summary="Obter URL oficial de autorização da OpenAI com PKCE")
