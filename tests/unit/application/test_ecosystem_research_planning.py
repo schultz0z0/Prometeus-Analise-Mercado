@@ -190,3 +190,4 @@ def test_build_ecosystem_seed_calls_degrades_gracefully_under_tight_budget() -> 
     # Seguradoras secundárias omitidas sob pressão orçamentária (< US$ 1.50)
     for secondary_domain in ("mapfre.com.br", "zurich.com.br", "yelumseguros.com.br"):
         assert f"site:{secondary_domain}" not in radar_google_queries
+

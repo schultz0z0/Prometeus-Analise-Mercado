@@ -311,3 +311,36 @@ def match_sector_radar_actor(
     if not context:
         return None
     return _match_actor_list(payload, source_url, context.get("sector_radar", []))
+
+
+
+def extract_sector_radar_actor_terms(entries: list[dict[str, Any]]) -> list[str]:
+    """Extrai nomes canônicos, aliases e nomes corporativos LinkedIn das seguradoras do radar."""
+    terms: list[str] = []
+    seen: set[str] = set()
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        social = entry.get("social") if isinstance(entry.get("social"), dict) else {}
+        candidates = [entry.get("name"), social.get("linkedin_company")]
+        aliases = entry.get("aliases")
+        if isinstance(aliases, list):
+            candidates.extend(aliases)
+        for cand in candidates:
+            clean = str(cand or "").strip()
+            if len(clean) >= 3 and clean.lower() not in seen:
+                seen.add(clean.lower())
+                terms.append(clean)
+    return terms
+
+
+def extract_global_social_actor_terms(entries: list[dict[str, Any]]) -> list[str]:
+    """Extrai termos identificadores dos atores cujo LinkedIn tem escopo global."""
+    global_entries = [
+        entry
+        for entry in entries
+        if isinstance(entry, dict)
+        and isinstance(entry.get("social"), dict)
+        and entry["social"].get("linkedin_scope") == "global"
+    ]
+    return extract_sector_radar_actor_terms(global_entries)

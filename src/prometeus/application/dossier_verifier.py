@@ -317,7 +317,7 @@ class DossierVerifier:
                     actionable_recommendations.append(
                         "Módulo de competidores: filtrar e separar ofertas internas do quadro de concorrência externa."
                     )
-            elif any(actor in label_lower for actor in sector_actors):
+            elif any(re.search(rf"\b{re.escape(actor)}\b", label_lower) for actor in sector_actors):
                 if "ecossistema" not in label_lower and "radar" not in label_lower and "corporativ" not in label_lower:
                     independence_verified = False
                     issues.append(
@@ -431,16 +431,6 @@ class DossierVerifier:
             for name in facts.analysis_audit.get("global_social_actors", [])
             if str(name).strip()
         ]
-        global_actor_regex = (
-            re.compile(
-                r"\b(?:"
-                + "|".join(re.escape(actor) for actor in global_social_actors)
-                + r")\b.*?\bseguidores?\s+(?:no\s+brasil|brasileiros?|nacionais?)\b",
-                re.IGNORECASE,
-            )
-            if global_social_actors
-            else None
-        )
 
         for claim in dossier.claims:
             stmt = claim.statement
@@ -457,7 +447,24 @@ class DossierVerifier:
                     )
                     if rec not in actionable_recommendations:
                         actionable_recommendations.append(rec)
-            if global_actor_regex is not None and global_actor_regex.search(stmt):
+            if (
+                global_social_actors
+                and any(
+                    re.search(rf"\b{re.escape(actor)}\b", stmt, re.IGNORECASE)
+                    for actor in global_social_actors
+                )
+                and re.search(r"\bseguidores?\b", stmt, re.IGNORECASE)
+                and re.search(
+                    r"\b(?:no\s+brasil|do\s+brasil|em\s+territ[óo]rio\s+nacional|brasileir[oa]s?|nacionais?)\b",
+                    stmt,
+                    re.IGNORECASE,
+                )
+                and not re.search(
+                    r"\b(?:perfil\s+global|escopo\s+global|audi[êe]ncia\s+global|n[ãa]o\s+representa)\b",
+                    stmt,
+                    re.IGNORECASE,
+                )
+            ):
                 proxies_properly_qualified = False
                 issues.append(
                     {

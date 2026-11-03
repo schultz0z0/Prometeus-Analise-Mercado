@@ -280,3 +280,176 @@ def test_dossier_verifier_flags_insurer_as_competitor_and_global_linkedin_as_nat
     issue_codes = {issue["code"] for issue in review.issues}
     assert "sector_actor_as_direct_competitor" in issue_codes
     assert "global_social_metric_as_national" in issue_codes
+
+
+
+@pytest.mark.asyncio
+async def test_sector_radar_social_voice_is_context_only_not_accepted_while_job_market_is_accepted_without_context_only() -> None:
+    ig_row = SimpleNamespace(
+        id="ev-porto-ig",
+        evidence_type="SOCIAL_VOICE",
+        source_name="apify_instagram",
+        source_url="https://www.instagram.com/porto/p/C9xyz/",
+        collector="apify_actor",
+        title="Porto Seguro lança assistente de IA para corretores parceiros no Brasil",
+        sanitized_data={
+            "title": "Porto Seguro lança assistente de IA para corretores parceiros no Brasil",
+            "caption": "Nova ferramenta agiliza cotação e vistoria de sinistros em São Paulo.",
+            "ownerUsername": "porto",
+            "location": "Brasil",
+        },
+    )
+    job_row = SimpleNamespace(
+        id="ev-porto-job",
+        evidence_type="JOB_MARKET",
+        source_name="apify_linkedin_jobs",
+        source_url="https://www.portoseguro.com.br/vagas/cientista-dados-sinistros",
+        collector="apify_actor",
+        title="Especialista em IA e Prevenção a Fraudes em Sinistros — Porto Seguro",
+        sanitized_data={
+            "title": "Especialista em IA e Prevenção a Fraudes em Sinistros — Porto Seguro",
+            "description": "Modelagem preditiva de sinistros e subscrição em São Paulo, Brasil.",
+            "companyName": "Porto Seguro",
+            "location": "São Paulo, Brasil",
+        },
+    )
+
+    session = AsyncMock()
+    scalars_mock = MagicMock()
+    scalars_mock.all.return_value = [ig_row, job_row]
+    exec_mock = MagicMock()
+    exec_mock.scalars.return_value = scalars_mock
+    session.execute.return_value = exec_mock
+
+    decisions = MagicMock()
+    decisions.get_pack.return_value = SimpleNamespace(
+        version="1.0.0", model_dump_json=lambda: '{"pack":"market-relevance-v1"}'
+    )
+    decisions.cache_key_for.return_value = "ck-ig-job"
+    decisions.execute_judgment = AsyncMock(
+        return_value=SimpleNamespace(
+            id="dec-ig-job",
+            selected_choice="RELEVANT",
+            confidence=0.91,
+            requires_human_review=False,
+            is_noul=False,
+        )
+    )
+
+    analysis = Analysis.create(
+        tenant_id="ens",
+        course_name="MBA em IA Aplicada a Seguros",
+        proposal_data={"_institution_context": ENS_CTX},
+        correlation_id="corr-ig-job",
+    )
+    understanding = CourseUnderstanding(
+        analysis_id=analysis.id,
+        course_title="MBA em IA Aplicada a Seguros",
+        subject_domains=["seguros", "inteligência artificial"],
+        target_audiences=["corretores de seguros", "analistas de sinistros"],
+        geography="Brasil",
+        institution_name="Escola de Negócios e Seguros",
+        institution_domains=["ens.edu.br"],
+    )
+
+    svc = EvidenceQualificationService(session=session, decisions=decisions)
+    summary = await svc.qualify(
+        analysis, understanding, "corr-ig-job", institution_context=ENS_CTX
+    )
+
+    # Only the employer JOB_MARKET vacancy is accepted into quantitative features;
+    # the corporate Instagram post stays context_only for #sec-sector-radar & curriculum!
+    assert summary["accepted"] == 1
+    ig_q = ig_row.sanitized_data["_qualification"]
+    assert ig_q["accepted"] is False
+    assert ig_q["context_only"] is True
+    assert "sector_radar" in ig_q["use_for"]
+    assert ig_q["use_assessments"]["learner_demand"]["usable"] is False
+
+    job_q = job_row.sanitized_data["_qualification"]
+    assert job_q["accepted"] is True
+    assert job_q["context_only"] is False
+    assert job_q["use_assessments"]["employability_signal"]["usable"] is True
+
+
+def test_dossier_verifier_catches_short_insurer_aliases_and_inverted_global_linkedin_claims() -> None:
+    from pathlib import Path
+
+    from prometeus.application.research_scope import (
+        extract_global_social_actor_terms,
+        extract_sector_radar_actor_terms,
+    )
+    from prometeus.domain.configuration import load_tenant_config
+
+    ens_cfg = load_tenant_config(Path("config/tenants/ens.example.yaml"))
+    radar_dicts = [s.model_dump(mode="json") for s in ens_cfg.ecosystem.sector_radar]
+    sector_terms = extract_sector_radar_actor_terms(radar_dicts)
+    global_terms = extract_global_social_actor_terms(radar_dicts)
+
+    facts = DossierFacts(
+        analysis_id="anl-alias",
+        course_name="MBA em IA Aplicada a Seguros",
+        target_audience="Corretores e Gestores de Seguros",
+        viability_score=80.0,
+        coverage_score=0.9,
+        confidence_score=0.85,
+        recommendation="APPROVED",
+        pillar_summaries={"competitive_landscape": 78.0},
+        items=[
+            DossierFactItem(
+                evidence_id="ev-z",
+                source_type="SOCIAL_VOICE",
+                title="Perfil Zurich Global",
+                key_metrics={"actor_role": "sector_radar", "linkedin_scope": "global"},
+                summary="Publicação institucional Zurich",
+            )
+        ],
+        analysis_audit={
+            "declared_offer": {"institution": "Escola de Negócios e Seguros"},
+            "sector_radar_actors": sector_terms,
+            "global_social_actors": global_terms,
+        },
+    )
+    dossier = DossierOutput(
+        analysis_id="anl-alias",
+        prompt_version="dossier-v1",
+        model_name="test-model",
+        facts_hash=facts.compute_facts_hash(),
+        executive_summary="Síntese executiva apoiada em evidências.",
+        executive_summary_claim_ids=["c-1"],
+        sections=[
+            DossierSection(
+                section_id="sec-market",
+                title="Concorrência, Ementa, Público e Viabilidade de Preço",
+                target_audience="executive",
+                content="Análise de riscos e concorrentes para alunos.",
+                claim_ids=["c-1", "c-2"],
+            )
+        ],
+        claims=[
+            DossierClaim(
+                claim_id="c-1",
+                statement="No Brasil, a MAPFRE conta com 1,2 milhão de seguidores engajados no LinkedIn.",
+                evidence_ids=["ev-z"],
+            ),
+            DossierClaim(
+                claim_id="c-2",
+                statement="A Zurich possui 950 mil seguidores brasileiros no LinkedIn.",
+                evidence_ids=["ev-z"],
+            ),
+        ],
+        highlights=DossierHighlights(
+            competitors=[
+                DossierComparison(label="Tokio Marine", claim_ids=["c-1"]),
+                DossierComparison(label="BB Seguros", claim_ids=["c-1"]),
+            ],
+            pros=["c-1"],
+            cons=["c-2"],
+        ),
+    )
+
+    review = DossierVerifier().verify_senior_analytical_quality(dossier, facts)
+    comp_issues = [i for i in review.issues if i["code"] == "sector_actor_as_direct_competitor"]
+    global_issues = [i for i in review.issues if i["code"] == "global_social_metric_as_national"]
+    assert len(comp_issues) == 2
+    assert len(global_issues) == 2

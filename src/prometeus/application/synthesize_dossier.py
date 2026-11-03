@@ -24,6 +24,10 @@ from prometeus.application.dossier_verifier import DossierVerifier
 from prometeus.application.ecosystem_presentation import build_ecosystem_presentation_blocks
 from prometeus.application.evidence_audit import summarize_evidence
 from prometeus.application.evidence_features import EvidenceFeatureExtractor
+from prometeus.application.research_scope import (
+    extract_global_social_actor_terms,
+    extract_sector_radar_actor_terms,
+)
 from prometeus.application.sanitization import EvidenceSanitizer
 from prometeus.domain.dossiers import (
     DossierFactItem,
@@ -169,6 +173,8 @@ class DossierSynthesisService:
                         metrics[qk] = qualification[qk]
             for key in (
                 "price_brl",
+                "total_price_brl",
+                "total_price",
                 "priceBrl",
                 "tuition_brl",
                 "price_period",
@@ -402,20 +408,22 @@ class DossierSynthesisService:
                 evidence_step.output_summary.get("ecosystem_summary", {}).get("sector_radar_actors")
                 if evidence_step and evidence_step.output_summary.get("ecosystem_summary")
                 else [
-                    str(s.get("name"))
+                    term
                     for s in (provided.get("_institution_context") or {}).get("sector_radar", [])
                     if isinstance(s, dict) and s.get("name")
+                    for term in extract_sector_radar_actor_terms([s])
                 ]
             ),
             "global_social_actors": (
                 evidence_step.output_summary.get("ecosystem_summary", {}).get("global_social_actors")
                 if evidence_step and evidence_step.output_summary.get("ecosystem_summary")
                 else [
-                    str(s.get("name"))
+                    term
                     for s in (provided.get("_institution_context") or {}).get("sector_radar", [])
                     if isinstance(s, dict)
                     and s.get("name")
                     and (s.get("social") or {}).get("linkedin_scope") == "global"
+                    for term in extract_global_social_actor_terms([s])
                 ]
             ),
             "sector_radar_baseline": (

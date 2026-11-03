@@ -41,7 +41,8 @@ from prometeus.domain.configuration import (
     AppSettings,
     ConfigurationError,
     TenantConfig,
-    load_tenant_config,
+    TenantNotFoundError,
+    resolve_tenant_config_for_id,
 )
 from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
 from prometeus.infrastructure.db.models import (
@@ -1571,41 +1572,20 @@ _TENANT_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{1,62}$")
 
 def _load_tenant_config_by_id(tenant_id: str, settings: AppSettings) -> TenantConfig:
     """Resolve a configuração pública do tenant sem expor caminhos fora de config/tenants."""
-    if not _TENANT_ID_PATTERN.fullmatch(tenant_id):
+    try:
+        return resolve_tenant_config_for_id(
+            tenant_id, settings, allow_synthetic_fallback=False
+        )
+    except TenantNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Tenant '{tenant_id}' não encontrado.",
-        )
-
-    configured_path = Path(settings.INSTITUTION_CONFIG_PATH)
-    if configured_path.is_file():
-        try:
-            configured_cfg = load_tenant_config(configured_path)
-            if configured_cfg.institution.id == tenant_id:
-                return configured_cfg
-        except ConfigurationError:
-            pass
-
-    candidates: list[Path] = [Path("config/tenants") / f"{tenant_id}.yaml"]
-    if settings.APP_ENV != "production":
-        candidates.append(Path("config/tenants") / f"{tenant_id}.example.yaml")
-
-    for candidate in candidates:
-        if candidate.is_file():
-            try:
-                cfg = load_tenant_config(candidate)
-                if cfg.institution.id == tenant_id:
-                    return cfg
-            except ConfigurationError as exc:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Configuração inválida para o tenant '{tenant_id}': {exc}",
-                ) from exc
-
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"Tenant '{tenant_id}' não encontrado.",
-    )
+        ) from exc
+    except ConfigurationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Configuração inválida para o tenant '{tenant_id}': {exc}",
+        ) from exc
 
 
 class SectorRadarRefreshRequest(BaseModel):
@@ -1674,6 +1654,11 @@ async def refresh_tenant_sector_radar(
 
     req = payload or SectorRadarRefreshRequest()
     settings = AppSettings()
+    if settings.KILL_SWITCH_ACTIVE:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Kill switch operacional ativo: atualização externa do Radar Setorial suspensa temporariamente.",
+        )
     cfg = _load_tenant_config_by_id(tenant_id, settings)
     if not cfg.ecosystem.sector_radar:
         return {

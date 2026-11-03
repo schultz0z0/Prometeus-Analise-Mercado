@@ -10,12 +10,13 @@ import base64
 import ipaddress
 import json
 import math
+import re
 from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import urlsplit
 
 import yaml
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from prometeus.domain.analyses import DomainError
@@ -23,6 +24,12 @@ from prometeus.domain.analyses import DomainError
 
 class ConfigurationError(DomainError):
     """Exceção levantada quando configurações de tenant, scoring ou env são inválidas."""
+
+    pass
+
+
+class TenantNotFoundError(ConfigurationError):
+    """Exceção levantada quando o arquivo de configuração de um tenant solicitado não existe."""
 
     pass
 
@@ -97,6 +104,8 @@ def _validate_https_url(url: str | None) -> str | None:
 
 
 class SocialChannelsConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     instagram_handle: str | None = None
     instagram_url: str | None = None
     linkedin_url: str | None = None
@@ -118,6 +127,8 @@ class SocialChannelsConfig(BaseModel):
 
 
 class CompetitorProfileConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     id: str
     name: str
     aliases: list[str] = Field(default_factory=list)
@@ -138,13 +149,15 @@ class CompetitorProfileConfig(BaseModel):
     def validate_competitor(self) -> CompetitorProfileConfig:
         if not self.domains:
             raise ConfigurationError(f"Concorrente '{self.id}' exige ao menos um domínio.")
-        normalized = sorted({_normalize_domain(d) for d in self.domains})
+        normalized = list(dict.fromkeys(_normalize_domain(d) for d in self.domains))
         object.__setattr__(self, "domains", normalized)
         object.__setattr__(self, "portal_url", _validate_https_url(self.portal_url))
         return self
 
 
 class SectorRadarActorConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     id: str
     name: str
     aliases: list[str] = Field(default_factory=list)
@@ -157,12 +170,14 @@ class SectorRadarActorConfig(BaseModel):
     def validate_sector_actor(self) -> SectorRadarActorConfig:
         if not self.domains:
             raise ConfigurationError(f"Ator do radar '{self.id}' exige ao menos um domínio.")
-        normalized = sorted({_normalize_domain(d) for d in self.domains})
+        normalized = list(dict.fromkeys(_normalize_domain(d) for d in self.domains))
         object.__setattr__(self, "domains", normalized)
         return self
 
 
 class TenantEcosystemConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     competitors: list[CompetitorProfileConfig] = Field(default_factory=list)
     sector_radar: list[SectorRadarActorConfig] = Field(default_factory=list)
     allow_extra_intake_competitors: bool = True
@@ -203,6 +218,7 @@ class TenantConfig(BaseModel):
             comp_domains.update(comp.domains)
 
         seen_radar_ids: set[str] = set()
+        radar_domains: set[str] = set()
         for actor in self.ecosystem.sector_radar:
             if actor.id in seen_radar_ids:
                 raise ConfigurationError(f"Ator do radar duplicado no tenant: '{actor.id}'")
@@ -217,6 +233,12 @@ class TenantConfig(BaseModel):
                 raise ConfigurationError(
                     f"Ator do radar '{actor.id}' conflita com domínio de concorrente educacional: {sorted(overlap_comp)}"
                 )
+            overlap_radar = radar_domains & set(actor.domains)
+            if overlap_radar:
+                raise ConfigurationError(
+                    f"Ator do radar '{actor.id}' duplica domínio já atribuído: {sorted(overlap_radar)}"
+                )
+            radar_domains.update(actor.domains)
         return self
 
 
@@ -436,6 +458,46 @@ def load_tenant_config(path: Path | str) -> TenantConfig:
         raise ConfigurationError(
             f"Erro ao validar configuração do tenant em {file_path}: {exc}"
         ) from exc
+
+
+_TENANT_SLUG_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{1,62}$")
+
+
+def resolve_tenant_config_for_id(
+    tenant_id: str,
+    settings: AppSettings,
+    *,
+    allow_synthetic_fallback: bool = False,
+) -> TenantConfig:
+    """Resolve a configuração do tenant solicitado sem vazar dados entre instituições."""
+    clean_id = (tenant_id or "").strip()
+    if not _TENANT_SLUG_PATTERN.fullmatch(clean_id):
+        raise TenantNotFoundError(f"Tenant '{tenant_id}' inválido ou não encontrado.")
+
+    configured_path = Path(settings.INSTITUTION_CONFIG_PATH)
+    if configured_path.is_file():
+        try:
+            configured_cfg = load_tenant_config(configured_path)
+            if configured_cfg.institution.id == clean_id:
+                return configured_cfg
+        except ConfigurationError:
+            pass
+
+    candidates: list[Path] = [Path("config/tenants") / f"{clean_id}.yaml"]
+    if settings.APP_ENV.strip().lower() != "production":
+        candidates.append(Path("config/tenants") / f"{clean_id}.example.yaml")
+
+    for candidate in candidates:
+        if candidate.is_file():
+            cfg = load_tenant_config(candidate)
+            if cfg.institution.id == clean_id:
+                return cfg
+
+    if allow_synthetic_fallback:
+        return TenantConfig(
+            institution=TenantInstitution(id=clean_id, display_name=clean_id, domains=[])
+        )
+    raise TenantNotFoundError(f"Tenant '{clean_id}' não encontrado.")
 
 
 def load_scoring_profile(path: Path | str) -> ScoringProfileConfig:

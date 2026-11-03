@@ -35,6 +35,10 @@ from prometeus.application.plan_course_research import (
 )
 from prometeus.application.pricing_reference import build_price_reference
 from prometeus.application.qualify_market_evidence import EvidenceQualificationService
+from prometeus.application.research_scope import (
+    extract_global_social_actor_terms,
+    extract_sector_radar_actor_terms,
+)
 from prometeus.application.research_sufficiency import research_gaps
 from prometeus.application.runtime_preflight import validate_runtime_preflight
 from prometeus.application.scoring_service import ScoringService
@@ -52,7 +56,7 @@ from prometeus.domain.configuration import (
     TenantConfig,
     TenantEcosystemConfig,
     load_scoring_profile,
-    load_tenant_config,
+    resolve_tenant_config_for_id,
 )
 from prometeus.domain.dossiers import DossierStatus
 from prometeus.domain.ports.decision_model import DecisionModelPort
@@ -187,6 +191,8 @@ class RunCourseAnalysis:
         if snapshot is not None and isinstance(snapshot.tenant_config_snapshot, dict):
             try:
                 tenant_cfg = TenantConfig.model_validate(snapshot.tenant_config_snapshot)
+                if tenant_cfg.institution.id != analysis.tenant_id:
+                    raise ValueError("Snapshot de tenant divergente do tenant_id da análise.")
                 ctx = {
                     "id": tenant_cfg.institution.id,
                     "name": tenant_cfg.institution.display_name,
@@ -217,7 +223,9 @@ class RunCourseAnalysis:
                 pass
 
         try:
-            tenant_cfg = load_tenant_config(Path(self.settings.INSTITUTION_CONFIG_PATH))
+            tenant_cfg = resolve_tenant_config_for_id(
+                analysis.tenant_id, self.settings, allow_synthetic_fallback=False
+            )
             if tenant_cfg.institution.id == analysis.tenant_id:
                 ctx = {
                     "id": tenant_cfg.institution.id,
@@ -763,11 +771,14 @@ class RunCourseAnalysis:
                     "ecosystem_summary": {
                         "monitored_competitors_count": len(ecosystem.competitors),
                         "monitored_insurers_count": len(ecosystem.sector_radar),
-                        "sector_radar_actors": [s.name for s in ecosystem.sector_radar],
+                        "sector_radar_actors": extract_sector_radar_actor_terms(
+                            [s.model_dump(mode="json") for s in ecosystem.sector_radar]
+                        ),
                         "global_social_actors": [
-                            s.name
+                            s_name
                             for s in ecosystem.sector_radar
                             if s.social.linkedin_scope == "global"
+                            for s_name in extract_global_social_actor_terms([s.model_dump(mode="json")])
                         ],
                     },
                 }

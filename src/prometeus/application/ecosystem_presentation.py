@@ -35,12 +35,20 @@ def _extract_modality(text: str) -> str:
     return "—"
 
 
-def _observed_price_display(metrics: dict[str, Any]) -> tuple[float | None, str]:
-    for key in ("price_brl", "total_price_brl", "priceBrl", "tuition_brl"):
+def _observed_price_display(
+    item: DossierFactItem,
+    comparable_prices: dict[str, float],
+) -> tuple[float | None, str]:
+    metrics = item.key_metrics
+    for key in ("price_brl", "total_price_brl", "total_price", "priceBrl", "tuition_brl"):
         val = metrics.get(key)
         if isinstance(val, (int, float)) and not isinstance(val, bool) and val > 0:
             formatted = f"R$ {float(val):,.0f}".replace(",", ".")
             return float(val), formatted
+    comp_val = comparable_prices.get(item.evidence_id)
+    if comp_val is not None and comp_val > 0:
+        formatted = f"R$ {float(comp_val):,.0f}".replace(",", ".")
+        return float(comp_val), formatted
     return None, "—"
 
 
@@ -96,7 +104,11 @@ def build_ecosystem_presentation_blocks(
 
     # 1. Matriz de Concorrência Educacional Fixa
     if competitors:
-        plan_calls = facts.research_plan.get("tool_calls", []) if isinstance(facts.research_plan, dict) else []
+        plan_calls = (
+            facts.research_plan.get("tool_calls", [])
+            if isinstance(facts.research_plan, dict)
+            else []
+        )
         queried_text = " ".join(
             str(call.get("query") or "").lower()
             for call in plan_calls
@@ -104,16 +116,31 @@ def build_ecosystem_presentation_blocks(
         )
         has_any_plan_calls = bool(plan_calls)
 
+        comparable_prices: dict[str, float] = {}
+        pricing_audit = facts.analysis_audit.get("pricing")
+        if isinstance(pricing_audit, dict):
+            raw_comparables = pricing_audit.get("comparables")
+            if isinstance(raw_comparables, list):
+                for entry in raw_comparables:
+                    if not isinstance(entry, dict):
+                        continue
+                    total_brl = entry.get("total_brl")
+                    eids = entry.get("evidence_ids")
+                    if (
+                        isinstance(total_brl, (int, float))
+                        and not isinstance(total_brl, bool)
+                        and total_brl > 0
+                        and isinstance(eids, list)
+                    ):
+                        for eid in eids:
+                            if eid:
+                                comparable_prices[str(eid)] = float(total_brl)
+
         by_comp: dict[str, list[DossierFactItem]] = {str(c["id"]): [] for c in competitors}
         for item in facts.items:
-            if item.source_type in {
-                "computed_scoring",
-                "semantic_decision",
-                "provided_proposal",
-                "institutional_history",
-                "computed_pricing",
-                "query_observation",
-            }:
+            if item.source_type not in {"OFFER", "PAID_COMPETITION"}:
+                continue
+            if item.key_metrics.get("evidence_role") == "context_only":
                 continue
             if item.key_metrics.get("actor_role") == "sector_radar":
                 continue
@@ -137,17 +164,20 @@ def build_ecosystem_presentation_blocks(
 
             if matched_items:
                 offers_found += 1
-                # Prioriza item com preço observado
                 best = sorted(
                     matched_items,
-                    key=lambda it: (1 if _observed_price_display(it.key_metrics)[0] is not None else 0),
+                    key=lambda it: (
+                        1 if _observed_price_display(it, comparable_prices)[0] is not None else 0
+                    ),
                     reverse=True,
                 )[0]
-                _, price_display = _observed_price_display(best.key_metrics)
+                _, price_display = _observed_price_display(best, comparable_prices)
                 raw_hours = best.key_metrics.get("workload_hours")
                 obs_hours = (
                     int(raw_hours)
-                    if isinstance(raw_hours, (int, float)) and not isinstance(raw_hours, bool) and raw_hours > 0
+                    if isinstance(raw_hours, (int, float))
+                    and not isinstance(raw_hours, bool)
+                    and raw_hours > 0
                     else None
                 )
                 hours_display = f"{obs_hours}h" if obs_hours is not None else "—"
@@ -307,7 +337,9 @@ def build_ecosystem_presentation_blocks(
 
         signals_out.sort(key=lambda s: (0 if s["priority"] == "primary" else 1, s["insurer_name"]))
         covered_names = list(dict.fromkeys(s["insurer_name"] for s in signals_out))
-        monitored_total = len(radar_actors) or int(baseline.get("monitored_actors_count", 0) if baseline else 0)
+        monitored_total = len(radar_actors) or int(
+            baseline.get("monitored_actors_count", 0) if baseline else 0
+        )
         pulse = (
             f"{len(signals_out)} sinal(is) contextual(is) capturado(s) em {len(covered_names)} de {monitored_total} "
             "seguradoras monitoradas (mercado empregador e dores de corretores — nunca contabilizadas como concorrentes de curso)."

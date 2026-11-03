@@ -13,7 +13,7 @@ from prometeus.domain.analyses import Analysis, AnalysisStatus
 from prometeus.domain.configuration import (
     AppSettings,
     load_scoring_profile,
-    load_tenant_config,
+    resolve_tenant_config_for_id,
 )
 from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
 from prometeus.infrastructure.db.models import AnalysisModel
@@ -64,11 +64,11 @@ class CreateAnalysisUseCase:
                 is_existing=True,
             )
 
-        # 2. Carrega configurações do tenant e do perfil de scoring para snapshot imutável
-        tenant_path = Path(self.settings.INSTITUTION_CONFIG_PATH)
+        # 2. Carrega configurações isoladas por tenant_id e do perfil de scoring para snapshot imutável
         scoring_path = Path(self.settings.SCORING_PROFILE_PATH)
-
-        tenant_config = load_tenant_config(tenant_path)
+        tenant_config = resolve_tenant_config_for_id(
+            command.tenant_id, self.settings, allow_synthetic_fallback=True
+        )
         scoring_profile = load_scoring_profile(scoring_path)
 
         # 3. Cria a raiz de agregação do domínio (ADR-0005: status=QUEUED, recommendation=None)

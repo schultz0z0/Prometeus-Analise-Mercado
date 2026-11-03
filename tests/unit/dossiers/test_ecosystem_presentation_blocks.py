@@ -222,3 +222,135 @@ def test_build_visual_presentation_blocks_generates_competitive_benchmark_and_se
     assert by_actor["porto-seguro"]["evidence_ids"] == ["ev-porto-radar"]
     assert by_actor["mapfre"]["scope_badge"] == "Global (contextual)"
     assert by_actor["mapfre"]["evidence_ids"] == ["ev-mapfre-linkedin"]
+
+
+
+def test_competitive_benchmark_excludes_non_offers_and_context_only_and_uses_pricing_audit_comparables() -> None:
+    institution_ctx = {
+        "id": "ens",
+        "name": "Escola de Negócios e Seguros",
+        "domains": ["ens.edu.br"],
+        "competitors": [
+            {
+                "id": "fgv",
+                "name": "FGV Educação Executiva",
+                "category": "executive_business",
+                "domains": ["fgv.br"],
+            },
+            {
+                "id": "ibmec",
+                "name": "Ibmec",
+                "category": "executive_business",
+                "domains": ["ibmec.br"],
+            },
+        ],
+        "sector_radar": [],
+    }
+    analysis = SimpleNamespace(
+        id="anl-ens-visual-2",
+        tenant_id="ens",
+        course_name="MBA em IA Aplicada a Seguros",
+        proposal_data={"_institution_context": institution_ctx, "workload_hours": 360},
+    )
+    scoring = SimpleNamespace(
+        viability_score=80.0,
+        confidence_score=0.84,
+        recommendation="APPROVED",
+    )
+    facts = DossierFacts(
+        analysis_id="anl-ens-visual-2",
+        course_name="MBA em IA Aplicada a Seguros",
+        target_audience="Gestores de Seguros",
+        viability_score=80.0,
+        coverage_score=0.88,
+        confidence_score=0.84,
+        recommendation="APPROVED",
+        pillar_summaries={},
+        items=[
+            # FGV real crawled offer without top-level price_brl in key_metrics,
+            # whose verified total_brl lives in analysis_audit.pricing.comparables:
+            DossierFactItem(
+                evidence_id="ev-fgv-offer",
+                source_type="OFFER",
+                source_url="https://educacao-executiva.fgv.br/cursos/mba-seguros",
+                title="MBA Executivo em Seguros e Riscos — FGV",
+                key_metrics={
+                    "actor_role": "configured_competitor",
+                    "matched_actor_id": "fgv",
+                    "matched_actor_name": "FGV Educação Executiva",
+                    "workload_hours": 432,
+                },
+                summary="MBA Executivo ao vivo.",
+            ),
+            # Ibmec has ONLY a context_only institutional blog article and a JOB_MARKET vacancy:
+            DossierFactItem(
+                evidence_id="ev-ibmec-blog",
+                source_type="OFFER",
+                source_url="https://www.ibmec.br/blog/tendencias-ia",
+                title="Blog Ibmec: O futuro da IA nos negócios",
+                key_metrics={
+                    "evidence_role": "context_only",
+                    "actor_role": "configured_competitor",
+                    "matched_actor_id": "ibmec",
+                    "matched_actor_name": "Ibmec",
+                },
+                summary="Artigo institucional de blog; Contexto do setor; não é oferta concorrente.",
+            ),
+            DossierFactItem(
+                evidence_id="ev-ibmec-job",
+                source_type="JOB_MARKET",
+                source_url="https://www.ibmec.br/carreiras/professor",
+                title="Vaga Docente Ibmec",
+                key_metrics={
+                    "actor_role": "configured_competitor",
+                    "matched_actor_id": "ibmec",
+                    "matched_actor_name": "Ibmec",
+                },
+                summary="Vaga de emprego.",
+            ),
+        ],
+        research_plan={
+            "tool_calls": [
+                {
+                    "id": "eco-competitors-gsearch-1",
+                    "capability": "google_search",
+                    "query": "(site:fgv.br OR site:ibmec.br) curso ia seguros",
+                }
+            ]
+        },
+        analysis_audit={
+            "pricing": {
+                "mean_total_brl": 24800.0,
+                "comparables": [
+                    {
+                        "title": "MBA Executivo em Seguros e Riscos — FGV",
+                        "total_brl": 24800.0,
+                        "evidence_ids": ["ev-fgv-offer"],
+                    }
+                ],
+            }
+        },
+    )
+    dossier = DossierOutput(
+        analysis_id="anl-ens-visual-2",
+        facts_hash=facts.compute_facts_hash(),
+        executive_summary="Síntese.",
+        claims=[
+            DossierClaim(
+                claim_id="c-1",
+                statement="FGV possui MBA precificado.",
+                evidence_ids=["ev-fgv-offer"],
+            )
+        ],
+        highlights=DossierHighlights(pros=["c-1"]),
+    )
+
+    svc = DossierSynthesisService(AsyncMock(), FakeGenerativeModel())
+    blocks = svc._build_visual_presentation_blocks(analysis, scoring, facts, dossier)
+    comp_block = blocks["competitive_benchmark"]
+
+    assert comp_block["offers_found_count"] == 1
+    by_id = {row["competitor_id"]: row for row in comp_block["rows"]}
+    assert by_id["fgv"]["status"] == "direct_offer"
+    assert "24.800" in by_id["fgv"]["price_display"]
+    assert by_id["ibmec"]["status"] == "no_offer_observed"

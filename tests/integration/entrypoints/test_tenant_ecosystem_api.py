@@ -218,3 +218,19 @@ console.log(renderIntakeView({{getState:()=>payload}}));"""
 
     assert "intake-ecosystem-panel" not in html_infnet
     assert 'id="course-competitors"' in html_infnet
+
+
+
+
+@pytest.mark.asyncio
+async def test_post_sector_radar_refresh_blocks_when_kill_switch_active(
+    client: httpx.AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("KILL_SWITCH_ACTIVE", "true")
+    resp = await client.post(
+        "/v1/tenants/ens/sector-radar/refresh",
+        json={"force": True, "max_budget_usd": 1.0},
+    )
+    assert resp.status_code == 503
+    assert "kill switch" in resp.json()["detail"].lower()

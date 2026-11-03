@@ -223,16 +223,16 @@ class EvidenceQualificationService:
                 context=judgment_context,
             )
             trusted = not result.requires_human_review and not result.is_noul
-            sector_blocked_as_offer = is_sector and row.evidence_type in {
-                "OFFER",
-                "PAID_COMPETITION",
-            }
+            # Sinais de seguradoras que NÃO são vagas de emprego (OFFER, PAID_COMPETITION,
+            # SOCIAL_VOICE corporativo, etc.) permanecem estritamente context_only para o
+            # Radar Setorial e ementa, nunca inflando contagens de demanda/concorrência de alunos.
+            sector_context_only_signal = is_sector and row.evidence_type != "JOB_MARKET"
             relevant = (
                 scoped
                 and result.selected_choice == "RELEVANT"
                 and trusted
                 and not own
-                and not sector_blocked_as_offer
+                and not sector_context_only_signal
             )
             reason = (
                 "Localização fora do escopo ou não comprovada"
@@ -259,8 +259,13 @@ class EvidenceQualificationService:
                 )
             if own:
                 reason = "Conteúdo da própria instituição; preservado como contexto, sem contar como concorrência externa"
-            elif sector_blocked_as_offer and scoped and trusted and result.selected_choice in {"RELEVANT", "CONTEXT"}:
-                reason = "Sinal de seguradora do Radar Setorial; preservado como pulso de mercado e pauta de corretores, sem contar como concorrente educacional"
+            elif (
+                sector_context_only_signal
+                and scoped
+                and trusted
+                and result.selected_choice in {"RELEVANT", "CONTEXT"}
+            ):
+                reason = "Sinal de seguradora do Radar Setorial; preservado como pulso de mercado e pauta de corretores, sem contar como concorrente educacional ou demanda espontânea de alunos"
 
             use_for = (
                 {
@@ -277,8 +282,15 @@ class EvidenceQualificationService:
             if own:
                 use_for = ["institution_context"]
             elif is_sector and scoped and trusted and result.selected_choice in {"RELEVANT", "CONTEXT"}:
-                use_for = sorted({*use_for, "sector_radar", "audience_needs", "curriculum"})
-                use_for = [u for u in use_for if u not in {"competitive_offers", "pricing", "paid_competition"}]
+                extra_uses = (
+                    {"sector_radar", "curriculum"}
+                    if row.evidence_type == "JOB_MARKET"
+                    else {"sector_radar", "audience_needs", "curriculum"}
+                )
+                use_for = sorted({*use_for, *extra_uses})
+                use_for = [
+                    u for u in use_for if u not in {"competitive_offers", "pricing", "paid_competition"}
+                ]
             elif scoped and result.selected_choice == "CONTEXT" and trusted:
                 use_for = ["sector_context"]
 
@@ -288,7 +300,7 @@ class EvidenceQualificationService:
                     "own_institution"
                     if own
                     else "sector_ecosystem_not_educational_competitor"
-                    if sector_blocked_as_offer
+                    if sector_context_only_signal
                     else "geography_unverified_or_out_of_scope"
                     if not scoped
                     else "review_required"
@@ -300,7 +312,6 @@ class EvidenceQualificationService:
                     else "irrelevant_signal"
                 ]
 
-            # Curadoria por finalidade (Tarefa 3.2): substituir 'accepted' universal por EvidenceUseAssessment
             assessments: dict[str, EvidenceUseAssessment] = {}
 
             # 1. Descoberta (discovery)
@@ -406,15 +417,22 @@ class EvidenceQualificationService:
             )
 
             # 7. Demanda de alunos (learner_demand)
-            learner_usable = row.evidence_type in {"SOCIAL_VOICE", "TRENDS", "SEARCH_VOLUME"} and scoped and result.selected_choice in {"RELEVANT", "CONTEXT"} and trusted
+            learner_usable = (
+                row.evidence_type in {"SOCIAL_VOICE", "TRENDS", "SEARCH_VOLUME"}
+                and not own
+                and not is_sector
+                and scoped
+                and result.selected_choice in {"RELEVANT", "CONTEXT"}
+                and trusted
+            )
             assessments[EvidencePurpose.LEARNER_DEMAND.value] = EvidenceUseAssessment(
                 purpose=EvidencePurpose.LEARNER_DEMAND,
                 usable=learner_usable,
                 confidence=result.confidence if learner_usable else 0.5,
                 observable_factors=["Interesse ou manifestação espontânea"] if learner_usable else [],
                 quote_snippets=[row.title] if row.title else [],
-                reason="Sinal de interesse ou dúvidas de potenciais alunos" if learner_usable else "Evidência não representa manifestação espontânea ou busca de alunos",
-                rejection_cause=None if learner_usable else "not_learner_voice_or_search",
+                reason="Sinal de interesse ou dúvidas de potenciais alunos" if learner_usable else ("Comunicação corporativa de seguradora pertence ao Radar Setorial, não à demanda espontânea de alunos" if is_sector else "Evidência não representa manifestação espontânea ou busca de alunos"),
+                rejection_cause=None if learner_usable else ("sector_corporate_voice_not_learner_demand" if is_sector else "not_learner_voice_or_search"),
             )
 
             # 8. Contexto próprio (own_context)
@@ -447,7 +465,7 @@ class EvidenceQualificationService:
                 "accepted": relevant,
                 "context_only": own
                 or (
-                    is_sector
+                    sector_context_only_signal
                     and scoped
                     and trusted
                     and result.selected_choice in {"RELEVANT", "CONTEXT"}
