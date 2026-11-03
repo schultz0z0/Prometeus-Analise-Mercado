@@ -1249,3 +1249,193 @@
   color: var(--prometeus-text-secondary);
 }
 
+
+/* ==========================================================================
+   ECOSYSTEM BENCHMARK & SECTOR RADAR (ENS COMPETITORS + INSURERS)
+   ========================================================================== */
+.ecosystem-benchmark-table td,
+.ecosystem-benchmark-table th {
+  vertical-align: top;
+}
+.eco-comp-name {
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 13.5px;
+}
+.eco-comp-cat {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--prometeus-text-secondary);
+  margin-top: 2px;
+}
+.eco-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.eco-status-pill[data-tone="direct"] {
+  background: rgba(248, 113, 113, 0.14);
+  color: #fca5a5;
+  border-color: rgba(248, 113, 113, 0.35);
+}
+.eco-status-pill[data-tone="adjacent"] {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fde68a;
+  border-color: rgba(251, 191, 36, 0.35);
+}
+.eco-status-pill[data-tone="whitespace"] {
+  background: rgba(52, 211, 153, 0.14);
+  color: #6ee7b7;
+  border-color: rgba(52, 211, 153, 0.35);
+}
+.eco-status-pill[data-tone="muted"] {
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+}
+.eco-diff-cell {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #cbd5e1;
+  max-width: 300px;
+}
+
+.sector-radar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.sector-radar-card {
+  padding: 18px;
+  background: var(--prometeus-surface-card);
+  border: 1px solid var(--prometeus-border-subtle);
+  border-radius: var(--prometeus-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sector-radar-card.priority-primary {
+  border-top: 2px solid var(--prometeus-accent-ice);
+}
+.sector-radar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.sector-radar-header h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #ffffff;
+}
+.eco-scope-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.eco-scope-badge.national {
+  background: rgba(56, 189, 248, 0.14);
+  color: #7dd3fc;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+.eco-scope-badge.global {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fde68a;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+.sector-radar-theme {
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--prometeus-accent-ice);
+}
+.sector-radar-pain {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e2e8f0;
+}
+.sector-radar-curriculum {
+  padding: 8px 10px;
+  background: rgba(56, 189, 248, 0.06);
+  border-left: 2px solid var(--prometeus-accent-ice);
+  border-radius: 0 var(--prometeus-radius-sm) var(--prometeus-radius-sm) 0;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+.sector-radar-footer {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.sector-radar-link {
+  font-size: 12px;
+  color: var(--prometeus-accent-ice);
+  text-decoration: none;
+}
+.sector-radar-link:hover {
+  text-decoration: underline;
+}
+
+/* Intake Automatic Ecosystem Monitoring Card */
+.intake-ecosystem-panel {
+  padding: 16px;
+  background: rgba(56, 189, 248, 0.04);
+  border: 1px solid var(--prometeus-border-subtle);
+  border-radius: var(--prometeus-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.intake-ecosystem-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.intake-ecosystem-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ffffff;
+}
+.intake-ecosystem-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.intake-eco-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+.intake-eco-chip.radar {
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.25);
+  color: #bae6fd;
+}
+.intake-extra-seed-details summary {
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--prometeus-accent-ice);
+  font-weight: 500;
+  user-select: none;
+}

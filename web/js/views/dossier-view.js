@@ -82,6 +82,7 @@ function scoreAudit(audit, scoring) {
   const priceReason = code =>
     ({
       own_institution: 'Oferta da própria instituição; fora da comparação externa',
+      sector_ecosystem_not_course_offer: 'Seguradora do Radar Setorial (ecossistema empregador, não oferta educacional)',
       not_qualified: 'Conteúdo sem qualificação para comparar preço',
       category_mismatch: 'Categoria de curso diferente da proposta',
       theme_mismatch: 'Tema diferente da proposta',
@@ -504,6 +505,115 @@ function renderRoadmap(roadmap) {
   </section>`;
 }
 
+function renderCompetitiveBenchmark(benchmark) {
+  if (!benchmark || !Array.isArray(benchmark.rows) || !benchmark.rows.length) return '';
+  const statusMeta = status =>
+    ({
+      direct_offer: { label: 'Oferta direta', tone: 'direct' },
+      adjacent_offer: { label: 'Oferta adjacente', tone: 'adjacent' },
+      no_offer_observed: { label: 'Sem oferta observada', tone: 'whitespace' },
+      not_queried: { label: 'Não consultado', tone: 'muted' }
+    })[status] || { label: 'Observação parcial', tone: 'muted' };
+
+  return `<section class="dossier-section" id="sec-competitive-benchmark">
+    <div class="section-title-wrap">
+      <h2>Matriz de Concorrentes Educacionais Fixos</h2>
+      <p class="dossier-muted">${escapeHtml(benchmark.whitespace_summary || 'Mapeamento estruturado das instituições de ensino concorrentes configuradas para a instituição.')}</p>
+    </div>
+    <div class="economics-summary-strip" style="margin-top:12px;">
+      <div class="eco-strip-item">Instituições Monitoradas: <strong>${escapeHtml(benchmark.monitored_total ?? benchmark.rows.length)}</strong></div>
+      <div class="eco-strip-divider"></div>
+      <div class="eco-strip-item">Com Oferta Correlata: <strong>${escapeHtml(benchmark.offers_found_count ?? 0)}</strong></div>
+      <div class="eco-strip-divider"></div>
+      <div class="eco-strip-item" style="color:var(--prometeus-accent-ice);">Escopo: <strong>Comparação de Curso, Carga &amp; Preço</strong></div>
+    </div>
+    <div class="prometeus-table-container" style="margin-top:16px;">
+      <table class="prometeus-table ecosystem-benchmark-table">
+        <thead>
+          <tr>
+            <th scope="col">Concorrente</th>
+            <th scope="col">Status no Tema</th>
+            <th scope="col">Oferta Observada</th>
+            <th scope="col">Formato / Carga</th>
+            <th scope="col">Preço Observado</th>
+            <th scope="col">Diferenciação Estratégica ENS</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${benchmark.rows
+            .map(row => {
+              const meta = statusMeta(row.status);
+              const fmtParts = [row.modality, row.workload_hours]
+                .filter(v => v && v !== '—')
+                .join(' · ') || '—';
+              return `<tr>
+                <th scope="row">
+                  <div class="eco-comp-name">${escapeHtml(row.name)}</div>
+                  <span class="eco-comp-cat">${escapeHtml(row.category_label || '')}</span>
+                </th>
+                <td><span class="eco-status-pill" data-tone="${escapeHtml(meta.tone)}">${escapeHtml(meta.label)}</span></td>
+                <td>
+                  <div>${escapeHtml(row.observed_offer_title || '—')}</div>
+                  ${inspectionButton(row.evidence_ids || [], 'Ver fonte')}
+                </td>
+                <td>${escapeHtml(fmtParts)}</td>
+                <td><strong>${escapeHtml(row.price_display || '—')}</strong></td>
+                <td class="eco-diff-cell">${escapeHtml(row.ens_differentiation || '')}</td>
+              </tr>`;
+            })
+            .join('')}
+        </tbody>
+      </table>
+    </div>
+  </section>`;
+}
+
+function renderSectorRadar(radar) {
+  if (!radar || (!Array.isArray(radar.signals) && !radar.monitored_insurers_total)) return '';
+  const signals = Array.isArray(radar.signals) ? radar.signals : [];
+  return `<section class="dossier-section" id="sec-sector-radar">
+    <div class="section-title-wrap">
+      <h2>Radar Setorial Permanente · Seguradoras &amp; Mercado Empregador</h2>
+      <p class="dossier-muted">${escapeHtml(radar.executive_pulse || 'Pulso estratégico das seguradoras monitoradas (tendências, produtos e dores de corretores — nunca contabilizadas como concorrentes de curso).')}</p>
+    </div>
+    <div class="economics-summary-strip" style="margin-top:12px;">
+      <div class="eco-strip-item">Seguradoras no Radar: <strong>${escapeHtml(radar.monitored_insurers_total ?? 0)}</strong></div>
+      <div class="eco-strip-divider"></div>
+      <div class="eco-strip-item">Sinais Capturados: <strong>${escapeHtml(radar.signals_count ?? signals.length)}</strong></div>
+      <div class="eco-strip-divider"></div>
+      <div class="eco-strip-item">Papel Analítico: <strong>Demanda B2B, Dores de Corretores &amp; Currículo</strong></div>
+    </div>
+    ${
+      signals.length
+        ? `<div class="sector-radar-grid">
+          ${signals
+            .map(sig => {
+              const url = safeUrl(sig.source_url);
+              const isGlobal = String(sig.scope_badge || '').toLowerCase().includes('global');
+              return `<article class="sector-radar-card ${sig.priority === 'primary' ? 'priority-primary' : ''}">
+                <div class="sector-radar-header">
+                  <div>
+                    <h3>${escapeHtml(sig.insurer_name)}</h3>
+                    <span class="eco-comp-cat">${escapeHtml(sig.channel_label || 'Web Institucional')}</span>
+                  </div>
+                  <span class="eco-scope-badge ${isGlobal ? 'global' : 'national'}">${escapeHtml(sig.scope_badge || 'Brasil')}</span>
+                </div>
+                <div class="sector-radar-theme">${escapeHtml(sig.theme_detected || 'Movimentação Setorial')}</div>
+                <p class="sector-radar-pain">${escapeHtml(sig.market_or_broker_pain || '')}</p>
+                ${sig.curriculum_link ? `<div class="sector-radar-curriculum"><strong>Conexão Curricular:</strong> ${escapeHtml(sig.curriculum_link)}</div>` : ''}
+                <div class="sector-radar-footer">
+                  ${url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="sector-radar-link">Abrir publicação original ↗</a>` : ''}
+                  ${inspectionButton(sig.evidence_ids || [], 'Ver evidência')}
+                </div>
+              </article>`;
+            })
+            .join('')}
+        </div>`
+        : '<p class="dossier-muted" style="margin-top:14px;">Nenhum sinal específico adicional capturado nesta rodada; o Radar Setorial permanece isolado da contagem de concorrência educacional.</p>'
+    }
+  </section>`;
+}
+
 export function renderDossierView(store) {
   const state = store.getState();
   const course = state.courses.find(item => item.id === state.activeCourseId);
@@ -547,6 +657,8 @@ export function renderDossierView(store) {
   const modules = pres.curriculum_modules || [];
   const swot = pres.swot || null;
   const roadmap = pres.tactical_roadmap || [];
+  const competitiveBenchmark = pres.competitive_benchmark || null;
+  const sectorRadar = pres.sector_radar || null;
   const review = pres.three_fold_review || dossier.three_fold_review;
   const verdict = pres.verdict || {
     status: scoring.recommendation || 'APPROVED',
@@ -569,6 +681,8 @@ export function renderDossierView(store) {
       <a href="#sec-overview" class="active">Visão Geral</a>
       <a href="#sec-kpis">Métricas-Chave</a>
       ${personas.length ? '<a href="#sec-personas">Personas B2B/B2C</a>' : ''}
+      ${competitiveBenchmark ? '<a href="#sec-competitive-benchmark">Concorrência Fixa</a>' : ''}
+      ${sectorRadar ? '<a href="#sec-sector-radar">Radar Setorial</a>' : ''}
       ${economics ? '<a href="#sec-economics">Economia & Cenários</a>' : ''}
       ${modules.length ? '<a href="#sec-curriculum">Grade Modular</a>' : ''}
       ${swot ? '<a href="#sec-swot">SWOT & TOWS</a>' : ''}
@@ -633,6 +747,12 @@ export function renderDossierView(store) {
 
     <!-- Personas Decisoras (B2B & B2C) -->
     ${renderPersonas(personas)}
+
+    <!-- Matriz de Concorrentes Educacionais Fixos -->
+    ${renderCompetitiveBenchmark(competitiveBenchmark)}
+
+    <!-- Pulso do Radar Setorial Permanente (Seguradoras) -->
+    ${renderSectorRadar(sectorRadar)}
 
     <!-- Modelagem Econômica & Cenários -->
     ${renderEconomics(economics)}
@@ -810,7 +930,7 @@ export function renderDossierView(store) {
                       qualification
                         ? `<span class="dossier-label">${qualification.accepted ? 'Qualificada' : qualification.context_only ? 'Contexto preservado' : 'Excluída do cálculo'}</span>
                            <p class="dossier-muted">${escapeHtml(qualification.reason || '')}</p>
-                           ${qualification.use_for?.length ? `<small>Uso: ${qualification.use_for.map(purpose => escapeHtml(({ employability: 'vagas', curriculum: 'necessidades curriculares', pricing: 'referência de preço', competitive_offers: 'ofertas comparáveis', paid_competition: 'concorrência em mídia', audience_needs: 'necessidades do público', institution_context: 'contexto da própria instituição', search_interest: 'interesse de busca' })[purpose] || purpose)).join(', ')}</small>` : ''}`
+                           ${qualification.use_for?.length ? `<small>Uso: ${qualification.use_for.map(purpose => escapeHtml(({ employability: 'vagas', curriculum: 'necessidades curriculares', pricing: 'referência de preço', competitive_offers: 'ofertas comparáveis', paid_competition: 'concorrência em mídia', audience_needs: 'necessidades do público', institution_context: 'contexto da própria instituição', search_interest: 'interesse de busca', sector_radar: 'radar setorial' })[purpose] || purpose)).join(', ')}</small>` : ''}`
                         : ''
                     }
                     ${inspectionButton([evidence.id], 'Inspecionar')}

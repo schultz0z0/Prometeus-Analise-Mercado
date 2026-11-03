@@ -141,3 +141,96 @@ def test_pricing_exclusions_explain_why_an_otherwise_useful_page_is_not_a_price(
     assert 'Vários preços sem vínculo inequívoco' in html
     assert 'não exclui automaticamente a página dos outros usos' in html
     assert 'Inspecionar página' in html
+
+
+
+def test_dossier_renders_competitive_benchmark_and_sector_radar_sections():
+    doc = document()
+    doc["presentation"] = {
+        "competitive_benchmark": {
+            "monitored_total": 10,
+            "offers_found_count": 2,
+            "whitespace_summary": "Apenas 2 de 10 concorrentes monitorados possuem oferta correlata; nenhum une IA generativa e regulação SUSEP.",
+            "rows": [
+                {
+                    "competitor_id": "ibmec",
+                    "name": "Ibmec",
+                    "category_label": "Escola Executiva",
+                    "status": "direct_offer",
+                    "observed_offer_title": "MBA em Finanças, Riscos e IA",
+                    "modality": "EAD Live",
+                    "workload_hours": "360h",
+                    "price_display": "R$ 16.800",
+                    "ens_differentiation": "ENS entrega verticalização securitária e casos reais de sinistros.",
+                    "evidence_ids": ["ev"],
+                },
+                {
+                    "competitor_id": "fgv",
+                    "name": "FGV Educação Executiva",
+                    "category_label": "Escola Executiva",
+                    "status": "no_offer_observed",
+                    "observed_offer_title": "Nenhuma oferta específica observada no tema",
+                    "modality": "—",
+                    "workload_hours": "—",
+                    "price_display": "—",
+                    "ens_differentiation": "Janela de pioneirismo (whitespace) frente à FGV.",
+                    "evidence_ids": [],
+                },
+            ],
+        },
+        "sector_radar": {
+            "monitored_insurers_total": 10,
+            "baseline_collected_at": "2026-11-03T12:00:00+00:00",
+            "signals_count": 2,
+            "executive_pulse": "Seguradoras líderes aceleram IA em subscrição e regulação de sinistros, exigindo reciclagem técnica de corretores.",
+            "signals": [
+                {
+                    "actor_id": "porto-seguro",
+                    "insurer_name": "Porto Seguro",
+                    "priority": "primary",
+                    "channel_label": "Web Institucional",
+                    "scope_badge": "Brasil",
+                    "theme_detected": "IA, Automação & Subscrição",
+                    "market_or_broker_pain": "Automação de vistoria e cotação assistida para corretores.",
+                    "curriculum_link": "Conecta-se aos módulos de subscrição e operações digitais.",
+                    "source_url": "https://www.portoseguro.com.br/corretores/ia",
+                    "evidence_ids": ["ev"],
+                },
+                {
+                    "actor_id": "mapfre",
+                    "insurer_name": "MAPFRE",
+                    "priority": "secondary",
+                    "channel_label": "LinkedIn",
+                    "scope_badge": "Global (contextual)",
+                    "theme_detected": "Grandes Riscos, Rural & ESG",
+                    "market_or_broker_pain": "Modelagem preditiva corporativa em grandes riscos.",
+                    "curriculum_link": "Referência internacional para estudos de caso.",
+                    "source_url": "https://www.linkedin.com/company/mapfre/posts/1",
+                    "evidence_ids": ["ev"],
+                },
+            ],
+        },
+    }
+    doc["analysis_audit"] = {
+        "pricing": {
+            "method": "arithmetic_mean_per_comparable_course",
+            "comparables": [],
+            "excluded": [
+                {
+                    "id": "ev",
+                    "origin": "external",
+                    "reason_code": "sector_ecosystem_not_course_offer",
+                }
+            ],
+        }
+    }
+    html = render(doc)
+    assert 'id="sec-competitive-benchmark"' in html
+    assert "Ibmec" in html
+    assert "R$ 16.800" in html
+    assert "Oferta direta" in html
+    assert "Sem oferta observada" in html
+    assert 'id="sec-sector-radar"' in html
+    assert "Porto Seguro" in html
+    assert "Global (contextual)" in html
+    assert "Seguradora do Radar Setorial" in html

@@ -5,7 +5,7 @@ description: Use when verified course, market, curriculum, scoring, and limitati
 
 # Building Course Offers
 
-**Version:** 2.0.0
+**Version:** 2.1.0
 
 Turn approved facts into a useful decision dossier while keeping observations and strategic hypotheses visibly separate.
 
@@ -19,6 +19,11 @@ Distinguish internal demand potential (IPD from up to three comparables), extern
 
 Present declared institution identity, price/payment terms and academic duration as declared inputs, not as questions already answered by the form. Own institution pages/ads belong to institutional context. Raise identity uncertainty only when source facts conflict, not merely because the institution appears on its own syllabus.
 
+Separate **Educational Competitors** from **Sector Ecosystem / Insurer Radar** (`actor_role == "sector_radar"`):
+- Educational competitors (schools, universities, EdTechs) are compared on active course offer, modality, workload, syllabus coverage, and observed tuition (`direct_competition` / `pricing`). Absence of an observed course on a queried competitor domain is academic whitespace to validate, never proof of zero demand or permission to invent prices.
+- Sector radar actors (e.g., insurance companies for ENS) represent the **employer market, broker ecosystem, product launches, and operational pains**. Use their signals to substantiate curriculum relevance, B2B/broker pain points, and market timing — NEVER list an insurer as a direct educational competitor or mix insurance product prices into tuition benchmarks.
+- When citing social presence of global corporate profiles (`linkedin_scope == "global"`, such as MAPFRE or Zurich global LinkedIn), qualify the metric explicitly as global corporate context and never attribute global follower counts to Brazil.
+
 Price recommendations use comparable same-category/theme offers, distinguish internal and external observations, and state pricing-reference gaps. Proximity to an average is a positioning signal; it does not prove profitability, margin, willingness to pay or enrollment.
 
 Explain material evidence losses by source and cause. Show whether information was unusable, context-only, duplicated, outside scope, awaiting review or lost to a source failure, rather than presenting every item simply as excluded. Useful context may support narrative without entering a score. An incomplete collection cannot support a confident negative verdict about the course.
@@ -30,7 +35,7 @@ Naming, positioning, promise, differentiators, audience segments, module changes
 ## Prohibited behavior
 
 - No invented competitor, price, job count, trend, quote, source, or financial result.
+- No listing of sector radar insurers/employers as direct educational competitors.
 - No approval language that implies a human decision.
 - No claims of guaranteed enrollment, revenue, employability, or compliance.
 - No hiding low coverage behind confident prose.
-

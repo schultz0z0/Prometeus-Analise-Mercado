@@ -23,6 +23,7 @@ from prometeus.application.decision_service import DecisionService
 from prometeus.application.dossier_verifier import DossierVerifier
 from prometeus.application.evidence_audit import summarize_evidence
 from prometeus.application.evidence_features import EvidenceFeatureExtractor
+from prometeus.application.ecosystem_presentation import build_ecosystem_presentation_blocks
 from prometeus.application.sanitization import EvidenceSanitizer
 from prometeus.domain.dossiers import (
     DossierFactItem,
@@ -162,6 +163,10 @@ class DossierSynthesisService:
             metrics: dict[str, Any] = {}
             if context_only:
                 metrics["evidence_role"] = "context_only"
+            if isinstance(qualification, dict):
+                for qk in ("actor_role", "matched_actor_id", "matched_actor_name", "linkedin_scope"):
+                    if isinstance(qualification.get(qk), str) and qualification[qk]:
+                        metrics[qk] = qualification[qk]
             for key in (
                 "price_brl",
                 "priceBrl",
@@ -331,7 +336,7 @@ class DossierSynthesisService:
         commercial = {
             key: value
             for key, value in provided.items()
-            if key not in {"curriculum", "curriculum_text", "_idempotency_key"}
+            if key not in {"curriculum", "curriculum_text", "_idempotency_key", "_institution_context"}
         }
         # Expose the deterministic total to both writer and verifier. Academic
         # duration never supplies the number of installments.
@@ -393,6 +398,29 @@ class DossierSynthesisService:
             "evidence": evidence_audit,
             "integrity_report": integrity_report.to_dict(),
             "declared_offer": commercial,
+            "sector_radar_actors": (
+                evidence_step.output_summary.get("ecosystem_summary", {}).get("sector_radar_actors")
+                if evidence_step and evidence_step.output_summary.get("ecosystem_summary")
+                else [
+                    str(s.get("name"))
+                    for s in (provided.get("_institution_context") or {}).get("sector_radar", [])
+                    if isinstance(s, dict) and s.get("name")
+                ]
+            ),
+            "global_social_actors": (
+                evidence_step.output_summary.get("ecosystem_summary", {}).get("global_social_actors")
+                if evidence_step and evidence_step.output_summary.get("ecosystem_summary")
+                else [
+                    str(s.get("name"))
+                    for s in (provided.get("_institution_context") or {}).get("sector_radar", [])
+                    if isinstance(s, dict)
+                    and s.get("name")
+                    and (s.get("social") or {}).get("linkedin_scope") == "global"
+                ]
+            ),
+            "sector_radar_baseline": (
+                evidence_step.output_summary.get("sector_radar_baseline") if evidence_step else None
+            ),
             "source_failures": [
                 {
                     "source": run.capability,
@@ -946,6 +974,7 @@ class DossierSynthesisService:
             "curriculum_modules": modules_data,
             "swot": swot,
             "tactical_roadmap": tactical_roadmap,
+            **build_ecosystem_presentation_blocks(proposal, facts, workload),
         }
 
     async def synthesize_and_verify(
