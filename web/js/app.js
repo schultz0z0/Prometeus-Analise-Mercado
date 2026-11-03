@@ -7,7 +7,7 @@ import { store } from './store.js?v=20261029c';
 import { renderPortfolioView, bindPortfolioEvents } from './views/portfolio-view.js?v=20261028e';
 import { renderIntakeView, bindIntakeEvents } from './views/intake-view.js?v=20261028e';
 import { renderLiveView, bindLiveEvents } from './views/live-view.js?v=20261029b';
-import { renderDossierView, bindDossierEvents } from './views/dossier-view.js?v=20261028e';
+import { renderDossierView, bindDossierEvents } from './views/dossier-view.js?v=20261103_visual';
 import { renderSettingsView, bindSettingsEvents } from './views/settings-view.js?v=20261029a';
 import { renderEvidenceDrawer, bindEvidenceDrawerEvents } from './components/evidence-drawer.js?v=20261028e';
 

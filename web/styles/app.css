@@ -698,3 +698,554 @@
 .historical-course-row:hover {
   background-color: rgba(255, 255, 255, 0.02);
 }
+
+
+/* =============================================================================
+ * 8. Dossiê Visual Executivo (Dashboard Moderno)
+ * ============================================================================= */
+
+/* Sub-navbar de navegação rápida */
+.dossier-subnav {
+  position: sticky;
+  top: 58px;
+  z-index: calc(var(--prometeus-z-sticky) - 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  margin-bottom: 24px;
+  background: rgba(11, 19, 38, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--prometeus-border-subtle);
+  border-radius: var(--prometeus-radius-lg);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.dossier-subnav::-webkit-scrollbar { display: none; }
+.dossier-subnav a {
+  white-space: nowrap;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--prometeus-text-secondary);
+  border-radius: var(--prometeus-radius-full);
+  text-decoration: none;
+  transition: all var(--prometeus-transition-fast);
+}
+.dossier-subnav a:hover, .dossier-subnav a.active {
+  color: #ffffff;
+  background: rgba(141, 181, 255, 0.12);
+  border: 1px solid rgba(141, 181, 255, 0.3);
+}
+
+/* Hero Executivo & Banner */
+.dossier-hero-card {
+  position: relative;
+  overflow: hidden;
+  padding: 32px 36px;
+  background: linear-gradient(135deg, rgba(20, 31, 56, 0.9) 0%, rgba(11, 19, 38, 0.95) 100%);
+  border: 1px solid var(--prometeus-border-card);
+  border-radius: var(--prometeus-radius-lg);
+  box-shadow: var(--prometeus-shadow-card);
+  margin-bottom: 28px;
+}
+.dossier-hero-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(6, 82, 197, 0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+.dossier-hero-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+.dossier-hero-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.dossier-hero-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--prometeus-radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--prometeus-text-secondary);
+}
+.dossier-verdict-quote {
+  margin-top: 20px;
+  padding: 16px 20px;
+  background: rgba(6, 82, 197, 0.08);
+  border-left: 4px solid var(--prometeus-accent-ice);
+  border-radius: 0 var(--prometeus-radius-md) var(--prometeus-radius-md) 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #e2e8f0;
+}
+
+/* KPI Dashboard Grid */
+.dossier-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.dossier-kpi-card {
+  padding: 20px 24px;
+  background: var(--prometeus-surface-card);
+  border: 1px solid var(--prometeus-border-subtle);
+  border-radius: var(--prometeus-radius-md);
+  box-shadow: var(--prometeus-shadow-card);
+  transition: transform var(--prometeus-transition-fast), border-color var(--prometeus-transition-fast);
+}
+.dossier-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(141, 181, 255, 0.35);
+}
+.dossier-kpi-label {
+  font-size: 13px;
+  color: var(--prometeus-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.dossier-kpi-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.dossier-kpi-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1;
+}
+.dossier-kpi-unit {
+  font-size: 14px;
+  color: var(--prometeus-text-secondary);
+}
+.dossier-kpi-trend {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: var(--prometeus-radius-full);
+}
+.dossier-kpi-trend.positive {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--prometeus-status-approved);
+}
+.dossier-kpi-trend.neutral {
+  background: rgba(141, 181, 255, 0.15);
+  color: var(--prometeus-accent-ice);
+}
+.dossier-kpi-trend.warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--prometeus-status-caution);
+}
+
+/* Personas Dashboard */
+.personas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 20px;
+  margin-top: 16px;
+}
+.persona-card {
+  padding: 24px;
+  background: var(--prometeus-surface-card);
+  border: 1px solid var(--prometeus-border-subtle);
+  border-radius: var(--prometeus-radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all var(--prometeus-transition-fast);
+}
+.persona-card:hover {
+  border-color: rgba(141, 181, 255, 0.3);
+}
+.persona-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 14px;
+}
+.persona-avatar-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--prometeus-brand-navy-light), var(--prometeus-brand-primary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  border: 2px solid var(--prometeus-accent-ice);
+}
+.persona-title-group h3 {
+  margin: 0;
+  font-size: 17px;
+  color: #ffffff;
+}
+.persona-role {
+  font-size: 13px;
+  color: var(--prometeus-accent-ice);
+  margin-top: 2px;
+}
+.persona-tag-pill {
+  margin-left: auto;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--prometeus-radius-full);
+  background: rgba(141, 181, 255, 0.15);
+  color: var(--prometeus-accent-ice);
+  border: 1px solid rgba(141, 181, 255, 0.3);
+}
+.persona-attribute {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.persona-attr-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.persona-attr-label.pain { color: #f87171; }
+.persona-attr-label.gain { color: var(--prometeus-status-approved); }
+.persona-attr-label.pricing { color: var(--prometeus-accent-ice); }
+.persona-attr-label.channels { color: #cbd5e1; }
+.persona-attr-desc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+/* Economics & Cenários */
+.economics-summary-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--prometeus-border-subtle);
+  border-radius: var(--prometeus-radius-md);
+  margin-bottom: 20px;
+  align-items: center;
+}
+.eco-strip-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--prometeus-text-secondary);
+}
+.eco-strip-item strong {
+  color: #ffffff;
+}
+.eco-strip-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--prometeus-border-subtle);
+}
+.scenarios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+.scenario-card {
+  padding: 22px;
+  background: var(--prometeus-surface-card);
+  border: 1px solid var(--prometeus-border-subtle);
+  border-radius: var(--prometeus-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: all var(--prometeus-transition-fast);
+}
+.scenario-card.highlight {
+  border-color: rgba(52, 211, 153, 0.4);
+  background: linear-gradient(180deg, rgba(20, 38, 48, 0.8) 0%, var(--prometeus-surface-card) 100%);
+}
+.scenario-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 10px;
+}
+.scenario-card-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #ffffff;
+}
+.scenario-occupancy {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--prometeus-radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--prometeus-text-secondary);
+}
+.scenario-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+.scenario-stat-row span {
+  color: var(--prometeus-text-secondary);
+}
+.scenario-stat-row strong {
+  color: #ffffff;
+}
+.scenario-profit-box {
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--prometeus-radius-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+.scenario-profit-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--prometeus-status-approved);
+}
+.scenario-margin-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--prometeus-accent-ice);
+}
+
+/* Módulos Curriculares Modernos */
+.modules-grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.module-item-card {
+  padding: 20px;
+  background: var(--prometeus-surface-card);
+  border: 1px solid var(--prometeus-border-subtle);
+  border-radius: var(--prometeus-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all var(--prometeus-transition-fast);
+}
+.module-item-card:hover {
+  border-color: rgba(141, 181, 255, 0.3);
+  transform: translateY(-2px);
+}
+.module-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.module-num-tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--prometeus-accent-ice);
+}
+.module-hours-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--prometeus-radius-full);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--prometeus-text-secondary);
+}
+.module-item-card h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #ffffff;
+}
+.module-focus-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+.module-practical-deliverable {
+  margin-top: auto;
+  padding: 8px 12px;
+  background: rgba(6, 82, 197, 0.1);
+  border-left: 3px solid var(--prometeus-accent-ice);
+  border-radius: 0 var(--prometeus-radius-sm) var(--prometeus-radius-sm) 0;
+  font-size: 12px;
+  color: #e2e8f0;
+}
+.module-practical-deliverable strong {
+  color: var(--prometeus-accent-ice);
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+/* SWOT 2x2 Matrix & TOWS */
+.swot-matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+@media (max-width: 768px) {
+  .swot-matrix-grid { grid-template-columns: 1fr; }
+}
+.swot-box {
+  padding: 20px;
+  background: var(--prometeus-surface-card);
+  border-radius: var(--prometeus-radius-md);
+  border: 1px solid var(--prometeus-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.swot-box.strengths { border-top: 3px solid var(--prometeus-status-approved); }
+.swot-box.opportunities { border-top: 3px solid #38bdf8; }
+.swot-box.weaknesses { border-top: 3px solid #fbbf24; }
+.swot-box.threats { border-top: 3px solid #f87171; }
+.swot-box-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.swot-box-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+}
+.swot-items-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+/* TOWS Strategic Plays */
+.tows-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+.tows-card {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--prometeus-border-subtle);
+  border-radius: var(--prometeus-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tows-type-tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--prometeus-accent-ice);
+}
+.tows-desc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e2e8f0;
+}
+
+/* Tactical Roadmap Timeline */
+.roadmap-timeline-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.roadmap-phase-card {
+  padding: 20px;
+  background: var(--prometeus-surface-card);
+  border: 1px solid var(--prometeus-border-subtle);
+  border-radius: var(--prometeus-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+}
+.roadmap-phase-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: var(--prometeus-accent-ice);
+  opacity: 0.5;
+}
+.roadmap-window-pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--prometeus-accent-ice);
+  margin-bottom: 4px;
+}
+.roadmap-phase-card h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #ffffff;
+}
+.roadmap-actions-list {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+.roadmap-footer {
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.roadmap-kpi-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--prometeus-status-approved);
+}
+.roadmap-owner-text {
+  font-size: 11px;
+  color: var(--prometeus-text-secondary);
+}
+

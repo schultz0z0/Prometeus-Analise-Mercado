@@ -415,6 +415,17 @@ async def test_synthesize_and_verify_e2e_flow(db_session: AsyncSession) -> None:
     assert "MBA em Inteligência de Dados" in persisted.executive_summary
     assert len(persisted.sections) == 3
     assert persisted.presentation["schema_version"] == dossier_output.schema_version
+    # Validações dos blocos visuais e executivos de ponta a ponta
+    assert "kpis" in persisted.presentation
+    assert len(persisted.presentation["kpis"]) == 4
+    assert "personas" in persisted.presentation
+    assert len(persisted.presentation["personas"]) == 2
+    assert "economics" in persisted.presentation
+    assert len(persisted.presentation["economics"]["scenarios"]) == 3
+    assert "curriculum_modules" in persisted.presentation
+    assert "swot" in persisted.presentation
+    assert "tactical_roadmap" in persisted.presentation
+    assert len(persisted.presentation["tactical_roadmap"]) == 4
 
 
 async def test_facts_exclude_rejected_evidence_and_keep_observed_fields(db_session):
