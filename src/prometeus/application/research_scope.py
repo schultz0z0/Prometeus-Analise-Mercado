@@ -254,8 +254,19 @@ def _match_actor_list(
 ) -> dict[str, Any] | None:
     if not isinstance(entries, list):
         return None
-    host = (urlsplit(source_url).hostname or "").lower().removeprefix("www.")
+    parsed_url = urlsplit(source_url)
+    host = (parsed_url.hostname or "").lower().removeprefix("www.")
+    path_parts = [part.lower() for part in parsed_url.path.strip("/").split("/") if part]
     observed_names, observed_handles = _extract_observed_identities(payload)
+    if (host == "instagram.com" or host.endswith(".instagram.com")) and path_parts:
+        if path_parts[0] not in {"p", "reel", "reels", "tv", "explore", "stories"}:
+            observed_handles.append(path_parts[0])
+    if (
+        (host == "linkedin.com" or host.endswith(".linkedin.com"))
+        and len(path_parts) >= 2
+        and path_parts[0] in {"company", "school"}
+    ):
+        observed_names.append(normalized_text(path_parts[1].replace("-", " ")))
 
     for entry in entries:
         if not isinstance(entry, dict):
@@ -270,6 +281,11 @@ def _match_actor_list(
             return entry
 
         candidate_names = [entry.get("name"), social.get("linkedin_company")]
+        li_url = str(social.get("linkedin_url") or "").strip()
+        if li_url:
+            li_parts = [p for p in urlsplit(li_url).path.strip("/").split("/") if p]
+            if len(li_parts) >= 2 and li_parts[0].lower() in {"company", "school"}:
+                candidate_names.append(li_parts[1].replace("-", " "))
         aliases = entry.get("aliases", [])
         if isinstance(aliases, list):
             candidate_names.extend(aliases)

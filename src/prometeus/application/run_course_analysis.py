@@ -38,6 +38,7 @@ from prometeus.application.qualify_market_evidence import EvidenceQualificationS
 from prometeus.application.research_sufficiency import research_gaps
 from prometeus.application.runtime_preflight import validate_runtime_preflight
 from prometeus.application.scoring_service import ScoringService
+from prometeus.application.sector_radar import SectorRadarService, serialize_radar_snapshot
 from prometeus.application.skill_registry import SkillRegistry
 from prometeus.application.synthesize_dossier import (
     DossierSynthesisService,
@@ -741,6 +742,16 @@ class RunCourseAnalysis:
                         merged.features["pricing_confidence"] = VerifiedFeature(
                             "pricing_confidence", confidence, ids, "pricing_source_completeness"
                         )
+                radar_baseline: dict[str, Any] | None = None
+                if ecosystem.sector_radar:
+                    try:
+                        radar_snap = await SectorRadarService(self.session).get_latest_snapshot(
+                            analysis.tenant_id, include_expired=False
+                        )
+                        radar_baseline = serialize_radar_snapshot(radar_snap)
+                    except SQLAlchemyError:
+                        radar_baseline = None
+
                 return {
                     "features": self._feature_dump(merged),
                     "qualification": qualification,
@@ -748,6 +759,7 @@ class RunCourseAnalysis:
                     "repair_status": repair_status,
                     "pricing_audit": pricing_audit,
                     "initial_collection_diagnostics": observations,
+                    "sector_radar_baseline": radar_baseline,
                     "ecosystem_summary": {
                         "monitored_competitors_count": len(ecosystem.competitors),
                         "monitored_insurers_count": len(ecosystem.sector_radar),

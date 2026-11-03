@@ -668,3 +668,31 @@ class ExecutionEnvelopeModel(Base):
         Index("ix_execution_envelopes_cache", "cache_key"),
     )
 
+
+
+class SectorRadarSnapshotModel(Base):
+    """Snapshot persistente do Radar Setorial Permanente por tenant (ex.: seguradoras ENS)."""
+
+    __tablename__ = "sector_radar_snapshots"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="READY")
+    collected_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    monitored_actors_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    covered_actors: Mapped[list[str]] = mapped_column(JsonType, nullable=False, default=list)
+    signals: Mapped[list[dict[str, Any]]] = mapped_column(JsonType, nullable=False, default=list)
+    trending_themes: Mapped[list[str]] = mapped_column(JsonType, nullable=False, default=list)
+    spent_usd: Mapped[float] = mapped_column(nullable=False, default=0.0)
+    config_hash: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    error_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+
+    __table_args__ = (
+        Index("ix_sector_radar_tenant_collected", "tenant_id", "collected_at"),
+    )

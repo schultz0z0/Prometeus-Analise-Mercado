@@ -205,3 +205,104 @@ def create_analysis_cli(
     except Exception as exc:
         console.print(f"[bold red]Erro ao processar criação de análise:[/bold red] {exc}")
         raise typer.Exit(code=1) from exc
+
+
+
+def _resolve_tenant_config_path(tenant: str) -> Path:
+    direct = Path(tenant)
+    if direct.is_file():
+        return direct
+    for candidate in (
+        Path(f"config/tenants/{tenant}.yaml"),
+        Path(f"config/tenants/{tenant}.example.yaml"),
+    ):
+        if candidate.is_file():
+            return candidate
+    raise ConfigurationError(f"Arquivo de configuração do tenant '{tenant}' não encontrado.")
+
+
+@app.command("radar-refresh")
+def radar_refresh_cli(
+    tenant: Annotated[
+        str,
+        typer.Option(
+            "--tenant",
+            "-t",
+            help="Identificador do tenant (ex.: ens) ou caminho do arquivo YAML",
+        ),
+    ] = "ens",
+    force: Annotated[
+        bool,
+        typer.Option(
+            "--force",
+            help="Ignora o cache TTL vigente e força nova varredura nas fontes Apify",
+        ),
+    ] = False,
+    max_budget_usd: Annotated[
+        float,
+        typer.Option(
+            "--max-budget-usd",
+            help="Orçamento máximo em USD para a atualização do Radar Setorial",
+        ),
+    ] = 1.50,
+) -> None:
+    """Atualiza o snapshot persistente do Radar Setorial Permanente de um tenant."""
+    from prometeus.application.sector_radar import SectorRadarService
+    from prometeus.infrastructure.apify.client import ApifyClient
+    from prometeus.infrastructure.apify.registry import ApifyActorRegistry
+
+    try:
+        cfg_path = _resolve_tenant_config_path(tenant)
+        tenant_cfg = load_tenant_config(cfg_path)
+    except ConfigurationError as exc:
+        console.print(f"[bold red]Erro de configuração:[/bold red] {exc}")
+        raise typer.Exit(code=1) from exc
+
+    settings = AppSettings()
+    if not settings.APIFY_TOKEN.strip() and force:
+        console.print("[bold red]APIFY_TOKEN ausente para atualização forçada do Radar Setorial.[/bold red]")
+        raise typer.Exit(code=1)
+
+    async def _run() -> None:
+        registry = ApifyActorRegistry.from_settings(settings)
+        executor = (
+            ApifyClient(
+                api_token=settings.APIFY_TOKEN,
+                registry=registry,
+                base_url=settings.APIFY_BASE_URL,
+                timeout_seconds=float(settings.GEN_LLM_TIMEOUT_SECONDS),
+            )
+            if settings.APIFY_TOKEN.strip()
+            else None
+        )
+        async with get_session() as session:
+            service = SectorRadarService(
+                session=session,
+                executor=executor,
+                allowed_capabilities=list(registry.capabilities),
+            )
+            snapshot = await service.refresh_radar(
+                tenant_id=tenant_cfg.institution.id,
+                tenant_config=tenant_cfg,
+                max_budget_usd=max_budget_usd,
+                force=force,
+            )
+
+            table = Table(title=f"Radar Setorial Permanente — {tenant_cfg.institution.display_name}")
+            table.add_column("Propriedade", style="cyan", no_wrap=True)
+            table.add_column("Valor", style="magenta")
+            table.add_row("Snapshot ID", snapshot.id)
+            table.add_row("Status", snapshot.status)
+            table.add_row("Atores Monitorados", str(snapshot.monitored_actors_count))
+            table.add_row("Atores com Sinais", ", ".join(snapshot.covered_actors) or "—")
+            table.add_row("Sinais Higienizados", str(len(snapshot.signals or [])))
+            table.add_row("Temas em Alta", ", ".join(snapshot.trending_themes) or "—")
+            table.add_row("Custo Apify (USD)", f"${snapshot.spent_usd:.4f}")
+            table.add_row("Expira em", snapshot.expires_at.isoformat())
+            console.print(table)
+
+    try:
+        asyncio.run(_run())
+    except Exception as exc:
+        console.print(f"[bold red]Falha ao atualizar Radar Setorial:[/bold red] {exc}")
+        raise typer.Exit(code=1) from exc
