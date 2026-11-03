@@ -48,7 +48,10 @@ from prometeus.domain.configuration import (
     AppSettings,
     ConfigurationError,
     ScoringProfileConfig,
+    TenantConfig,
+    TenantEcosystemConfig,
     load_scoring_profile,
+    load_tenant_config,
 )
 from prometeus.domain.dossiers import DossierStatus
 from prometeus.domain.ports.decision_model import DecisionModelPort
@@ -169,6 +172,69 @@ class RunCourseAnalysis:
         if isinstance(value, list):
             return [RunCourseAnalysis._normalize(item) for item in value]
         return value
+
+    def _resolve_ecosystem_and_context(
+        self,
+        analysis: Analysis,
+        snapshot: ConfigSnapshotModel | None,
+    ) -> tuple[TenantEcosystemConfig, dict[str, Any]]:
+        raw_ctx = (
+            dict(analysis.proposal_data.get("_institution_context"))
+            if isinstance((analysis.proposal_data or {}).get("_institution_context"), dict)
+            else {}
+        )
+        if snapshot is not None and isinstance(snapshot.tenant_config_snapshot, dict):
+            try:
+                tenant_cfg = TenantConfig.model_validate(snapshot.tenant_config_snapshot)
+                ctx = {
+                    "id": tenant_cfg.institution.id,
+                    "name": tenant_cfg.institution.display_name,
+                    "domains": list(tenant_cfg.institution.domains),
+                    "competitors": [
+                        c.model_dump(mode="json") for c in tenant_cfg.ecosystem.competitors
+                    ],
+                    "sector_radar": [
+                        s.model_dump(mode="json") for s in tenant_cfg.ecosystem.sector_radar
+                    ],
+                    "radar_ttl_hours": tenant_cfg.ecosystem.radar_ttl_hours,
+                }
+                return tenant_cfg.ecosystem, ctx
+            except Exception:
+                pass
+
+        if raw_ctx and ("competitors" in raw_ctx or "sector_radar" in raw_ctx):
+            try:
+                eco = TenantEcosystemConfig.model_validate(
+                    {
+                        "competitors": raw_ctx.get("competitors", []),
+                        "sector_radar": raw_ctx.get("sector_radar", []),
+                        "radar_ttl_hours": raw_ctx.get("radar_ttl_hours", 168),
+                    }
+                )
+                return eco, raw_ctx
+            except Exception:
+                pass
+
+        try:
+            tenant_cfg = load_tenant_config(Path(self.settings.INSTITUTION_CONFIG_PATH))
+            if tenant_cfg.institution.id == analysis.tenant_id:
+                ctx = {
+                    "id": tenant_cfg.institution.id,
+                    "name": tenant_cfg.institution.display_name,
+                    "domains": list(tenant_cfg.institution.domains),
+                    "competitors": [
+                        c.model_dump(mode="json") for c in tenant_cfg.ecosystem.competitors
+                    ],
+                    "sector_radar": [
+                        s.model_dump(mode="json") for s in tenant_cfg.ecosystem.sector_radar
+                    ],
+                    "radar_ttl_hours": tenant_cfg.ecosystem.radar_ttl_hours,
+                }
+                return tenant_cfg.ecosystem, ctx
+        except Exception:
+            pass
+
+        return TenantEcosystemConfig(), raw_ctx
 
     async def _checkpoint(
         self,
@@ -385,6 +451,10 @@ class RunCourseAnalysis:
             if snapshot
             else load_scoring_profile(Path(self.settings.SCORING_PROFILE_PATH))
         )
+        ecosystem, institution_ctx = self._resolve_ecosystem_and_context(analysis, snapshot)
+        sector_radar_domains = [
+            domain for actor in ecosystem.sector_radar for domain in actor.domains
+        ]
         v2 = profile.historical_method == "ipd"
         if analysis.status in {AnalysisStatus.BLOCKED, AnalysisStatus.WAITING_FOR_INPUT}:
             analysis.resume(
@@ -472,7 +542,8 @@ class RunCourseAnalysis:
 
             async def plan_research() -> dict[str, Any]:
                 plan = await CourseResearchPlanner(self.llm, self.skills, self.settings).plan(
-                    understanding
+                    understanding,
+                    ecosystem=ecosystem,
                 )
                 return plan.model_dump(mode="json")
 
@@ -509,7 +580,12 @@ class RunCourseAnalysis:
 
             async def sanitize_evidence() -> dict[str, Any]:
                 qualifier = EvidenceQualificationService(self.session, self.decisions)
-                qualification = await qualifier.qualify(analysis, understanding, correlation_id)
+                qualification = await qualifier.qualify(
+                    analysis,
+                    understanding,
+                    correlation_id,
+                    institution_context=institution_ctx or None,
+                )
                 diagnostic_runs = list(
                     (
                         await self.session.execute(
@@ -582,6 +658,7 @@ class RunCourseAnalysis:
                             ],
                             budget_limit_usd=remaining,
                             observations=observations,
+                            ecosystem=ecosystem,
                         )
                         repair = repair.model_copy(update={"id": repair_id})
                     if repair.tool_calls:
@@ -591,7 +668,10 @@ class RunCourseAnalysis:
                             understanding_snapshot=understanding.model_dump(mode="json"),
                         )
                         qualification = await qualifier.qualify(
-                            analysis, understanding, correlation_id
+                            analysis,
+                            understanding,
+                            correlation_id,
+                            institution_context=institution_ctx or None,
                         )
                         market = await self._market_features(analysis.id, understanding)
                         repair_status = (
@@ -621,6 +701,7 @@ class RunCourseAnalysis:
                         level=understanding.level,
                         institution_name=understanding.institution_name,
                         institution_domains=understanding.institution_domains,
+                        sector_radar_domains=sector_radar_domains,
                         internal_prices=history_payload.get("audit", {}).get("observed_prices", []),
                         offers=[
                             {
@@ -667,21 +748,22 @@ class RunCourseAnalysis:
                     "repair_status": repair_status,
                     "pricing_audit": pricing_audit,
                     "initial_collection_diagnostics": observations,
+                    "ecosystem_summary": {
+                        "monitored_competitors_count": len(ecosystem.competitors),
+                        "monitored_insurers_count": len(ecosystem.sector_radar),
+                        "sector_radar_actors": [s.name for s in ecosystem.sector_radar],
+                        "global_social_actors": [
+                            s.name
+                            for s in ecosystem.sector_radar
+                            if s.social.linkedin_scope == "global"
+                        ],
+                    },
                 }
 
             feature_payload = await self._checkpoint(analysis, 9, sanitize_evidence)
             verified_features = self._feature_load(dict(feature_payload.get("features", {})))
 
             async def semantic_judgments() -> dict[str, Any]:
-                evidence_ids = sorted(
-                    (
-                        await self.session.execute(
-                            select(MarketEvidenceModel.id).where(
-                                MarketEvidenceModel.analysis_id == analysis.id
-                            )
-                        )
-                    ).scalars()
-                )
                 evidence_rows = list(
                     (
                         await self.session.execute(
@@ -691,17 +773,29 @@ class RunCourseAnalysis:
                         )
                     ).scalars()
                 )
-                evidence_rows = [
-                    row
-                    for row in evidence_rows
-                    if (row.sanitized_data or {}).get("_qualification", {}).get("accepted") is True
-                ]
                 if v2:
                     evidence_rows = [
                         row
                         for row in evidence_rows
-                        if "curriculum"
+                        if (
+                            (row.sanitized_data or {}).get("_qualification", {}).get("accepted")
+                            is True
+                            or (
+                                (row.sanitized_data or {})
+                                .get("_qualification", {})
+                                .get("context_only")
+                                is True
+                            )
+                        )
+                        and "curriculum"
                         in (row.sanitized_data or {}).get("_qualification", {}).get("use_for", [])
+                    ]
+                else:
+                    evidence_rows = [
+                        row
+                        for row in evidence_rows
+                        if (row.sanitized_data or {}).get("_qualification", {}).get("accepted")
+                        is True
                     ]
                 evidence_ids = [row.id for row in evidence_rows]
                 if not evidence_rows:

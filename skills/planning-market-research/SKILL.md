@@ -5,7 +5,7 @@ description: Use when a structured course understanding must become an auditable
 
 # Planning Market Research
 
-**Version:** 3.1.0
+**Version:** 3.2.0
 
 Translate the course understanding into research questions and bounded tool calls. The plan guides collection; it does not contain answers.
 
@@ -35,9 +35,13 @@ Every question in the plan must specify its decision matrix fields:
 - `sufficiency_criteria`: Critério objetivo para considerar a pergunta respondida.
 - `fallback_or_stop_rule`: Ação de contingência ou encerramento caso a evidência seja insuficiente.
 
-## Brand Seeds Policy
+## Brand Seeds & Institutional Ecosystem Policy
 
-Marcas ou instituições indicadas pelo usuário (em `supplied_materials` ou no briefing) são referências de comparação e sementes de descoberta inicial, e NUNCA devem ser usadas como limite exclusivo da pesquisa. O plano de pesquisa DEVE conter consultas de tema aberto (para descobrir concorrentes não mapeados) além de consultas direcionadas às sementes.
+Marcas ou instituições indicadas pelo usuário (em `supplied_materials` ou no briefing) ou fornecidas em `<institutional_ecosystem>` são sementes auditáveis e NUNCA devem ser usadas como limite exclusivo da pesquisa:
+
+1. **Concorrentes Educacionais Fixos (`educational_competitors`)**: instituições de ensino que disputam o aluno na mesma categoria ou em formações adjacentes. Compare oferta ativa, modalidade, carga horária, ementa e preço, sempre mantendo pelo menos uma consulta de tema aberto sem operador `site:` para descobrir ofertas não mapeadas.
+2. **Radar Setorial de Empregadores/Seguradoras (`sector_radar_insurers_context_only`)**: empresas empregadoras e formadoras de demanda do setor (ex.: seguradoras para a ENS). Use esses atores exclusivamente nas trilhas `workforce_needs` e `economic_context` (tendências de produto, tecnologia, regulação e dores operacionais de corretores/especialistas) — NUNCA os conte como ofertas concorrentes de cursos nem compare seus preços de produtos securitários com mensalidades educacionais.
+3. **Agrupamento Seguro no Google Search**: agrupe no máximo 5 domínios `site:` por consulta e limite termos de tópico a expressões curtas para jamais ultrapassar o limite de 32 termos da busca Google.
 
 ## Coverage
 
