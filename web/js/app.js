@@ -3,9 +3,9 @@
  * Orquestrador principal da aplicação SPA, roteamento e renderização reativa.
  */
 
-import { store } from './store.js?v=20261029c';
+import { store } from './store.js?v=20261103_eco';
 import { renderPortfolioView, bindPortfolioEvents } from './views/portfolio-view.js?v=20261028e';
-import { renderIntakeView, bindIntakeEvents } from './views/intake-view.js?v=20261028e';
+import { renderIntakeView, bindIntakeEvents } from './views/intake-view.js?v=20261103_eco';
 import { renderLiveView, bindLiveEvents } from './views/live-view.js?v=20261029b';
 import { renderDossierView, bindDossierEvents } from './views/dossier-view.js?v=20261103_visual';
 import { renderSettingsView, bindSettingsEvents } from './views/settings-view.js?v=20261029a';
@@ -28,6 +28,7 @@ class PrometeusApp {
 
     // Sincroniza configurações persistidas no backend apenas uma vez
     store.syncBackendSettings();
+    store.loadTenantEcosystem();
     store.loadHistoricalCourses();
     const analysisId = new URL(window.location.href).searchParams.get('analysis');
     store.loadCompletedAnalyses().then(() => {

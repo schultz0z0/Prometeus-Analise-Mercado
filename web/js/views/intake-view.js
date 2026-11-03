@@ -2,9 +2,100 @@
  * VIEW: Validar Novo Curso (Intake Rápido e Descomplicado)
  */
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+export function renderEcosystemFieldBlock(eco, existingExtraSeed = '') {
+  const competitors = Array.isArray(eco?.competitors) ? eco.competitors : [];
+  const sectorRadar = Array.isArray(eco?.sector_radar) ? eco.sector_radar : [];
+
+  if (!competitors.length && !sectorRadar.length) {
+    return `
+      <label class="form-label" for="course-competitors">Concorrentes Conhecidos (Opcional)</label>
+      <input type="text" id="course-competitors" class="form-input"
+             value="${escapeHtml(existingExtraSeed)}"
+             placeholder="Ex: FGV, PUC, Insper, cursos online da Alura/Udemy">
+      <span class="form-hint">O Prometeus também varre automaticamente novas ofertas via Meta Ads e Google</span>
+    `;
+  }
+
+  const radarStatus = eco?.radar_status || {};
+  let radarBadge = 'Coleta sob demanda ativa';
+  if (radarStatus.has_snapshot && radarStatus.is_fresh) {
+    radarBadge = `Snapshot ativo (${Number(radarStatus.signals_count || 0)} sinais)`;
+  } else if (radarStatus.has_snapshot) {
+    radarBadge = `Snapshot expirado — renovação automática`;
+  }
+
+  const allowExtra = eco?.allow_extra_intake_competitors !== false;
+
+  return `
+    <div class="intake-ecosystem-panel">
+      <div class="intake-ecosystem-header">
+        <div class="intake-ecosystem-title">
+          <span>🎯 Ecossistema Monitorado Automaticamente</span>
+        </div>
+        <span style="font-size:11px; padding:3px 10px; border-radius:999px; background:rgba(16,185,129,0.12); color:#34d399; border:1px solid rgba(16,185,129,0.28); font-weight:600;">
+          Radar Setorial: ${escapeHtml(radarBadge)}
+        </span>
+      </div>
+      <p style="margin:0 0 12px 0; font-size:12.5px; color:var(--prometeus-text-secondary); line-height:1.5;">
+        Você não precisa listar concorrentes manualmente: o Prometeus varre automaticamente os portais dos concorrentes educacionais abaixo (oferta, ementa, carga horária e preço) e isola as seguradoras do Radar Setorial como termômetro de demanda e dores de corretores.
+      </p>
+
+      ${competitors.length ? `
+        <div style="margin-bottom:10px;">
+          <div style="font-size:11.5px; font-weight:600; color:#e2e8f0; margin-bottom:6px;">
+            Concorrentes Educacionais Fixos (${competitors.length})
+          </div>
+          <div class="intake-ecosystem-chips">
+            ${competitors.map(item => `
+              <span class="intake-eco-chip" title="${escapeHtml(item.website_url || '')}">${escapeHtml(item.name)}</span>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      ${sectorRadar.length ? `
+        <div>
+          <div style="font-size:11.5px; font-weight:600; color:#93c5fd; margin-bottom:6px;">
+            Radar Setorial Permanente — Seguradoras &amp; Mercado Empregador (${sectorRadar.length})
+          </div>
+          <div class="intake-ecosystem-chips">
+            ${sectorRadar.map(item => `
+              <span class="intake-eco-chip radar" title="${escapeHtml(item.website_url || '')}">${escapeHtml(item.name)}</span>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      ${allowExtra ? `
+        <details class="intake-extra-seed-details"${existingExtraSeed ? ' open' : ''}>
+          <summary>+ Adicionar concorrente extra pontual para esta análise (opcional)</summary>
+          <div style="margin-top:10px;">
+            <input type="text" id="course-competitors" class="form-input"
+                   value="${escapeHtml(existingExtraSeed)}"
+                   placeholder="Ex: Curso nichado específico fora dos concorrentes fixos monitorados">
+            <span class="form-hint">Use apenas para incluir uma oferta pontual além do catálogo institucional fixo e da descoberta aberta em Google e Meta Ads.</span>
+          </div>
+        </details>
+      ` : `
+        <input type="hidden" id="course-competitors" value="">
+      `}
+    </div>
+  `;
+}
+
 export function renderIntakeView(store) {
   const state = store.getState();
   const currentTenant = state.tenants.find(t => t.id === state.currentTenantId) || state.tenants[0];
+  const eco = state.tenantEcosystems?.[state.currentTenantId] || null;
 
   return `
     <div class="view-header">
@@ -138,11 +229,8 @@ Módulo 6: Projeto Aplicado de Inteligência de Seguros (50h)</textarea>
                    placeholder="Ex: Gestores de seguros, TI">
           </div>
 
-          <div class="form-group col-12">
-            <label class="form-label" for="course-competitors">Concorrentes Conhecidos (Opcional)</label>
-            <input type="text" id="course-competitors" class="form-input" 
-                   placeholder="Ex: FGV, PUC, Insper, cursos online da Alura/Udemy">
-            <span class="form-hint">O Prometeus também varre automaticamente novas ofertas via Meta Ads e Google</span>
+          <div class="form-group col-12" id="intake-ecosystem-mount" data-eco-ready="${eco ? 'true' : 'false'}">
+            ${renderEcosystemFieldBlock(eco)}
           </div>
         </div>
       </div>
@@ -166,6 +254,21 @@ export function bindIntakeEvents(store, container) {
   if (cancelBtn) {
     cancelBtn.addEventListener('click', () => {
       store.setView('portfolio');
+    });
+  }
+
+  // Caso o usuário tenha aberto a tela antes do fetch inicial de /ecosystem terminar,
+  // atualiza apenas o painel #intake-ecosystem-mount sem tocar no restante do formulário.
+  const currentState = store.getState();
+  const activeTenantId = currentState.currentTenantId;
+  if (!currentState.tenantEcosystems?.[activeTenantId] && typeof store.loadTenantEcosystem === 'function') {
+    store.loadTenantEcosystem(activeTenantId).then((loaded) => {
+      if (!loaded) return;
+      const mount = container.querySelector('#intake-ecosystem-mount');
+      if (!mount) return;
+      const existingVal = container.querySelector('#course-competitors')?.value || '';
+      mount.innerHTML = renderEcosystemFieldBlock(loaded, existingVal);
+      mount.setAttribute('data-eco-ready', 'true');
     });
   }
 
@@ -306,7 +409,7 @@ export function bindIntakeEvents(store, container) {
         installments: container.querySelector('#course-installments').value,
         curriculum: container.querySelector('#curriculum-text').value,
         audience: container.querySelector('#course-audience').value,
-        competitors: container.querySelector('#course-competitors').value,
+        competitors: container.querySelector('#course-competitors')?.value || '',
         curriculum_file_name: attachedFileName
       };
 

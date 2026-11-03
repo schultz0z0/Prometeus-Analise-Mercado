@@ -30,7 +30,17 @@ O serviço deve falhar antes de aceitar tráfego quando:
 
 ## White-label
 
-`config/tenants/<institution>.yaml` define identidade, locale, modalidades, features, fontes, callbacks e referências para perfis. Não contém tokens.
+`config/tenants/<institution>.yaml` define identidade, locale, modalidades, features, fontes, callbacks, referências para perfis e o bloco opcional `ecosystem`. Não contém tokens.
+
+### Ecossistema institucional e Radar Setorial Permanente
+
+O bloco `ecosystem` em `config/tenants/<institution>.yaml` separa explicitamente dois papéis de mercado e é congelado no snapshot de cada análise (`proposal_data["_institution_context"]`):
+
+- `competitors`: instituições educacionais concorrentes (ex.: Conhecer Seguros, FGV, Ibmec, FIPECAFI, FIA, Insper, Estácio, ESA OAB-SP, FIAP e Alura na ENS), usadas para varredura comparativa de oferta, modalidade, carga horária, ementa e preço;
+- `sector_radar`: empresas empregadoras e formadoras de demanda do setor (ex.: as 10 seguradoras do Radar Setorial Permanente da ENS — Porto Seguro, Bradesco Seguros, Tokio Marine, Allianz, HDI, MAPFRE, Brasilseg/BB, Zurich, Itaú Seguros e Yelum), monitoradas para tendências de produto, sinistros e dores de corretores, **jamais** contabilizadas como concorrência educacional direta nem incluídas em `reference_mean_price_brl`;
+- `radar_ttl_hours` (padrão `168`) e `allow_extra_intake_competitors` (padrão `true`): controlam a validade do snapshot persistido na tabela `sector_radar_snapshots` (migração `0012_sector_radar_snapshots`) e a oferta de campo opcional extra no formulário de intake. Perfis sociais não confirmados permanecem `null` e perfis corporativos globais recebem `linkedin_scope: global`.
+
+A operação pode consultar o catálogo público via `GET /v1/tenants/{tenant_id}/ecosystem` e atualizar o snapshot sob demanda via `POST /v1/tenants/{tenant_id}/sector-radar/refresh` ou `prometeus radar-refresh --tenant ens`. Tenants sem a chave `ecosystem` (ex.: `infnet.example.yaml`) preservam comportamento padrão retrocompatível.
 
 ## `.env.example`
 

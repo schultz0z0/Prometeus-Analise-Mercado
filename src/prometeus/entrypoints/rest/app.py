@@ -9,6 +9,7 @@ import io
 import json
 import logging
 import os
+import re
 import time
 import uuid
 import xml.etree.ElementTree as ET
@@ -34,8 +35,14 @@ from prometeus.application.create_analysis import (
     CreateAnalysisUseCase,
 )
 from prometeus.application.runtime_preflight import validate_runtime_preflight
+from prometeus.application.sector_radar import SectorRadarService, serialize_radar_snapshot
 from prometeus.domain.analyses import Analysis, AnalysisStatus, DomainError
-from prometeus.domain.configuration import AppSettings, ConfigurationError
+from prometeus.domain.configuration import (
+    AppSettings,
+    ConfigurationError,
+    TenantConfig,
+    load_tenant_config,
+)
 from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
 from prometeus.infrastructure.db.models import (
     AnalysisModel,
@@ -1555,6 +1562,180 @@ async def chatgpt_oauth_status() -> dict[str, Any]:
         "email": credentials.email if credentials else None,
         "direct_usage_scope": bool(credentials and DIRECT_USAGE_SCOPE in credentials.scopes),
         "expires_at": credentials.expires_at if credentials else None,
+    }
+
+
+# =============================================================================
+_TENANT_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{1,62}$")
+
+
+def _load_tenant_config_by_id(tenant_id: str, settings: AppSettings) -> TenantConfig:
+    """Resolve a configuração pública do tenant sem expor caminhos fora de config/tenants."""
+    if not _TENANT_ID_PATTERN.fullmatch(tenant_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Tenant '{tenant_id}' não encontrado.",
+        )
+
+    configured_path = Path(settings.INSTITUTION_CONFIG_PATH)
+    if configured_path.is_file():
+        try:
+            configured_cfg = load_tenant_config(configured_path)
+            if configured_cfg.institution.id == tenant_id:
+                return configured_cfg
+        except ConfigurationError:
+            pass
+
+    candidates: list[Path] = [Path("config/tenants") / f"{tenant_id}.yaml"]
+    if settings.APP_ENV != "production":
+        candidates.append(Path("config/tenants") / f"{tenant_id}.example.yaml")
+
+    for candidate in candidates:
+        if candidate.is_file():
+            try:
+                cfg = load_tenant_config(candidate)
+                if cfg.institution.id == tenant_id:
+                    return cfg
+            except ConfigurationError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Configuração inválida para o tenant '{tenant_id}': {exc}",
+                ) from exc
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"Tenant '{tenant_id}' não encontrado.",
+    )
+
+
+class SectorRadarRefreshRequest(BaseModel):
+    force: bool = False
+    max_budget_usd: float = Field(default=1.50, gt=0.0, le=10.0)
+
+
+@app.get(
+    "/v1/tenants/{tenant_id}/ecosystem",
+    summary="Consultar concorrentes fixos e Radar Setorial Permanente do tenant",
+)
+async def get_tenant_ecosystem(
+    tenant_id: str,
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> dict[str, Any]:
+    settings = AppSettings()
+    cfg = _load_tenant_config_by_id(tenant_id, settings)
+    radar_service = SectorRadarService(session=session)
+    latest = await radar_service.get_latest_snapshot(cfg.institution.id, include_expired=True)
+    serialized_radar = serialize_radar_snapshot(latest)
+    if serialized_radar is None:
+        radar_status: dict[str, Any] = {
+            "has_snapshot": False,
+            "is_fresh": False,
+            "status": "EMPTY",
+            "collected_at": None,
+            "expires_at": None,
+            "signals_count": 0,
+            "covered_actors": [],
+            "trending_themes": [],
+        }
+    else:
+        radar_status = {
+            "has_snapshot": True,
+            "is_fresh": serialized_radar["is_fresh"],
+            "status": serialized_radar["status"],
+            "collected_at": serialized_radar["collected_at"],
+            "expires_at": serialized_radar["expires_at"],
+            "signals_count": serialized_radar["signals_count"],
+            "covered_actors": serialized_radar["covered_actors"],
+            "trending_themes": serialized_radar["trending_themes"],
+        }
+
+    return {
+        "tenant_id": cfg.institution.id,
+        "institution_name": cfg.institution.display_name,
+        "allow_extra_intake_competitors": cfg.ecosystem.allow_extra_intake_competitors,
+        "radar_ttl_hours": cfg.ecosystem.radar_ttl_hours,
+        "competitors": [c.model_dump(mode="json") for c in cfg.ecosystem.competitors],
+        "sector_radar": [s.model_dump(mode="json") for s in cfg.ecosystem.sector_radar],
+        "radar_status": radar_status,
+    }
+
+
+@app.post(
+    "/v1/tenants/{tenant_id}/sector-radar/refresh",
+    summary="Atualizar snapshot do Radar Setorial Permanente",
+)
+async def refresh_tenant_sector_radar(
+    tenant_id: str,
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+    payload: SectorRadarRefreshRequest | None = None,
+) -> dict[str, Any]:
+    from prometeus.infrastructure.apify.client import ApifyClient
+    from prometeus.infrastructure.apify.registry import ActorConfigurationError, ApifyActorRegistry
+
+    req = payload or SectorRadarRefreshRequest()
+    settings = AppSettings()
+    cfg = _load_tenant_config_by_id(tenant_id, settings)
+    if not cfg.ecosystem.sector_radar:
+        return {
+            "tenant_id": cfg.institution.id,
+            "snapshot_id": None,
+            "status": "NOT_CONFIGURED",
+            "collected_at": None,
+            "expires_at": None,
+            "signals_count": 0,
+            "covered_actors": [],
+            "trending_themes": [],
+            "spent_usd": 0.0,
+        }
+
+    executor = None
+    allowed_caps: list[str] | None = None
+    if settings.APIFY_TOKEN.strip():
+        try:
+            registry = ApifyActorRegistry.from_settings(settings)
+            allowed_caps = list(registry.capabilities)
+            if allowed_caps:
+                executor = ApifyClient(
+                    api_token=settings.APIFY_TOKEN,
+                    registry=registry,
+                    base_url=settings.APIFY_BASE_URL,
+                    timeout_seconds=float(settings.GEN_LLM_TIMEOUT_SECONDS),
+                )
+        except ActorConfigurationError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=str(exc),
+            ) from exc
+
+    service = SectorRadarService(
+        session=session,
+        executor=executor,
+        allowed_capabilities=allowed_caps,
+    )
+    try:
+        snapshot = await service.refresh_radar(
+            tenant_id=cfg.institution.id,
+            tenant_config=cfg,
+            max_budget_usd=req.max_budget_usd,
+            force=req.force,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        ) from exc
+
+    serialized = serialize_radar_snapshot(snapshot) or {}
+    return {
+        "tenant_id": cfg.institution.id,
+        "snapshot_id": serialized.get("id"),
+        "status": serialized.get("status", snapshot.status),
+        "collected_at": serialized.get("collected_at"),
+        "expires_at": serialized.get("expires_at"),
+        "signals_count": serialized.get("signals_count", 0),
+        "covered_actors": serialized.get("covered_actors", []),
+        "trending_themes": serialized.get("trending_themes", []),
+        "spent_usd": serialized.get("spent_usd", 0.0),
     }
 
 

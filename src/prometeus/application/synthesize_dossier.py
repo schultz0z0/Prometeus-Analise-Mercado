@@ -21,9 +21,9 @@ from prometeus.application.business_labels import (
 )
 from prometeus.application.decision_service import DecisionService
 from prometeus.application.dossier_verifier import DossierVerifier
+from prometeus.application.ecosystem_presentation import build_ecosystem_presentation_blocks
 from prometeus.application.evidence_audit import summarize_evidence
 from prometeus.application.evidence_features import EvidenceFeatureExtractor
-from prometeus.application.ecosystem_presentation import build_ecosystem_presentation_blocks
 from prometeus.application.sanitization import EvidenceSanitizer
 from prometeus.domain.dossiers import (
     DossierFactItem,

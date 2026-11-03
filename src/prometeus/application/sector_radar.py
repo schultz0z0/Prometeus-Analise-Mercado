@@ -10,10 +10,9 @@ from typing import Any
 from urllib.parse import urlsplit
 
 import httpx
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from pydantic import BaseModel, ConfigDict
 
 from prometeus.application.collect_market_evidence import ResearchToolExecutor
 from prometeus.application.research_scope import match_sector_radar_actor, normalized_text

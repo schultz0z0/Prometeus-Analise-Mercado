@@ -40,6 +40,7 @@ class PrometeusStore {
       settings: savedSettings,
       courses: savedCourses,
       historicalCourses: INITIAL_HISTORICAL_COURSES,
+      tenantEcosystems: {},
       portfolioTab: 'historical',
       activeCourseId: null,
       currentDossier: null,
@@ -73,6 +74,7 @@ class PrometeusStore {
   setTenant(tenantId) {
     if (this.state.tenants.some(tenant => tenant.id === tenantId)) {
       this.state.currentTenantId = tenantId;
+      this.loadTenantEcosystem(tenantId);
       this.notify();
     }
   }
@@ -90,6 +92,24 @@ class PrometeusStore {
   setPortfolioTab(tab) {
     this.state.portfolioTab = tab;
     this.notify();
+  }
+
+  async loadTenantEcosystem(tenantId = this.state.currentTenantId) {
+    if (!tenantId) return null;
+    try {
+      const response = await fetch(`/v1/tenants/${encodeURIComponent(tenantId)}/ecosystem`);
+      if (!response.ok) return null;
+      const data = await response.json();
+      this.state.tenantEcosystems = {
+        ...(this.state.tenantEcosystems || {}),
+        [tenantId]: data
+      };
+      this.notify();
+      return data;
+    } catch (error) {
+      console.warn('Ecossistema institucional indisponível.', error);
+      return null;
+    }
   }
 
   async loadHistoricalCourses() {
