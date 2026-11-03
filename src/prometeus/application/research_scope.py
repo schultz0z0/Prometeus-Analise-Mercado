@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from typing import Any
 from urllib.parse import urlsplit
 
 _RESTRICTION = re.compile(
@@ -187,6 +188,42 @@ def normalize_language(value: str) -> str:
     return value.strip().replace("_", "-")
 
 
+def _extract_observed_identities(payload: dict[str, object]) -> tuple[list[str], list[str]]:
+    raw_names = [
+        payload.get(key)
+        for key in (
+            "pageName",
+            "page_name",
+            "institution",
+            "institution_name",
+            "advertiser",
+            "advertiser_name",
+            "companyName",
+            "company",
+        )
+    ]
+    raw_handles = [payload.get(key) for key in ("ownerUsername", "username", "authorHandle")]
+    snapshot = payload.get("snapshot")
+    if isinstance(snapshot, dict):
+        raw_names.extend(snapshot.get(key) for key in ("page_name", "pageName"))
+        raw_handles.append(snapshot.get("ownerUsername"))
+    names = [normalized_text(item) for item in raw_names if item]
+    handles = [str(item).strip().lstrip("@").lower() for item in raw_handles if item]
+    return names, handles
+
+
+def _host_matches_domains(host: str, domains: list[Any]) -> bool:
+    if not host:
+        return False
+    for domain in domains:
+        if not domain:
+            continue
+        clean = str(domain).strip().lower().removeprefix("www.")
+        if host == clean or host.endswith("." + clean):
+            return True
+    return False
+
+
 def is_own_institution(
     payload: dict[str, object], source_url: str, context: dict[str, object] | None
 ) -> bool:
@@ -198,30 +235,63 @@ def is_own_institution(
     if isinstance(aliases, list):
         names.extend(aliases)
     own_names = {normalized_text(name) for name in names if name}
-    observed = [
-        payload.get(key)
-        for key in (
-            "pageName",
-            "page_name",
-            "institution",
-            "institution_name",
-            "advertiser",
-            "advertiser_name",
-            "ownerUsername",
-        )
-    ]
-    snapshot = payload.get("snapshot")
-    if isinstance(snapshot, dict):
-        observed.extend(snapshot.get(key) for key in ("page_name", "pageName", "ownerUsername"))
-    if any(normalized_text(name) in own_names for name in observed if name):
+    observed_names, observed_handles = _extract_observed_identities(payload)
+    if any(name in own_names for name in observed_names) or any(
+        normalized_text(handle) in own_names for handle in observed_handles
+    ):
         return True
     domains = context.get("domains", [])
     if not isinstance(domains, list):
         return False
     host = (urlsplit(source_url).hostname or "").lower().removeprefix("www.")
-    return any(
-        host == str(domain).lower().removeprefix("www.")
-        or host.endswith("." + str(domain).lower().removeprefix("www."))
-        for domain in domains
-        if domain
-    )
+    return _host_matches_domains(host, domains)
+
+
+def _match_actor_list(
+    payload: dict[str, object],
+    source_url: str,
+    entries: object,
+) -> dict[str, Any] | None:
+    if not isinstance(entries, list):
+        return None
+    host = (urlsplit(source_url).hostname or "").lower().removeprefix("www.")
+    observed_names, observed_handles = _extract_observed_identities(payload)
+
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        domains = entry.get("domains", [])
+        if isinstance(domains, list) and _host_matches_domains(host, domains):
+            return entry
+
+        social = entry.get("social") if isinstance(entry.get("social"), dict) else {}
+        ig_handle = str(social.get("instagram_handle") or "").strip().lstrip("@").lower()
+        if ig_handle and ig_handle in observed_handles:
+            return entry
+
+        candidate_names = [entry.get("name"), social.get("linkedin_company")]
+        aliases = entry.get("aliases", [])
+        if isinstance(aliases, list):
+            candidate_names.extend(aliases)
+        known_names = {normalized_text(n) for n in candidate_names if n}
+        if known_names and any(obs in known_names for obs in observed_names):
+            return entry
+    return None
+
+
+def match_configured_competitor(
+    payload: dict[str, object], source_url: str, context: dict[str, object] | None
+) -> dict[str, Any] | None:
+    """Identifica se a evidência pertence a um dos concorrentes educacionais fixos do tenant."""
+    if not context:
+        return None
+    return _match_actor_list(payload, source_url, context.get("competitors", []))
+
+
+def match_sector_radar_actor(
+    payload: dict[str, object], source_url: str, context: dict[str, object] | None
+) -> dict[str, Any] | None:
+    """Identifica se a evidência pertence a uma seguradora/ator do Radar Setorial do tenant."""
+    if not context:
+        return None
+    return _match_actor_list(payload, source_url, context.get("sector_radar", []))

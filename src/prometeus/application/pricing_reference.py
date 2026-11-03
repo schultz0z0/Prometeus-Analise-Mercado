@@ -159,6 +159,7 @@ def build_price_reference(
     offers: list[dict[str, Any]],
     installments: int | None = None,
     institution_domains: list[str] | None = None,
+    sector_radar_domains: list[str] | None = None,
 ) -> dict[str, Any]:
     """Cada curso contribui uma vez com um total inequivocamente observado.
 
@@ -169,6 +170,7 @@ def build_price_reference(
     seen: set[str] = set()
     expected = _category(level) or _category(course_title)
     own_domains = {x.lower().removeprefix("www.") for x in institution_domains or []}
+    radar_domains = {x.lower().removeprefix("www.") for x in sector_radar_domains or []}
     if "ens" == _plain(institution_name).strip() or "escola de negocios e seguros" in _plain(
         institution_name
     ):
@@ -214,6 +216,10 @@ def build_price_reference(
             host == domain or host.endswith("." + domain) for domain in own_domains
         ):
             reason = "own_institution"
+        elif qualification.get("actor_role") == "sector_radar" or any(
+            host == domain or host.endswith("." + domain) for domain in radar_domains
+        ):
+            reason = "sector_ecosystem_not_course_offer"
         elif qualification.get("accepted") is not True:
             reason = "not_qualified"
         elif not expected or _category(title) != expected:

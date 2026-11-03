@@ -14,7 +14,12 @@ from prometeus.application.evidence_projection import (
     PROJECTOR_VERSION,
     build_qualification_context,
 )
-from prometeus.application.research_scope import is_own_institution, normalize_geography
+from prometeus.application.research_scope import (
+    is_own_institution,
+    match_configured_competitor,
+    match_sector_radar_actor,
+    normalize_geography,
+)
 from prometeus.application.skill_registry import SkillRegistry
 from prometeus.application.tool_capabilities import CAPABILITY_CONTRACTS
 from prometeus.domain.analyses import Analysis
@@ -47,10 +52,25 @@ class EvidenceQualificationService:
         *,
         institution_context: dict[str, object] | None = None,
     ) -> dict[str, int]:
-        institution_context = institution_context or {
-            "name": getattr(understanding, "institution_name", ""),
-            "domains": getattr(understanding, "institution_domains", []),
-        }
+        proposal_ctx = (
+            analysis.proposal_data.get("_institution_context")
+            if isinstance(getattr(analysis, "proposal_data", None), dict)
+            else None
+        )
+        if institution_context is None:
+            if isinstance(proposal_ctx, dict) and proposal_ctx:
+                institution_context = dict(proposal_ctx)
+                institution_context.setdefault(
+                    "name", getattr(understanding, "institution_name", "")
+                )
+                institution_context.setdefault(
+                    "domains", getattr(understanding, "institution_domains", [])
+                )
+            else:
+                institution_context = {
+                    "name": getattr(understanding, "institution_name", ""),
+                    "domains": getattr(understanding, "institution_domains", []),
+                }
         review_skills = self.skills.for_stage("evidence_review")
         # Local procedures/catalog changes must invalidate persisted qualification.
         guidance = "\n\n".join(skill.instructions for skill in review_skills)
@@ -93,6 +113,34 @@ class EvidenceQualificationService:
             prior = data.pop("_qualification", {})
             scope = EvidenceFeatureExtractor(geography=understanding.geography)
             own = is_own_institution(data, row.source_url, institution_context)
+            sector_actor = (
+                None if own else match_sector_radar_actor(data, row.source_url, institution_context)
+            )
+            comp_actor = (
+                None
+                if (own or sector_actor)
+                else match_configured_competitor(data, row.source_url, institution_context)
+            )
+            is_sector = sector_actor is not None
+            actor_role = (
+                "own_institution"
+                if own
+                else "sector_radar"
+                if is_sector
+                else "configured_competitor"
+                if comp_actor is not None
+                else "open_market"
+            )
+            matched_actor = sector_actor or comp_actor
+            matched_actor_id = str(matched_actor["id"]) if matched_actor else None
+            matched_actor_name = str(matched_actor["name"]) if matched_actor else None
+            actor_social = (
+                matched_actor.get("social", {})
+                if isinstance(matched_actor, dict) and isinstance(matched_actor.get("social"), dict)
+                else {}
+            )
+            linkedin_scope = actor_social.get("linkedin_scope")
+
             scoped = scope.accepts(
                 MarketEvidence.create(
                     analysis_id=analysis.id,
@@ -120,10 +168,11 @@ class EvidenceQualificationService:
                 if row.evidence_type == "JOB_MARKET"
                 else "o código não confirma a região deste item; consulta e IP do coletor não provam localização do conteúdo",
                 "own_institution": own,
+                "sector_ecosystem_actor": is_sector,
                 "signal_policy": {
                     "JOB_MARKET": "Avaliar relação do cargo e competências com a atuação dos egressos. Uma vaga NÃO precisa exigir MBA nem demonstrar procura por curso para ser relevante à empregabilidade/ementa. Cargo adjacente genérico sem relação observável permanece contexto.",
                     "SOCIAL_VOICE": "Necessidades, dúvidas e dificuldades profissionais pertinentes podem orientar a ementa. Propaganda genérica ou entretenimento não prova dor nem intenção de matrícula.",
-                    "OFFER": "Ofertas da própria instituição são contexto institucional; empregadores e notícias não são concorrentes. Comparabilidade de tema/categoria/preço é verificada separadamente.",
+                    "OFFER": "Ofertas da própria instituição são contexto institucional; empregadores, seguradoras do ecossistema e notícias não são concorrentes educacionais. Comparabilidade de tema/categoria/preço é verificada separadamente.",
                     "TRENDS": "Série temporal válida mede interesse relativo. Metadados sem série não devem ser interpretados como procura zero.",
                 }.get(
                     row.evidence_type,
@@ -173,12 +222,17 @@ class EvidenceQualificationService:
                 component_versions=comp_versions,
                 context=judgment_context,
             )
+            trusted = not result.requires_human_review and not result.is_noul
+            sector_blocked_as_offer = is_sector and row.evidence_type in {
+                "OFFER",
+                "PAID_COMPETITION",
+            }
             relevant = (
                 scoped
                 and result.selected_choice == "RELEVANT"
-                and not result.requires_human_review
-                and not result.is_noul
+                and trusted
                 and not own
+                and not sector_blocked_as_offer
             )
             reason = (
                 "Localização fora do escopo ou não comprovada"
@@ -205,7 +259,9 @@ class EvidenceQualificationService:
                 )
             if own:
                 reason = "Conteúdo da própria instituição; preservado como contexto, sem contar como concorrência externa"
-            trusted = not result.requires_human_review and not result.is_noul
+            elif sector_blocked_as_offer and scoped and trusted and result.selected_choice in {"RELEVANT", "CONTEXT"}:
+                reason = "Sinal de seguradora do Radar Setorial; preservado como pulso de mercado e pauta de corretores, sem contar como concorrente educacional"
+
             use_for = (
                 {
                     "JOB_MARKET": ["employability", "curriculum"],
@@ -220,13 +276,19 @@ class EvidenceQualificationService:
             )
             if own:
                 use_for = ["institution_context"]
+            elif is_sector and scoped and trusted and result.selected_choice in {"RELEVANT", "CONTEXT"}:
+                use_for = sorted({*use_for, "sector_radar", "audience_needs", "curriculum"})
+                use_for = [u for u in use_for if u not in {"competitive_offers", "pricing", "paid_competition"}]
             elif scoped and result.selected_choice == "CONTEXT" and trusted:
                 use_for = ["sector_context"]
+
             exclusion_codes = []
             if not relevant:
                 exclusion_codes = [
                     "own_institution"
                     if own
+                    else "sector_ecosystem_not_educational_competitor"
+                    if sector_blocked_as_offer
                     else "geography_unverified_or_out_of_scope"
                     if not scoped
                     else "review_required"
@@ -260,33 +322,54 @@ class EvidenceQualificationService:
             if isinstance(data, dict):
                 price_val = data.get("total_price") or data.get("price_brl") or data.get("price") or (data.get("pricing") or {}).get("total_price")
                 has_price = price_val is not None
-            pricing_usable = row.evidence_type == "OFFER" and scoped and has_price and not result.is_noul
+            pricing_usable = (
+                row.evidence_type == "OFFER"
+                and not own
+                and not is_sector
+                and scoped
+                and has_price
+                and not result.is_noul
+            )
             assessments[EvidencePurpose.PRICING.value] = EvidenceUseAssessment(
                 purpose=EvidencePurpose.PRICING,
                 usable=pricing_usable,
                 confidence=result.confidence if pricing_usable else 0.0,
-                observable_factors=[f"Preço observado: {price_val}"] if has_price else ["Preço total não informado na oferta pública"],
-                quote_snippets=[f"{row.title} - R$ {price_val}"] if has_price else [],
-                reason="Oferta educacional com preço total observável e verificado" if pricing_usable else ("Oferta educacional sem preço explícito público" if row.evidence_type == "OFFER" else "Tipo de evidência não contém preço de curso"),
-                rejection_cause=None if pricing_usable else ("price_missing_or_lead_wall" if row.evidence_type == "OFFER" else "not_a_course_offer"),
-                next_step=None if pricing_usable else ("Consultar página de checkout ou contato comercial para obter precificação" if row.evidence_type == "OFFER" else None),
+                observable_factors=[f"Preço observado: {price_val}"] if (has_price and not is_sector) else ["Preço de curso aplicável não observado"],
+                quote_snippets=[f"{row.title} - R$ {price_val}"] if (has_price and not is_sector) else [],
+                reason="Oferta educacional com preço total observável e verificado" if pricing_usable else ("Seguradora do ecossistema não constitui oferta educacional precificável" if is_sector else ("Oferta educacional sem preço explícito público" if row.evidence_type == "OFFER" else "Tipo de evidência não contém preço de curso")),
+                rejection_cause=None if pricing_usable else ("sector_ecosystem_not_course_offer" if is_sector else ("price_missing_or_lead_wall" if row.evidence_type == "OFFER" else "not_a_course_offer")),
+                next_step=None if pricing_usable else (None if is_sector else ("Consultar página de checkout ou contato comercial para obter precificação" if row.evidence_type == "OFFER" else None)),
             )
 
             # 3. Concorrência direta (direct_competition)
-            direct_usable = row.evidence_type in {"OFFER", "PAID_COMPETITION"} and not own and scoped and result.selected_choice == "RELEVANT" and trusted
+            direct_usable = (
+                row.evidence_type in {"OFFER", "PAID_COMPETITION"}
+                and not own
+                and not is_sector
+                and scoped
+                and result.selected_choice == "RELEVANT"
+                and trusted
+            )
             assessments[EvidencePurpose.DIRECT_COMPETITION.value] = EvidenceUseAssessment(
                 purpose=EvidencePurpose.DIRECT_COMPETITION,
                 usable=direct_usable,
                 confidence=result.confidence if direct_usable else 0.5,
-                observable_factors=["Concorrente externo verificado"] if (not own and row.evidence_type in {"OFFER", "PAID_COMPETITION"}) else ["Oferta própria ou tipo não concorrente"],
+                observable_factors=["Concorrente externo verificado"] if (not own and not is_sector and row.evidence_type in {"OFFER", "PAID_COMPETITION"}) else ["Oferta própria, ecossistema segurador ou tipo não concorrente"],
                 quote_snippets=[row.title] if row.title else [],
-                reason="Concorrente direto na mesma temática e categoria" if direct_usable else ("Oferta da própria instituição não concorre externamente" if own else "Não é concorrente direto"),
-                rejection_cause=None if direct_usable else ("own_institution_not_competitor" if own else "not_a_direct_competitor"),
-                next_step=None if direct_usable else ("Preservar como contexto interno da instituição" if own else "Analisar se atua como oferta adjacente"),
+                reason="Concorrente direto na mesma temática e categoria" if direct_usable else ("Oferta da própria instituição não concorre externamente" if own else ("Seguradora do Radar Setorial não disputa matrícula acadêmica" if is_sector else "Não é concorrente direto")),
+                rejection_cause=None if direct_usable else ("own_institution_not_competitor" if own else ("sector_ecosystem_not_educational_competitor" if is_sector else "not_a_direct_competitor")),
+                next_step=None if direct_usable else ("Preservar como contexto interno da instituição" if own else ("Utilizar sinal no Radar Setorial e na matriz curricular" if is_sector else "Analisar se atua como oferta adjacente")),
             )
 
             # 4. Concorrência adjacente (adjacent_competition)
-            adjacent_usable = row.evidence_type in {"OFFER", "PAID_COMPETITION"} and not own and scoped and result.selected_choice in {"RELEVANT", "CONTEXT"} and trusted
+            adjacent_usable = (
+                row.evidence_type in {"OFFER", "PAID_COMPETITION"}
+                and not own
+                and not is_sector
+                and scoped
+                and result.selected_choice in {"RELEVANT", "CONTEXT"}
+                and trusted
+            )
             assessments[EvidencePurpose.ADJACENT_COMPETITION.value] = EvidenceUseAssessment(
                 purpose=EvidencePurpose.ADJACENT_COMPETITION,
                 usable=adjacent_usable,
@@ -294,7 +377,7 @@ class EvidenceQualificationService:
                 observable_factors=["Oferta externa adjacente ou substituta"] if adjacent_usable else [],
                 quote_snippets=[row.title] if row.title else [],
                 reason="Oferta adjacente (cursos livres, extensões ou certificações)" if adjacent_usable else "Não atua como oferta adjacente",
-                rejection_cause=None if adjacent_usable else "not_an_adjacent_offer",
+                rejection_cause=None if adjacent_usable else ("sector_ecosystem_not_educational_competitor" if is_sector else "not_an_adjacent_offer"),
             )
 
             # 5. Competências profissionais (workforce_competencies)
@@ -364,12 +447,22 @@ class EvidenceQualificationService:
                 "accepted": relevant,
                 "context_only": own
                 or (
+                    is_sector
+                    and scoped
+                    and trusted
+                    and result.selected_choice in {"RELEVANT", "CONTEXT"}
+                )
+                or (
                     scoped
                     and result.selected_choice == "CONTEXT"
                     and not result.requires_human_review
                     and not result.is_noul
                 ),
                 "own_institution": own,
+                "actor_role": actor_role,
+                "matched_actor_id": matched_actor_id,
+                "matched_actor_name": matched_actor_name,
+                "linkedin_scope": linkedin_scope,
                 "use_for": use_for,
                 "usable_purposes": multi_purpose.usable_purposes,
                 "use_assessments": {p: a.model_dump() for p, a in multi_purpose.assessments.items()},

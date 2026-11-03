@@ -292,11 +292,16 @@ class DossierVerifier:
             ),
         }
 
-        # 2. Independência e não-canibalização: ENS não é concorrente externo
+        # 2. Independência e não-canibalização: ENS e seguradoras do Radar não são concorrentes educacionais
         independence_verified = True
         declared_inst = str(
             facts.analysis_audit.get("declared_offer", {}).get("institution") or "ENS"
         ).strip().lower()
+        sector_actors = [
+            str(name).strip().lower()
+            for name in facts.analysis_audit.get("sector_radar_actors", [])
+            if str(name).strip()
+        ]
         for comp in dossier.highlights.competitors:
             label_lower = comp.label.strip().lower()
             if "ens" in label_lower or "escola nacional de seguros" in label_lower or (declared_inst and declared_inst in label_lower):
@@ -311,6 +316,19 @@ class DossierVerifier:
                     )
                     actionable_recommendations.append(
                         "Módulo de competidores: filtrar e separar ofertas internas do quadro de concorrência externa."
+                    )
+            elif any(actor in label_lower for actor in sector_actors):
+                if "ecossistema" not in label_lower and "radar" not in label_lower and "corporativ" not in label_lower:
+                    independence_verified = False
+                    issues.append(
+                        {
+                            "path": f"highlights.competitors.{comp.label}",
+                            "code": "sector_actor_as_direct_competitor",
+                            "message": f"A seguradora '{comp.label}' pertence ao Radar Setorial e não pode ser listada como concorrente educacional direto.",
+                        }
+                    )
+                    actionable_recommendations.append(
+                        "Módulo de competidores: separar seguradoras do Radar Setorial (mercado empregador/tendências) das instituições de ensino concorrentes."
                     )
 
         # 3. Qualificação de proxies e inferências analíticas sênior
@@ -408,6 +426,22 @@ class DossierVerifier:
             ),
         ]
 
+        global_social_actors = [
+            str(name).strip()
+            for name in facts.analysis_audit.get("global_social_actors", [])
+            if str(name).strip()
+        ]
+        global_actor_regex = (
+            re.compile(
+                r"\b(?:"
+                + "|".join(re.escape(actor) for actor in global_social_actors)
+                + r")\b.*?\bseguidores?\s+(?:no\s+brasil|brasileiros?|nacionais?)\b",
+                re.IGNORECASE,
+            )
+            if global_social_actors
+            else None
+        )
+
         for claim in dossier.claims:
             stmt = claim.statement
             for pattern, code, msg, rec in disallowed_analytical_patterns:
@@ -423,6 +457,19 @@ class DossierVerifier:
                     )
                     if rec not in actionable_recommendations:
                         actionable_recommendations.append(rec)
+            if global_actor_regex is not None and global_actor_regex.search(stmt):
+                proxies_properly_qualified = False
+                issues.append(
+                    {
+                        "path": f"claims.{claim.claim_id}",
+                        "code": "global_social_metric_as_national",
+                        "message": "Audiência social de perfil global não pode ser atribuída diretamente ao recorte nacional brasileiro.",
+                        "text_excerpt": stmt[:300],
+                    }
+                )
+                rec = "Módulo social: distinguir métricas de perfis globais (ex.: MAPFRE, Zurich) de audiências brasileiras verificadas."
+                if rec not in actionable_recommendations:
+                    actionable_recommendations.append(rec)
             if re.search(r"\bmatr[íi]culas? garantidas?\b", stmt, re.IGNORECASE):
                 proxies_properly_qualified = False
                 issues.append(
@@ -550,7 +597,9 @@ class DossierVerifier:
                 issues.append(
                     {
                         "path": f"claims.{verified.claim_id}",
-                        "code": verified.verification_status.value,
+                        "code": verified.verification_note
+                        if False
+                        else verified.verification_status.value,
                         "message": verified.verification_note or "Afirmação sem suporte factual.",
                         "text_excerpt": verified.statement[:300],
                         "evidence_ids": verified.evidence_ids,
