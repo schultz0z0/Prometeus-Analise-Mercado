@@ -27,3 +27,228 @@ webhooks:
     - analysis.requires_review
     - analysis.completed
     - analysis.failed
+ecosystem:
+  allow_extra_intake_competitors: true
+  radar_ttl_hours: 168
+  competitors:
+    - id: conhecer-seguros
+      name: Conhecer Seguros
+      aliases: [ConhecerSeguros]
+      category: direct_specialist
+      domains: [conhecerseguros.com.br]
+      portal_url: https://conhecerseguros.com.br
+      focus_notes: Cursos livres, certificações e conteúdos técnicos especializados em seguros, resseguros e previdência.
+      social:
+        instagram_handle: conhecerseguros
+        instagram_url: https://www.instagram.com/conhecerseguros/
+        youtube_url: https://www.youtube.com/channel/UCoW6aijItbuOkgmMA-Qgb9Q
+        facebook_url: https://www.facebook.com/Conhecer-Seguros-107437617767929/
+    - id: fgv
+      name: FGV Educação Executiva
+      aliases: [Fundação Getulio Vargas, FGV, FGV IDE]
+      category: executive_business
+      domains: [fgv.br, portal.fgv.br, educacao-executiva.fgv.br]
+      portal_url: https://educacao-executiva.fgv.br
+      focus_notes: MBAs executivos em Gestão de Seguros e Previdência, Finanças e Gestão de Riscos.
+      social:
+        instagram_handle: fgv.oficial
+        instagram_url: https://www.instagram.com/fgv.oficial/
+        linkedin_company: fundacao-getulio-vargas
+        linkedin_url: https://www.linkedin.com/school/fundacao-getulio-vargas/
+        youtube_url: https://www.youtube.com/fgv
+    - id: ibmec
+      name: Ibmec
+      aliases: [Pós Ibmec, Faculdade Ibmec]
+      category: executive_business
+      domains: [ibmec.br, pos.ibmec.br]
+      portal_url: https://pos.ibmec.br
+      focus_notes: MBAs executivos e pós-graduação em Finanças, Mercado de Capitais e Gestão de Riscos com forte presença RJ/SP e EAD Live.
+      social:
+        instagram_handle: ibmec
+        instagram_url: https://www.instagram.com/ibmec/
+        linkedin_company: ibmec
+        linkedin_url: https://www.linkedin.com/school/ibmec/
+    - id: fipecafi
+      name: FIPECAFI
+      aliases: [Faculdade FIPECAFI]
+      category: technical_academic
+      domains: [fipecafi.org]
+      portal_url: https://fipecafi.org
+      focus_notes: Pós-graduação e formação técnica em Ciências Atuariais, Contabilidade Securitária e Gestão de Riscos.
+      social:
+        instagram_handle: faculdadefipecafi
+        instagram_url: https://www.instagram.com/faculdadefipecafi/
+        linkedin_company: fipecafi
+        linkedin_url: https://www.linkedin.com/school/fipecafi/
+    - id: fia
+      name: FIA Business School
+      aliases: [Fundação Instituto de Administração, FIA]
+      category: executive_business
+      domains: [fia.com.br]
+      portal_url: https://fia.com.br
+      focus_notes: MBAs em Gestão de Riscos, Compliance, Governança e Finanças Corporativas.
+      social:
+        instagram_handle: businessschool.fia
+        instagram_url: https://www.instagram.com/businessschool.fia/
+        linkedin_company: fia
+        linkedin_url: https://www.linkedin.com/school/fia/
+    - id: insper
+      name: Insper
+      aliases: [Instituto de Ensino e Pesquisa]
+      category: executive_business
+      domains: [insper.edu.br]
+      portal_url: https://www.insper.edu.br
+      focus_notes: Educação executiva de alta liderança em Finanças Quantitativas, Ciência de Dados e Decisão sob Risco.
+      social:
+        instagram_handle: insperedu
+        instagram_url: https://www.instagram.com/insperedu/
+        linkedin_company: insper
+        linkedin_url: https://www.linkedin.com/school/insper/
+    - id: estacio
+      name: Estácio
+      aliases: [Universidade Estácio de Sá, Pós Estácio]
+      category: scale_ead
+      domains: [estacio.br, portal.estacio.br]
+      portal_url: https://portal.estacio.br/pos-graduacao
+      focus_notes: Graduação tecnológica em Gestão de Seguros e pós-graduação EAD de escala e preço acessível.
+      social:
+        instagram_handle: estacio_brasil
+        instagram_url: https://www.instagram.com/estacio_brasil/
+        linkedin_company: estacio
+        linkedin_url: https://www.linkedin.com/school/estacio/
+    - id: esa-oab
+      name: ESA OAB-SP
+      aliases: [Escola Superior de Advocacia, ESA OAB]
+      category: legal_niche
+      domains: [esaoabsp.edu.br]
+      portal_url: https://esaoabsp.edu.br
+      focus_notes: Extensão e especialização em Direito Securitário, regulação SUSEP e contencioso de sinistros.
+      social:
+        instagram_handle: esaoabsp
+        instagram_url: https://www.instagram.com/esaoabsp/
+    - id: fiap
+      name: FIAP
+      aliases: [Pós Tech FIAP]
+      category: tech_edtech
+      domains: [fiap.com.br]
+      portal_url: https://www.fiap.com.br
+      focus_notes: MBAs e Pós Tech em Inteligência Artificial, Big Data, Cibersegurança e Analytics corporativo.
+      social:
+        instagram_handle: fiapoficial
+        instagram_url: https://www.instagram.com/fiapoficial/
+        linkedin_company: fiap
+        linkedin_url: https://www.linkedin.com/school/fiap/
+    - id: alura
+      name: Alura
+      aliases: [Alura Para Empresas]
+      category: tech_edtech
+      domains: [alura.com.br]
+      portal_url: https://www.alura.com.br
+      focus_notes: Formações rápidas e corporativas em Inteligência Artificial aplicada, Dados e Automação.
+      social:
+        instagram_handle: aluraonline
+        instagram_url: https://www.instagram.com/aluraonline/
+        linkedin_company: aluraonline
+        linkedin_url: https://www.linkedin.com/company/aluraonline/
+  sector_radar:
+    - id: porto-seguro
+      name: Porto Seguro
+      aliases: [Porto, Porto Educa]
+      priority: primary
+      domains: [portoseguro.com.br]
+      monitoring_focus: [relacionamento com corretores, novos produtos, IA e telemetria, educação de mercado]
+      social:
+        instagram_handle: porto
+        instagram_url: https://www.instagram.com/porto/
+        linkedin_company: Porto
+        linkedin_scope: national
+    - id: bradesco-seguros
+      name: Bradesco Seguros
+      aliases: [Grupo Bradesco Seguros, Universo Bradesco Seguros]
+      priority: primary
+      domains: [bradescoseguros.com.br]
+      monitoring_focus: [saúde suplementar, previdência, automação de sinistros, capacitação de corretores]
+      social:
+        instagram_handle: bradescoseguros
+        instagram_url: https://www.instagram.com/bradescoseguros/
+        linkedin_company: Bradesco Seguros
+        linkedin_scope: national
+    - id: tokio-marine
+      name: Tokio Marine Seguradora
+      aliases: [Tokio Marine]
+      priority: primary
+      domains: [tokiomarine.com.br]
+      monitoring_focus: [riscos corporativos, automóvel, assessoria a corretores, inovação operacional]
+      social:
+        instagram_handle: tokiomarineseguradora
+        instagram_url: https://www.instagram.com/tokiomarineseguradora/
+        linkedin_company: Tokio Marine
+        linkedin_scope: national
+    - id: allianz-seguros
+      name: Allianz Seguros
+      aliases: [Allianz Brasil]
+      priority: primary
+      domains: [allianz.com.br]
+      monitoring_focus: [grandes riscos, ESG, cibernético, parcerias com corretores]
+      social:
+        instagram_handle: allianzbrasil
+        instagram_url: https://www.instagram.com/allianzbrasil/
+        linkedin_company: Allianz Seguros
+        linkedin_scope: national
+    - id: hdi-seguros
+      name: HDI Seguros
+      aliases: [Grupo HDI]
+      priority: primary
+      domains: [hdiseguros.com.br]
+      monitoring_focus: [sinistros digitais, seguro auto e patrimonial, canal corretor]
+      social:
+        linkedin_company: Grupo HDI
+        linkedin_scope: national
+    - id: mapfre
+      name: MAPFRE
+      aliases: [MAPFRE Brasil]
+      priority: secondary
+      domains: [mapfre.com.br]
+      monitoring_focus: [agronegócio, vida, grandes riscos, transformação digital]
+      social:
+        instagram_handle: mapfrebrasil
+        instagram_url: https://www.instagram.com/mapfrebrasil/
+        linkedin_company: MAPFRE
+        linkedin_scope: global
+    - id: brasilseg-bb
+      name: Brasilseg / BB Seguros
+      aliases: [BB Seguros, Brasilseg]
+      priority: secondary
+      domains: [bbseguros.com.br, brasilseg.com.br]
+      monitoring_focus: [seguro rural, prestamista, vida e previdência, bancassurance]
+      social:
+        linkedin_company: Brasilseg
+        linkedin_scope: national
+    - id: zurich-seguros
+      name: Zurich Seguros
+      aliases: [Zurich Brasil]
+      priority: secondary
+      domains: [zurich.com.br]
+      monitoring_focus: [riscos climáticos, seguros corporativos, afinidades, cibersegurança]
+      social:
+        instagram_handle: zurichnobrasil
+        instagram_url: https://www.instagram.com/zurichnobrasil/
+        linkedin_company: Zurich
+        linkedin_scope: global
+    - id: itau-seguros
+      name: Itaú Seguros
+      aliases: [Itau Seguros]
+      priority: secondary
+      domains: [itau.com.br]
+      monitoring_focus: [seguros massificados, residencial, vida e proteção digital]
+      social:
+        linkedin_scope: unconfirmed
+    - id: yelum-seguros
+      name: Yelum Seguros
+      aliases: [Yelum, ex-Liberty Seguros]
+      priority: secondary
+      domains: [yelumseguros.com.br]
+      monitoring_focus: [posicionamento de marca, corretores parceiros, auto e vida]
+      social:
+        linkedin_company: Grupo HDI
+        linkedin_scope: national

@@ -7,10 +7,12 @@ e restrições operacionais críticas (ex.: proibição de jev-latest em produç
 from __future__ import annotations
 
 import base64
+import ipaddress
 import json
 import math
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+from urllib.parse import urlsplit
 
 import yaml
 from pydantic import BaseModel, Field, model_validator
@@ -60,6 +62,113 @@ class TenantWebhooks(BaseModel):
     events: list[str] = Field(default_factory=list)
 
 
+def _normalize_domain(raw: str) -> str:
+    candidate = str(raw or "").strip().lower()
+    if "://" in candidate:
+        parsed = urlsplit(candidate)
+        candidate = (parsed.hostname or "").strip().lower()
+    else:
+        candidate = candidate.split("/", 1)[0].strip().lower()
+    candidate = candidate.removeprefix("www.")
+    if not candidate or "." not in candidate or any(ch.isspace() for ch in candidate):
+        raise ConfigurationError(f"Domínio inválido na configuração do tenant: {raw!r}")
+    return candidate
+
+
+def _validate_https_url(url: str | None) -> str | None:
+    if url is None:
+        return None
+    cleaned = str(url).strip()
+    if not cleaned:
+        return None
+    parsed = urlsplit(cleaned)
+    host = (parsed.hostname or "").strip().lower()
+    if parsed.scheme != "https" or not host or "." not in host:
+        raise ConfigurationError(f"URL institucional/social exige HTTPS válido: {url!r}")
+    if host in {"localhost"}:
+        raise ConfigurationError(f"Host local proibido na configuração do ecossistema: {url!r}")
+    try:
+        ip = ipaddress.ip_address(host)
+        if ip.is_private or ip.is_loopback or ip.is_link_local:
+            raise ConfigurationError(f"IP privado proibido na configuração do ecossistema: {url!r}")
+    except ValueError:
+        pass
+    return cleaned
+
+
+class SocialChannelsConfig(BaseModel):
+    instagram_handle: str | None = None
+    instagram_url: str | None = None
+    linkedin_url: str | None = None
+    linkedin_company: str | None = None
+    linkedin_scope: Literal["national", "global", "unconfirmed"] = "national"
+    youtube_url: str | None = None
+    facebook_url: str | None = None
+
+    @model_validator(mode="after")
+    def validate_channels(self) -> SocialChannelsConfig:
+        object.__setattr__(self, "instagram_url", _validate_https_url(self.instagram_url))
+        object.__setattr__(self, "linkedin_url", _validate_https_url(self.linkedin_url))
+        object.__setattr__(self, "youtube_url", _validate_https_url(self.youtube_url))
+        object.__setattr__(self, "facebook_url", _validate_https_url(self.facebook_url))
+        if self.instagram_handle is not None:
+            handle = self.instagram_handle.strip().lstrip("@").lower()
+            object.__setattr__(self, "instagram_handle", handle or None)
+        return self
+
+
+class CompetitorProfileConfig(BaseModel):
+    id: str
+    name: str
+    aliases: list[str] = Field(default_factory=list)
+    category: Literal[
+        "direct_specialist",
+        "executive_business",
+        "technical_academic",
+        "scale_ead",
+        "legal_niche",
+        "tech_edtech",
+    ]
+    domains: list[str]
+    portal_url: str | None = None
+    social: SocialChannelsConfig = Field(default_factory=SocialChannelsConfig)
+    focus_notes: str = ""
+
+    @model_validator(mode="after")
+    def validate_competitor(self) -> CompetitorProfileConfig:
+        if not self.domains:
+            raise ConfigurationError(f"Concorrente '{self.id}' exige ao menos um domínio.")
+        normalized = sorted({_normalize_domain(d) for d in self.domains})
+        object.__setattr__(self, "domains", normalized)
+        object.__setattr__(self, "portal_url", _validate_https_url(self.portal_url))
+        return self
+
+
+class SectorRadarActorConfig(BaseModel):
+    id: str
+    name: str
+    aliases: list[str] = Field(default_factory=list)
+    priority: Literal["primary", "secondary"] = "primary"
+    domains: list[str]
+    social: SocialChannelsConfig = Field(default_factory=SocialChannelsConfig)
+    monitoring_focus: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_sector_actor(self) -> SectorRadarActorConfig:
+        if not self.domains:
+            raise ConfigurationError(f"Ator do radar '{self.id}' exige ao menos um domínio.")
+        normalized = sorted({_normalize_domain(d) for d in self.domains})
+        object.__setattr__(self, "domains", normalized)
+        return self
+
+
+class TenantEcosystemConfig(BaseModel):
+    competitors: list[CompetitorProfileConfig] = Field(default_factory=list)
+    sector_radar: list[SectorRadarActorConfig] = Field(default_factory=list)
+    allow_extra_intake_competitors: bool = True
+    radar_ttl_hours: int = Field(default=168, ge=1, le=720)
+
+
 class TenantConfig(BaseModel):
     """Configuração white-label e institucional por tenant."""
 
@@ -70,6 +179,45 @@ class TenantConfig(BaseModel):
     adapters: TenantAdapters = Field(default_factory=TenantAdapters)
     profiles: TenantProfiles = Field(default_factory=TenantProfiles)
     webhooks: TenantWebhooks = Field(default_factory=TenantWebhooks)
+    ecosystem: TenantEcosystemConfig = Field(default_factory=TenantEcosystemConfig)
+
+    @model_validator(mode="after")
+    def validate_ecosystem_isolation(self) -> TenantConfig:
+        own_domains = {_normalize_domain(d) for d in self.institution.domains if str(d).strip()}
+        comp_domains: set[str] = set()
+        seen_comp_ids: set[str] = set()
+        for comp in self.ecosystem.competitors:
+            if comp.id in seen_comp_ids:
+                raise ConfigurationError(f"Concorrente duplicado no tenant: '{comp.id}'")
+            seen_comp_ids.add(comp.id)
+            overlap_own = own_domains & set(comp.domains)
+            if overlap_own:
+                raise ConfigurationError(
+                    f"Concorrente '{comp.id}' compartilha domínio da própria instituição: {sorted(overlap_own)}"
+                )
+            overlap_comp = comp_domains & set(comp.domains)
+            if overlap_comp:
+                raise ConfigurationError(
+                    f"Concorrente '{comp.id}' duplica domínio já atribuído: {sorted(overlap_comp)}"
+                )
+            comp_domains.update(comp.domains)
+
+        seen_radar_ids: set[str] = set()
+        for actor in self.ecosystem.sector_radar:
+            if actor.id in seen_radar_ids:
+                raise ConfigurationError(f"Ator do radar duplicado no tenant: '{actor.id}'")
+            seen_radar_ids.add(actor.id)
+            overlap_own = own_domains & set(actor.domains)
+            if overlap_own:
+                raise ConfigurationError(
+                    f"Ator do radar '{actor.id}' compartilha domínio da própria instituição: {sorted(overlap_own)}"
+                )
+            overlap_comp = comp_domains & set(actor.domains)
+            if overlap_comp:
+                raise ConfigurationError(
+                    f"Ator do radar '{actor.id}' conflita com domínio de concorrente educacional: {sorted(overlap_comp)}"
+                )
+        return self
 
 
 class ScoringGates(BaseModel):

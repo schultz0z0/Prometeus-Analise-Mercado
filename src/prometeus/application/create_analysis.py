@@ -73,10 +73,16 @@ class CreateAnalysisUseCase:
 
         # 3. Cria a raiz de agregação do domínio (ADR-0005: status=QUEUED, recommendation=None)
         proposal_with_idempotency = dict(command.proposal_data)
-        institution=tenant_config.model_dump().get("institution",{})
-        proposal_with_idempotency["_institution_context"]={
-            "id":command.tenant_id,"name":institution.get("display_name",command.tenant_id),
-            "domains":institution.get("domains",[]),
+        dumped_tenant = tenant_config.model_dump(mode="json")
+        institution = dumped_tenant.get("institution", {})
+        ecosystem = dumped_tenant.get("ecosystem", {})
+        proposal_with_idempotency["_institution_context"] = {
+            "id": command.tenant_id,
+            "name": institution.get("display_name", command.tenant_id),
+            "domains": institution.get("domains", []),
+            "competitors": ecosystem.get("competitors", []),
+            "sector_radar": ecosystem.get("sector_radar", []),
+            "radar_ttl_hours": ecosystem.get("radar_ttl_hours", 168),
         }
         proposal_with_idempotency["_idempotency_key"] = command.idempotency_key
 
@@ -93,8 +99,8 @@ class CreateAnalysisUseCase:
             analysis_id=analysis.id,
             tenant_id=command.tenant_id,
             scoring_profile_id=scoring_profile.profile_id,
-            tenant_config_snapshot=tenant_config.model_dump(),
-            scoring_profile_snapshot=scoring_profile.model_dump(),
+            tenant_config_snapshot=dumped_tenant,
+            scoring_profile_snapshot=scoring_profile.model_dump(mode="json"),
         )
 
         return CreateAnalysisResult(
