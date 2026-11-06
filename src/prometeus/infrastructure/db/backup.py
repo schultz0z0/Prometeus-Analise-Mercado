@@ -10,36 +10,16 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from prometeus.infrastructure.db.models import (
-    AnalysisModel,
-    AnalysisStepModel,
-    AuditEventModel,
-    ConfigSnapshotModel,
-    CourseOutcomeModel,
-    DossierModel,
-    HistoricalCourseModel,
-    HistoricalFunnelModel,
-    HumanDecisionModel,
-    WebhookDeliveryModel,
-)
+from prometeus.infrastructure.db.models import Base
 
 logger = logging.getLogger("prometeus.operations.backup")
 
-TABLE_MODELS = [
-    ("analyses", AnalysisModel),
-    ("analysis_steps", AnalysisStepModel),
-    ("audit_events", AuditEventModel),
-    ("config_snapshots", ConfigSnapshotModel),
-    ("historical_courses", HistoricalCourseModel),
-    ("historical_funnel_records", HistoricalFunnelModel),
-    ("dossiers", DossierModel),
-    ("human_decisions", HumanDecisionModel),
-    ("course_outcomes", CourseOutcomeModel),
-    ("webhook_deliveries", WebhookDeliveryModel),
-]
+# A mesma metadata das migrações governa cobertura e ordem de dependências.
+_MAPPED_TABLES = {mapper.class_.__tablename__: mapper.class_ for mapper in Base.registry.mappers}
+TABLE_MODELS = [(table.name, _MAPPED_TABLES[table.name]) for table in Base.metadata.sorted_tables]
 
 
 def serialize_value(val: Any) -> Any:
@@ -81,6 +61,14 @@ class BackupRestoreManager:
         """Extrai todos os dados relacionais e grava arquivo assinado com checksum SHA-256."""
         path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
+        if self.session.get_bind().dialect.name == "postgresql":
+            if self.session.in_transaction():
+                raise ValueError(
+                    "Backup consistente exige uma sessão PostgreSQL sem transação anterior."
+                )
+            await self.session.execute(
+                text("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY")
+            )
 
         payload: dict[str, list[dict[str, Any]]] = {}
         table_counts: dict[str, int] = {}
@@ -107,7 +95,7 @@ class BackupRestoreManager:
         payload_sha256 = hashlib.sha256(payload_bytes).hexdigest()
 
         manifest = BackupManifest(
-            version=1,
+            version=2,
             product="Prometeus",
             created_at=datetime.now(UTC).isoformat(),
             total_records=total_records,
@@ -140,6 +128,21 @@ class BackupRestoreManager:
 
         manifest = data.get("manifest", {})
         payload = data.get("payload", {})
+        required = {name for name, _ in TABLE_MODELS}
+        if (
+            manifest.get("version") != 2
+            or not isinstance(payload, dict)
+            or set(payload) != required
+        ):
+            logger.error("Backup incompleto ou incompatível com o esquema atual: %s", path)
+            return False
+        if any(not isinstance(rows, list) for rows in payload.values()):
+            return False
+        counts = {name: len(rows) for name, rows in payload.items()}
+        if manifest.get("table_counts") != counts or manifest.get("total_records") != sum(
+            counts.values()
+        ):
+            return False
         expected_sha = manifest.get("payload_sha256", "")
 
         computed_sha = hashlib.sha256(
@@ -174,6 +177,7 @@ class BackupRestoreManager:
                 for _, model_cls in reversed(TABLE_MODELS):
                     await self.session.execute(delete(model_cls))
                 await self.session.flush()
+                self.session.expunge_all()
 
             for table_name, model_cls in TABLE_MODELS:
                 records = payload.get(table_name, [])

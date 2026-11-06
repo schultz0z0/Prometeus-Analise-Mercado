@@ -24,6 +24,121 @@ from prometeus.infrastructure.db.models import (
 from prometeus.infrastructure.llm.fake import FakeGenerativeModel
 
 
+async def test_dossier_facts_include_initial_and_followup_calls_and_actual_execution(db_session):
+    from prometeus.infrastructure.db.models import ResearchPlanModel, ToolRunModel
+
+    analysis = Analysis.create(tenant_id="ens", course_name="IA", correlation_id="all-plans")
+    await AnalysisRepository(db_session).save(analysis)
+    db_session.add(
+        ScoringResultModel(
+            id="all-plans-score",
+            analysis_id=analysis.id,
+            profile_id="portfolio-v2",
+            viability_score=0,
+            coverage_score=0,
+            confidence_score=0,
+            partial_score=0,
+            recommendation="INSUFFICIENT_EVIDENCE",
+            is_experimental=True,
+            pillar_scores={},
+            gate_details={},
+        )
+    )
+    for index, institution in enumerate(("fgv", "insper")):
+        db_session.add(
+            ResearchPlanModel(
+                id=f"research-{index}",
+                analysis_id=analysis.id,
+                tenant_id="ens",
+                cache_key=f"cache-{index}",
+                understanding_snapshot={"target_audiences": ["Gestores"]},
+                plan_snapshot={
+                    "tool_calls": [
+                        {
+                            "id": f"call-{index}",
+                            "capability": "google_search",
+                            "parameters": {
+                                "competitor_id": institution,
+                                "collection_phase": "discovery",
+                            },
+                        }
+                    ]
+                },
+            )
+        )
+        db_session.add(
+            ToolRunModel(
+                id=f"run-{index}",
+                analysis_id=analysis.id,
+                research_plan_id=f"research-{index}",
+                planned_call_id=f"call-{index}",
+                capability="google_search",
+                query="curso IA",
+                actor_id="search",
+                actor_build="1",
+                status="FAILED" if index == 0 else "EMPTY",
+                provider_run_id=None if index == 0 else "remote-1",
+                parameters={
+                    "observation_status": "budget_skipped" if index == 0 else "observed_empty"
+                },
+            )
+        )
+    await db_session.commit()
+    facts = await DossierSynthesisService(db_session, FakeGenerativeModel()).build_facts(
+        analysis.id
+    )
+    assert {call["id"] for call in facts.research_plan["tool_calls"]} == {"call-0", "call-1"}
+    assert {run["id"] for run in facts.research_plan["tool_runs"]} == {"run-0", "run-1"}
+    assert facts.research_plan["tool_runs"][0]["planned_call_id"] == "call-0"
+
+
+async def test_publication_rechecks_visual_blocks_after_text_verification(db_session, monkeypatch):
+    analysis = Analysis.create(
+        tenant_id="ens", course_name="Governança de IA", correlation_id="visual-gate"
+    )
+    analysis.proposal_data = {
+        "_institution_context": {
+            "competitors": [{"id": "fgv", "name": "FGV", "domains": ["fgv.br"]}]
+        }
+    }
+    await AnalysisRepository(db_session).save(analysis)
+    db_session.add(
+        ScoringResultModel(
+            id="visual-gate-score",
+            analysis_id=analysis.id,
+            profile_id="portfolio-v2",
+            viability_score=0,
+            coverage_score=0,
+            confidence_score=0,
+            partial_score=0,
+            recommendation="INSUFFICIENT_EVIDENCE",
+            is_experimental=True,
+            pillar_scores={},
+            gate_details={},
+        )
+    )
+    await db_session.commit()
+    service = DossierSynthesisService(db_session, FakeGenerativeModel())
+    original = service._build_visual_presentation_blocks
+
+    def corrupted_blocks(*args):
+        blocks = original(*args)
+        blocks["competitive_benchmark"]["offers_found_count"] = 99
+        return blocks
+
+    monkeypatch.setattr(service, "_build_visual_presentation_blocks", corrupted_blocks)
+    with pytest.raises(DossierVerificationError) as error:
+        await service.synthesize_and_verify(analysis.id)
+    assert error.value.report["gate"] == "final_presentation"
+    assert error.value.can_revise is False
+    published = (
+        await db_session.execute(
+            select(DossierModel).where(DossierModel.analysis_id == analysis.id)
+        )
+    ).scalar_one_or_none()
+    assert published is None
+
+
 @pytest.mark.parametrize("installments", [12, None, True, 0])
 async def test_real_failure_facts_expose_computed_total_and_history_nature(
     db_session, installments
@@ -415,17 +530,17 @@ async def test_synthesize_and_verify_e2e_flow(db_session: AsyncSession) -> None:
     assert "MBA em Inteligência de Dados" in persisted.executive_summary
     assert len(persisted.sections) == 3
     assert persisted.presentation["schema_version"] == dossier_output.schema_version
-    # Validações dos blocos visuais e executivos de ponta a ponta
-    assert "kpis" in persisted.presentation
-    assert len(persisted.presentation["kpis"]) == 4
-    assert "personas" in persisted.presentation
-    assert len(persisted.presentation["personas"]) == 2
-    assert "economics" in persisted.presentation
-    assert len(persisted.presentation["economics"]["scenarios"]) == 3
-    assert "curriculum_modules" in persisted.presentation
-    assert "swot" in persisted.presentation
-    assert "tactical_roadmap" in persisted.presentation
-    assert len(persisted.presentation["tactical_roadmap"]) == 4
+    # The final persisted presentation cannot introduce facts outside the verified dossier.
+    assert persisted.presentation["contract_version"] == 2
+    assert persisted.presentation["verdict"]["score"] == scoring.viability_score
+    assert persisted.presentation["kpis"] == []  # UI uses canonical scoring directly.
+    assert persisted.presentation["personas"] == []
+    assert persisted.presentation["economics"]["status"] == "not_calculable"
+    assert persisted.presentation["economics"]["scenarios"] == []
+    assert persisted.presentation["economics"]["break_even_students"] is None
+    assert persisted.presentation["curriculum_modules"] == []
+    assert not any(persisted.presentation["swot"].values())
+    assert persisted.presentation["tactical_roadmap"] == []
 
 
 async def test_facts_exclude_rejected_evidence_and_keep_observed_fields(db_session):
@@ -848,7 +963,9 @@ async def test_job_descriptions_reach_writer_facts_and_integrity_report_is_track
             gate_details={},
         )
     )
-    job_desc = "Responsável pela regulação de sinistros patrimoniais complexos e prevenção a fraudes."
+    job_desc = (
+        "Responsável pela regulação de sinistros patrimoniais complexos e prevenção a fraudes."
+    )
     db_session.add(
         MarketEvidenceModel(
             id="job-ev-1",

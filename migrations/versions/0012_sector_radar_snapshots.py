@@ -47,4 +47,3 @@ def downgrade() -> None:
     op.drop_index("ix_sector_radar_tenant_collected", table_name="sector_radar_snapshots")
     op.drop_index("ix_sector_radar_snapshots_tenant_id", table_name="sector_radar_snapshots")
     op.drop_table("sector_radar_snapshots")
-

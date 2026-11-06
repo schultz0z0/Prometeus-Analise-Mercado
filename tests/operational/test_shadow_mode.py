@@ -4,6 +4,7 @@ import httpx
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from prometeus.domain.configuration import AppSettings
 from prometeus.domain.webhooks import (
     WebhookDeliveryStatus,
     WebhookEvent,
@@ -36,7 +37,11 @@ async def shadow_client(shadow_session: AsyncSession) -> httpx.AsyncClient:
 
     app.dependency_overrides[get_db_session] = override_session
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+    async with httpx.AsyncClient(
+        transport=transport,
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
+    ) as c:
         yield c
     app.dependency_overrides.clear()
 
@@ -49,7 +54,8 @@ async def test_api_tags_analysis_when_shadow_mode_active(
         patch("prometeus.entrypoints.rest.app.AppSettings") as MockSettings,
         patch("prometeus.entrypoints.rest.app.run_analysis_workflow.delay"),
     ):
-        instance = MockSettings.return_value
+        instance = AppSettings()
+        MockSettings.return_value = instance
         instance.KILL_SWITCH_ACTIVE = False
         instance.SHADOW_MODE = True
 
@@ -81,6 +87,7 @@ async def test_webhook_dispatcher_shadow_mode_avoids_real_network_call(
     # Inicializa dispatcher com shadow_mode=True
     dispatcher = WebhookDispatcher(
         db_session=shadow_session,
+        secret="isolated-test-secret",
         shadow_mode=True,
     )
 

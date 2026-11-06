@@ -18,7 +18,8 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
+from urllib.parse import urlencode
 
 import redis.asyncio as aioredis
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response, status
@@ -30,19 +31,29 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from prometeus import __descriptor__, __product__, __version__
+from prometeus.application.analysis_jobs import publish_analysis_job
 from prometeus.application.create_analysis import (
     CreateAnalysisCommand,
     CreateAnalysisUseCase,
 )
 from prometeus.application.runtime_preflight import validate_runtime_preflight
 from prometeus.application.sector_radar import SectorRadarService, serialize_radar_snapshot
-from prometeus.domain.analyses import Analysis, AnalysisStatus, DomainError
+from prometeus.domain.analyses import AnalysisStatus, DomainError
 from prometeus.domain.configuration import (
     AppSettings,
     ConfigurationError,
     TenantConfig,
     TenantNotFoundError,
     resolve_tenant_config_for_id,
+)
+from prometeus.infrastructure.access import (
+    COOKIE_NAME,
+    AccessPrincipal,
+    authenticate_key,
+    authenticated_principal,
+    create_browser_session,
+    operation_scope,
+    require_same_origin,
 )
 from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
 from prometeus.infrastructure.db.models import (
@@ -54,6 +65,7 @@ from prometeus.infrastructure.db.models import (
     HumanDecisionModel,
     MarketEvidenceModel,
     ScoringResultModel,
+    ToolRunAttemptModel,
     ToolRunModel,
 )
 from prometeus.infrastructure.db.session import get_db_session, get_engine
@@ -124,13 +136,97 @@ async def security_headers_middleware(request: Request, call_next: Any) -> Respo
     else:
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'; "
+            "script-src 'self'; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com data:; "
             "img-src 'self' data: https:; "
             "connect-src 'self'"
         )
     return response
+
+
+@app.middleware("http")
+async def access_control_middleware(request: Request, call_next: Any) -> Response:
+    path = request.url.path
+    if not path.startswith("/v1/") or path == "/v1/session/login":
+        return await call_next(request)  # type: ignore[no-any-return]
+    try:
+        principal, cookie_auth = authenticated_principal(request, AppSettings())
+        principal.require(operation_scope(request))
+        if cookie_auth and request.method not in {"GET", "HEAD", "OPTIONS"}:
+            require_same_origin(request)
+        tenant_ids = request.query_params.getlist("tenant_id")
+        tenant_path = re.match(r"^/v1/tenants/([^/]+)", path)
+        if tenant_path:
+            tenant_ids.append(tenant_path.group(1))
+        if request.method in {"POST", "PUT", "PATCH"} and request.headers.get(
+            "content-type", ""
+        ).startswith("application/json"):
+            try:
+                body = await request.json()
+            except json.JSONDecodeError:
+                body = {}
+            if isinstance(body, dict) and body.get("tenant_id"):
+                tenant_ids.append(str(body["tenant_id"]))
+            elif path == "/v1/analyses":
+                tenant_ids.append("ens")  # Mesmo default do contrato CreateAnalysisRequest.
+        if not tenant_ids and (path == "/v1/analyses" or path.startswith("/v1/institutional/")):
+            request.scope["query_string"] = urlencode(
+                [*request.query_params.multi_items(), ("tenant_id", principal.tenant_id)]
+            ).encode()
+        if any(tenant_id != principal.tenant_id for tenant_id in tenant_ids):
+            raise HTTPException(403, "Acesso a outra instituição não autorizado.")
+        resource = re.match(r"^/v1/analyses/([^/]+)", path)
+        if resource:
+            dependency = app.dependency_overrides.get(get_db_session, get_db_session)
+            async for session in dependency():
+                owner = await session.scalar(
+                    select(AnalysisModel.tenant_id).where(AnalysisModel.id == resource.group(1))
+                )
+                if owner is not None and owner != principal.tenant_id:
+                    raise HTTPException(403, "Acesso a outra instituição não autorizado.")
+        request.state.principal = principal
+        return await call_next(request)  # type: ignore[no-any-return]
+    except HTTPException as error:
+        return JSONResponse(
+            status_code=error.status_code, content={"detail": error.detail}, headers=error.headers
+        )
+
+
+class LoginRequest(BaseModel):
+    access_key: str = Field(min_length=1, max_length=4096)
+
+
+@app.post("/v1/session/login")
+async def login_session(
+    payload: LoginRequest, request: Request, response: Response
+) -> dict[str, str]:
+    require_same_origin(request)
+    settings = AppSettings()
+    principal = authenticate_key(payload.access_key, settings)
+    response.set_cookie(
+        COOKIE_NAME,
+        create_browser_session(principal, settings),
+        httponly=True,
+        samesite="strict",
+        secure=request.url.scheme == "https",
+        max_age=28800,
+        path="/",
+    )
+    response.headers["Cache-Control"] = "no-store"
+    return principal.public()
+
+
+@app.get("/v1/session")
+async def get_browser_session(request: Request) -> dict[str, str]:
+    principal: AccessPrincipal = request.state.principal
+    return principal.public()
+
+
+@app.post("/v1/session/logout")
+async def logout_session(response: Response) -> dict[str, str]:
+    response.delete_cookie(COOKIE_NAME, path="/")
+    return {"status": "signed_out"}
 
 
 @app.exception_handler(ConfigurationError)
@@ -227,7 +323,7 @@ async def create_analysis(
     if settings.SHADOW_MODE:
         proposal_data["_shadow_mode"] = True
 
-    use_case = CreateAnalysisUseCase(session)
+    use_case = CreateAnalysisUseCase(session, settings)
     command = CreateAnalysisCommand(
         tenant_id=payload.tenant_id,
         course_name=payload.course_name,
@@ -236,15 +332,12 @@ async def create_analysis(
         correlation_id=corr_id,
     )
     result = await use_case.execute(command)
+    # A análise, snapshot e outbox ficam visíveis antes de qualquer publicação.
+    await session.commit()
 
     # Dispara workflow no Celery de forma assíncrona se não for requisição duplicada
     if not result.is_existing:
-        try:
-            run_analysis_workflow.delay(result.analysis_id, corr_id)
-        except Exception as exc:
-            logger.warning(
-                f"Não foi possível enfileirar tarefa no Celery imediatamente: {exc}. Job mantido em QUEUED."
-            )
+        await publish_analysis_job(session, result.analysis_id, run_analysis_workflow.delay)
 
     msg = (
         "Análise recuperada com sucesso via Idempotency-Key."
@@ -381,7 +474,7 @@ async def list_analyses(
                 "highlights": (dossier.presentation or {}).get("highlights", {}),
                 "limitations": (dossier.presentation or {}).get("limitations", []),
                 "analysis_audit": (dossier.presentation or {}).get("analysis_audit", {}),
-        "three_fold_review": (dossier.presentation or {}).get("three_fold_review"),
+                "three_fold_review": (dossier.presentation or {}).get("three_fold_review"),
                 "presentation": dossier.presentation or {},
                 "sections": dossier.sections,
                 "claims": dossier.claims,
@@ -418,10 +511,11 @@ async def list_analyses(
             {
                 "id": row.id,
                 "name": row.course_name,
-                "area": proposal.get("area") or "Jurídico & Seguros",
-                "level": proposal.get("level") or "MBA Executivo",
-                "modality": proposal.get("modality") or "100% EAD",
+                "area": proposal.get("area") or "Não informada",
+                "level": proposal.get("level") or "Não informado",
+                "modality": proposal.get("modality") or "Não informada",
                 "ticket": proposal.get("ticket"),
+                "price_period": proposal.get("price_period") or "unknown",
                 "duration_months": proposal.get("duration_months"),
                 "status": row.status,
                 "recommendation": scoring.recommendation if scoring else row.recommendation,
@@ -462,6 +556,33 @@ async def get_analysis(
         .scalars()
         .all()
     )
+    attempts = list((await session.execute(
+        select(ToolRunAttemptModel)
+        .where(ToolRunAttemptModel.analysis_id == analysis_id,
+               ToolRunAttemptModel.tenant_id == analysis.tenant_id)
+        .order_by(ToolRunAttemptModel.attempt_index)
+    )).scalars())
+    attempts_by_run: dict[str, list[dict[str, Any]]] = {}
+
+    def diagnostic_code(diagnostic: dict[str, Any], key: str) -> str | None:
+        # Only structured identifiers leave the backend; no input snapshots or logs.
+        value = diagnostic.get(key)
+        return value if isinstance(value, str) and re.fullmatch(r"[a-z][a-z0-9_]{0,63}", value) else None
+
+    for attempt in attempts:
+        diagnostic = attempt.diagnosis or {}
+        attempts_by_run.setdefault(attempt.tool_run_id, []).append({
+            "attempt_index": attempt.attempt_index,
+            "status": attempt.status,
+            "run_id": attempt.provider_run_id,
+            "dataset_id": attempt.dataset_id,
+            "cost_usd": attempt.cost_usd,
+            "cause": diagnostic_code(diagnostic, "cause"),
+            "action": diagnostic_code(diagnostic, "action"),
+            "started_at": attempt.started_at.isoformat(),
+            "finished_at": attempt.finished_at.isoformat() if attempt.finished_at else None,
+            "next_attempt_at": attempt.next_attempt_at.isoformat() if attempt.next_attempt_at else None,
+        })
     blocking_event = next(
         (event for event in reversed(analysis.audit_events) if event.to_status.value == "BLOCKED"),
         None,
@@ -517,6 +638,14 @@ async def get_analysis(
                 "valid_items_count": run.valid_items_count,
                 "observation_status": (run.parameters or {}).get("observation_status"),
                 "cost_usd": run.cost_usd,
+                "cost_status": (run.parameters or {}).get("cost_status", "historical_observation"),
+                "cost_observed_at": (run.parameters or {}).get("cost_observed_at"),
+                "cost_source": (run.parameters or {}).get("cost_source", "apify.usageTotalUsd"),
+                "authorized_cap_usd": (run.parameters or {}).get("authorized_cap_usd"),
+                "authorization_status": (run.parameters or {}).get("authorization_status"),
+                "spending_mode": (run.parameters or {}).get("spending_mode", "legacy_caps"),
+                "attempts_count": len(attempts_by_run.get(run.id, [])),
+                "attempts": attempts_by_run.get(run.id, []),
                 "error_code": run.error_code,
                 "error_message": run.error_message,
                 "started_at": run.started_at.isoformat() if run.started_at else None,
@@ -569,6 +698,7 @@ async def reanalyze(
     analysis_id: str,
     payload: ReanalyzeRequest,
     session: Annotated[AsyncSession, Depends(get_db_session)],
+    idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
 ) -> dict[str, Any]:
     settings = AppSettings()
     if settings.KILL_SWITCH_ACTIVE:
@@ -586,26 +716,33 @@ async def reanalyze(
             detail=f"Análise original não encontrada: {analysis_id}",
         )
 
-    # Cria nova análise com herança e vínculo explícito
-    new_analysis = Analysis.create(
-        tenant_id=previous.tenant_id,
-        course_name=previous.course_name,
-        correlation_id=corr_id,
-        proposal_data={**previous.proposal_data, **payload.proposal_data},
-        previous_analysis_id=previous.id,
+    if not idempotency_key or not idempotency_key.strip():
+        raise HTTPException(400, "Header 'Idempotency-Key' é obrigatório para reanálise.")
+    result = await CreateAnalysisUseCase(session, settings).execute(
+        CreateAnalysisCommand(
+            tenant_id=previous.tenant_id,
+            course_name=previous.course_name,
+            correlation_id=corr_id,
+            proposal_data={
+                **{
+                    key: value
+                    for key, value in previous.proposal_data.items()
+                    if not key.startswith("_")
+                },
+                **payload.proposal_data,
+            },
+            idempotency_key=f"revision:{previous.id}:{idempotency_key.strip()}",
+            previous_analysis_id=previous.id,
+        )
     )
-    await repo.save(new_analysis)
     await session.commit()
-
-    try:
-        run_analysis_workflow.delay(new_analysis.id, corr_id)
-    except Exception as exc:
-        logger.warning(f"Erro ao disparar tarefa Celery para reanálise {new_analysis.id}: {exc}")
+    if not result.is_existing:
+        await publish_analysis_job(session, result.analysis_id, run_analysis_workflow.delay)
 
     return {
-        "analysis_id": new_analysis.id,
+        "analysis_id": result.analysis_id,
         "previous_analysis_id": previous.id,
-        "status": new_analysis.status.value,
+        "status": result.status.value,
         "message": f"Reanálise enfileirada com sucesso a partir de {previous.id}.",
     }
 
@@ -723,7 +860,9 @@ class SubmitDecisionRequest(BaseModel):
 
     user_id: str = Field(..., description="ID do decisor institucional")
     user_role: str = Field(..., description="Papel do decisor (ex: director, coordinator)")
-    decision: str = Field(..., description="APPROVED, APPROVED_WITH_ADJUSTMENTS, REJECTED")
+    decision: Literal["APPROVED", "APPROVED_WITH_ADJUSTMENTS", "REJECTED"] = Field(
+        ..., description="Decisão institucional"
+    )
     rationale: str = Field(..., description="Justificativa da decisão tomada")
     adjustments: dict[str, Any] = Field(default_factory=dict, description="Ajustes negociados")
 
@@ -736,6 +875,7 @@ class SubmitDecisionRequest(BaseModel):
 async def submit_human_decision(
     analysis_id: str,
     payload: SubmitDecisionRequest,
+    request: Request,
     session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> dict[str, Any]:
     repo = AnalysisRepository(session)
@@ -749,8 +889,8 @@ async def submit_human_decision(
     model = HumanDecisionModel(
         id=f"dec_{uuid.uuid4().hex[:12]}",
         analysis_id=analysis_id,
-        user_id=payload.user_id,
-        user_role=payload.user_role,
+        user_id=request.state.principal.subject,
+        user_role=request.state.principal.role,
         decision=payload.decision.upper(),
         rationale=payload.rationale,
         adjustments=payload.adjustments,
@@ -920,6 +1060,29 @@ async def list_institutional_courses(
                 for c in raw_items
                 if q in c["name"].lower() or any(q in t.lower() for t in c["tags"])
             ]
+        # Mesmo contrato de apresentação da base persistida, sem alterar as fixtures.
+        raw_items = [
+            {
+                **item,
+                "metrics_summary": {
+                    "total_periods": len(item.get("funnel_history", [])),
+                    "total_leads": sum(
+                        row.get("leads", 0) for row in item.get("funnel_history", [])
+                    ),
+                    "total_enrolled": sum(
+                        row.get("enrolled", 0) for row in item.get("funnel_history", [])
+                    ),
+                    "total_revenue_brl": round(
+                        sum(
+                            row.get("total_revenue_brl", 0)
+                            for row in item.get("funnel_history", [])
+                        ),
+                        2,
+                    ),
+                },
+            }
+            for item in raw_items
+        ]
         return {
             "tenant_id": tenant_id,
             "total": len(raw_items),
@@ -1155,6 +1318,7 @@ class SettingsUpdateRequest(BaseModel):
     jev_model: str | None = None
     apify_token: str | None = None
     apify_max_charge: float | None = None
+    apify_discovery_mcp_enabled: bool | None = None
 
 
 def _env_path() -> Path:
@@ -1248,12 +1412,20 @@ async def get_settings() -> dict[str, Any]:
             else "100% TRADITIONAL (LLM assume decisões e textos)"
         ),
         "apify_token_masked": mask(settings.APIFY_TOKEN),
-        "apify_max_charge": settings.APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS,
+        "apify_max_charge": None,
+        "apify_spending_mode": "monitor_only",
+        "apify_legacy_max_charge": settings.APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS,
+        "apify_discovery_mcp_enabled": settings.APIFY_DISCOVERY_MCP_ENABLED,
     }
 
 
 @app.post("/v1/settings", summary="Atualizar configurações de IA e conectores via app")
 async def update_settings_endpoint(payload: SettingsUpdateRequest) -> dict[str, Any]:
+    if payload.apify_max_charge is not None:
+        raise HTTPException(
+            status_code=422,
+            detail="Novas análises usam monitoramento de custos, sem teto monetário por chamada. Atualize a tela de configurações.",
+        )
     settings = AppSettings()
     provider = payload.gen_llm_provider or settings.GEN_LLM_PROVIDER
     if payload.gen_llm_provider is not None and provider not in {
@@ -1304,8 +1476,8 @@ async def update_settings_endpoint(payload: SettingsUpdateRequest) -> dict[str, 
         updates["JEV_MODEL"] = payload.jev_model
     if payload.apify_token is not None and not payload.apify_token.startswith("••••"):
         updates["APIFY_TOKEN"] = payload.apify_token
-    if payload.apify_max_charge is not None:
-        updates["APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS"] = str(payload.apify_max_charge)
+    if payload.apify_discovery_mcp_enabled is not None:
+        updates["APIFY_DISCOVERY_MCP_ENABLED"] = str(payload.apify_discovery_mcp_enabled).lower()
 
     previous_credentials: ChatGPTCredentials | None = None
     credential_store = ChatGPTCredentialStore(settings.CHATGPT_CREDENTIALS_PATH)
@@ -1335,6 +1507,22 @@ async def update_settings_endpoint(payload: SettingsUpdateRequest) -> dict[str, 
 # =============================================================================
 
 _chatgpt_catalog_lock = asyncio.Lock()
+
+
+class ApifyDiscoveryRequest(BaseModel):
+    tool: Literal["search-actors", "fetch-actor-details", "search-apify-docs", "fetch-apify-docs"]
+    arguments: dict[str, Any] = Field(default_factory=dict)
+
+
+@app.post("/v1/settings/apify/discovery", summary="Consultar catálogo e documentação Apify sem executar Actors")
+async def apify_discovery_lookup(payload: ApifyDiscoveryRequest) -> dict[str, Any]:
+    from prometeus.infrastructure.apify.discovery_mcp import ApifyDiscoveryMCP
+
+    settings = AppSettings()
+    result = await ApifyDiscoveryMCP(enabled=settings.APIFY_DISCOVERY_MCP_ENABLED).lookup(
+        payload.tool, payload.arguments,
+    )
+    return result.model_dump(mode="json")
 
 
 async def _chatgpt_account_catalog(
@@ -1573,9 +1761,7 @@ _TENANT_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{1,62}$")
 def _load_tenant_config_by_id(tenant_id: str, settings: AppSettings) -> TenantConfig:
     """Resolve a configuração pública do tenant sem expor caminhos fora de config/tenants."""
     try:
-        return resolve_tenant_config_for_id(
-            tenant_id, settings, allow_synthetic_fallback=False
-        )
+        return resolve_tenant_config_for_id(tenant_id, settings, allow_synthetic_fallback=False)
     except TenantNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

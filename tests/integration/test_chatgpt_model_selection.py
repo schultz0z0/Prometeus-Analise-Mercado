@@ -62,7 +62,9 @@ def connected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
 async def test_model_selection_updates_credentials_env_settings_and_factory(connected):
     path, credentials, saved = connected
     async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=app_module.app), base_url="http://test"
+        transport=httpx.ASGITransport(app=app_module.app),
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
     ) as client:
         response = await client.post(
             "/v1/settings",
@@ -96,7 +98,9 @@ async def test_catalog_endpoint_exposes_only_models_and_no_credentials(connected
 
     monkeypatch.setattr(app_module, "list_chatgpt_models", models)
     async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=app_module.app), base_url="http://test"
+        transport=httpx.ASGITransport(app=app_module.app),
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
     ) as client:
         response = await client.get("/v1/auth/chatgpt/models")
     assert response.status_code == 200
@@ -109,6 +113,47 @@ async def test_catalog_endpoint_exposes_only_models_and_no_credentials(connected
     ]
     assert "token" not in response.text
     assert "secret" not in response.text
+
+
+@pytest.mark.asyncio
+async def test_apify_settings_expose_monitoring_policy_despite_legacy_env(connected, monkeypatch):
+    monkeypatch.setenv("APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS", "5")
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app_module.app),
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
+    ) as client:
+        response = await client.get("/v1/settings")
+    assert response.status_code == 200
+    assert response.json()["apify_max_charge"] is None
+    assert response.json()["apify_spending_mode"] == "monitor_only"
+    assert response.json()["apify_legacy_max_charge"] == 5
+
+
+@pytest.mark.asyncio
+async def test_old_budget_input_cannot_silently_restore_per_run_caps(connected):
+    _, _, saved = connected
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app_module.app),
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
+    ) as client:
+        response = await client.post("/v1/settings", json={"apify_max_charge": 10})
+    assert response.status_code == 422
+    assert "APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS" not in saved
+
+
+@pytest.mark.asyncio
+async def test_optional_discovery_can_be_enabled_without_changing_execution_credentials(connected):
+    _, _, saved = connected
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app_module.app),
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
+    ) as client:
+        response = await client.post("/v1/settings", json={"apify_discovery_mcp_enabled": True})
+    assert response.status_code == 200
+    assert saved == {"APIFY_DISCOVERY_MCP_ENABLED": "true"}
 
 
 @pytest.mark.asyncio
@@ -125,7 +170,9 @@ async def test_unavailable_model_or_unsupported_effort_never_changes_credentials
 ):
     path, credentials, saved = connected
     async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=app_module.app), base_url="http://test"
+        transport=httpx.ASGITransport(app=app_module.app),
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
     ) as client:
         response = await client.post("/v1/settings", json=payload)
     assert response.status_code == 422
@@ -155,7 +202,9 @@ async def test_model_catalog_refreshes_expired_session_without_reconnection(conn
     monkeypatch.setattr(app_module, "refresh_chatgpt_tokens", refresh, raising=False)
     monkeypatch.setattr(app_module, "list_chatgpt_models", models)
     async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=app_module.app), base_url="http://test"
+        transport=httpx.ASGITransport(app=app_module.app),
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
     ) as client:
         response = await client.get("/v1/auth/chatgpt/models")
     assert response.status_code == 200
@@ -174,7 +223,9 @@ async def test_failed_catalog_has_actionable_error_and_does_not_apply_new_model(
 
     monkeypatch.setattr(app_module, "list_chatgpt_models", unavailable)
     async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=app_module.app), base_url="http://test"
+        transport=httpx.ASGITransport(app=app_module.app),
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
     ) as client:
         response = await client.post("/v1/settings", json={"gen_llm_model": "account-new"})
     assert response.status_code == 502
@@ -187,7 +238,9 @@ async def test_failed_catalog_has_actionable_error_and_does_not_apply_new_model(
 async def test_api_model_save_does_not_override_oauth_selection(connected):
     path, credentials, saved = connected
     async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=app_module.app), base_url="http://test"
+        transport=httpx.ASGITransport(app=app_module.app),
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
     ) as client:
         response = await client.post(
             "/v1/settings",
@@ -228,7 +281,9 @@ async def test_failed_settings_persistence_never_restores_stale_tokens_or_anothe
 
     monkeypatch.setattr(app_module, "_persist_env_updates", failing_persist)
     async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=app_module.app), base_url="http://test"
+        transport=httpx.ASGITransport(app=app_module.app),
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
     ) as client:
         response = await client.post("/v1/settings", json={"gen_llm_model": "account-new"})
     assert response.status_code == 500

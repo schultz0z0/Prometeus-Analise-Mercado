@@ -1,5 +1,15 @@
 # REST, MCP e webhooks
 
+## Contrato operacional vigente — 04/11/2026
+
+REST `/v1/` é autenticado; criação e reanálise exigem `Idempotency-Key`, com snapshot e outbox. Decisão usa `POST /v1/analyses/{id}/decisions`; exportação estruturada usa `GET /v1/analyses/{id}/dossier`. A documentação HTTP gerada pela API descreve os endpoints efetivos.
+
+MCP stdio é executado com `python -m prometeus.entrypoints.mcp`. As cinco ferramentas são `create_course_analysis`, `check_analysis_progress`, `retrieve_course_dossier`, `submit_decision` e `record_course_outcome`; criação exige `idempotency_key` e compartilha a transação canônica. O processo local confiável é restrito à instituição configurada. Não há listener remoto MCP entregue.
+
+Eventos atualmente conectados à outbox são `analysis.completed`, `analysis.blocked` e `analysis.failed`; recomendação de revisão humana segue no payload da conclusão. Destino HTTPS e segredo são explícitos, despacho é posterior ao commit, retries são exponenciais e entregas terminais não se repetem. Headers: `X-Prometeus-Signature`, `X-Prometeus-Timestamp` e `X-Prometeus-Event-ID`. Corpo contém `event_id`, `event_type`, `analysis_id`, `tenant_id`, `timestamp` e `payload`. Consulte [operação](../operations/audit-remediation.md) e [ADR-0009](../architecture/adr/0009-access-and-workflow-recovery.md).
+
+O catálogo abaixo é o planejamento histórico, e não uma declaração de endpoints/eventos implementados adicionais.
+
 ## REST planejado
 
 - `POST /v1/analyses`

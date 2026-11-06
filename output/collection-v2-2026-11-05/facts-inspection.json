@@ -1,0 +1,236 @@
+{
+  "analysis_status": "RUNNING",
+  "benchmark": {
+    "schema_version": 1,
+    "configured_total": 10,
+    "searched_total": 10,
+    "completed_total": 10,
+    "blocked_total": 0,
+    "institutions_with_offers": 7,
+    "total_offers": 10,
+    "coverage_complete": true,
+    "monitored_total": 10,
+    "offers_found_count": 7,
+    "whitespace_summary": "10 de 10 instituições pesquisadas; 10 ofertas qualificadas em 7 instituições. Cobertura do recorte concluída. Ausência de oferta no recorte não comprova ausência de concorrência."
+  },
+  "rows": [
+    {
+      "name": "Conhecer Seguros",
+      "execution_status": "completed",
+      "evidence_status": "no_qualified_offer",
+      "offers": []
+    },
+    {
+      "name": "FGV Educação Executiva",
+      "execution_status": "completed",
+      "evidence_status": "adjacent_offer",
+      "offers": [
+        {
+          "competitor_id": "fgv",
+          "evidence_id": "ee14d959-e902-41e1-9151-fee456be6ad5",
+          "evidence_ids": [
+            "ee14d959-e902-41e1-9151-fee456be6ad5"
+          ],
+          "title": "MBA em Inteligência Artificial, Comunicação Estratégica e Soberania Digital Sobre o curso Prepare-se para liderar estratégias com inteligência artificial, soberania digital e segurança da informação em contextos de transformação digital. O MBA em Inteligên",
+          "source_url": "https://educacao-executiva.fgv.br/produto/mba-em-inteligencia-artificial-comunicacao-estrategica-e-soberania-digital-01tV200000KXKPRIA5",
+          "relation": "adjacent",
+          "relation_reason": "Oferta pertinente de categoria educacional diferente da proposta",
+          "modality": "Online / EAD",
+          "workload_hours": "—",
+          "price_display": "—",
+          "collected_at": "2026-11-06T19:13:05.902764+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Ibmec",
+      "execution_status": "completed",
+      "evidence_status": "adjacent_offer",
+      "offers": [
+        {
+          "competitor_id": "ibmec",
+          "evidence_id": "ce6ecd5c-4cd6-44a5-9f8a-47b2e1e23c81",
+          "evidence_ids": [
+            "ce6ecd5c-4cd6-44a5-9f8a-47b2e1e23c81"
+          ],
+          "title": "Guia de Inteligência Artificial - Tudo sobre a área, mercado de trabalho, salário e tempo de curso! O que é um MBA em Inteligência Artificial? O MBA em Inteligência Artificial (IA) é um curso de pós-graduação que estuda as aplicações de tecnologias inovado",
+          "source_url": "https://www.ibmec.br/guia-de-carreiras/mba-em-inteligencia-artificial",
+          "relation": "adjacent",
+          "relation_reason": "Oferta pertinente de categoria educacional diferente da proposta",
+          "modality": "—",
+          "workload_hours": "—",
+          "price_display": "—",
+          "collected_at": "2026-11-06T19:29:52.064521+00:00"
+        },
+        {
+          "competitor_id": "ibmec",
+          "evidence_id": "a9d9d658-c103-4c29-a62f-809caad8a7e7",
+          "evidence_ids": [
+            "a9d9d658-c103-4c29-a62f-809caad8a7e7"
+          ],
+          "title": "Guia de MBA em Inteligência Artificial, Data Science e Big Data para Negócios O MBA em Inteligência Artificial, Data Science e Big Data para Negócios é uma especialização direcionada a profissionais que almejam compreender como utilizar tecnologias emergen",
+          "source_url": "https://www.ibmec.br/guia-de-carreiras/mba-em-inteligencia-artificial-data-science-e-big-data-para-negocios",
+          "relation": "adjacent",
+          "relation_reason": "Oferta pertinente de categoria educacional diferente da proposta",
+          "modality": "EAD Live",
+          "workload_hours": "—",
+          "price_display": "—",
+          "collected_at": "2026-11-06T19:29:52.064985+00:00"
+        }
+      ]
+    },
+    {
+      "name": "FIPECAFI",
+      "execution_status": "completed",
+      "evidence_status": "no_qualified_offer",
+      "offers": []
+    },
+    {
+      "name": "FIA Business School",
+      "execution_status": "completed",
+      "evidence_status": "adjacent_offer",
+      "offers": [
+        {
+          "competitor_id": "fia",
+          "evidence_id": "9558d42a-0787-46f6-ad1b-3a0ac584b4bf",
+          "evidence_ids": [
+            "9558d42a-0787-46f6-ad1b-3a0ac584b4bf",
+            "77c25620-c5b0-4702-a647-7d353df95367"
+          ],
+          "title": "Pós-Graduação Analytics e Inteligência Artificial",
+          "source_url": "https://fia.com.br/pos-graduacao-ead/analytics-inteligencia-artificial-data-science/",
+          "relation": "adjacent",
+          "relation_reason": "Oferta pertinente de categoria educacional diferente da proposta",
+          "modality": "EAD Live",
+          "workload_hours": "—",
+          "price_display": "—",
+          "collected_at": "2026-11-06T19:31:22.451309+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Insper",
+      "execution_status": "completed",
+      "evidence_status": "no_qualified_offer",
+      "offers": []
+    },
+    {
+      "name": "Estácio",
+      "execution_status": "completed",
+      "evidence_status": "adjacent_offer",
+      "offers": [
+        {
+          "competitor_id": "estacio",
+          "evidence_id": "6389c2b3-b65a-4e8c-957c-5cfcedfe1971",
+          "evidence_ids": [
+            "6389c2b3-b65a-4e8c-957c-5cfcedfe1971"
+          ],
+          "title": "Pós-graduação em IA aplicada ao marketing Pós-graduação em Inteligência Artificial Aplicada ao Marketing (6 meses) Use IA, automação e análise preditiva para personalizar campanhas e aumentar resultados em marketing. Preços podem variar de acordo com a f",
+          "source_url": "https://estacio.br/cursos/pos-graduacao/inteligencia-artificial-aplicada-ao-marketing-2?srsltid=AYCX9vLOaeId_1lYFPCtCcZZWiURCTi_2F-TvlH4E_1dyJIZ_Cl83Lsb",
+          "relation": "adjacent",
+          "relation_reason": "Oferta pertinente de categoria educacional diferente da proposta",
+          "modality": "Online / EAD",
+          "workload_hours": "—",
+          "price_display": "—",
+          "collected_at": "2026-11-05T19:36:32.185633+00:00"
+        }
+      ]
+    },
+    {
+      "name": "ESA OAB-SP",
+      "execution_status": "completed",
+      "evidence_status": "adjacent_offer",
+      "offers": [
+        {
+          "competitor_id": "esa-oab",
+          "evidence_id": "54d02a66-762e-4702-94f2-df2421f27b78",
+          "evidence_ids": [
+            "54d02a66-762e-4702-94f2-df2421f27b78"
+          ],
+          "title": "OAB ESA 14266 - Curso de Especialização em Proteção de Dados e Privacidade, Inteligência Artificial e Cibersegurança. A quem se destina: O curso é destinado a advogados(as), bacharéis em Direito ou direcionado a profissionais com formação jurídica que atue",
+          "source_url": "https://www.esaoabsp.edu.br/Curso/14266-curso-de-especializacao-em-protecao-de-dados-e-privacidade,-inteligencia-artificial-e-ciberseguranca-/14266",
+          "relation": "adjacent",
+          "relation_reason": "Oferta pertinente de categoria educacional diferente da proposta",
+          "modality": "Presencial",
+          "workload_hours": "—",
+          "price_display": "—",
+          "collected_at": "2026-11-05T19:37:41.444923+00:00"
+        }
+      ]
+    },
+    {
+      "name": "FIAP",
+      "execution_status": "completed",
+      "evidence_status": "adjacent_offer",
+      "offers": [
+        {
+          "competitor_id": "fiap",
+          "evidence_id": "73c02b78-3a66-4c5b-ba3f-5c9a3be20757",
+          "evidence_ids": [
+            "73c02b78-3a66-4c5b-ba3f-5c9a3be20757"
+          ],
+          "title": "PosTech em Governança de IA LIDERE A ADOÇÃO RESPONSÁVEL DA INTELIGÊNCIA ARTIFICIAL Prepare-se para estruturar e liderar a governança de IA nas organizações. Você vai aprender a definir políticas, avaliar riscos, acompanhar o ciclo de vida de modelos e gara",
+          "source_url": "https://postech.fiap.com.br/curso/governanca-de-ia",
+          "relation": "unclassified",
+          "relation_reason": "Oferta observada; relação direta ou adjacente ainda não confirmada",
+          "modality": "—",
+          "workload_hours": "—",
+          "price_display": "—",
+          "collected_at": "2026-11-06T19:20:49.501628+00:00"
+        },
+        {
+          "competitor_id": "fiap",
+          "evidence_id": "44fec03e-caba-47e4-9bbb-5de4d2b6b701",
+          "evidence_ids": [
+            "44fec03e-caba-47e4-9bbb-5de4d2b6b701"
+          ],
+          "title": "MBA em Data Science & Artificial Intelligence nos formatos live para todo o Brasil Híbrido em são paulo CRIE O FUTURO DA INTELIGÊNCIA ARTIFICIAL, COM SOLUÇÕES QUE GERAM IMPACTO EM TODOS OS SETORES DA ECONOMIA Você vai se preparar para: Compreender os mode",
+          "source_url": "https://www.fiap.com.br/mba/mba-em-data-science-artificial-intelligence/",
+          "relation": "adjacent",
+          "relation_reason": "Oferta pertinente de categoria educacional diferente da proposta",
+          "modality": "Online / EAD",
+          "workload_hours": "—",
+          "price_display": "—",
+          "collected_at": "2026-11-06T19:20:49.508848+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Alura",
+      "execution_status": "completed",
+      "evidence_status": "offer_relation_pending",
+      "offers": [
+        {
+          "competitor_id": "alura",
+          "evidence_id": "87b98489-6523-4a58-88f9-1bda871f8d2a",
+          "evidence_ids": [
+            "87b98489-6523-4a58-88f9-1bda871f8d2a"
+          ],
+          "title": "Governança de IA: estratégias éticas e compliance nas empresas 8hCarga horária 48Atividades 1.223Estudantes 9,2Avaliação média 01Certificado 8hCarga horária 48Atividades 1.223Estudantes 9,2Avaliação média 01Certificado 8hCarga horária 48Atividades 1.223Est",
+          "source_url": "https://www.alura.com.br/curso-online-governanca-modelos-reprodutibilidade?srsltid=AYCX9vI7M_-eC5vvaCKwWfY4BgFHhNmZ96p2rwSvx0s0NJ7_fNKC3so1",
+          "relation": "unclassified",
+          "relation_reason": "Oferta observada; relação direta ou adjacente ainda não confirmada",
+          "modality": "—",
+          "workload_hours": "—",
+          "price_display": "—",
+          "collected_at": "2026-11-06T19:22:50.247657+00:00"
+        },
+        {
+          "competitor_id": "alura",
+          "evidence_id": "198e8d56-2d25-4820-94a0-a7052ae0379a",
+          "evidence_ids": [
+            "198e8d56-2d25-4820-94a0-a7052ae0379a"
+          ],
+          "title": "Governança no ciclo de vida de IA: monitorando modelos e supervisionando sistemas 8hCarga horária 48Atividades 341Estudantes 9,3Avaliação média 01Certificado 8hCarga horária 48Atividades 341Estudantes 9,3Avaliação média 01Certificado 8hCarga horária 48Ativ",
+          "source_url": "https://www.alura.com.br/curso-online-governanca-ciclo-vida-modelos-ia?srsltid=AYCX9vK4HVskrcUJHdVkCTZexe7Kk0YaZpMKuq-r0KZkpC-tlmiGY5Nd",
+          "relation": "unclassified",
+          "relation_reason": "Oferta observada; relação direta ou adjacente ainda não confirmada",
+          "modality": "—",
+          "workload_hours": "—",
+          "price_display": "—",
+          "collected_at": "2026-11-06T19:42:16.023080+00:00"
+        }
+      ]
+    }
+  ]
+}

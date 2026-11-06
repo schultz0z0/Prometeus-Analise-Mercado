@@ -42,10 +42,18 @@ def test_theme_comparison_rejects_negative_cases():
     assert _same_theme("Extensão em Culinária Prática", "MBA em Fraudes em Seguros") is False
 
     # Direitos Humanos vs Fraudes em Seguros
-    assert _same_theme("Curso de Direitos Humanos e Litigância", "MBA em Gestão de Fraudes em Seguros") is False
+    assert (
+        _same_theme("Curso de Direitos Humanos e Litigância", "MBA em Gestão de Fraudes em Seguros")
+        is False
+    )
 
     # Positive match
-    assert _same_theme("Gestão e Prevenção de Fraudes em Seguros", "MBA em Gestão de Fraudes em Seguros") is True
+    assert (
+        _same_theme(
+            "Gestão e Prevenção de Fraudes em Seguros", "MBA em Gestão de Fraudes em Seguros"
+        )
+        is True
+    )
 
 
 def test_url_canonicalization_preserves_semantic_params_and_strips_tracking():

@@ -182,6 +182,8 @@ def run_backtest_evaluation(
     final_report = {
         "timestamp": datetime.now(UTC).isoformat(),
         "gate": "Gate D — Score ready",
+        "evaluation_mode": "fixture_simulation",
+        "manual_homologation_required": True,
         "profile_id": profile_id,
         "sample_count": total_samples,
         "metrics": {
@@ -196,7 +198,8 @@ def run_backtest_evaluation(
             "strong_correlation": strong_correlation,
             "accuracy_above_80pct": model_accuracy >= 0.80,
         },
-        "gate_status": "APPROVED" if gate_d_approved else "REJECTED",
+        "gate_status": "PENDING_MANUAL_VALIDATION",
+        "simulation_criteria_passed": gate_d_approved,
         "evaluations": course_results,
     }
 
@@ -219,7 +222,9 @@ def run_backtest_evaluation(
         print(f"  - {mod:<12}: {stats['accuracy']:.1%} ({stats['total']} cursos)")
     print("=" * 80)
     print(f"Relatorio gerado em: {report_path}")
-    print(f"Status do Gate D: {'APROVADO (10/10)' if gate_d_approved else 'REPROVADO'}")
+    print(
+        "Status do Gate D: PENDING_MANUAL_VALIDATION — fixtures não certificam backtest temporal real"
+    )
     print("=" * 80 + "\n")
 
     return 0 if gate_d_approved else 1

@@ -1,0 +1,11 @@
+{
+  "courses": 33,
+  "funnels": 66,
+  "courses_hash": "1a78fa9b42b074976f2c1c64a97eca06",
+  "funnels_hash": "b06fc7ba93d93e7a4dcbe7419709923a",
+  "dossiers": 11,
+  "dossiers_hash": "94236ffd06f20337a6f1655549e6016d",
+  "running_analyses": 0,
+  "running_jobs": 0,
+  "migration": "0013_workflow_reliability"
+}

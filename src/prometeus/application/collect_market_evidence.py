@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import hashlib
 import ipaddress
 import json
+import math
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any, Protocol
 from urllib.parse import parse_qs, parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -22,12 +26,14 @@ from prometeus.infrastructure.apify.client import (
     ApifyActorFailedError,
     ApifyBudgetExceededError,
     ApifyError,
+    ApifyReconciliationRequiredError,
     ApifySchemaDriftError,
     ApifyTimeoutError,
 )
 from prometeus.infrastructure.apify.registry import ActorConfigurationError, ApifyActorRegistry
 from prometeus.infrastructure.apify.schemas import ApifyExecutionResult
 from prometeus.infrastructure.db.models import (
+    AnalysisModel,
     MarketEvidenceModel,
     ResearchPlanModel,
     ToolRunModel,
@@ -43,9 +49,13 @@ class RequiredSourceBlockedError(RuntimeError):
         super().__init__(f"Fonte obrigatória bloqueada em '{call_id}': {reason}")
 
 
+class NoDiscoveredUrlError(ActorConfigurationError):
+    """A consulta anterior não descobriu páginas elegíveis para validação."""
+
+
 class ResearchToolExecutor(Protocol):
     async def execute(
-        self, call: PlannedToolCall, *, max_total_charge_usd: float
+        self, call: PlannedToolCall, *, max_total_charge_usd: float | None
     ) -> ApifyExecutionResult: ...
 
 
@@ -111,6 +121,99 @@ class CollectMarketEvidenceService:
                 )
             )
         ).scalar_one_or_none()
+
+    async def _reserve_authorization(
+        self, plan: CourseResearchPlan, call: PlannedToolCall, run: ToolRunModel
+    ) -> float:
+        # Serialize commitments on the parent aggregate, then commit BEFORE the external POST.
+        await self.session.execute(
+            select(AnalysisModel.id).where(AnalysisModel.id == plan.analysis_id).with_for_update()
+        )
+        plans = list(
+            (
+                await self.session.execute(
+                    select(ResearchPlanModel)
+                    .where(ResearchPlanModel.analysis_id == plan.analysis_id)
+                    .order_by(ResearchPlanModel.created_at, ResearchPlanModel.id)
+                )
+            ).scalars()
+        )
+        runs = list(
+            (
+                await self.session.execute(
+                    select(ToolRunModel)
+                    .where(ToolRunModel.analysis_id == plan.analysis_id)
+                    .execution_options(populate_existing=True)
+                )
+            ).scalars()
+        )
+        total = Decimal("0")
+        current_plan = Decimal("0")
+        for previous in runs:
+            if previous.id == run.id:
+                continue
+            audit = previous.parameters or {}
+            if (
+                audit.get("authorization_status") == "awaiting_authorization"
+                and previous.status == "RUNNING"
+                and not previous.provider_run_id
+                and previous.cost_usd == 0
+            ):
+                # Another collector may have persisted its pre-POST checkpoint while
+                # waiting for this same aggregate lock. It has not bought a run.
+                continue
+            if (
+                audit.get("authorization_status") == "released_pre_execution"
+                or audit.get("observation_status") == "budget_skipped"
+            ):
+                continue
+            cap = audit.get("authorized_cap_usd")
+            if (
+                not isinstance(cap, int | float)
+                or isinstance(cap, bool)
+                or not math.isfinite(cap)
+                or cap <= 0
+            ):
+                raise RequiredSourceBlockedError(
+                    call.id,
+                    "Execução anterior sem autorização de orçamento verificável; requer reconciliação.",
+                )
+            total += Decimal(str(cap))
+            if previous.research_plan_id == plan.id:
+                current_plan += Decimal(str(cap))
+        requested = call.parameters.get("max_total_charge_usd", 0.5)
+        if (
+            not isinstance(requested, int | float)
+            or isinstance(requested, bool)
+            or not math.isfinite(requested)
+            or requested <= 0
+        ):
+            raise ApifyBudgetExceededError("Autorização da consulta inválida.")
+        cap_decimal = max(Decimal("0.50"), Decimal(str(requested)))
+        root_limit = Decimal(str(plans[0].budget_limit_usd))
+        plan_limit = Decimal(str(plan.budget_limit_usd))
+        if (
+            not root_limit.is_finite()
+            or not plan_limit.is_finite()
+            or root_limit < 0
+            or plan_limit < 0
+        ):
+            raise RequiredSourceBlockedError(
+                call.id, "Orçamento inválido; nenhuma nova compra autorizada."
+            )
+        if total + cap_decimal > root_limit or current_plan + cap_decimal > plan_limit:
+            raise ApifyBudgetExceededError(
+                "Saldo de autorizações insuficiente; custo provisório não libera orçamento."
+            )
+        run.parameters = {
+            **(run.parameters or {}),
+            "authorized_cap_usd": float(cap_decimal),
+            "authorization_status": "committed",
+            "authorization_at": datetime.now(UTC).isoformat(),
+            "authorization_policy": "analysis-caps-v1",
+        }
+        await self.session.commit()
+        return float(cap_decimal)
 
     @staticmethod
     def _is_usable_discovered_url(capability: str, value: object) -> bool:
@@ -199,7 +302,7 @@ class CollectMarketEvidenceService:
                 )
             dependencies[call.id] = deps
         ordered: list[PlannedToolCall] = []
-        remaining = list(plan.tool_calls)
+        remaining = sorted(plan.tool_calls, key=lambda call: call.parameters.get("priority", 100) if isinstance(call.parameters.get("priority", 100), int) else 100)
         completed: set[str] = set()
         while remaining:
             ready = next(
@@ -258,6 +361,14 @@ class CollectMarketEvidenceService:
                 ):
                     discovered.append(str(candidate))
         supplied = call.parameters.get("urls", call.parameters.get("start_urls", []))
+        target_domains = call.parameters.get("target_domains")
+        if isinstance(target_domains, list) and target_domains:
+            domains = [str(d).lower().removeprefix("www.") for d in target_domains]
+            discovered = [url for url in discovered if any(
+                (urlsplit(url).hostname or "").lower() == domain
+                or (urlsplit(url).hostname or "").lower().endswith("." + domain)
+                for domain in domains
+            )]
         if isinstance(supplied, str):
             supplied = [supplied]
         if isinstance(supplied, list) and supplied:
@@ -314,13 +425,14 @@ class CollectMarketEvidenceService:
                 canonical_seen.add(canonical)
                 unique_urls.append(url)
         if not unique_urls:
-            raise ActorConfigurationError(
+            raise NoDiscoveredUrlError(
                 f"A capability '{call.capability}' não recebeu URL e nenhuma URL compatível "
                 "foi descoberta por uma busca anterior."
             )
         if call.capability == "web_crawler":
             unique_urls = self._prioritize_crawler_urls(
-                unique_urls, query=call.query, max_urls=call.max_items
+                unique_urls, query=call.query, max_urls=call.max_items,
+                per_domain_limit=call.max_items if call.parameters.get("competitor_id") else 2,
             )
         parameters = dict(call.parameters)
         parameters["urls"] = unique_urls[: call.max_items]
@@ -332,6 +444,7 @@ class CollectMarketEvidenceService:
         urls: list[str],
         query: str = "",
         max_urls: int = 10,
+        per_domain_limit: int = 2,
     ) -> list[str]:
         """Rankeamento determinístico de URLs por relevância e diversidade de domínios.
 
@@ -363,7 +476,9 @@ class CollectMarketEvidenceService:
             path_lower = parsed.path.lower()
             score = 0.0
 
-            path_words = set(path_lower.replace("/", " ").replace("-", " ").replace("_", " ").split())
+            path_words = set(
+                path_lower.replace("/", " ").replace("-", " ").replace("_", " ").split()
+            )
             if any(term in path_words for term in course_terms):
                 score += 10.0
 
@@ -374,7 +489,9 @@ class CollectMarketEvidenceService:
                 score += 5.0
             elif any(cat in path_lower for cat in ("/catalogo", "/cursos", "/pos-graduacao")):
                 score += 2.0
-            elif any(article in path_lower for article in ("/noticia", "/noticias", "/artigo", "/blog")):
+            elif any(
+                article in path_lower for article in ("/noticia", "/noticias", "/artigo", "/blog")
+            ):
                 score -= 3.0
 
             scored_urls.append((score, url))
@@ -387,7 +504,7 @@ class CollectMarketEvidenceService:
         for _, url in scored_urls:
             hostname = (urlsplit(url).hostname or "").lower().removeprefix("www.")
             count = domain_counts.get(hostname, 0)
-            if count < 2:
+            if count < per_domain_limit:
                 domain_counts[hostname] = count + 1
                 prioritized.append(url)
                 if len(prioritized) >= max_urls:
@@ -400,18 +517,30 @@ class CollectMarketEvidenceService:
         *,
         plan: CourseResearchPlan,
         call: PlannedToolCall,
+        commit: bool = True,
     ) -> ToolRunModel:
         spec = self.registry.require(call.capability)
         model = await self._find_run(plan.id, call.id)
         effective_scope = {
             "capability": call.capability,
-            "geography": call.parameters.get("location") or call.parameters.get("country") or call.parameters.get("geo") or "Brasil",
-            "time_window": call.parameters.get("time_range") or call.parameters.get("time_window") or call.parameters.get("date_posted"),
+            "geography": call.parameters.get("location")
+            or call.parameters.get("country")
+            or call.parameters.get("geo")
+            or "Brasil",
+            "time_window": call.parameters.get("time_range")
+            or call.parameters.get("time_window")
+            or call.parameters.get("date_posted"),
             "limit_unit": CAPABILITY_LIMIT_UNITS.get(call.capability, "retained_total"),
             "max_items": call.max_items,
             "query": call.query,
         }
-        run_parameters = dict(call.parameters)
+        run_parameters = {
+            key: value
+            for key, value in call.parameters.items()
+            if not key.startswith(("authorized_", "authorization_", "cost_"))
+            and key not in {"observation_status", "provider_status", "dataset_total_items"}
+        }
+        run_parameters["authorization_status"] = "awaiting_authorization"
         try:
             run_parameters["effective_actor_input"] = self.registry.build_input(call)
         except Exception:
@@ -419,7 +548,7 @@ class CollectMarketEvidenceService:
         run_parameters["effective_scope"] = effective_scope
         if model is None:
             model = ToolRunModel(
-                id=f"tool-run:{plan.id}:{call.id}",
+                id=("tool-run:" + hashlib.sha256(f"{plan.id}:{call.id}".encode()).hexdigest()[:48]) if plan.execution_policy else f"tool-run:{plan.id}:{call.id}",
                 analysis_id=plan.analysis_id,
                 research_plan_id=plan.id,
                 planned_call_id=call.id,
@@ -441,11 +570,16 @@ class CollectMarketEvidenceService:
             model.error_message = None
             model.started_at = datetime.now(UTC)
             model.finished_at = None
-        await self.session.commit()
+        if commit:
+            await self.session.commit()
+        else:
+            await self.session.flush()
         return model
 
     @staticmethod
     def _error_code(exc: Exception) -> str:
+        if isinstance(exc, ApifyReconciliationRequiredError):
+            return "provider_execution_requires_reconciliation"
         if isinstance(exc, ApifyTimeoutError):
             return "timeout"
         if isinstance(exc, ApifySchemaDriftError):
@@ -467,12 +601,22 @@ class CollectMarketEvidenceService:
             run.provider_run_id = exc.run_id
         if isinstance(exc, ApifyTimeoutError) and exc.run_id:
             run.provider_run_id = exc.run_id
-        if isinstance(exc, (ApifyTimeoutError, ApifySchemaDriftError)) and exc.run_data:
+        if (
+            isinstance(exc, (ApifyTimeoutError, ApifySchemaDriftError, ApifyActorFailedError))
+            and exc.run_data
+        ):
             run.provider_run_id = str(exc.run_data.get("id") or run.provider_run_id or "") or None
             run.dataset_id = exc.run_data.get("defaultDatasetId")
             cost = exc.run_data.get("usageTotalUsd", 0)
             run.cost_usd = float(cost) if isinstance(cost, int | float) else 0.0
         run.status = "FAILED"
+        if isinstance(exc, ApifyReconciliationRequiredError):
+            run.status = "IN_DOUBT"
+            run.parameters = {
+                **(run.parameters or {}),
+                "cost_status": "unknown",
+                "observation_status": "execution_or_billing_unconfirmed",
+            }
         run.error_code = self._error_code(exc)
         run.error_message = self._safe_error(exc)
         run.finished_at = datetime.now(UTC)
@@ -768,6 +912,7 @@ class CollectMarketEvidenceService:
         call: PlannedToolCall,
         run: ToolRunModel,
         result: ApifyExecutionResult,
+        commit: bool = True,
     ) -> list[str]:
         spec = self.registry.require(call.capability)
         if result.run.actor_id != spec.actor_id or result.run.build_number != spec.build:
@@ -813,6 +958,7 @@ class CollectMarketEvidenceService:
                     id=evidence.id,
                     analysis_id=evidence.analysis_id,
                     tool_run_id=run.id,
+                    tool_run_attempt_id=run.parameters.get("active_attempt_id"),
                     evidence_type=evidence.evidence_type.value,
                     source_name=evidence.source_name,
                     source_url=evidence.source_url,
@@ -839,12 +985,20 @@ class CollectMarketEvidenceService:
             run.error_message = result.run.incomplete_reason
         audit = dict(run.parameters)
         audit["provider_status"] = result.run.status
+        audit["cost_status"] = result.run.cost_status
+        audit["cost_observed_at"] = datetime.now(UTC).isoformat()
+        audit["cost_source"] = "apify.usageTotalUsd"
         audit["dataset_total_items"] = result.total_items
         audit["effective_actor_input"] = self.registry.build_input(call)
         audit["effective_scope"] = {
             "capability": call.capability,
-            "geography": call.parameters.get("location") or call.parameters.get("country") or call.parameters.get("geo") or "Brasil",
-            "time_window": call.parameters.get("time_range") or call.parameters.get("time_window") or call.parameters.get("date_posted"),
+            "geography": call.parameters.get("location")
+            or call.parameters.get("country")
+            or call.parameters.get("geo")
+            or "Brasil",
+            "time_window": call.parameters.get("time_range")
+            or call.parameters.get("time_window")
+            or call.parameters.get("date_posted"),
             "limit_unit": CAPABILITY_LIMIT_UNITS.get(call.capability, "retained_total"),
             "max_items": call.max_items,
             "query": call.query,
@@ -903,6 +1057,7 @@ class CollectMarketEvidenceService:
                         url_outcomes[target] = "rejected"
                 else:
                     url_outcomes[target] = (
+                        "extraction_failed" if result.run.incomplete_reason else
                         "budget_skipped" if len(items) >= call.max_items else "not_found"
                     )
             audit["url_outcomes"] = url_outcomes
@@ -921,7 +1076,8 @@ class CollectMarketEvidenceService:
         ]
         run.parameters = audit
         run.finished_at = datetime.now(UTC)
-        await self.session.commit()
+        if commit:
+            await self.session.commit()
         return [evidence.id for evidence in unique]
 
     async def collect(
@@ -930,7 +1086,15 @@ class CollectMarketEvidenceService:
         tenant_id: str,
         plan: CourseResearchPlan,
         understanding_snapshot: dict[str, object] | None = None,
+        check_active: Callable[[], Awaitable[None]] | None = None,
     ) -> CollectionOutcome:
+        if plan.execution_policy is not None:
+            from prometeus.application.recover_market_collection import collect_monitoring
+
+            return await collect_monitoring(
+                self, tenant_id=tenant_id, plan=plan,
+                understanding_snapshot=understanding_snapshot, check_active=check_active,
+            )
         dependency_ordered_calls = self._ordered_calls(plan)
         plan_model = await self._ensure_plan(
             tenant_id=tenant_id,
@@ -943,7 +1107,20 @@ class CollectMarketEvidenceService:
         optional_failures: list[str] = []
 
         for call in dependency_ordered_calls:
+            if check_active is not None:
+                await check_active()
             existing = await self._find_run(plan.id, call.id)
+            if existing is not None and existing.status in {"RUNNING", "IN_DOUBT"}:
+                existing.status = "IN_DOUBT"
+                existing.error_code = "provider_execution_requires_reconciliation"
+                existing.error_message = "Execução remota interrompida ou sem confirmação; custo e resultado exigem reconciliação antes de nova coleta."
+                existing.parameters = {
+                    **(existing.parameters or {}),
+                    "cost_status": "unknown",
+                    "observation_status": "execution_unconfirmed",
+                }
+                await self.session.commit()
+                raise RequiredSourceBlockedError(call.id, existing.error_message)
             if existing is not None and existing.status in {"SUCCEEDED", "PARTIAL"}:
                 if existing.status == "PARTIAL":
                     optional_failures.append(call.id)
@@ -968,14 +1145,6 @@ class CollectMarketEvidenceService:
                     optional_failures.append(call.id)
                 continue
 
-            remaining_budget = plan.budget_limit_usd - plan_model.spent_usd
-            if remaining_budget <= 0:
-                error = ApifyBudgetExceededError("Orçamento total da análise esgotado.")
-                run = await self._checkpoint_running(plan=plan, call=call)
-                await self._checkpoint_failure(run, error)
-                optional_failures.append(call.id)
-                continue
-
             run = await self._checkpoint_running(plan=plan, call=call)
             try:
                 resolved_call = await self._resolve_dependent_urls(
@@ -986,9 +1155,12 @@ class CollectMarketEvidenceService:
                     "resolved_urls": resolved_call.parameters.get("urls", []),
                 }
                 await self.session.commit()
+                if check_active is not None:
+                    await check_active()
+                authorized_cap = await self._reserve_authorization(plan, call, run)
                 result = await self.executor.execute(
                     resolved_call,
-                    max_total_charge_usd=remaining_budget,
+                    max_total_charge_usd=authorized_cap,
                 )
                 # Charge the observed run atomically with its evidence/failure
                 # checkpoint so retries cannot recover a stale, larger budget.
@@ -996,9 +1168,9 @@ class CollectMarketEvidenceService:
                 run.provider_run_id = result.run.run_id
                 run.dataset_id = result.run.dataset_id
                 run.cost_usd = result.run.cost_usd
-                if result.run.cost_usd > remaining_budget + 0.000001:
+                if result.run.cost_usd > authorized_cap + 0.000001:
                     raise ApifyBudgetExceededError(
-                        "Custo real da run excedeu o orçamento restante autorizado."
+                        "Custo observado da run excedeu sua autorização; requer reconciliação."
                     )
                 new_evidence_ids = await self._persist_result(
                     call=resolved_call,
@@ -1017,11 +1189,37 @@ class CollectMarketEvidenceService:
                     completed.append(call.id)
                 await self.session.commit()
             except (ApifyError, ActorConfigurationError, httpx.HTTPError, TimeoutError) as exc:
-                if isinstance(exc, (ApifyTimeoutError, ApifySchemaDriftError)) and exc.run_data:
+                if (
+                    isinstance(
+                        exc, (ApifyTimeoutError, ApifySchemaDriftError, ApifyActorFailedError)
+                    )
+                    and exc.run_data
+                ):
                     cost = exc.run_data.get("usageTotalUsd", 0)
                     if isinstance(cost, int | float):
                         plan_model.spent_usd = round(plan_model.spent_usd + cost, 6)
                 await self._checkpoint_failure(run, exc)
+                audit = dict(run.parameters or {})
+                if isinstance(exc, ActorConfigurationError) or (
+                    isinstance(exc, httpx.HTTPStatusError)
+                    and 400 <= exc.response.status_code < 500
+                    and exc.request.method == "POST"
+                    and exc.request.url.path.endswith("/runs")
+                ):
+                    audit["authorization_status"] = "released_pre_execution"
+                    audit["authorization_release_reason"] = self._error_code(exc)
+                    audit["cost_status"] = "not_incurred"
+                if isinstance(exc, ApifyBudgetExceededError) and not audit.get(
+                    "authorized_cap_usd"
+                ):
+                    audit["observation_status"] = "budget_skipped"
+                    audit["cost_status"] = "not_incurred"
+                run.parameters = audit
+                await self.session.commit()
+                if isinstance(exc, ApifyReconciliationRequiredError):
+                    raise RequiredSourceBlockedError(call.id, self._safe_error(exc)) from exc
+                if isinstance(exc, ApifyBudgetExceededError) and audit.get("authorized_cap_usd"):
+                    raise RequiredSourceBlockedError(call.id, self._safe_error(exc)) from exc
                 optional_failures.append(call.id)
 
         plan_model.status = "COMPLETED" if not optional_failures else "PARTIAL"

@@ -1,0 +1,5 @@
+CONTROL source=scoring_result expected=OBSERVED observed=OBSERVED confidence=1.0
+.CONTROL source=institutional_history expected=OBSERVED observed=OBSERVED confidence=1.0
+.CONTROL source=scoring_result expected=UNSUPPORTED observed=UNSUPPORTED confidence=1.0
+.CONTROL source=institutional_history expected=UNSUPPORTED observed=UNSUPPORTED confidence=1.0
+.

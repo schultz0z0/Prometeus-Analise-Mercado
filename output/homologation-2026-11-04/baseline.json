@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-11-04T17:17:19.322044+00:00",
+  "metadata": {
+    "preflight": {
+      "ready": true,
+      "ai_mode": "traditional",
+      "jev_enabled": false,
+      "required_sources": [
+        "google_search",
+        "web_crawler",
+        "meta_ads_library",
+        "linkedin",
+        "linkedin_jobs",
+        "instagram",
+        "tiktok",
+        "youtube_comments"
+      ],
+      "synthetic_sources": [
+        "institutional_history"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    "app_env": "staging",
+    "provider": "chatgpt_oauth",
+    "oauth_stored": true,
+    "selected_model": "gpt-6.1-terra",
+    "apify_configured": true,
+    "synthetic_history_allowed": true,
+    "shadow_mode": false,
+    "kill_switch": false,
+    "max_cost_usd": null,
+    "service_keys_configured": false,
+    "webhook_configured": false
+  },
+  "migration": "0010_historical_ipd_metadata",
+  "historical": {
+    "historical_courses": {
+      "count": 33,
+      "sha256": "e5eeda96fba064b0de8b2dbae3fba55b708a9043e17bbab7a0684156721b3700"
+    },
+    "historical_funnel_records": {
+      "count": 66,
+      "sha256": "2eb8a8a7bcb951a4bb4a39a57d3c4e92906e1894b1d5e5f7e2c0ec53a0cd2edd"
+    }
+  },
+  "analysis_statuses": {
+    "COMPLETED": 10,
+    "QUEUED": 1,
+    "BLOCKED": 5
+  },
+  "env_sha256": "06fd095f5f26f96c96eb244651f7c85a22e2436a789d77954ef304ce9495afe5"
+}

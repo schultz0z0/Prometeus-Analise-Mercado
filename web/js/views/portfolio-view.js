@@ -25,7 +25,8 @@ function getRecommendationLabel(rec) {
     case 'APPROVED_WITH_ADJUSTMENTS': return 'Ajuste de Ementa';
     case 'HIGH_RISK': return 'Alto Risco / Inviável';
     case 'REQUIRES_HUMAN_REVIEW': return 'Revisão de Comitê';
-    default: return rec;
+    case 'INSUFFICIENT_EVIDENCE': return 'Evidências insuficientes';
+    default: return escapeHtml(rec);
   }
 }
 
@@ -135,15 +136,15 @@ export function renderPortfolioView(store) {
                   <tr class="historical-course-row" style="cursor:default;">
                     <td>
                       <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-family:var(--prometeus-font-mono); font-size:11px; color:#38BDF8; font-weight:700;">${c.external_id}</span>
+                        <span style="font-family:var(--prometeus-font-mono); font-size:11px; color:#38BDF8; font-weight:700;">${escapeHtml(c.external_id)}</span>
                       </div>
-                      <strong style="color:#ffffff; font-size:14px; display:block; margin-top:2px;">${c.name}</strong>
-                      <span style="font-size:12px; color:var(--prometeus-text-muted);">${c.category} • ${c.segment || c.category}</span>
+                      <strong style="color:#ffffff; font-size:14px; display:block; margin-top:2px;">${escapeHtml(c.name)}</strong>
+                      <span style="font-size:12px; color:var(--prometeus-text-muted);">${escapeHtml(c.category)} • ${escapeHtml(c.segment || c.category)}</span>
                       ${safeUrl(c.academic_reference?.source_url) ? `<div style="font-size:12px; margin-top:6px;"><a href="${escapeHtml(safeUrl(c.academic_reference.source_url))}" target="_blank" rel="noopener noreferrer">Nome e categoria: fonte ENS</a><span style="color:var(--prometeus-text-muted);"> · Indicadores e preços simulados</span></div>` : ''}
                     </td>
                     <td>
-                      <span style="font-size:13px; color:var(--prometeus-text-secondary);">${c.modality}</span>
-                      <div style="font-size:11px; color:var(--prometeus-text-muted);">${c.workload_hours}h</div>
+                      <span style="font-size:13px; color:var(--prometeus-text-secondary);">${escapeHtml(c.modality)}</span>
+                      <div style="font-size:11px; color:var(--prometeus-text-muted);">${escapeHtml(c.workload_hours)}h</div>
                     </td>
                     <td>
                       ${getTierBadge(c.tier || (isCancelled ? 'CANCELADO_POR_QUORUM' : c.status === 'active' ? 'SUCESSO' : 'MEDIANO'))}
@@ -235,16 +236,16 @@ export function renderPortfolioView(store) {
             </thead>
             <tbody>
               ${courses.map(course => `
-                <tr class="cursor-pointer course-row" data-id="${course.id}">
+                <tr class="cursor-pointer course-row" data-id="${escapeHtml(course.id)}">
                   <td>
-                    <strong style="color:#ffffff; font-size:14px; display:block;">${course.name}</strong>
-                    <span style="font-size:12px; color:var(--prometeus-text-muted);">${course.area} • ${course.level}</span>
+                    <strong style="color:#ffffff; font-size:14px; display:block;">${escapeHtml(course.name)}</strong>
+                    <span style="font-size:12px; color:var(--prometeus-text-muted);">${escapeHtml(course.area)} • ${escapeHtml(course.level)}</span>
                   </td>
                   <td>
-                    <span style="font-size:13px; color:var(--prometeus-text-secondary);">${course.modality}</span>
+                    <span style="font-size:13px; color:var(--prometeus-text-secondary);">${escapeHtml(course.modality)}</span>
                   </td>
                   <td class="prometeus-stat-mono" style="font-weight:600; color:#ffffff;">
-                    ${course.ticket === null ? 'Não informado' : `R$ ${Number(course.ticket).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}<span style="font-size:11px; color:var(--prometeus-text-muted);">${course.ticket === null ? '' : '/mês'}</span>
+                    ${course.ticket === null ? 'Não informado' : `R$ ${Number(course.ticket).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}<span style="font-size:11px; color:var(--prometeus-text-muted);">${course.ticket === null ? '' : course.price_period === 'monthly' ? '/mês' : course.price_period === 'total' ? '/curso' : ' (período não informado)'}</span>
                   </td>
                   <td>
                     <div style="display:flex; align-items:center; gap:8px;">
@@ -254,7 +255,7 @@ export function renderPortfolioView(store) {
                     </div>
                   </td>
                   <td>
-                    <span class="prometeus-pill-badge" data-status="${course.recommendation}">
+                    <span class="prometeus-pill-badge" data-status="${escapeHtml(course.recommendation)}">
                       ● ${getRecommendationLabel(course.recommendation)}
                     </span>
                   </td>
@@ -262,7 +263,7 @@ export function renderPortfolioView(store) {
                     ${course.coverage_index === null ? 'Não disponível' : `Cobertura ${(Number(course.coverage_index) * 100).toFixed(0)}%`}
                   </td>
                   <td style="text-align:right;">
-                    <button class="prometeus-btn-primary btn-open-dossier" data-id="${course.id}" style="padding:6px 12px; font-size:12px; min-height:30px;">
+                    <button class="prometeus-btn-primary btn-open-dossier" data-id="${escapeHtml(course.id)}" style="padding:6px 12px; font-size:12px; min-height:30px;">
                       Ver Dossiê →
                     </button>
                   </td>

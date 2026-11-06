@@ -83,7 +83,9 @@ async def test_research_plan_is_course_specific_and_covers_required_sources() ->
     plan = await planner.plan(understanding)
 
     assert plan.analysis_id == "anl-123"
-    assert plan.budget_limit_usd == 4.5
+    assert plan.budget_limit_usd is None
+    assert plan.execution_policy is not None
+    assert plan.execution_policy.spending_mode == "monitor_only"
     assert {call.capability for call in plan.tool_calls} == {
         "google_search",
         "meta_ads_library",

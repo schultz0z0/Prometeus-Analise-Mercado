@@ -38,11 +38,15 @@ def test_live_view_shows_partial_collection_and_escaped_verification_diagnostics
       const {renderLiveView}=await import(pathToFileURL(process.cwd()+'/web/js/views/live-view.js'));
       const store={getState:()=>({liveJob:{id:'analysis',status:'BLOCKED',name:'Curso',
         steps:[{status:'FAILED',output_summary:{verification:{issues:[{message:'Número sem suporte',text_excerpt:'<script>alert(1)</script>'}]}}}],
-        toolRuns:[{capability:'google_trends',status:'PARTIAL',query:'seguros',cost_usd:0.13}]
+        toolRuns:[{capability:'google_trends',status:'PARTIAL',query:'seguros',cost_usd:0.13},
+          {capability:'google_search',status:'FAILED',observation_status:'budget_skipped',query:'ofertas',cost_usd:0},
+          {capability:'web_crawler',status:'IN_DOUBT',query:'páginas',cost_status:'unknown'}]
       }})};
       const html=renderLiveView(store);
       assert.match(html,/Número sem suporte/);
-      assert.match(html,/consulta interrompida com retorno parcial/);
+      assert.match(html,/consulta com retorno parcial; itens recuperados sujeitos à validação/);
+      assert.match(html,/consulta não executada por limite de orçamento/);
+      assert.match(html,/resultado da execução pendente de reconciliação/);
       assert.match(html,/&lt;script&gt;/);
       assert.doesNotMatch(html,/<script>/);
       const job=store.getState().liveJob;

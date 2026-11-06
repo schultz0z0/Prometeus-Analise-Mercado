@@ -215,4 +215,3 @@ class ShadowDecisionService:
             evidence_ids=list(evidence_ids or []),
         )
         self.comparison_records.append(record)
-

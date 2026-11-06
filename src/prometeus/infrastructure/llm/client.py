@@ -333,8 +333,10 @@ class OpenAIGenerativeClient(GenerativeModelPort):
             previous = revision.get("rejected_dossier", {})
             if isinstance(previous, dict) and isinstance(previous.get("claims"), list):
                 revision_claim_ids = [
-                    item["claim_id"] for item in previous["claims"]
-                    if isinstance(item, dict) and isinstance(item.get("claim_id"), str)
+                    item["claim_id"]
+                    for item in previous["claims"]
+                    if isinstance(item, dict)
+                    and isinstance(item.get("claim_id"), str)
                     and item["claim_id"].strip()
                 ] or None
         response_text = await self.generate_structured(

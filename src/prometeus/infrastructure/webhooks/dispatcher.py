@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import httpx
 from sqlalchemy import select
@@ -26,7 +26,7 @@ class WebhookDispatcher:
     def __init__(
         self,
         db_session: AsyncSession,
-        secret: str = "prometeus-webhook-secret-v1",
+        secret: str = "",
         timeout_seconds: float = 5.0,
         max_retries: int = 5,
         http_client: httpx.AsyncClient | None = None,
@@ -45,6 +45,8 @@ class WebhookDispatcher:
         target_url: str,
     ) -> WebhookDeliveryModel:
         """Envia o evento assinado ao endpoint com rastreamento persistente de tentativas."""
+        if not self.secret:
+            raise ValueError("Segredo de webhook obrigatório.")
         body = event.to_json()
         sig = compute_webhook_signature(self.secret, event.timestamp, body)
 
@@ -61,6 +63,8 @@ class WebhookDispatcher:
             WebhookDeliveryModel.target_url == target_url,
         )
         delivery = (await self.db.execute(stmt)).scalar_one_or_none()
+        if delivery and delivery.status in {"DELIVERED", "SHADOW_DELIVERED", "DEAD_LETTER"}:
+            return delivery
 
         if not delivery:
             delivery = WebhookDeliveryModel(
@@ -130,6 +134,12 @@ class WebhookDispatcher:
         finally:
             if close_client:
                 await client.aclose()
+            delivery.next_attempt_at = (
+                datetime.now(UTC)
+                + timedelta(seconds=min(3600, 2 ** min(delivery.attempt_count, 10)))
+                if delivery.status == "FAILED"
+                else None
+            )
             await self.db.commit()
 
         return delivery

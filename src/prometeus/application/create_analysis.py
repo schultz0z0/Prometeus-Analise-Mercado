@@ -6,7 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from prometeus.domain.analyses import Analysis, AnalysisStatus
@@ -16,7 +17,7 @@ from prometeus.domain.configuration import (
     resolve_tenant_config_for_id,
 )
 from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
-from prometeus.infrastructure.db.models import AnalysisModel
+from prometeus.infrastructure.db.models import AnalysisJobModel, AnalysisModel
 
 
 @dataclass
@@ -28,6 +29,7 @@ class CreateAnalysisCommand:
     proposal_data: dict[str, Any]
     idempotency_key: str
     correlation_id: str
+    previous_analysis_id: str | None = None
 
 
 @dataclass
@@ -52,8 +54,22 @@ class CreateAnalysisUseCase:
         # 1. Verifica idempotência: se já existe análise criada com a mesma idempotency_key
         # Procuramos no JSON proposal_data pela chave _idempotency_key
         # (funciona tanto no SQLite quanto no PostgreSQL)
-        stmt = select(AnalysisModel).where(
-            AnalysisModel.proposal_data["_idempotency_key"].as_string() == command.idempotency_key
+        stmt = (
+            select(AnalysisModel)
+            .where(
+                AnalysisModel.tenant_id == command.tenant_id,
+                or_(
+                    AnalysisModel.idempotency_key == command.idempotency_key,
+                    and_(
+                        AnalysisModel.idempotency_key.is_(None),
+                        AnalysisModel.previous_analysis_id.is_(None),
+                        AnalysisModel.proposal_data["_idempotency_key"].as_string()
+                        == command.idempotency_key,
+                    ),
+                ),
+            )
+            .order_by(AnalysisModel.created_at, AnalysisModel.id)
+            .limit(1)
         )
         existing = (await self.session.execute(stmt)).scalar_one_or_none()
         if existing:
@@ -72,7 +88,13 @@ class CreateAnalysisUseCase:
         scoring_profile = load_scoring_profile(scoring_path)
 
         # 3. Cria a raiz de agregação do domínio (ADR-0005: status=QUEUED, recommendation=None)
-        proposal_with_idempotency = dict(command.proposal_data)
+        if not command.idempotency_key.strip() or len(command.idempotency_key) > 255:
+            raise ValueError("Chave de idempotência deve ter entre 1 e 255 caracteres.")
+        proposal_with_idempotency = {
+            key: value for key, value in command.proposal_data.items() if not key.startswith("_")
+        }
+        if self.settings.SHADOW_MODE:
+            proposal_with_idempotency["_shadow_mode"] = True
         dumped_tenant = tenant_config.model_dump(mode="json")
         institution = dumped_tenant.get("institution", {})
         ecosystem = dumped_tenant.get("ecosystem", {})
@@ -91,17 +113,39 @@ class CreateAnalysisUseCase:
             course_name=command.course_name,
             proposal_data=proposal_with_idempotency,
             correlation_id=command.correlation_id,
+            previous_analysis_id=command.previous_analysis_id,
         )
 
         # 4. Persiste a análise e o snapshot de governança no banco
-        await self.repository.save(analysis)
-        await self.repository.save_config_snapshot(
-            analysis_id=analysis.id,
-            tenant_id=command.tenant_id,
-            scoring_profile_id=scoring_profile.profile_id,
-            tenant_config_snapshot=dumped_tenant,
-            scoring_profile_snapshot=scoring_profile.model_dump(mode="json"),
-        )
+        connection = await self.session.connection()
+        if connection.dialect.name == "sqlite":
+            # sqlite3 <=3.11 não inicia uma transação para SELECT/SAVEPOINT.
+            # Sem BEGIN real, RELEASE do savepoint publicaria a outbox antes do commit.
+            raw = await connection.get_raw_connection()
+            if raw.driver_connection is not None and not raw.driver_connection.in_transaction:
+                await connection.exec_driver_sql("BEGIN")
+        try:
+            async with self.session.begin_nested():
+                await self.repository.save(analysis)
+                await self.repository.save_config_snapshot(
+                    analysis_id=analysis.id,
+                    tenant_id=command.tenant_id,
+                    scoring_profile_id=scoring_profile.profile_id,
+                    tenant_config_snapshot=dumped_tenant,
+                    scoring_profile_snapshot=scoring_profile.model_dump(mode="json"),
+                )
+                self.session.add(
+                    AnalysisJobModel(analysis_id=analysis.id, correlation_id=command.correlation_id)
+                )
+                await self.session.flush()
+        except IntegrityError:
+            # Uma criação concorrente venceu a restrição única; a transação externa continua utilizável.
+            existing = (await self.session.execute(stmt)).scalar_one_or_none()
+            if existing is None:
+                raise
+            return CreateAnalysisResult(
+                existing.id, AnalysisStatus(existing.status), existing.created_at.isoformat(), True
+            )
 
         return CreateAnalysisResult(
             analysis_id=analysis.id,

@@ -3,11 +3,23 @@
 from __future__ import annotations
 
 import asyncio
+import uuid
+from collections.abc import Awaitable, Callable
+from contextlib import suppress
 
 from celery import Celery
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.pool import NullPool
 
+from prometeus.application.analysis_jobs import (
+    claim_analysis_job,
+    finish_analysis_job,
+    reconcile_analysis_jobs,
+    renew_analysis_job,
+    schedule_analysis_job_retry,
+)
+from prometeus.application.analysis_webhooks import deliver_pending_webhooks
+from prometeus.application.recover_market_collection import CollectionRetryScheduled
 from prometeus.application.run_course_analysis import (
     WORKFLOW_STEPS,
     RunCourseAnalysis,
@@ -36,6 +48,10 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     task_track_started=True,
+    task_acks_late=True,
+    task_reject_on_worker_lost=True,
+    worker_prefetch_multiplier=1,
+    beat_schedule={"recover-analysis-jobs": {"task": "prometeus.reconcile_jobs", "schedule": 15.0}},
 )
 
 
@@ -45,6 +61,7 @@ async def execute_workflow_steps(
     repository: AnalysisRepository,
     use_case: RunCourseAnalysis | None = None,
     runtime_settings: AppSettings | None = None,
+    execution_guard: Callable[[], Awaitable[None]] | None = None,
 ) -> None:
     """Executa o workflow real; a injeção opcional existe apenas para testes."""
     if use_case is not None:
@@ -85,6 +102,7 @@ async def execute_workflow_steps(
         registry=registry,
         base_url=runtime_settings.APIFY_BASE_URL,
         timeout_seconds=float(runtime_settings.GEN_LLM_TIMEOUT_SECONDS),
+        cancellation_check=lambda: _analysis_active(repository, analysis_id),
     )
     try:
         workflow = RunCourseAnalysis(
@@ -95,9 +113,21 @@ async def execute_workflow_steps(
             tool_executor=apify,
             registry=registry,
         )
+        workflow.execution_guard = execution_guard
         await workflow.execute(analysis_id, correlation_id)
     finally:
         await apify.aclose()
+
+
+async def _analysis_active(repository: AnalysisRepository, analysis_id: str) -> bool:
+    from sqlalchemy import select
+
+    from prometeus.infrastructure.db.models import AnalysisModel
+
+    value = await repository.session.scalar(
+        select(AnalysisModel.status).where(AnalysisModel.id == analysis_id)
+    )
+    return value not in {None, "CANCELLED", "FAILED", "COMPLETED"}
 
 
 @celery_app.task(name="prometeus.run_analysis_workflow")
@@ -114,11 +144,87 @@ def run_analysis_workflow(analysis_id: str, correlation_id: str) -> dict[str, st
         try:
             async with session_factory() as session:
                 repository = AnalysisRepository(session)
-                await execute_workflow_steps(analysis_id, correlation_id, repository)
+                token = uuid.uuid4().hex
+                if not await claim_analysis_job(session, analysis_id, token):
+                    return "ALREADY_CLAIMED"
+
+                async def lease_guard() -> None:
+                    from datetime import UTC, datetime
+
+                    from sqlalchemy import select
+
+                    from prometeus.domain.analyses import WorkflowStoppedError
+                    from prometeus.infrastructure.db.models import AnalysisJobModel
+
+                    async with session_factory() as guard_session:
+                        owned = await guard_session.scalar(
+                            select(AnalysisJobModel.analysis_id).where(
+                                AnalysisJobModel.analysis_id == analysis_id,
+                                AnalysisJobModel.lease_token == token,
+                                AnalysisJobModel.status == "RUNNING",
+                                AnalysisJobModel.lease_expires_at > datetime.now(UTC),
+                            )
+                        )
+                        if owned is None:
+                            raise WorkflowStoppedError(
+                                "Lease de execução perdido; interromper chamadas externas."
+                            )
+
+                workflow_task = asyncio.create_task(
+                    execute_workflow_steps(
+                        analysis_id, correlation_id, repository, execution_guard=lease_guard
+                    )
+                )
+
+                async def heartbeat() -> None:
+                    while True:
+                        await asyncio.sleep(30)
+                        try:
+                            async with session_factory() as lease_session:
+                                if await renew_analysis_job(lease_session, analysis_id, token):
+                                    continue
+                        except Exception:
+                            pass
+                        workflow_task.cancel()
+                        return
+
+                task = asyncio.create_task(heartbeat())
+                try:
+                    await workflow_task
+                except CollectionRetryScheduled as exc:
+                    scheduled = await schedule_analysis_job_retry(
+                        session, analysis_id, token, exc.next_attempt_at
+                    )
+                    return "RETRY_SCHEDULED" if scheduled else "LEASE_LOST_OR_STOPPED"
+                except asyncio.CancelledError:
+                    return "LEASE_LOST"
+                finally:
+                    task.cancel()
+                    with suppress(asyncio.CancelledError):
+                        await task
                 analysis = await repository.get_by_id(analysis_id)
+                if analysis is not None and analysis.status.value != "RUNNING":
+                    await finish_analysis_job(session, analysis_id, token)
                 return analysis.status.value if analysis is not None else "NOT_FOUND"
         finally:
             await engine.dispose()
 
     status = asyncio.run(_runner())
     return {"analysis_id": analysis_id, "status": status}
+
+
+@celery_app.task(name="prometeus.reconcile_jobs")
+def reconcile_jobs() -> dict[str, int]:
+    async def run() -> dict[str, int]:
+        runtime_settings = AppSettings()
+        engine = get_engine(runtime_settings.DATABASE_URL, poolclass=NullPool)
+        factory = async_sessionmaker(engine, expire_on_commit=False)
+        try:
+            async with factory() as session:
+                published = await reconcile_analysis_jobs(session, run_analysis_workflow.delay)
+                delivered = await deliver_pending_webhooks(session, runtime_settings)
+                return {"published": published, "webhooks_attempted": delivered}
+        finally:
+            await engine.dispose()
+
+    return asyncio.run(run())

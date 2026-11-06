@@ -143,4 +143,3 @@ CANONICAL_FEATURE_INVENTORY: dict[str, FeatureInventoryItem] = {
 
 def get_feature_inventory(feature_name: str) -> FeatureInventoryItem | None:
     return CANONICAL_FEATURE_INVENTORY.get(feature_name)
-

@@ -7,6 +7,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from prometeus.domain.analyses import Analysis
+from prometeus.domain.configuration import AppSettings
 from prometeus.entrypoints.rest.app import app
 from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
 from prometeus.infrastructure.db.models import Base
@@ -33,7 +34,11 @@ async def op_client(op_session: AsyncSession) -> httpx.AsyncClient:
 
     app.dependency_overrides[get_db_session] = override_session
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+    async with httpx.AsyncClient(
+        transport=transport,
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
+    ) as c:
         yield c
     app.dependency_overrides.clear()
 
@@ -63,7 +68,8 @@ async def test_kill_switch_blocks_new_analyses_and_reanalyses(
 
     # Com KILL_SWITCH_ACTIVE = True
     with patch("prometeus.entrypoints.rest.app.AppSettings") as MockSettings:
-        instance = MockSettings.return_value
+        instance = AppSettings()
+        MockSettings.return_value = instance
         instance.KILL_SWITCH_ACTIVE = True
         instance.SHADOW_MODE = False
 
@@ -101,7 +107,8 @@ async def test_kill_switch_inactive_allows_submissions(
         patch("prometeus.entrypoints.rest.app.AppSettings") as MockSettings,
         patch("prometeus.entrypoints.rest.app.run_analysis_workflow.delay"),
     ):
-        instance = MockSettings.return_value
+        instance = AppSettings()
+        MockSettings.return_value = instance
         instance.KILL_SWITCH_ACTIVE = False
         instance.SHADOW_MODE = False
 

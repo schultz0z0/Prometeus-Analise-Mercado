@@ -43,7 +43,9 @@ class MockGenerativeModel(GenerativeModelPort):
     async def synthesize_dossier(self, facts: Any, prompt_version: str = "dossier-v1") -> Any:
         raise NotImplementedError
 
-    async def revise_dossier(self, facts: Any, draft: Any, verification_report: Any, prompt_version: str = "dossier-v1") -> Any:
+    async def revise_dossier(
+        self, facts: Any, draft: Any, verification_report: Any, prompt_version: str = "dossier-v1"
+    ) -> Any:
         raise NotImplementedError
 
 
@@ -74,6 +76,7 @@ def score_pack() -> DecisionPack:
 
 # --- Testes para LLMDecisionAdapter ---
 
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "invalid_payload,error_match",
@@ -83,7 +86,11 @@ def score_pack() -> DecisionPack:
             "selected_choice",
         ),
         (
-            {"selected_choice": "UNKNOWN_LABEL", "confidence": 0.9, "distribution": {"UNKNOWN_LABEL": 1.0}},
+            {
+                "selected_choice": "UNKNOWN_LABEL",
+                "confidence": 0.9,
+                "distribution": {"UNKNOWN_LABEL": 1.0},
+            },
             "não permitida",
         ),
         (
@@ -91,11 +98,19 @@ def score_pack() -> DecisionPack:
             "booleano",
         ),
         (
-            {"selected_choice": "RELEVANT", "confidence": float("nan"), "distribution": {"RELEVANT": 1.0}},
+            {
+                "selected_choice": "RELEVANT",
+                "confidence": float("nan"),
+                "distribution": {"RELEVANT": 1.0},
+            },
             "finito",
         ),
         (
-            {"selected_choice": "RELEVANT", "confidence": float("inf"), "distribution": {"RELEVANT": 1.0}},
+            {
+                "selected_choice": "RELEVANT",
+                "confidence": float("inf"),
+                "distribution": {"RELEVANT": 1.0},
+            },
             "finito",
         ),
         (
@@ -111,11 +126,19 @@ def score_pack() -> DecisionPack:
             "distribution",
         ),
         (
-            {"selected_choice": "RELEVANT", "confidence": 0.9, "distribution": {"RELEVANT": 0.5, "CONTEXT": 0.9}},
+            {
+                "selected_choice": "RELEVANT",
+                "confidence": 0.9,
+                "distribution": {"RELEVANT": 0.5, "CONTEXT": 0.9},
+            },
             "distribuição",
         ),
         (
-            {"selected_choice": "RELEVANT", "confidence": 0.9, "distribution": {"INVALID_KEY": 1.0}},
+            {
+                "selected_choice": "RELEVANT",
+                "confidence": 0.9,
+                "distribution": {"INVALID_KEY": 1.0},
+            },
             "distribuição",
         ),
     ],
@@ -171,6 +194,7 @@ async def test_llm_adapter_rejects_invalid_score_payloads(
 
 
 # --- Testes para TypeSafeJEVClient ---
+
 
 @pytest.mark.asyncio
 async def test_jev_client_never_defaults_missing_choice_to_first_option(

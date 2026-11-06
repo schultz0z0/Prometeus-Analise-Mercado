@@ -51,7 +51,10 @@ def test_learner_demand_case_b2c_individual():
             "enrolled_target": 25,
             "conversion_rate_lead_to_enrolled": 0.10,
         },
-        institutional_context_sources=["SUSEP - Estatísticas do Mercado Supervisionado", "CNseg - Relatório Anual"],
+        institutional_context_sources=[
+            "SUSEP - Estatísticas do Mercado Supervisionado",
+            "CNseg - Relatório Anual",
+        ],
         institutional_multipliers_applied=False,
     )
 
@@ -70,8 +73,13 @@ def test_learner_demand_case_b2b_corporate():
         buyer_vs_beneficiary="employer_b2b",
         segment_type="b2b",
         eligibility_criteria=["Equipes de regulação e sinistros de seguradoras e resseguradoras"],
-        training_intent_signals=["Demandas corporativas de treinamento de analistas para redução de sinistralidade"],
-        alternatives_considered=["Treinamento in-company customizado", "Capacitação interna informal"],
+        training_intent_signals=[
+            "Demandas corporativas de treinamento de analistas para redução de sinistralidade"
+        ],
+        alternatives_considered=[
+            "Treinamento in-company customizado",
+            "Capacitação interna informal",
+        ],
         barriers=["Orçamento anual corporativo de T&D", "Liberação de horas dos analistas"],
         plausible_initial_cohort_size=15,
         funnel_reach_scenario={"target_companies": 10, "cohorts": 1, "students_per_cohort": 15},
@@ -86,11 +94,13 @@ def test_learner_demand_case_b2b_corporate():
 
 def test_prohibits_direct_macro_multipliers_on_enrollment_demand():
     # Attempting to set institutional_multipliers_applied=True must raise a ValueError
-    with pytest.raises(ValueError, match="dados macroeconômicos ou setoriais.*NUNCA devem ser aplicados como multiplicador direto"):
+    with pytest.raises(
+        ValueError,
+        match="dados macroeconômicos ou setoriais.*NUNCA devem ser aplicados como multiplicador direto",
+    ):
         LearnerDemandCase(
             buyer_vs_beneficiary="same_individual",
             segment_type="b2c",
             institutional_context_sources=["SUSEP"],
             institutional_multipliers_applied=True,  # VIOLATION!
         )
-

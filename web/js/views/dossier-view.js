@@ -192,33 +192,37 @@ function renderThreeFoldReview(review) {
   const di = review.data_integrity || {};
   const sa = review.senior_analytical || {};
   const fd = review.factual_drafting || {};
+  const notes = value => Array.isArray(value) ? value.join(' ') : typeof value === 'string' ? value : '';
+  const integrityNotes = notes(di.notes) || (Number.isInteger(di.brief_facts_count) && Number.isInteger(di.source_count) ? `${di.brief_facts_count} fatos auditados a partir de ${di.source_count} registros de origem.` : 'Contagens de auditoria não informadas');
+  const analyticalNotes = notes(sa.notes) || (sa.independence_verified === true ? 'Independência institucional conferida pelas verificações' : sa.independence_verified === false ? 'Independência institucional requer revisão' : 'Verificação de independência não informada');
+  const factualNotes = notes(fd.notes) || (fd.numeric_consistency === true ? 'Consistência numérica verificada' : fd.numeric_consistency === false ? 'Inconsistências numéricas apontadas' : 'Resultado da consistência numérica não informado');
 
   const statusLabel = s =>
-    s === 'PASS' || s === 'APPROVED' ? 'Homologado' : s === 'WARN' ? 'Alerta / Limitação' : 'Revisão necessária';
+    s === 'PASS' || s === 'APPROVED' ? 'Passou na verificação' : s === 'WARN' ? 'Alerta / Limitação' : s ? 'Revisão necessária' : 'Não informado';
   const statusTone = s =>
     s === 'PASS' || s === 'APPROVED' ? 'strong' : s === 'WARN' ? 'moderate' : 'weak';
 
   return `<section class="dossier-section" id="sec-homologation">
     <div class="section-title-wrap">
-      <h2>Homologação em três frentes de revisão</h2>
-      <p class="dossier-muted">${escapeHtml(review.summary || 'Auditoria técnica, analítica e factual realizada por agentes autônomos.')}</p>
+      <h2>Revisões automáticas em três frentes</h2>
+      <p class="dossier-muted">Estas verificações de integridade, análise e redação não substituem a homologação humana ou a decisão institucional.</p>
     </div>
     <div class="dossier-pillars">
       <article class="dossier-pillar" data-tone="${statusTone(di.status)}">
         <h3>1. Integridade dos dados</h3>
         <p class="dossier-pillar-score">${escapeHtml(statusLabel(di.status))}</p>
-        <p class="dossier-muted">${di.notes ? escapeHtml(di.notes) : `${di.brief_facts_count || di.claims_evaluated || 12} fatos auditados a partir de ${di.source_count || 6} fontes brutas.`}</p>
+        <p class="dossier-muted">${escapeHtml(integrityNotes)}</p>
         ${di.missing_descriptions_count ? `<p class="dossier-muted">${di.missing_descriptions_count} descrições parciais preservadas como limitações.</p>` : ''}
       </article>
       <article class="dossier-pillar" data-tone="${statusTone(sa.status)}">
         <h3>2. Qualidade analítica sênior</h3>
         <p class="dossier-pillar-score">${escapeHtml(statusLabel(sa.status))}</p>
-        <p class="dossier-muted">${sa.notes ? escapeHtml(sa.notes) : sa.independence_verified ? 'Independência institucional confirmada' : 'Viabilidade comprovada em quórum mínimo'}.</p>
+        <p class="dossier-muted">${escapeHtml(analyticalNotes)}.</p>
       </article>
       <article class="dossier-pillar" data-tone="${statusTone(fd.status)}">
         <h3>3. Factualidade da redação</h3>
         <p class="dossier-pillar-score">${escapeHtml(statusLabel(fd.status))}</p>
-        <p class="dossier-muted">${fd.notes ? escapeHtml(fd.notes) : fd.no_hallucinations ? 'Sem alucinações numéricas' : 'Todas as afirmações possuem evidências'}.</p>
+        <p class="dossier-muted">${escapeHtml(factualNotes)}.</p>
       </article>
     </div>
     ${
@@ -320,13 +324,31 @@ function renderPersonas(personas) {
 
 function renderEconomics(eco) {
   if (!eco) return '';
-  const money = v => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const inputLabels = {
+    total_price_brl: 'Preço total do curso', installments: 'Número de parcelas',
+    discount_rate_pct: 'Desconto comercial (%)', default_and_refund_rate_pct: 'Inadimplência e estornos (%)',
+    tax_rate_pct: 'Tributos sobre a receita (%)', instruction_and_coordination_cost_brl: 'Docência e coordenação (R$)',
+    variable_cost_per_student_brl: 'Custo variável por aluno (R$)', marketing_campaign_cost_brl: 'Campanha de marketing (R$)',
+    cac_per_enrolled_brl: 'Aquisição por matrícula (R$)', min_capacity: 'Quórum mínimo', max_capacity: 'Capacidade máxima',
+    academic_duration_months: 'Duração acadêmica (meses)', financial_duration_months: 'Prazo de recebimento (meses)'
+  };
+  if (eco.status !== 'calculable') {
+    return `<section class="dossier-section" id="sec-economics"><h2>Simulação econômica</h2>
+      <p class="dossier-notice">${escapeHtml(eco.message || 'Premissas insuficientes para calcular a viabilidade financeira.')}</p>
+      ${(eco.missing_inputs || []).length ? `<p>Premissas a informar: ${(eco.missing_inputs || []).map(key => escapeHtml(inputLabels[key] || 'Premissa financeira')).join(', ')}.</p>` : ''}
+      <p class="dossier-muted">O índice de mercado não substitui a avaliação financeira da turma.</p></section>`;
+  }
+  const money = v => v !== null && v !== undefined && Number.isFinite(Number(v))
+    ? Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'Não informado';
   const scenarios = eco.scenarios || [];
+  const breakEven = eco.break_even_students === null || eco.break_even_students === undefined
+    ? 'Equilíbrio inexistente com a contribuição informada'
+    : `${escapeHtml(eco.break_even_students)} alunos${eco.is_break_even_compatible_with_capacity === false ? ' — acima da capacidade' : ''}`;
 
   return `<section class="dossier-section" id="sec-economics">
     <div class="section-title-wrap">
       <h2>Modelagem Econômica & Análise de Sensibilidade</h2>
-      <p class="dossier-muted">Simulação de viabilidade operacional com ponto de equilíbrio e margens por faixa de matrículas.</p>
+      <p class="dossier-muted">Simulação por premissas declaradas; não é previsão de matrículas nem garantia de retorno.</p>
     </div>
     
     <div class="economics-summary-strip">
@@ -336,9 +358,9 @@ function renderEconomics(eco) {
       <div class="eco-strip-divider"></div>
       <div class="eco-strip-item">Custo Variável/Aluno: <strong>${money(eco.variable_cost_per_student)}</strong></div>
       <div class="eco-strip-divider"></div>
-      <div class="eco-strip-item">Capacidade Máxima: <strong>${eco.max_capacity} vagas</strong></div>
+      <div class="eco-strip-item">Capacidade Máxima: <strong>${escapeHtml(eco.max_capacity)} vagas</strong></div>
       <div class="eco-strip-divider"></div>
-      <div class="eco-strip-item" style="color:var(--prometeus-status-approved);">Break-even Quórum: <strong>${eco.break_even_students} alunos</strong></div>
+      <div class="eco-strip-item">Ponto de equilíbrio: <strong>${breakEven}</strong></div>
     </div>
 
     ${
@@ -350,7 +372,11 @@ function renderEconomics(eco) {
         <article class="scenario-card ${sc.status === 'highlight' ? 'highlight' : ''}">
           <div class="scenario-card-header">
             <h3>Cenário ${escapeHtml(sc.name)}</h3>
-            <span class="scenario-occupancy">${escapeHtml(sc.occupancy)} (${sc.students} vagas)</span>
+            <span class="scenario-occupancy">${escapeHtml(sc.occupancy)} (${escapeHtml(sc.students)} vagas)</span>
+          </div>
+          <div class="scenario-stat-row">
+            <span>Receita Líquida:</span>
+            <span>${money(sc.net_revenue)}</span>
           </div>
           <div class="scenario-stat-row">
             <span>Receita Bruta:</span>
@@ -363,16 +389,18 @@ function renderEconomics(eco) {
           <div class="scenario-profit-box">
             <div>
               <div style="font-size:11px;color:var(--prometeus-text-secondary);text-transform:uppercase;">Resultado Líquido</div>
-              <div class="scenario-profit-val">${money(sc.net_profit)}</div>
+              <div class="scenario-profit-val" style="color:var(${Number(sc.net_profit) > 0 ? '--prometeus-status-approved' : '--prometeus-status-risk'});">${money(sc.net_profit)}</div>
             </div>
             <div class="scenario-margin-badge">Margem ${escapeHtml(sc.margin)}</div>
           </div>
+          ${(sc.assumptions || []).length ? `<ul class="dossier-muted">${sc.assumptions.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : ''}
         </article>`
         )
         .join('')}
     </div>`
         : ''
     }
+    <details><summary>Premissas informadas na proposta</summary><dl>${Object.entries(eco.inputs || {}).map(([key, value]) => `<dt>${escapeHtml(inputLabels[key] || key)}</dt><dd>${escapeHtml(value)}</dd>`).join('')}</dl></details>
   </section>`;
 }
 
@@ -381,7 +409,7 @@ function renderCurriculumModules(modules) {
   return `<section class="dossier-section" id="sec-curriculum">
     <div class="section-title-wrap">
       <h2>Matriz Curricular Aplicada & Ementa</h2>
-      <p class="dossier-muted">Estrutura modular com ênfase prática, alinhada às Leis Federais 15.040 e 15.484/2024 e jurisprudência superior.</p>
+      <p class="dossier-muted">Estrutura curricular baseada nos conteúdos e vínculos de evidência desta análise.</p>
     </div>
     <div class="modules-grid-cards">
       ${modules
@@ -406,7 +434,7 @@ function renderCurriculumModules(modules) {
 }
 
 function renderSWOT(swot) {
-  if (!swot) return '';
+  if (!swot || !Object.values(swot).some(value => Array.isArray(value) && value.length)) return '';
   const tows = swot.tows_strategies || [];
   return `<section class="dossier-section" id="sec-swot">
     <div class="section-title-wrap">
@@ -511,19 +539,36 @@ function renderCompetitiveBenchmark(benchmark) {
     ({
       direct_offer: { label: 'Oferta direta', tone: 'direct' },
       adjacent_offer: { label: 'Oferta adjacente', tone: 'adjacent' },
+      offer_relation_pending: { label: 'Oferta observada; relação pendente', tone: 'muted' },
       no_offer_observed: { label: 'Sem oferta observada', tone: 'whitespace' },
-      not_queried: { label: 'Não consultado', tone: 'muted' }
+      not_queried: { label: 'Não consultado', tone: 'muted' },
+      blocked: { label: 'Coleta bloqueada', tone: 'muted' },
+      partial: { label: 'Coleta parcial', tone: 'muted' },
+      running: { label: 'Em execução', tone: 'muted' },
+      retrying: { label: 'Em retentativa', tone: 'muted' },
+      in_doubt: { label: 'Execução pendente de confirmação', tone: 'muted' }
     })[status] || { label: 'Observação parcial', tone: 'muted' };
+  const executionLabels = {
+    not_started: 'Não iniciada', running: 'Em execução', retrying: 'Em retentativa',
+    completed: 'Pesquisa concluída', partial: 'Coleta parcial', blocked: 'Coleta bloqueada',
+    in_doubt: 'Execução pendente de confirmação'
+  };
+  const coverageKnown = benchmark.schema_version === 1;
 
   return `<section class="dossier-section" id="sec-competitive-benchmark">
     <div class="section-title-wrap">
       <h2>Matriz de Concorrentes Educacionais Fixos</h2>
+      <p class="dossier-notice">${coverageKnown ? benchmark.coverage_complete ? 'Pesquisa do recorte concluída' : 'Benchmark incompleto' : 'Benchmark histórico: cobertura de execução não validada nesta versão'}</p>
       <p class="dossier-muted">${escapeHtml(benchmark.whitespace_summary || 'Mapeamento estruturado das instituições de ensino concorrentes configuradas para a instituição.')}</p>
     </div>
     <div class="economics-summary-strip" style="margin-top:12px;">
       <div class="eco-strip-item">Instituições Monitoradas: <strong>${escapeHtml(benchmark.monitored_total ?? benchmark.rows.length)}</strong></div>
       <div class="eco-strip-divider"></div>
       <div class="eco-strip-item">Com Oferta Correlata: <strong>${escapeHtml(benchmark.offers_found_count ?? 0)}</strong></div>
+      ${coverageKnown ? `<div class="eco-strip-divider"></div><div class="eco-strip-item">Pesquisadas: <strong>${escapeHtml(benchmark.searched_total)}</strong></div>
+      <div class="eco-strip-divider"></div><div class="eco-strip-item">Ofertas distintas: <strong>${escapeHtml(benchmark.total_offers)}</strong></div>
+      <div class="eco-strip-divider"></div><div class="eco-strip-item">Concluídas: <strong>${escapeHtml(benchmark.completed_total)}</strong></div>
+      <div class="eco-strip-divider"></div><div class="eco-strip-item">Bloqueadas: <strong>${escapeHtml(benchmark.blocked_total)}</strong></div>` : ''}
       <div class="eco-strip-divider"></div>
       <div class="eco-strip-item" style="color:var(--prometeus-accent-ice);">Escopo: <strong>Comparação de Curso, Carga &amp; Preço</strong></div>
     </div>
@@ -551,10 +596,12 @@ function renderCompetitiveBenchmark(benchmark) {
                   <div class="eco-comp-name">${escapeHtml(row.name)}</div>
                   <span class="eco-comp-cat">${escapeHtml(row.category_label || '')}</span>
                 </th>
-                <td><span class="eco-status-pill" data-tone="${escapeHtml(meta.tone)}">${escapeHtml(meta.label)}</span></td>
+                <td><span class="eco-status-pill" data-tone="${escapeHtml(meta.tone)}">${escapeHtml(meta.label)}</span>
+                  ${row.execution_status ? `<p class="dossier-muted">${escapeHtml(executionLabels[row.execution_status] || 'Estado não informado')}</p>` : ''}
+                  ${(row.failures || []).length ? `<details><summary>Lacunas da coleta</summary><ul>${row.failures.map(failure => `<li>${escapeHtml(failure.error_message || failure.error_code || 'Consulta não concluída')}</li>`).join('')}</ul></details>` : ''}
+                </td>
                 <td>
-                  <div>${escapeHtml(row.observed_offer_title || '—')}</div>
-                  ${inspectionButton(row.evidence_ids || [], 'Ver fonte')}
+                  ${(row.offers || []).length ? `<details open><summary>${escapeHtml(row.offers.length)} oferta(s) confirmada(s)</summary><ul>${row.offers.map(offer => `<li><strong>${escapeHtml(offer.title)}</strong><p>${escapeHtml([offer.modality, offer.workload_hours, offer.price_display].filter(Boolean).join(' · '))}</p>${offer.relation_reason ? `<p>${escapeHtml(offer.relation_reason)}</p>` : ''}${offer.collected_at ? `<small>Coletada em ${escapeHtml(offer.collected_at)}</small>` : ''}${inspectionButton(offer.evidence_ids || [offer.evidence_id].filter(Boolean), 'Ver fonte')}</li>`).join('')}</ul></details>` : `<div>${escapeHtml(row.observed_offer_title || '—')}</div>${inspectionButton(row.evidence_ids || [], 'Ver fonte')}`}
                 </td>
                 <td>${escapeHtml(fmtParts)}</td>
                 <td><strong>${escapeHtml(row.price_display || '—')}</strong></td>
@@ -598,7 +645,7 @@ function renderSectorRadar(radar) {
                   </div>
                   <span class="eco-scope-badge ${isGlobal ? 'global' : 'national'}">${escapeHtml(sig.scope_badge || 'Brasil')}</span>
                 </div>
-                <div class="sector-radar-theme">${escapeHtml(sig.theme_detected || 'Movimentação Setorial')}</div>
+                <div class="sector-radar-theme">Tema sugerido: ${escapeHtml(sig.theme_detected || 'Movimentação Setorial')}</div>
                 <p class="sector-radar-pain">${escapeHtml(sig.market_or_broker_pain || '')}</p>
                 ${sig.curriculum_link ? `<div class="sector-radar-curriculum"><strong>Conexão Curricular:</strong> ${escapeHtml(sig.curriculum_link)}</div>` : ''}
                 <div class="sector-radar-footer">
@@ -651,17 +698,18 @@ export function renderDossierView(store) {
     groups.set(key, [...(groups.get(key) || []), ev]);
   });
 
-  const kpis = pres.kpis || [];
-  const personas = pres.personas || [];
-  const economics = pres.economics || null;
-  const modules = pres.curriculum_modules || [];
-  const swot = pres.swot || null;
-  const roadmap = pres.tactical_roadmap || [];
-  const competitiveBenchmark = pres.competitive_benchmark || null;
-  const sectorRadar = pres.sector_radar || null;
+  const verifiedPresentation = pres.contract_version === 2;
+  const kpis = verifiedPresentation ? pres.kpis || [] : [];
+  const personas = verifiedPresentation ? pres.personas || [] : [];
+  const economics = verifiedPresentation ? pres.economics || null : null;
+  const modules = verifiedPresentation ? pres.curriculum_modules || [] : [];
+  const swot = verifiedPresentation ? pres.swot || null : null;
+  const roadmap = verifiedPresentation ? pres.tactical_roadmap || [] : [];
+  const competitiveBenchmark = verifiedPresentation ? pres.competitive_benchmark || null : null;
+  const sectorRadar = verifiedPresentation ? pres.sector_radar || null : null;
   const review = pres.three_fold_review || dossier.three_fold_review;
-  const verdict = pres.verdict || {
-    status: scoring.recommendation || 'APPROVED',
+  const verdict = {
+    status: scoring.recommendation || 'INSUFFICIENT_EVIDENCE',
     badge_label: recommendationLabel(scoring.recommendation),
     summary: dossier.executive_summary
   };
@@ -688,7 +736,7 @@ export function renderDossierView(store) {
       ${swot ? '<a href="#sec-swot">SWOT & TOWS</a>' : ''}
       ${roadmap.length ? '<a href="#sec-roadmap">Cronograma Tático</a>' : ''}
       <a href="#sec-pillars">Pilares de Viabilidade</a>
-      <a href="#sec-homologation">Homologação</a>
+      <a href="#sec-homologation">Revisões</a>
       <a href="#sec-evidences">Fontes & Evidências</a>
     </nav>
 

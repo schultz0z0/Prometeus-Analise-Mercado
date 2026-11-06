@@ -29,6 +29,8 @@ PostgreSQL, Redis, TypeSafe SDK, LLMs, Apify, Google, Meta, HTTP e armazenamento
 
 REST, MCP, CLI e consumers de worker. Apenas valida entrada, autentica, chama casos de uso e converte respostas.
 
+A interface mantém dossiês em memória e os recarrega pela API autenticada. Não persiste dossiês ou evidências em `localStorage`; remove o cache legado de análises ao iniciar, preservando as preferências locais. Isso evita exceder a quota do navegador e restaurar dados de outra sessão.
+
 ## Regras de dependência
 
 ```text

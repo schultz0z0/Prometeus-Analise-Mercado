@@ -1,0 +1,56 @@
+{
+  "google_search": [
+    {
+      "id": "CYGwA6zybYnHxoWrz",
+      "status": "SUCCEEDED",
+      "startedAt": "2026-11-04T17:39:28.935Z",
+      "finishedAt": "2026-11-04T17:39:47.173Z",
+      "usageTotalUsd": 0.004549999999999999,
+      "statusMessage": null
+    },
+    {
+      "id": "Dh3ePTI4HBc8Gd32O",
+      "status": "SUCCEEDED",
+      "startedAt": "2026-11-04T17:39:07.776Z",
+      "finishedAt": "2026-11-04T17:39:28.309Z",
+      "usageTotalUsd": 0.004549999999999999,
+      "statusMessage": null
+    }
+  ],
+  "google_trends": [
+    {
+      "id": "0g2XRUqe7wr2um7PU",
+      "status": "RUNNING",
+      "startedAt": "2026-11-04T17:37:40.624Z",
+      "finishedAt": null,
+      "usageTotalUsd": 0.08145627077830997,
+      "statusMessage": null
+    },
+    {
+      "id": "jWJKJWrLg8cWYhFHL",
+      "status": "ABORTED",
+      "startedAt": "2026-10-29T20:27:21.012Z",
+      "finishedAt": "2026-10-29T20:33:22.954Z",
+      "usageTotalUsd": 0.17000356089323923,
+      "statusMessage": null
+    }
+  ],
+  "youtube_comments": [
+    {
+      "id": "cxIZIh8bGV9F1hA2s",
+      "status": "SUCCEEDED",
+      "startedAt": "2026-11-04T17:35:40.217Z",
+      "finishedAt": "2026-11-04T17:37:39.798Z",
+      "usageTotalUsd": 0.008,
+      "statusMessage": null
+    },
+    {
+      "id": "4mtRTV49ysQaYsQuM",
+      "status": "SUCCEEDED",
+      "startedAt": "2026-10-29T19:59:20.906Z",
+      "finishedAt": "2026-10-29T19:59:36.526Z",
+      "usageTotalUsd": 0.10200000000000001,
+      "statusMessage": null
+    }
+  ]
+}

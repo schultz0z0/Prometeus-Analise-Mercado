@@ -1,0 +1,10 @@
+{
+  "source_rows": 70,
+  "observed_snapshot_bodies": 70,
+  "projected_snapshot_bodies": 70,
+  "observed_carousels": 10,
+  "projected_carousels": 10,
+  "all_ids_present": true,
+  "all_context_budgets_valid": true,
+  "no_paid_runs_started": true
+}

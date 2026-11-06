@@ -11,6 +11,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from prometeus.domain.collection_execution import CollectionExecutionPolicy
+
 
 class ImmutableModel(BaseModel):
     model_config = {"frozen": True}
@@ -221,7 +223,8 @@ class CourseResearchPlan(ImmutableModel):
     understanding_hash: str
     questions: list[ResearchQuestion] = Field(default_factory=list)
     tool_calls: list[PlannedToolCall] = Field(default_factory=list)
-    budget_limit_usd: float = Field(default=5.0, ge=0.0)
+    budget_limit_usd: float | None = Field(default=5.0, ge=0.0)
+    execution_policy: CollectionExecutionPolicy | None = None
     skill_snapshots: list[dict[str, str]] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 

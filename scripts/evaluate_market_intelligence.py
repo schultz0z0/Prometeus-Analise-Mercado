@@ -130,7 +130,9 @@ class MarketIntelligenceEvaluator:
             expected_fields = item.get("expected_critical_fields", [])
             allowed_claims = item.get("allowed_claims", [])
             disallowed_claims = item.get("disallowed_claims", [])
-            gold_utility = item.get("adjudication", {}).get("final_utility") or item.get("utility", "direct")
+            gold_utility = item.get("adjudication", {}).get("final_utility") or item.get(
+                "utility", "direct"
+            )
             adjudication_status = item.get("adjudication", {}).get("status", "AGREED")
 
             # Control type counts
@@ -189,7 +191,10 @@ class MarketIntelligenceEvaluator:
                 dossier = self._build_mock_dossier(facts, claim)
                 analytical_review = self.verifier.verify_senior_analytical_quality(dossier, facts)
                 drafting_review = self.verifier.verify_factual_drafting(dossier, facts)
-                if analytical_review.status == ReviewStatus.FAIL or drafting_review.status == ReviewStatus.FAIL:
+                if (
+                    analytical_review.status == ReviewStatus.FAIL
+                    or drafting_review.status == ReviewStatus.FAIL
+                ):
                     item_allowed_pass = False
                     summary.layer_losses["analytical_layer"] += 1
                 else:
@@ -210,7 +215,10 @@ class MarketIntelligenceEvaluator:
                 dossier = self._build_mock_dossier(facts, claim)
                 analytical_review = self.verifier.verify_senior_analytical_quality(dossier, facts)
                 drafting_review = self.verifier.verify_factual_drafting(dossier, facts)
-                if analytical_review.status == ReviewStatus.FAIL or drafting_review.status == ReviewStatus.FAIL:
+                if (
+                    analytical_review.status == ReviewStatus.FAIL
+                    or drafting_review.status == ReviewStatus.FAIL
+                ):
                     summary.disallowed_claims_flagged += 1
                 else:
                     item_disallowed_flagged = False
@@ -250,9 +258,7 @@ class MarketIntelligenceEvaluator:
             else True
         )
         summary.passed = bool(
-            disallowed_ok
-            and allowed_ok
-            and summary.critical_fields_preservation_rate >= 0.95
+            disallowed_ok and allowed_ok and summary.critical_fields_preservation_rate >= 0.95
         )
 
         shadow_records: list[ShadowComparisonRecord] = []
@@ -262,7 +268,10 @@ class MarketIntelligenceEvaluator:
             summary.shadow_evaluations = [e.to_dict() for e in shadow_evaluations]
 
         self._export_results(
-            summary, diagnostics, shadow_records=shadow_records, shadow_evaluations=shadow_evaluations
+            summary,
+            diagnostics,
+            shadow_records=shadow_records,
+            shadow_evaluations=shadow_evaluations,
         )
         return summary
 
@@ -303,7 +312,9 @@ class MarketIntelligenceEvaluator:
                     source_type=item.get("source_name", "web_evidence"),
                     title=f"Evidência de referência: {example_id}",
                     key_metrics=key_metrics,
-                    summary=" | ".join(summary_parts) if summary_parts else "Evidência de contexto.",
+                    summary=" | ".join(summary_parts)
+                    if summary_parts
+                    else "Evidência de contexto.",
                     source_url=item.get("source_url"),
                 )
             ],
@@ -523,32 +534,52 @@ class MarketIntelligenceEvaluator:
             f.write("## 2. Preservação de Campos Críticos e Integridade\n\n")
             f.write(f"- Campos críticos esperados: {summary.critical_fields_total}\n")
             f.write(f"- Campos críticos preservados: {summary.critical_fields_preserved}\n")
-            f.write(f"- Taxa de preservação: **{summary.critical_fields_preservation_rate * 100:.1f}%**\n\n")
+            f.write(
+                f"- Taxa de preservação: **{summary.critical_fields_preservation_rate * 100:.1f}%**\n\n"
+            )
 
             f.write("## 3. Segurança e Factualidade das Afirmações\n\n")
-            f.write(f"- Claims permitidas avaliadas: {summary.allowed_claims_evaluated} (Aprovadas: **{summary.allowed_claims_accepted}**)\n")
-            f.write(f"- Claims proibidas (adversariais) avaliadas: {summary.disallowed_claims_evaluated} (Bloqueadas com sucesso: **{summary.disallowed_claims_flagged}**)\n\n")
+            f.write(
+                f"- Claims permitidas avaliadas: {summary.allowed_claims_evaluated} (Aprovadas: **{summary.allowed_claims_accepted}**)\n"
+            )
+            f.write(
+                f"- Claims proibidas (adversariais) avaliadas: {summary.disallowed_claims_evaluated} (Bloqueadas com sucesso: **{summary.disallowed_claims_flagged}**)\n\n"
+            )
 
             f.write("## 4. Perdas por Camada de Auditoria\n\n")
-            f.write(f"- Camada 1 (Integridade de dados): {summary.layer_losses['integrity_layer']} falhas\n")
-            f.write(f"- Camada 2 (Qualidade analítica sênior): {summary.layer_losses['analytical_layer']} falhas\n")
-            f.write(f"- Camada 3 (Factualidade da redação): {summary.layer_losses['drafting_layer']} falhas\n\n")
+            f.write(
+                f"- Camada 1 (Integridade de dados): {summary.layer_losses['integrity_layer']} falhas\n"
+            )
+            f.write(
+                f"- Camada 2 (Qualidade analítica sênior): {summary.layer_losses['analytical_layer']} falhas\n"
+            )
+            f.write(
+                f"- Camada 3 (Factualidade da redação): {summary.layer_losses['drafting_layer']} falhas\n\n"
+            )
 
             f.write("## 5. Matriz de Confusão por Utilidade\n\n")
             f.write("| Gold \\ Previsto | Direto | Adjacente | Contexto | Excluído |\n")
             f.write("|---|---|---|---|---|\n")
             for gold_k, preds in summary.confusion_matrix.items():
-                f.write(f"| **{gold_k}** | {preds.get('direct', 0)} | {preds.get('adjacent', 0)} | {preds.get('context_only', 0)} | {preds.get('excluded', 0)} |\n")
+                f.write(
+                    f"| **{gold_k}** | {preds.get('direct', 0)} | {preds.get('adjacent', 0)} | {preds.get('context_only', 0)} | {preds.get('excluded', 0)} |\n"
+                )
             f.write("\n")
 
             if self.shadow and shadow_evaluations:
                 f.write("## 6. Avaliação Shadow Mode e Não Inferioridade JEV (Fase 6)\n\n")
-                f.write("Execução paralela em shadow mode sem blast radius sobre os resultados de produção (ADR-0008).\n\n")
+                f.write(
+                    "Execução paralela em shadow mode sem blast radius sobre os resultados de produção (ADR-0008).\n\n"
+                )
                 f.write("- **Modelo Primário (Produção)**: `gpt-4o-mini`\n")
                 f.write("- **Modelo Shadow (Candidato JEV)**: `jev-2026.1`\n")
-                f.write(f"- **Total de Comparações Realizadas**: **{len(shadow_records or [])}**\n\n")
+                f.write(
+                    f"- **Total de Comparações Realizadas**: **{len(shadow_records or [])}**\n\n"
+                )
                 f.write("### Tabela de Homologação por Tarefa\n\n")
-                f.write("| Pack ID | Nível de Risco | Concordância | Abstenção Shadow | Δ Latência Média | Limiar Mín. | Veredito |\n")
+                f.write(
+                    "| Pack ID | Nível de Risco | Concordância | Abstenção Shadow | Δ Latência Média | Limiar Mín. | Veredito |\n"
+                )
                 f.write("|---|---|---|---|---|---|---|\n")
                 for ev in shadow_evaluations:
                     f.write(
@@ -628,8 +659,12 @@ def main() -> int:
     if args.mode == "offline":
         summary = evaluator.evaluate_offline()
         print(f"Avaliação offline concluída: {'PASS' if summary.passed else 'FAIL'}")
-        print(f"Preservação de campos críticos: {summary.critical_fields_preservation_rate * 100:.1f}%")
-        print(f"Claims proibidas bloqueadas: {summary.disallowed_claims_flagged}/{summary.disallowed_claims_evaluated}")
+        print(
+            f"Preservação de campos críticos: {summary.critical_fields_preservation_rate * 100:.1f}%"
+        )
+        print(
+            f"Claims proibidas bloqueadas: {summary.disallowed_claims_flagged}/{summary.disallowed_claims_evaluated}"
+        )
         if args.shadow and summary.shadow_evaluations:
             print("\n--- Resultados de Não Inferioridade Shadow JEV (Fase 6) ---")
             for sev in summary.shadow_evaluations:

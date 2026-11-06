@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from prometeus.application import plan_course_research
 from prometeus.application.plan_course_research import (
     CourseResearchPlanner,
     build_ecosystem_seed_calls,
@@ -34,15 +35,39 @@ def test_compact_topic_terms_bounds_word_count() -> None:
     understanding = CourseUnderstanding(
         analysis_id="anl-topic",
         course_title="MBA Executivo em Inteligência Artificial Aplicada à Subscrição de Riscos e Sinistros",
-        subject_domains=["inteligência artificial", "subscrição de riscos", "sinistros securitários"],
+        subject_domains=[
+            "inteligência artificial",
+            "subscrição de riscos",
+            "sinistros securitários",
+        ],
     )
     compact = compact_topic_terms(understanding, max_tokens=4)
     tokens = compact.split()
     assert 1 <= len(tokens) <= 4
 
 
+def test_competitor_queries_preserve_course_focus_before_broadening_supporting_domains() -> None:
+    cfg = load_tenant_config(Path("config/tenants/ens.example.yaml"))
+    understanding = CourseUnderstanding(
+        analysis_id="course-focus",
+        course_title="Governança de Inteligência Artificial e Proteção de Dados no Mercado Segurador",
+        subject_domains=["Inteligência artificial generativa aplicada ao mercado segurador"],
+    )
+    _, initial = build_ecosystem_seed_calls(understanding, cfg.ecosystem, ["google_search"], None)
+    first = next(call for call in initial if call.parameters.get("competitor_id") == "fgv")
+    assert "governança" in first.query
+    assert "proteção" in first.query
+    diagnostic = {"rows": [{"competitor_id": "fgv", "execution_status": "completed", "offers": []}]}
+    second = plan_course_research.build_competitor_followup_calls(understanding, cfg.ecosystem, initial, diagnostic)
+    assert "governança" in second[0].query and "dados" in second[0].query
+    third = plan_course_research.build_competitor_followup_calls(understanding, cfg.ecosystem, [*initial, *second], diagnostic)
+    assert "inteligência artificial" in third[0].query
+    assert "governança" not in third[0].query
+    assert len(second[0].query.split()) < 32
+
+
 @pytest.mark.asyncio
-async def test_planner_injects_clustered_competitors_sector_radar_and_open_web_search() -> None:
+async def test_planner_injects_individual_competitors_sector_radar_and_open_web_search() -> None:
     ens_cfg = load_tenant_config(Path("config/tenants/ens.example.yaml"))
     llm = FakeGenerativeModel(
         canned_text=json.dumps(
@@ -63,6 +88,11 @@ async def test_planner_injects_clustered_competitors_sector_radar_and_open_web_s
                         "required": True,
                         "rationale": "Busca pontual inicial",
                         "max_items": 10,
+                        "parameters": {
+                            "priority": "critical",
+                            "competitor_id": "fiap",
+                            "collection_phase": "discovery",
+                        },
                     },
                     {
                         "id": "llm-crawler",
@@ -99,6 +129,10 @@ async def test_planner_injects_clustered_competitors_sector_radar_and_open_web_s
 
     plan = await planner.plan(understanding, ecosystem=ens_cfg.ecosystem, budget_limit_usd=5.0)
 
+    assert plan.budget_limit_usd is None
+    assert plan.execution_policy is not None
+    assert plan.execution_policy.spending_mode == "monitor_only"
+
     google_calls = [c for c in plan.tool_calls if c.capability == "google_search"]
     # 1. Toda chamada google_search respeita <= 5 operadores site: e <= 28 termos
     for gcall in google_calls:
@@ -119,20 +153,34 @@ async def test_planner_injects_clustered_competitors_sector_radar_and_open_web_s
 
     # 4. web_crawler referencia IDs das buscas de concorrentes em depends_on e sem URLs brutas
     comp_search_ids = {
-        c.id
+        c.id for c in google_calls if c.parameters.get("ecosystem_role") == "configured_competitor"
+    }
+    assert len(comp_search_ids) >= 2
+    individual_searches = {
+        c.parameters.get("competitor_id"): c
         for c in google_calls
         if c.parameters.get("ecosystem_role") == "configured_competitor"
     }
-    assert len(comp_search_ids) >= 2
+    assert set(individual_searches) == {comp.id for comp in ens_cfg.ecosystem.competitors}
+    for comp in ens_cfg.ecosystem.competitors:
+        search = individual_searches[comp.id]
+        assert search.parameters["collection_phase"] == "discovery"
+        assert search.parameters["target_domains"] == comp.domains
+        assert search.parameters["priority"] == 1
+    assert plan.tool_calls[0].parameters.get("ecosystem_role") == "configured_competitor"
+    untrusted_call = next(call for call in plan.tool_calls if call.id == "llm-google-site")
+    assert "competitor_id" not in untrusted_call.parameters
     crawler_calls = [c for c in plan.tool_calls if c.capability == "web_crawler"]
     assert crawler_calls
-    all_crawler_deps = {
-        dep for c in crawler_calls for dep in c.parameters.get("depends_on", [])
-    }
+    all_crawler_deps = {dep for c in crawler_calls for dep in c.parameters.get("depends_on", [])}
     assert comp_search_ids.issubset(all_crawler_deps)
     for c in crawler_calls:
         assert "urls" not in c.parameters
         assert "start_urls" not in c.parameters
+        comp_id = c.parameters.get("competitor_id")
+        if comp_id:
+            assert c.parameters["depends_on"] == [individual_searches[comp_id].id]
+            assert c.parameters["collection_phase"] == "validation"
 
     # 5. Pergunta q-sector-radar em WORKFORCE_NEEDS + cobertura das 10 seguradoras na web
     radar_questions = [q for q in plan.questions if q.id == "q-sector-radar"]
@@ -149,11 +197,19 @@ async def test_planner_injects_clustered_competitors_sector_radar_and_open_web_s
     assert len(ig_calls) >= 1
     ig_queries = {c.query.lower().lstrip("@#") for c in ig_calls}
     assert "porto" in ig_queries or "bradescoseguros" in ig_queries
-    for unconfirmed_token in ("itau", "itauseguros", "hdiseguros", "yelum", "yelumseguros", "brasilseg", "bbseguros"):
+    for unconfirmed_token in (
+        "itau",
+        "itauseguros",
+        "hdiseguros",
+        "yelum",
+        "yelumseguros",
+        "brasilseg",
+        "bbseguros",
+    ):
         assert unconfirmed_token not in ig_queries
 
 
-def test_build_ecosystem_seed_calls_degrades_gracefully_under_tight_budget() -> None:
+def test_build_ecosystem_seed_calls_does_not_drop_sources_for_legacy_budget() -> None:
     ens_cfg = load_tenant_config(Path("config/tenants/ens.example.yaml"))
     understanding = CourseUnderstanding(
         analysis_id="anl-budget",
@@ -187,7 +243,72 @@ def test_build_ecosystem_seed_calls_degrades_gracefully_under_tight_budget() -> 
     ):
         assert f"site:{primary_domain}" in radar_google_queries
 
-    # Seguradoras secundárias omitidas sob pressão orçamentária (< US$ 1.50)
+    # O antigo orçamento não elimina seguradoras do escopo.
     for secondary_domain in ("mapfre.com.br", "zurich.com.br", "yelumseguros.com.br"):
-        assert f"site:{secondary_domain}" not in radar_google_queries
+        assert f"site:{secondary_domain}" in radar_google_queries
 
+
+def test_zero_legacy_budget_keeps_every_competitor_in_scope() -> None:
+    cfg = load_tenant_config(Path("config/tenants/ens.example.yaml"))
+    _, calls = build_ecosystem_seed_calls(
+        understanding=CourseUnderstanding(analysis_id="no-budget-cap", course_title="Curso de IA"),
+        ecosystem=cfg.ecosystem,
+        allowed_capabilities=["google_search", "web_crawler"],
+        budget_usd=0,
+    )
+    assert {
+        c.parameters.get("competitor_id")
+        for c in calls
+        if c.capability == "google_search"
+        and c.parameters.get("ecosystem_role") == "configured_competitor"
+    } == {comp.id for comp in cfg.ecosystem.competitors}
+
+
+def test_followup_expands_completed_low_yield_only_and_stops_after_three_variants() -> None:
+    cfg = load_tenant_config(Path("config/tenants/ens.example.yaml"))
+    understanding = CourseUnderstanding(
+        analysis_id="expand-competitors", course_title="Governança de IA e proteção de dados",
+        subject_domains=["governança de inteligência artificial", "proteção de dados"],
+    )
+    _, initial = build_ecosystem_seed_calls(
+        understanding, cfg.ecosystem, ["google_search", "web_crawler"], None,
+    )
+    diagnostic = {"rows": [
+        {"competitor_id": "fgv", "execution_status": "completed", "evidence_status": "no_qualified_offer", "offers": []},
+        {"competitor_id": "fiap", "execution_status": "retrying", "evidence_status": "not_observed", "offers": []},
+        {"competitor_id": "insper", "execution_status": "completed", "evidence_status": "direct_offer", "offers": [{"title": "Curso IA"}]},
+        {"competitor_id": "alura", "execution_status": "in_doubt", "offers": []},
+        {"competitor_id": "ibmec", "execution_status": "blocked", "failures": [{"error_code": "invalid_token"}], "offers": []},
+    ]}
+    builder = getattr(plan_course_research, "build_competitor_followup_calls", None)
+    assert builder is not None, "A coleta precisa de expansão semântica determinística e limitada"
+    second = builder(understanding, cfg.ecosystem, initial, diagnostic)
+    assert len(second) == 2
+    discovery, validation = second
+    assert discovery.parameters["competitor_id"] == "fgv"
+    assert discovery.parameters["semantic_variant"] == 2
+    assert "site:fgv.br" in discovery.query
+    assert discovery.query != next(c.query for c in initial if c.id == "eco-competitor-fgv-discovery")
+    assert validation.parameters["depends_on"] == [discovery.id]
+    assert validation.parameters["target_domains"] == next(
+        comp.domains for comp in cfg.ecosystem.competitors if comp.id == "fgv"
+    )
+
+    third = builder(understanding, cfg.ecosystem, [*initial, *second], diagnostic)
+    assert len(third) == 2
+    assert third[0].parameters["semantic_variant"] == 3
+    assert third[0].query != discovery.query
+    assert builder(understanding, cfg.ecosystem, [*initial, *second, *third], diagnostic) == []
+
+
+def test_followup_does_not_buy_validation_when_no_crawler_was_configured() -> None:
+    cfg = load_tenant_config(Path("config/tenants/ens.example.yaml"))
+    understanding = CourseUnderstanding(analysis_id="no-crawler", course_title="Curso de IA")
+    _, initial = build_ecosystem_seed_calls(understanding, cfg.ecosystem, ["google_search"], None)
+    builder = getattr(plan_course_research, "build_competitor_followup_calls", None)
+    assert builder is not None
+    followup = builder(understanding, cfg.ecosystem, initial, {"rows": [
+        {"competitor_id": "fgv", "execution_status": "completed", "offers": []},
+    ]})
+    assert len(followup) == 1
+    assert followup[0].capability == "google_search"

@@ -1,0 +1,12 @@
+{
+  "ready": 200,
+  "apify_spending_mode": "monitor_only",
+  "apify_max_charge": null,
+  "discovery_mcp": "ok",
+  "discovery_untrusted": true,
+  "ai_mode": "traditional",
+  "jev_enabled": false,
+  "llm_provider": "chatgpt_oauth",
+  "llm_model": "gpt-6.1-terra",
+  "oauth_connected": true
+}

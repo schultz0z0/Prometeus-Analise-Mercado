@@ -48,6 +48,7 @@ class LLMDecisionAdapter(DecisionModelPort):
 
     def component_versions(self, pack_id: str, context: dict[str, Any]) -> dict[str, str]:
         import hashlib
+
         guidance = self._local_guidance(pack_id, context)
         guidance_hash = hashlib.sha256(guidance.encode("utf-8")).hexdigest()
         return {
@@ -129,7 +130,9 @@ class LLMDecisionAdapter(DecisionModelPort):
             prompt=prompt, system_prompt=system_prompt, temperature=0.1
         )
         parsed = self._extract_json(raw)
-        choice = validate_choice_selection(parsed.get("selected_choice"), pack.options, pack.pack_id)
+        choice = validate_choice_selection(
+            parsed.get("selected_choice"), pack.options, pack.pack_id
+        )
         confidence = validate_probability(parsed.get("confidence"), "confidence")
         dist = validate_distribution(parsed.get("distribution"), pack.options)
 
@@ -176,7 +179,9 @@ class LLMDecisionAdapter(DecisionModelPort):
             prompt=prompt, system_prompt=system_prompt, temperature=0.1
         )
         parsed = self._extract_json(raw)
-        score = validate_finite_number(parsed.get("score_value"), "score_value", pack.min_score, pack.max_score)
+        score = validate_finite_number(
+            parsed.get("score_value"), "score_value", pack.min_score, pack.max_score
+        )
         confidence = validate_probability(parsed.get("confidence"), "confidence")
 
         result = DecisionResult.score(

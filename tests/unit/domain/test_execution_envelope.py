@@ -73,9 +73,7 @@ def test_unknown_usage_and_cost_are_never_reported_as_real_zero() -> None:
     with pytest.raises(ValueError):
         MeasuredCost.measured(Decimal("-0.01"), source="x")
 
-    summary = summarize_costs(
-        [MeasuredCost.measured(Decimal("0.002"), source="apify"), cost, cost]
-    )
+    summary = summarize_costs([MeasuredCost.measured(Decimal("0.002"), source="apify"), cost, cost])
     assert summary["measured_usd"] == "0.002"
     assert summary["unavailable_count"] == 2
     assert summary["complete"] is False
@@ -156,4 +154,3 @@ def test_provider_telemetry_is_scoped_to_the_capture_context() -> None:
     with capture_provider_calls() as calls:
         record_provider_call(telemetry)
     assert calls == [telemetry]
-

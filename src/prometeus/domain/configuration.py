@@ -67,6 +67,7 @@ class TenantProfiles(BaseModel):
 
 class TenantWebhooks(BaseModel):
     events: list[str] = Field(default_factory=list)
+    target_url: str | None = None
 
 
 def _normalize_domain(raw: str) -> str:
@@ -350,7 +351,9 @@ class AppSettings(BaseSettings):
     # Apify / Coleta de Dados Web (Scraping de Concorrentes e Vagas)
     APIFY_TOKEN: str = ""
     APIFY_BASE_URL: str = "https://api.apify.com/v2"
-    APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS: float = 5.00
+    # Legacy snapshots only; new analyses use collection-v2 without a monetary cap.
+    APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS: float | None = None
+    APIFY_DISCOVERY_MCP_ENABLED: bool = False
     APIFY_ACTOR_GOOGLE_SEARCH: str = ""
     APIFY_ACTOR_WEB_CRAWLER: str = ""
     APIFY_ACTOR_META_AD_LIBRARY: str = ""
@@ -373,6 +376,9 @@ class AppSettings(BaseSettings):
     SCORING_PROFILE_PATH: str = "config/scoring/portfolio-v2.yaml"
 
     SERVICE_API_KEYS: str = ""
+    AUTH_ADMIN_KEY_PATH: str = "var/auth/admin.key"
+    WEBHOOK_SECRET: str = ""
+    WEBHOOK_TARGET_URL: str = ""
     SHADOW_MODE: bool = False
     KILL_SWITCH_ACTIVE: bool = False
 
@@ -436,7 +442,10 @@ def validate_environment_and_models(settings: AppSettings) -> None:
     env = settings.APP_ENV.strip().lower()
     jev_model = settings.JEV_MODEL.strip().lower()
 
-    if env == "production" and jev_model == "jev-latest":
+    jev_enabled = settings.AI_MODE in {"hybrid", "shadow"} or (
+        settings.AI_MODE == "auto" and settings.is_jev_configured
+    )
+    if env == "production" and jev_enabled and jev_model == "jev-latest":
         raise ConfigurationError(
             "O uso de 'jev-latest' é expressamente proibido em ambiente de produção (ADR-0003). "
             "Fixe uma versão imutável aprovada no gate (ex.: 'jev-v1.2.0')."

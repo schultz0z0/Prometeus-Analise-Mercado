@@ -81,8 +81,95 @@ def plan(calls):
         analysis_id="integrity",
         understanding_hash="a" * 64,
         tool_calls=calls,
-        budget_limit_usd=1,
+        budget_limit_usd=max(1, len(calls) * 0.5),
     )
+
+
+async def test_interrupted_remote_run_blocks_resume_without_rebuying(session):
+    from prometeus.application.collect_market_evidence import RequiredSourceBlockedError
+
+    executor = Executor({})
+    service = CollectMarketEvidenceService(session, executor, registry())
+    planned = call("crashed")
+    research = plan([planned])
+    await service._ensure_plan(tenant_id="ens", plan=research, understanding_snapshot=None)
+    await service._checkpoint_running(plan=research, call=planned)
+    await session.commit()
+    with pytest.raises(RequiredSourceBlockedError, match="reconciliação"):
+        await service.collect(tenant_id="ens", plan=research)
+    assert executor.calls == []
+    persisted = (await session.execute(select(ToolRunModel))).scalar_one()
+    assert persisted.status == "IN_DOUBT"
+    assert persisted.parameters["cost_status"] == "unknown"
+    with pytest.raises(RequiredSourceBlockedError):
+        await service.collect(tenant_id="ens", plan=research)
+    assert executor.calls == []
+
+
+async def test_uncertain_remote_billing_or_transport_stops_further_purchases(session):
+    from prometeus.application.collect_market_evidence import RequiredSourceBlockedError
+    from prometeus.infrastructure.apify.client import ApifyReconciliationRequiredError
+
+    class UnconfirmedExecutor(Executor):
+        async def execute(self, planned, *, max_total_charge_usd):
+            self.calls.append(planned.id)
+            raise ApifyReconciliationRequiredError(
+                "Cobrança requer reconciliação.",
+                run_data={
+                    "id": "remote-paid",
+                    "defaultDatasetId": "remote-data",
+                    "usageTotalUsd": 0.00005,
+                },
+            )
+
+    executor = UnconfirmedExecutor({})
+    service = CollectMarketEvidenceService(session, executor, registry())
+    research = plan([call("uncertain"), call("must-not-buy")])
+    with pytest.raises(RequiredSourceBlockedError, match="reconciliação"):
+        await service.collect(tenant_id="ens", plan=research)
+    assert executor.calls == ["uncertain"]
+    persisted = (await session.execute(select(ToolRunModel))).scalar_one()
+    assert persisted.status == "IN_DOUBT"
+    assert persisted.provider_run_id == "remote-paid"
+    assert persisted.parameters["cost_status"] == "unknown"
+    with pytest.raises(RequiredSourceBlockedError):
+        await service.collect(tenant_id="ens", plan=research)
+    assert executor.calls == ["uncertain"]
+
+
+async def test_failed_paid_actor_keeps_cost_and_its_authorization_for_the_next_source(session):
+    from prometeus.infrastructure.apify.client import ApifyActorFailedError
+
+    class PaidFailure(Executor):
+        budgets = []
+
+        async def execute(self, planned, *, max_total_charge_usd):
+            self.budgets.append(max_total_charge_usd)
+            if planned.id == "paid-failure":
+                raise ApifyActorFailedError(
+                    run_id="paid-remote",
+                    status="FAILED",
+                    run_data={
+                        "id": "paid-remote",
+                        "defaultDatasetId": "paid-data",
+                        "usageTotalUsd": 0.4,
+                    },
+                )
+            return await super().execute(planned, max_total_charge_usd=max_total_charge_usd)
+
+    executor = PaidFailure({})
+    outcome = await CollectMarketEvidenceService(session, executor, registry()).collect(
+        tenant_id="ens", plan=plan([call("paid-failure"), call("next-source")])
+    )
+    assert executor.budgets == [0.5, 0.5]
+    assert outcome.spent_usd == 0.41
+    failed = (
+        await session.execute(
+            select(ToolRunModel).where(ToolRunModel.planned_call_id == "paid-failure")
+        )
+    ).scalar_one()
+    assert failed.provider_run_id == "paid-remote"
+    assert failed.cost_usd == 0.4
 
 
 async def test_partial_result_keeps_evidence_cost_and_failure_on_resume(session):

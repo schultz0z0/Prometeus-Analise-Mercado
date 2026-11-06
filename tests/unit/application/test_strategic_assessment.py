@@ -95,7 +95,10 @@ def test_validator_rejects_data_gap_as_commercial_weakness():
         quote_or_datapoint="hasData=false",
     )
 
-    with pytest.raises(ValueError, match="Lacuna de dados de pesquisa não pode ser classificada como fraqueza comercial"):
+    with pytest.raises(
+        ValueError,
+        match="Lacuna de dados de pesquisa não pode ser classificada como fraqueza comercial",
+    ):
         validate_data_gap_is_not_weakness(bad_item)
 
 
@@ -122,7 +125,10 @@ def test_validator_rejects_job_vacancies_as_course_demand():
         supporting_evidence_ids=["ev-job-1"],
     )
 
-    with pytest.raises(ValueError, match="Vagas de emprego representam demanda do mercado de trabalho.*não demanda direta"):
+    with pytest.raises(
+        ValueError,
+        match="Vagas de emprego representam demanda do mercado de trabalho.*não demanda direta",
+    ):
         validate_job_posting_is_not_course_demand(bad_finding)
 
 
@@ -134,7 +140,10 @@ def test_validator_rejects_insurance_premium_growth_as_enrollment_potential():
         supporting_evidence_ids=["ev-susep-1"],
     )
 
-    with pytest.raises(ValueError, match="crescimento de prêmios emitidos no setor segurador.*não constitui potencial direto"):
+    with pytest.raises(
+        ValueError,
+        match="crescimento de prêmios emitidos no setor segurador.*não constitui potencial direto",
+    ):
         validate_insurance_premium_growth_is_not_enrollment(bad_finding)
 
 
@@ -148,7 +157,10 @@ def test_validator_rejects_own_institution_as_external_threat():
         quote_or_datapoint="Portal institucional ENS",
     )
 
-    with pytest.raises(ValueError, match="própria instituição são contexto institucional interno e não podem ser classificados como ameaça"):
+    with pytest.raises(
+        ValueError,
+        match="própria instituição são contexto institucional interno e não podem ser classificados como ameaça",
+    ):
         validate_own_source_is_not_external_competitor(bad_item)
 
 

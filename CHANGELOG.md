@@ -1,5 +1,47 @@
 # Changelog
 
+## Recuperação validada em execução real — 2026-11-06
+
+- Dossiês completos deixam de ocupar `localStorage`; a interface remove o cache legado e recarrega os dados pela API autenticada. Regressão confirma notificações e dossiê de 6 MB preservados em memória sem exceder a quota.
+- Retomada real concluída com 15 checkpoints e dossiê verificado: dez instituições pesquisadas, dez ofertas em sete instituições, 522 evidências e 93 tentativas. Recomendação de evidências insuficientes, custo Apify observado de US$ 1,271501 e base histórica ENS preservada.
+- Corrigido falso positivo que rejeitava o denominador da escala do índice quando seguido de vírgula. O valor observado e os demais números continuam obrigatoriamente verificados, incluindo regressões contra percentuais inventados.
+- Homologação identificou texto de Meta Ads omitido no normalizador: `snapshot.body.text`, títulos/links e carrosséis agora chegam ao julgamento com proveniência e orçamento. Subversão publicitária invalida somente os anúncios afetados; coletas e demais julgamentos são preservados. Setenta anúncios reais conferidos sem nova execução paga.
+- Corrigida omissão do corpo de páginas e snippets no julgamento de ofertas; projetor v3 preserva conteúdo e proveniência com orçamento explícito, separado de ementa. Qualificações com projeção anterior são refeitas sobre os mesmos dados coletados.
+- Qualificação v4 distingue oferta direta, adjacente e relação ainda não confirmada por identidade/categoria observadas. Contexto não encerra reparo como oferta; anúncio pertinente mantém seu sinal publicitário. Deduplicação conserva atributos completos das páginas verificadas.
+- Consultas competitivas priorizam o foco do título do curso, evitando que um domínio temático genérico ocupe todos os termos. A segunda variante preserva mais termos do título; a terceira amplia para domínios de apoio. Snapshots já executados permanecem inalterados.
+- Retomada de run com aborto terminal confirmado recupera itens parciais com os mesmos controles de identidade/build. URLs ausentes em coleta interrompida ficam como extração incompleta; HTTP 404 continua separado.
+- Falha real de inicialização do navegador do Google Trends motivou redução de concorrência nativa para uma página nas retentativas. O ajuste preserva termos/região e foi validado contra o schema do build aprovado `0.0.143`.
+- Painel distingue resultados normalizados de registros brutos e diferencia execução incerta de cobrança provisória.
+- Homologação real pesquisou individualmente as dez instituições e preservou 337 evidências; máximo de quatro tentativas por tarefa confirmado. Cota do ChatGPT OAuth interrompeu a qualificação com bloqueio explícito e sem publicar dossiê incompleto. Histórico ENS e onze dossiês anteriores preservados; conclusão analítica continua pendente.
+
+## Cobertura competitiva e recuperação Apify — 2026-11-05
+
+- Novas análises usam `collection-v2`, sem teto monetário local nem reserva fixa por chamada; limites operacionais e monitoramento de custo continuam em código. Planos anteriores preservam seus snapshots.
+- Pesquisa prioriza consultas individuais dos concorrentes, valida seus domínios e preserva múltiplas ofertas. Até três variantes semânticas ampliam pesquisas concluídas sem oferta qualificada.
+- Tentativa inicial e até três retentativas diagnosticadas são persistidas em `tool_run_attempts` (migração 0014), com espera pela outbox e reconciliação de execução incerta. Reparos e reinícios não zeram o contador; leituras não iniciam novo Actor.
+- Dossiê reúne todos os planos e execuções, distingue lacunas e consulta planejada, e verifica o payload visual final antes de publicar. Interface acompanha tentativas e custos provisórios.
+- MCP Apify opcional fornece consulta de catálogo, documentação e schemas pelo SDK oficial; API continua executando as coletas. Actors descobertos exigem validação antes de entrar no catálogo.
+
+## Homologação em execução real — 2026-11-04
+
+- Backup pré-migração restaurado em PostgreSQL isolado com contagens históricas preservadas; migrações 0011–0013 aplicadas ao ambiente Docker existente, com API/worker/scheduler atualizados.
+- Teste live Apify confere o schema do build fixado por ID, sem exigir que continue sendo o alias padrão do fornecedor. Assets corrigidos recebem novos identificadores de cache para atualização dos navegadores existentes.
+- Mantidos os 33 cursos e 66 registros históricos sintéticos ENS; uma submissão legada de 23/10 segue pendente de revisão operacional, sem disparo automático na reconciliação.
+- Homologação identificou atraso da cobrança Apify após `SUCCEEDED` e run ativa após HTTP 502. Metadata/custo preservados em falhas, aborto não confirmado bloqueia continuidade, e autorizações por run são persistidas antes do POST e somadas entre planos/reparos (ADR-0010). Custo observado provisório e limite comprometido aparecem separados na API/interface. Concorrência validada em PostgreSQL isolado.
+- Reanálise real concluiu os 15 checkpoints com dossiê verificado e recomendação de evidências insuficientes; nenhuma aprovação comercial foi registrada. Contrato factual v4 declara a escala do índice, e o verificador reconhece seu denominador sem liberar percentuais inventados. Revisões automáticas na interface não afirmam homologação humana, contagens ausentes ou viabilidade comprovada.
+
+## Correções da auditoria sistêmica — 2026-11-04
+
+- Removidos defaults financeiros e conclusões genéricas do dossiê visual; apresentação contrato 2 bloqueia enriquecimentos legados inseguros. Economia canônica em Decimal exige premissas explícitas, respeita capacidade, contribuição e centavos, com proveniência e rótulo de simulação.
+- Adicionado acesso próprio do Prometeus por identidade/papel/instituição e sessão HttpOnly, independente do OAuth ChatGPT; decisão humana usa principal autenticado. Metadados HTML escapados e CSP da SPA sem scripts inline; portas Compose em loopback por padrão.
+- Criação/reanálise usam snapshot e idempotência institucional com restrição única; publicação pós-commit por outbox, scheduler, leases e heartbeat. Revisão otimista impede sobrescrita de cancelamento; perda de lease interrompe execução e consultas remotas indeterminadas ficam `IN_DOUBT`, sem nova compra automática.
+- Keywords deixam de compartilhar sessão assíncrona em chamadas concorrentes e preservam vínculo de análise/instituição, sem converter falha técnica em irrelevância.
+- MCP stdio integrado à criação canônica; eventos de conclusão/bloqueio/falha persistidos para webhook com assinatura configurada, retries e dead-letter.
+- Backup JSON formato 2 cobre todas as tabelas e recusa exportações parciais antes de limpeza. Migração `0013_workflow_reliability` verificada em PostgreSQL temporário, sem alterar a base em uso.
+- Avaliadores distinguem simulação de homologação e não enviam gabarito ao modelo. Gates comerciais/de produção voltam a pendentes de validação manual. Testes do ecossistema reconciliados; lint, formatação e tipagem corrigidos.
+- Mantidos histórico sintético ENS e uso integral da LLM tradicional sem JEV, incluindo ChatGPT OAuth e preflight sem exigir modelo JEV inutilizado. Nenhuma homologação paga ou implantação no stack ativo nesta etapa.
+- Sem credencial JEV, comparação shadow desativada em vez de usar contraparte fictícia. Resumos históricos no fallback derivam dos funis sintéticos existentes. Verificação final: 691 testes aprovados e cinco live não executados; relatório de correções e operação publicados na documentação local.
+
 ## Fase 6 — JEV Híbrido, após Baseline Tradicional (2026-10-30)
 
 - Criada a modelagem de domínio para orquestração de Shadow Mode e avaliação de não inferioridade em `src/prometeus/domain/shadow_decisions.py` (`DivergenceCategory`, `ShadowComparisonRecord`, `TaskNonInferiorityCriteria`, `NonInferiorityEvaluation`), em estrito cumprimento ao ADR-0008.

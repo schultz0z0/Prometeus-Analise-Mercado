@@ -207,7 +207,6 @@ def create_analysis_cli(
         raise typer.Exit(code=1) from exc
 
 
-
 def _resolve_tenant_config_path(tenant: str) -> Path:
     direct = Path(tenant)
     if direct.is_file():
@@ -260,7 +259,9 @@ def radar_refresh_cli(
 
     settings = AppSettings()
     if not settings.APIFY_TOKEN.strip() and force:
-        console.print("[bold red]APIFY_TOKEN ausente para atualização forçada do Radar Setorial.[/bold red]")
+        console.print(
+            "[bold red]APIFY_TOKEN ausente para atualização forçada do Radar Setorial.[/bold red]"
+        )
         raise typer.Exit(code=1)
 
     async def _run() -> None:
@@ -288,7 +289,9 @@ def radar_refresh_cli(
                 force=force,
             )
 
-            table = Table(title=f"Radar Setorial Permanente — {tenant_cfg.institution.display_name}")
+            table = Table(
+                title=f"Radar Setorial Permanente — {tenant_cfg.institution.display_name}"
+            )
             table.add_column("Propriedade", style="cyan", no_wrap=True)
             table.add_column("Valor", style="magenta")
             table.add_row("Snapshot ID", snapshot.id)

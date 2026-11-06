@@ -41,7 +41,11 @@ async def client(test_session: AsyncSession) -> httpx.AsyncClient:
 
     app.dependency_overrides[get_db_session] = override_session
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+    async with httpx.AsyncClient(
+        transport=transport,
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
+    ) as c:
         yield c
     app.dependency_overrides.clear()
 
@@ -62,6 +66,7 @@ async def test_reanalyze_creates_linked_analysis(
 
     response = await client.post(
         f"/v1/analyses/{orig.id}/reanalyze",
+        headers={"Idempotency-Key": "revision-test"},
         json={"proposal_data": {"price": 950.0, "new_module": "Cyber Insurance"}},
     )
     assert response.status_code == 202

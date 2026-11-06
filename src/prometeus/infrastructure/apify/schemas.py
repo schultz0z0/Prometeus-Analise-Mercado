@@ -16,6 +16,7 @@ class ApifyRunMetadata(BaseModel):
     actor_id: str
     build_number: str
     cost_usd: float = 0.0
+    cost_status: str = "observed_provisional"
     incomplete_reason: str | None = None
 
 

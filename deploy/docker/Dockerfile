@@ -24,7 +24,7 @@ COPY pyproject.toml uv.lock README.md /build/
 COPY src/ /build/src/
 RUN uv venv /opt/venv && \
     . /opt/venv/bin/activate && \
-    uv pip install --no-cache -e ".[dev]"
+    uv pip install --no-cache -e ".[dev,apify-mcp]"
 
 # -------------------------------------------------------------
 # Estágio 2: Imagem final mínima e segura (Non-root user)

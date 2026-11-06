@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -15,6 +15,7 @@ from prometeus.domain.analyses import (
     AnalysisStatus,
     AnalysisStep,
     AuditEvent,
+    ConcurrentAnalysisUpdateError,
 )
 from prometeus.infrastructure.db.models import (
     AnalysisModel,
@@ -45,6 +46,8 @@ class AnalysisRepository:
                 recommendation=analysis.recommendation.value if analysis.recommendation else None,
                 proposal_data=analysis.proposal_data,
                 previous_analysis_id=analysis.previous_analysis_id,
+                revision=1,
+                idempotency_key=analysis.proposal_data.get("_idempotency_key"),
                 created_at=analysis.created_at,
                 updated_at=analysis.updated_at,
             )
@@ -77,13 +80,27 @@ class AnalysisRepository:
                 self.session.add(step_model)
 
             await self.session.flush()
+            analysis.revision = 1
             return
 
         # Atualiza campos escalares da análise existente
-        model.status = analysis.status.value
-        model.recommendation = analysis.recommendation.value if analysis.recommendation else None
-        model.proposal_data = analysis.proposal_data
-        model.updated_at = analysis.updated_at
+        changed = await self.session.execute(
+            update(AnalysisModel)
+            .where(AnalysisModel.id == analysis.id, AnalysisModel.revision == analysis.revision)
+            .values(
+                status=analysis.status.value,
+                recommendation=analysis.recommendation.value if analysis.recommendation else None,
+                proposal_data=analysis.proposal_data,
+                updated_at=analysis.updated_at,
+                revision=analysis.revision + 1,
+            )
+            .execution_options(synchronize_session=False)
+        )
+        if changed.rowcount != 1:  # type: ignore[attr-defined]
+            raise ConcurrentAnalysisUpdateError(
+                "A análise foi atualizada por outra operação; recarregue o estado atual."
+            )
+        analysis.revision += 1
 
         # Busca IDs já persistidos para evitar re-inserção ou lazy-load acidental
         event_ids_stmt = select(AuditEventModel.id).where(
@@ -134,6 +151,10 @@ class AnalysisRepository:
                 sm.error_message = step.error_message
 
         await self.session.flush()
+        from prometeus.application.analysis_webhooks import enqueue_analysis_event
+        from prometeus.domain.configuration import AppSettings
+
+        await enqueue_analysis_event(self.session, analysis, AppSettings())
 
     async def get_by_id(self, analysis_id: str) -> Analysis | None:
         """Recupera a análise por ID reconstituindo a raiz de agregação com auditoria e steps."""
@@ -144,6 +165,7 @@ class AnalysisRepository:
                 selectinload(AnalysisModel.steps),
             )
             .where(AnalysisModel.id == analysis_id)
+            .execution_options(populate_existing=True)
         )
         result = await self.session.execute(stmt)
         model = result.scalar_one_or_none()
@@ -188,6 +210,7 @@ class AnalysisRepository:
             if model.recommendation
             else None,
             previous_analysis_id=model.previous_analysis_id,
+            revision=model.revision,
             created_at=model.created_at,
             updated_at=model.updated_at,
             audit_events=audit_events,
@@ -226,6 +249,7 @@ class AnalysisRepository:
                     status=AnalysisStatus(m.status),
                     recommendation=rec,
                     previous_analysis_id=m.previous_analysis_id,
+                    revision=m.revision,
                     created_at=m.created_at,
                     updated_at=m.updated_at,
                     audit_events=[

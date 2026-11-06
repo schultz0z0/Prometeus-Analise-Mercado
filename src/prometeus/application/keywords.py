@@ -6,11 +6,11 @@ e seleção determinística por regra em código (KeywordSet).
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
 from prometeus.application.decision_service import DecisionService
+from prometeus.domain.analyses import Analysis
 from prometeus.domain.ports.generative_model import GenerativeModelPort
 from prometeus.domain.ports.market_sources import (
     KeywordCandidate,
@@ -43,6 +43,7 @@ class KeywordPipeline:
         target_audience: str,
         correlation_id: str = "none",
         candidate_count: int = 15,
+        analysis: Analysis | None = None,
     ) -> KeywordSet:
         """Executa o pipeline completo da Etapa 04 do workflow."""
         # TOOL-01: Geração de candidatos via LLM generativa
@@ -63,29 +64,25 @@ class KeywordPipeline:
                 cleaned_terms.append(norm)
 
         # TOOL-02: Julgamento atômico de relevância de cada termo no JEV / DecisionModel
-        semaphore = asyncio.Semaphore(5)
-
         async def _evaluate_term(term: str) -> tuple[str, str, float]:
             context: dict[str, Any] = {
                 "course_title": course_title,
                 "search_term": term,
             }
-            async with semaphore:
-                try:
-                    jev_res = await self.decision_service.execute_judgment(
-                        pack_id="keywords-relevance-v1",
-                        context=context,
-                        correlation_id=correlation_id,
-                    )
-                    relevance = jev_res.selected_choice or "IRRELEVANT"
-                    confidence = jev_res.confidence
-                except Exception as exc:
-                    logger.warning(f"Falha avaliando relevância do termo '{term}' no JEV: {exc}")
-                    relevance = "IRRELEVANT"
-                    confidence = 0.0
+            jev_res = await self.decision_service.execute_judgment(
+                pack_id="keywords-relevance-v1",
+                context=context,
+                correlation_id=correlation_id,
+                analysis=analysis,
+            )
+            if jev_res.is_noul or jev_res.selected_choice is None:
+                raise ValueError(f"Julgamento de keyword inconclusivo: {term}")
+            relevance = jev_res.selected_choice
+            confidence = jev_res.confidence
             return term, relevance, confidence
 
-        judged_terms = await asyncio.gather(*(_evaluate_term(term) for term in cleaned_terms))
+        # AsyncSession é uma unidade transacional: persistência nunca é concorrente.
+        judged_terms = [await _evaluate_term(term) for term in cleaned_terms]
 
         evaluated_candidates: list[KeywordCandidate] = []
         primary_list: list[str] = []

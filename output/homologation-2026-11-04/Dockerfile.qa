@@ -1,0 +1,4 @@
+FROM pesquisademercado-ia-api:latest
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends nodejs && rm -rf /var/lib/apt/lists/*
+USER prometeus

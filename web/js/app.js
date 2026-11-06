@@ -3,23 +3,74 @@
  * Orquestrador principal da aplicação SPA, roteamento e renderização reativa.
  */
 
-import { store } from './store.js?v=20261103_eco';
-import { renderPortfolioView, bindPortfolioEvents } from './views/portfolio-view.js?v=20261028e';
+import { store } from './store.js?v=20261106_storage';
+import { renderPortfolioView, bindPortfolioEvents } from './views/portfolio-view.js?v=20261104_audit';
 import { renderIntakeView, bindIntakeEvents } from './views/intake-view.js?v=20261103_eco';
-import { renderLiveView, bindLiveEvents } from './views/live-view.js?v=20261029b';
-import { renderDossierView, bindDossierEvents } from './views/dossier-view.js?v=20261103_visual';
-import { renderSettingsView, bindSettingsEvents } from './views/settings-view.js?v=20261029a';
+import { renderLiveView, bindLiveEvents } from './views/live-view.js?v=20261106_collection3';
+import { renderDossierView, bindDossierEvents } from './views/dossier-view.js?v=20261106_collection3';
+import { renderSettingsView, bindSettingsEvents } from './views/settings-view.js?v=20261105_collection';
 import { renderEvidenceDrawer, bindEvidenceDrawerEvents } from './components/evidence-drawer.js?v=20261028e';
 
 class PrometeusApp {
   constructor() {
     this.root = document.getElementById('app-root');
+    this.unsubscribe = null;
     this.init();
   }
 
-  init() {
+  renderLogin() {
+    if (this.unsubscribe) this.unsubscribe();
+    this.unsubscribe = null;
+    this.root.innerHTML = `<main class="app-container" style="max-width:440px;margin:12vh auto;">
+      <h1>Entrar no Prometeus</h1>
+      <p>Use sua chave de acesso ao ambiente institucional.</p>
+      <form id="access-login" class="prometeus-card" style="display:grid;gap:16px;">
+        <label for="access-key">Chave de acesso</label>
+        <input id="access-key" class="form-input" type="password" autocomplete="current-password" required>
+        <button type="submit" class="prometeus-btn-primary">Entrar</button>
+        <p id="access-error" role="alert"></p>
+      </form></main>`;
+    this.root.querySelector('#access-login').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = event.currentTarget.querySelector('button');
+      button.disabled = true;
+      try {
+        const response = await fetch('/v1/session/login', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({access_key: this.root.querySelector('#access-key').value})});
+        if (!response.ok) throw new Error('Chave inválida ou acesso indisponível.');
+        this.root.querySelector('#access-key').value = '';
+        await this.init();
+      } catch (error) {
+        const message = this.root.querySelector('#access-error');
+        if (message) message.textContent = error.message || 'Não foi possível entrar.';
+      } finally {
+        button.disabled = false;
+      }
+    });
+  }
+
+  async init() {
+    try {
+      const response = await fetch('/v1/session', {cache: 'no-store'});
+      if (!response.ok) { this.renderLogin(); return; }
+      const identity = await response.json();
+      if (store.state.currentTenantId !== identity.tenant_id) {
+        store.state.courses = [];
+        store.state.currentDossier = null;
+        store.state.activeCourseId = null;
+        store.state.historicalCourses = [];
+      }
+      store.state.currentTenantId = identity.tenant_id;
+      store.state.tenants = store.state.tenants.filter(tenant => tenant.id === identity.tenant_id);
+      if (!store.state.tenants.length) store.state.tenants = [{id: identity.tenant_id, name: identity.tenant_id}];
+      this.identity = identity;
+    } catch (error) {
+      this.renderLogin();
+      this.root.querySelector('#access-error').textContent = 'Não foi possível conectar ao Prometeus. Tente novamente.';
+      return;
+    }
     // Inscreve no store para re-renderizar quando o estado mudar
-    store.subscribe((state) => {
+    if (this.unsubscribe) this.unsubscribe();
+    this.unsubscribe = store.subscribe((state) => {
       this.render(state);
     });
 
@@ -97,6 +148,7 @@ class PrometeusApp {
             <button class="nav-tab-item ${state.currentView === 'settings' ? 'active' : ''}" id="nav-tab-settings">
               <span>⚙️ Configurações & Conectores</span>
             </button>
+            <button class="nav-tab-item" id="nav-sign-out"><span>Sair</span></button>
           </div>
         </nav>
 
@@ -132,6 +184,16 @@ class PrometeusApp {
   }
 
   bindEvents(state) {
+    document.getElementById('nav-sign-out')?.addEventListener('click', async () => {
+      const response = await fetch('/v1/session/logout', {method: 'POST'});
+      if (!response.ok) return;
+      store.state.courses = [];
+      store.state.currentDossier = null;
+      store.state.activeCourseId = null;
+      store.state.historicalCourses = [];
+      localStorage.removeItem('prometeus_courses_real_v2');
+      this.renderLogin();
+    });
     const viewContainer = document.getElementById('view-container');
     const drawerMount = document.getElementById('evidence-drawer-mount');
 

@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir uv
 
 # Instala dependências a partir do pyproject.toml e uv.lock
 COPY pyproject.toml uv.lock README.md /app/
-RUN uv pip install --system -e ".[dev]"
+RUN uv pip install --system -e ".[dev,apify-mcp]"
 
 # Copia código fonte, migrações e configurações
 COPY src/ /app/src/

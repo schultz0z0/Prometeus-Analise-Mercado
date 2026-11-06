@@ -101,12 +101,14 @@ class TokenUsage:
             return None
         usage = cls(
             input_tokens=_non_negative_int(raw.get("input_tokens", raw.get("prompt_tokens"))),
-            output_tokens=_non_negative_int(
-                raw.get("output_tokens", raw.get("completion_tokens"))
-            ),
+            output_tokens=_non_negative_int(raw.get("output_tokens", raw.get("completion_tokens"))),
             total_tokens=_non_negative_int(raw.get("total_tokens")),
         )
-        if usage.input_tokens is None and usage.output_tokens is None and usage.total_tokens is None:
+        if (
+            usage.input_tokens is None
+            and usage.output_tokens is None
+            and usage.total_tokens is None
+        ):
             return None
         return usage
 
@@ -377,4 +379,3 @@ class ExecutionEnvelope:
         }
         scrubbed: dict[str, Any] = scrub_secrets(snapshot)
         return scrubbed
-

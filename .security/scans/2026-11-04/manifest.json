@@ -1,0 +1,13 @@
+{
+  "scan_id": "981589ba-cdbd-43a6-84ab-0c624203f2f1",
+  "sealed_at": "2026-11-04T14:42:59.200939+00:00",
+  "sha256": {
+    "findings.json": "53b97fed3520b4dce1525976912cfcc2474192295344054bd3e03ef12f0b9a51",
+    "report.json": "3800c50e225fd866ad34a31a34417bb52cd7912f4198d04f4cf26d385a343b9b",
+    "security-report.html": "e9a68675695594bd6e1578b8b33364695eb35430dabde7435a80ba68e262c62b",
+    "architecture.md": "687ce0dad6b246e47a70221ad2faa60b696c865dc38a597e655c6218e93475d9",
+    "security-probe-output.json": "333a1d9a1fda59c4b0cb29c53c0618870ed99b1a32f80d46c0a628186590785c",
+    "browser-xss-output.json": "8af4c5f0ffd317c48f042262ce9e5983b5c38cea713f28367d03ed94b066dac1",
+    "independent-verification.md": "7914c7122dd12c33914ebc700b2b218ccca21093cef10eb7bc1e47af19d75845"
+  }
+}

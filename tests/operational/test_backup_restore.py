@@ -109,3 +109,59 @@ async def test_backup_integrity_tampering_detection(
 
     with pytest.raises(ValueError, match="Abortando restauração"):
         await manager.restore_backup(backup_file)
+
+
+async def test_backup_covers_every_mapped_table_and_restores_scoring(operational_session, tmp_path):
+    from sqlalchemy import select
+
+    from prometeus.infrastructure.db.backup import TABLE_MODELS
+    from prometeus.infrastructure.db.models import ScoringResultModel
+
+    assert {name for name, _ in TABLE_MODELS} == set(Base.metadata.tables)
+    analysis = Analysis.create(
+        tenant_id="ens", course_name="Backup fixture", correlation_id="backup"
+    )
+    await AnalysisRepository(operational_session).save(analysis)
+    operational_session.add(
+        ScoringResultModel(
+            id="backup-score",
+            analysis_id=analysis.id,
+            profile_id="portfolio-v2",
+            viability_score=40,
+            coverage_score=0.5,
+            confidence_score=0.6,
+            partial_score=40,
+            recommendation="INSUFFICIENT_EVIDENCE",
+        )
+    )
+    await operational_session.commit()
+    path = tmp_path / "complete.json"
+    manager = BackupRestoreManager(operational_session)
+    await manager.create_backup(path)
+    await manager.restore_backup(path)
+    score = (await operational_session.execute(select(ScoringResultModel))).scalar_one()
+    assert score.analysis_id == analysis.id
+    assert score.viability_score == 40
+
+
+async def test_partial_backup_is_rejected_before_deleting_existing_data(
+    operational_session, tmp_path
+):
+    import hashlib
+
+    analysis = Analysis.create(tenant_id="ens", course_name="Keep fixture", correlation_id="backup")
+    repo = AnalysisRepository(operational_session)
+    await repo.save(analysis)
+    await operational_session.commit()
+    path = tmp_path / "partial.json"
+    manager = BackupRestoreManager(operational_session)
+    await manager.create_backup(path)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["payload"].pop("scoring_results", None)
+    data["manifest"]["payload_sha256"] = hashlib.sha256(
+        json.dumps(data["payload"], ensure_ascii=False, sort_keys=True).encode()
+    ).hexdigest()
+    path.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(ValueError, match="Abortando restauração"):
+        await manager.restore_backup(path)
+    assert await repo.get_by_id(analysis.id) is not None

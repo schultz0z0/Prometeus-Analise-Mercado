@@ -1,0 +1,168 @@
+{
+  "checked_at": "2026-11-06T18:32:52.977575+00:00",
+  "analysis_id": "9cb4f98e-60b5-46d9-998e-5ad81ebe7d86",
+  "status": "BLOCKED",
+  "job_status": "FINISHED",
+  "external_blocker": "subscription_sharing_usage_limit_exceeded",
+  "dossier_published": false,
+  "tool_runs": 48,
+  "tool_run_statuses": {
+    "SUCCEEDED": 42,
+    "PARTIAL": 1,
+    "EMPTY": 3,
+    "FAILED": 2
+  },
+  "attempts": 57,
+  "max_attempt_index": 4,
+  "observed_cost_usd": 1.002182,
+  "cost_is_final_invoice": false,
+  "configured_competitors": 10,
+  "searched_competitors": 10,
+  "competitor_runs": [
+    {
+      "competitor_id": "estacio",
+      "capability": "google_search",
+      "status": "SUCCEEDED",
+      "items": 4
+    },
+    {
+      "competitor_id": "estacio",
+      "capability": "web_crawler",
+      "status": "SUCCEEDED",
+      "items": 3
+    },
+    {
+      "competitor_id": "esa-oab",
+      "capability": "google_search",
+      "status": "SUCCEEDED",
+      "items": 10
+    },
+    {
+      "competitor_id": "esa-oab",
+      "capability": "web_crawler",
+      "status": "SUCCEEDED",
+      "items": 8
+    },
+    {
+      "competitor_id": "fiap",
+      "capability": "google_search",
+      "status": "SUCCEEDED",
+      "items": 4
+    },
+    {
+      "competitor_id": "fiap",
+      "capability": "web_crawler",
+      "status": "SUCCEEDED",
+      "items": 3
+    },
+    {
+      "competitor_id": "alura",
+      "capability": "google_search",
+      "status": "SUCCEEDED",
+      "items": 10
+    },
+    {
+      "competitor_id": "conhecer-seguros",
+      "capability": "google_search",
+      "status": "SUCCEEDED",
+      "items": 8
+    },
+    {
+      "competitor_id": "conhecer-seguros",
+      "capability": "web_crawler",
+      "status": "SUCCEEDED",
+      "items": 8
+    },
+    {
+      "competitor_id": "alura",
+      "capability": "web_crawler",
+      "status": "SUCCEEDED",
+      "items": 8
+    },
+    {
+      "competitor_id": "fgv",
+      "capability": "google_search",
+      "status": "SUCCEEDED",
+      "items": 4
+    },
+    {
+      "competitor_id": "fia",
+      "capability": "google_search",
+      "status": "SUCCEEDED",
+      "items": 4
+    },
+    {
+      "competitor_id": "fgv",
+      "capability": "web_crawler",
+      "status": "SUCCEEDED",
+      "items": 4
+    },
+    {
+      "competitor_id": "insper",
+      "capability": "web_crawler",
+      "status": "SUCCEEDED",
+      "items": 3
+    },
+    {
+      "competitor_id": "ibmec",
+      "capability": "google_search",
+      "status": "SUCCEEDED",
+      "items": 10
+    },
+    {
+      "competitor_id": "ibmec",
+      "capability": "web_crawler",
+      "status": "SUCCEEDED",
+      "items": 8
+    },
+    {
+      "competitor_id": "fipecafi",
+      "capability": "google_search",
+      "status": "SUCCEEDED",
+      "items": 3
+    },
+    {
+      "competitor_id": "fipecafi",
+      "capability": "web_crawler",
+      "status": "EMPTY",
+      "items": 0
+    },
+    {
+      "competitor_id": "fia",
+      "capability": "web_crawler",
+      "status": "SUCCEEDED",
+      "items": 3
+    },
+    {
+      "competitor_id": "insper",
+      "capability": "google_search",
+      "status": "SUCCEEDED",
+      "items": 4
+    }
+  ],
+  "evidence_rows": 337,
+  "qualification_v4_rows": 64,
+  "qualification_unfinished": 273,
+  "preliminary_offers_not_a_final_benchmark": [
+    {
+      "title": "Pós-graduação em IA aplicada ao marketing Pós-graduação em Inteligência Artificial Aplicada ao Marketing (6 meses) Use IA, automação e análise preditiva para personalizar campanhas e aumentar resultados em marketing. Preços podem variar de acordo com a f",
+      "url": "https://estacio.br/cursos/pos-graduacao/inteligencia-artificial-aplicada-ao-marketing-2?srsltid=AYCX9vLOaeId_1lYFPCtCcZZWiURCTi_2F-TvlH4E_1dyJIZ_Cl83Lsb",
+      "relation": "adjacent"
+    }
+  ],
+  "preservation": {
+    "courses": 33,
+    "courses_hash": "1a78fa9b42b074976f2c1c64a97eca06",
+    "funnels": 66,
+    "funnels_hash": "b06fc7ba93d93e7a4dcbe7419709923a",
+    "old_dossiers_hash": "94236ffd06f20337a6f1655549e6016d",
+    "human_decisions": 4,
+    "course_outcomes": 4
+  },
+  "backup": {
+    "format": 2,
+    "records": 4171,
+    "sha256": "7c7e25d0e08daf11737c0510b57d8efb0caf80d8746423f7889bab94cd54081a",
+    "attempt_rows": 83
+  }
+}

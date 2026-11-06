@@ -146,7 +146,13 @@ def _canonical(url: str) -> str:
     filtered_query.sort()
     query_str = urlencode(filtered_query) if filtered_query else ""
     return urlunsplit(
-        ("https", (p.hostname or "").lower().removeprefix("www."), p.path.rstrip("/"), query_str, "")
+        (
+            "https",
+            (p.hostname or "").lower().removeprefix("www."),
+            p.path.rstrip("/"),
+            query_str,
+            "",
+        )
     )
 
 

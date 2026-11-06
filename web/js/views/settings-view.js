@@ -63,7 +63,7 @@ export function renderSettingsView(store) {
         <p>Execuções reais e auditáveis para busca, crawling, Meta Ads Library, LinkedIn, vagas e redes sociais. Actors e builds são fixados pelo backend.</p>
         <div class="form-grid">
           <div class="form-group col-8"><label class="form-label" for="setting-apify-token">API token</label><input type="password" id="setting-apify-token" class="form-input" autocomplete="new-password" placeholder="${escapeHtml(settings.apify_token_masked || 'apify_api_...')}"></div>
-          <div class="form-group col-4"><label class="form-label" for="setting-apify-max-charge">Limite por análise (USD)</label><input type="number" id="setting-apify-max-charge" class="form-input" min="0.1" step="0.1" value="${escapeHtml(settings.apify_max_charge ?? 5)}"></div>
+          <div class="form-group col-4"><label class="form-label">Custos da coleta</label><p class="text-secondary">Monitoramento de custos, sem teto monetário por chamada. A pesquisa mantém limites de páginas, itens e tempo.</p></div>
         </div>
       </div>
 
@@ -161,8 +161,7 @@ export function bindSettingsEvents(store, container) {
     result.textContent = 'Salvando...';
     const payload = {
       gen_llm_provider: provider.value,
-      jev_model: container.querySelector('#setting-jev-model').value.trim(),
-      apify_max_charge: Number(container.querySelector('#setting-apify-max-charge').value)
+      jev_model: container.querySelector('#setting-jev-model').value.trim()
     };
     const catalog = store.chatgptModelsCatalog || { status: 'idle', models: [] };
     if (isOAuth()) {

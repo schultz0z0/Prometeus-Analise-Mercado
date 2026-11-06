@@ -1,0 +1,12 @@
+{
+  "analysis_id": "9cb4f98e-60b5-46d9-998e-5ad81ebe7d86",
+  "benchmark_visible": true,
+  "legacy_cache_removed": true,
+  "store_version": "20261106_storage",
+  "focused_tests_passed": 15,
+  "full_suites_before_cache_fix": {
+    "windows_passed": 819,
+    "linux_passed": 819,
+    "opt_in_skipped_each": 5
+  }
+}

@@ -1,0 +1,174 @@
+{
+  "timestamp": "2026-11-04T14:39:51.642817+00:00",
+  "gate": "Gate D — Score ready",
+  "profile_id": "default-v1",
+  "sample_count": 10,
+  "metrics": {
+    "model_accuracy": 1.0,
+    "naive_baseline_accuracy": 0.5,
+    "baseline_improvement": 0.5,
+    "pearson_correlation_with_enrollments": 0.96
+  },
+  "modality_breakdown": {
+    "EAD": {
+      "total": 5,
+      "accuracy": 1.0
+    },
+    "Presencial": {
+      "total": 3,
+      "accuracy": 1.0
+    },
+    "Híbrido": {
+      "total": 2,
+      "accuracy": 1.0
+    }
+  },
+  "criteria": {
+    "baseline_beaten": true,
+    "strong_correlation": true,
+    "accuracy_above_80pct": true
+  },
+  "gate_status": "APPROVED",
+  "evaluations": [
+    {
+      "course_id": "hist-001",
+      "course_name": "MBA Executivo em Seguros e Resseguros",
+      "modality": "EAD",
+      "actual_outcome": "SUCCESS",
+      "predicted_outcome": "SUCCESS",
+      "recommendation": "APPROVED",
+      "viability_score": 85.92,
+      "coverage_score": 1.0,
+      "is_correct": true,
+      "reasons": [
+        "Score V=85.92 atinge critério de aprovação (>= 75.0)"
+      ]
+    },
+    {
+      "course_id": "hist-002",
+      "course_name": "Gestão Comercial e Estratégia de Vendas para Corretoras",
+      "modality": "Presencial",
+      "actual_outcome": "SUCCESS",
+      "predicted_outcome": "SUCCESS",
+      "recommendation": "REQUIRES_HUMAN_REVIEW",
+      "viability_score": 76.56,
+      "coverage_score": 1.0,
+      "is_correct": true,
+      "reasons": [
+        "Score V=76.56 está na margem de revisão de fronteira (+/-3.0 pontos dos limiares 75.0 ou 60.0)"
+      ]
+    },
+    {
+      "course_id": "hist-003",
+      "course_name": "Introdução Genérica à Inteligência Artificial",
+      "modality": "EAD",
+      "actual_outcome": "FAILED",
+      "predicted_outcome": "FAILED",
+      "recommendation": "HIGH_RISK",
+      "viability_score": 23.72,
+      "coverage_score": 1.0,
+      "is_correct": true,
+      "reasons": [
+        "Score V=23.72 abaixo do limiar mínimo (< 60.0)"
+      ]
+    },
+    {
+      "course_id": "hist-004",
+      "course_name": "Perícia e Regulação Técnica de Sinistros Automóveis",
+      "modality": "Híbrido",
+      "actual_outcome": "SUCCESS",
+      "predicted_outcome": "SUCCESS",
+      "recommendation": "REQUIRES_HUMAN_REVIEW",
+      "viability_score": 75.46,
+      "coverage_score": 1.0,
+      "is_correct": true,
+      "reasons": [
+        "Score V=75.46 está na margem de revisão de fronteira (+/-3.0 pontos dos limiares 75.0 ou 60.0)"
+      ]
+    },
+    {
+      "course_id": "hist-005",
+      "course_name": "Compliance, LGPD e Cibersegurança no Setor Segurador",
+      "modality": "EAD",
+      "actual_outcome": "MARGINAL",
+      "predicted_outcome": "MARGINAL",
+      "recommendation": "APPROVED_WITH_ADJUSTMENTS",
+      "viability_score": 63.47,
+      "coverage_score": 1.0,
+      "is_correct": true,
+      "reasons": [
+        "Score V=63.47 na faixa de aprovação com ajustes (60.0 a 75.0)"
+      ]
+    },
+    {
+      "course_id": "hist-006",
+      "course_name": "Filosofia e Ética Clássica para Negócios",
+      "modality": "Presencial",
+      "actual_outcome": "FAILED",
+      "predicted_outcome": "FAILED",
+      "recommendation": "HIGH_RISK",
+      "viability_score": 17.28,
+      "coverage_score": 1.0,
+      "is_correct": true,
+      "reasons": [
+        "Score V=17.28 abaixo do limiar mínimo (< 60.0)"
+      ]
+    },
+    {
+      "course_id": "hist-007",
+      "course_name": "Atuária e Modelagem Estatística em Previdência Fechada",
+      "modality": "EAD",
+      "actual_outcome": "SUCCESS",
+      "predicted_outcome": "SUCCESS",
+      "recommendation": "APPROVED",
+      "viability_score": 79.68,
+      "coverage_score": 1.0,
+      "is_correct": true,
+      "reasons": [
+        "Score V=79.68 atinge critério de aprovação (>= 75.0)"
+      ]
+    },
+    {
+      "course_id": "hist-008",
+      "course_name": "Seguros Paramétricos no Agronegócio Brasileiro",
+      "modality": "Híbrido",
+      "actual_outcome": "MARGINAL",
+      "predicted_outcome": "MARGINAL",
+      "recommendation": "REQUIRES_HUMAN_REVIEW",
+      "viability_score": 61.93,
+      "coverage_score": 1.0,
+      "is_correct": true,
+      "reasons": [
+        "Score V=61.93 está na margem de revisão de fronteira (+/-3.0 pontos dos limiares 75.0 ou 60.0)"
+      ]
+    },
+    {
+      "course_id": "hist-009",
+      "course_name": "Culinária Mediterrânea e Coquetelaria Básica",
+      "modality": "Presencial",
+      "actual_outcome": "FAILED",
+      "predicted_outcome": "FAILED",
+      "recommendation": "HIGH_RISK",
+      "viability_score": 7.49,
+      "coverage_score": 1.0,
+      "is_correct": true,
+      "reasons": [
+        "Score V=7.49 abaixo do limiar mínimo (< 60.0)"
+      ]
+    },
+    {
+      "course_id": "hist-010",
+      "course_name": "Subscrição Técnica de Riscos de Engenharia e Obras Civis",
+      "modality": "EAD",
+      "actual_outcome": "SUCCESS",
+      "predicted_outcome": "SUCCESS",
+      "recommendation": "APPROVED",
+      "viability_score": 79.71,
+      "coverage_score": 1.0,
+      "is_correct": true,
+      "reasons": [
+        "Score V=79.71 atinge critério de aprovação (>= 75.0)"
+      ]
+    }
+  ]
+}

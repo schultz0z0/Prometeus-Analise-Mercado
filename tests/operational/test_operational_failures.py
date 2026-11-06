@@ -44,6 +44,7 @@ async def test_webhook_dead_letter_after_consecutive_failures(fail_session: Asyn
     )
 
     dispatcher = WebhookDispatcher(
+        secret="isolated-test-secret",
         db_session=fail_session,
         max_retries=3,
         shadow_mode=False,

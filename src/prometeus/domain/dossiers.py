@@ -200,8 +200,10 @@ class DossierFacts:
             "pillar_summaries": {k: round(v, 2) for k, v in sorted(self.pillar_summaries.items())},
             "pillar_details": self.pillar_details,
             "scoring_experimental": self.scoring_experimental,
-            "citable_contract_version": 3,
-            "items": [item.to_dict() for item in sorted(self.citable_items(), key=lambda x: x.evidence_id)],
+            "citable_contract_version": 4,
+            "items": [
+                item.to_dict() for item in sorted(self.citable_items(), key=lambda x: x.evidence_id)
+            ],
             "limitations": sorted(self.limitations),
             "course_understanding": self.course_understanding,
             "research_plan": self.research_plan,
@@ -226,6 +228,7 @@ class DossierFacts:
                     "confidence_score": self.confidence_score,
                     "confidence_percent": round(self.confidence_score * 100, 2),
                     "scoring_experimental": self.scoring_experimental,
+                    "index_scale": {"minimum": 0, "maximum": 100},
                     "pillar_scores": self.pillar_summaries,
                     "pillar_details": self.pillar_details,
                 },

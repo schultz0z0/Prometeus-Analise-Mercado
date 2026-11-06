@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from prometeus.application.competitor_coverage import build_competitor_coverage
 from prometeus.application.research_scope import (
     match_configured_competitor,
     match_sector_radar_actor,
@@ -53,33 +54,15 @@ def _observed_price_display(
 
 
 def _differentiation_note(category: str, has_offer: bool) -> str:
-    if not has_offer:
-        return "Janela de pioneirismo (whitespace acadêmico) para posicionamento vertical da ENS."
-    mapping = {
-        "direct_specialist": "ENS agrega chancela de escola de negócios, profundidade executiva e networking corporativo.",
-        "executive_business": "ENS diferencia-se pela especialização vertical em seguros, regulação SUSEP e casos de sinistros/subscrição.",
-        "technical_academic": "ENS equilibra rigor técnico-atuarial com aplicação gerencial imediata no mercado segurador.",
-        "scale_ead": "ENS posiciona-se em faixa executiva premium com corpo docente atuante no setor e curadoria técnica.",
-        "legal_niche": "ENS conecta o marco jurídico-regulatório à operação técnica, subscrição e gestão de produtos securitários.",
-        "tech_edtech": "ENS traduz tecnologia e IA para a realidade regulada de subscrição, corretagem e sinistros.",
-    }
-    return mapping.get(
-        category,
-        "ENS combina autoridade institucional no setor de seguros com aplicabilidade prática.",
+    return (
+        "Diferencial desta oferta ainda não validado. Consulte as conclusões verificadas do dossiê."
+        if has_offer
+        else "Ausência de oferta no recorte não comprova ausência de concorrência ou vantagem competitiva."
     )
 
 
 def _curriculum_connection_for_theme(theme: str) -> str:
-    lower = theme.lower()
-    if "ia" in lower or "automacao" in lower or "subscricao" in lower:
-        return "Sustenta módulos de subscrição assistida, automação e análise preditiva de riscos."
-    if "sinistro" in lower or "operac" in lower:
-        return "Sustenta oficinas práticas de regulação digital de sinistros e mitigação de fraudes."
-    if "corretor" in lower or "distribuicao" in lower:
-        return "Endereça dores comerciais e consultivas reais da rede de corretores parceiros."
-    if "saude" in lower or "vida" in lower or "previdencia" in lower:
-        return "Alinha estudos de caso às linhas de pessoas, benefícios e equilíbrio técnico."
-    return "Conecta a ementa às demandas estratégicas atuais das seguradoras empregadoras."
+    return "Conexão curricular específica requer validação; o sinal setorial é somente contextual."
 
 
 def build_ecosystem_presentation_blocks(
@@ -88,11 +71,8 @@ def build_ecosystem_presentation_blocks(
     proposed_workload_hours: int,
 ) -> dict[str, Any]:
     """Gera `competitive_benchmark` e `sector_radar` com rastreabilidade estrita a `evidence_ids`."""
-    institution_ctx = (
-        dict(proposal.get("_institution_context"))
-        if isinstance(proposal.get("_institution_context"), dict)
-        else {}
-    )
+    raw_ctx = proposal.get("_institution_context")
+    institution_ctx = dict(raw_ctx) if isinstance(raw_ctx, dict) else {}
     competitors = [
         c for c in institution_ctx.get("competitors", []) if isinstance(c, dict) and c.get("id")
     ]
@@ -109,13 +89,6 @@ def build_ecosystem_presentation_blocks(
             if isinstance(facts.research_plan, dict)
             else []
         )
-        queried_text = " ".join(
-            str(call.get("query") or "").lower()
-            for call in plan_calls
-            if isinstance(call, dict)
-        )
-        has_any_plan_calls = bool(plan_calls)
-
         comparable_prices: dict[str, float] = {}
         pricing_audit = facts.analysis_audit.get("pricing")
         if isinstance(pricing_audit, dict):
@@ -144,6 +117,8 @@ def build_ecosystem_presentation_blocks(
                 continue
             if item.key_metrics.get("actor_role") == "sector_radar":
                 continue
+            if item.key_metrics.get("competition_relation") == "not_qualified":
+                continue
             matched_id = str(item.key_metrics.get("matched_actor_id") or "")
             if not matched_id or matched_id not in by_comp:
                 matched_comp = match_configured_competitor(
@@ -153,26 +128,13 @@ def build_ecosystem_presentation_blocks(
             if matched_id in by_comp:
                 by_comp[matched_id].append(item)
 
-        rows: list[dict[str, Any]] = []
-        offers_found = 0
+        offers: list[dict[str, Any]] = []
         for comp in competitors:
             comp_id = str(comp["id"])
-            comp_name = str(comp.get("name") or comp_id)
-            category = str(comp.get("category") or "executive_business")
-            cat_label = CATEGORY_LABELS.get(category, "Instituição de Ensino")
             matched_items = by_comp.get(comp_id, [])
-
-            if matched_items:
-                offers_found += 1
-                best = sorted(
-                    matched_items,
-                    key=lambda it: (
-                        1 if _observed_price_display(it, comparable_prices)[0] is not None else 0
-                    ),
-                    reverse=True,
-                )[0]
-                _, price_display = _observed_price_display(best, comparable_prices)
-                raw_hours = best.key_metrics.get("workload_hours")
+            for item in matched_items:
+                _, price_display = _observed_price_display(item, comparable_prices)
+                raw_hours = item.key_metrics.get("workload_hours")
                 obs_hours = (
                     int(raw_hours)
                     if isinstance(raw_hours, (int, float))
@@ -181,58 +143,77 @@ def build_ecosystem_presentation_blocks(
                     else None
                 )
                 hours_display = f"{obs_hours}h" if obs_hours is not None else "—"
-                is_adjacent = category in {"direct_specialist", "tech_edtech"} or (
-                    obs_hours is not None and obs_hours < 120 and proposed_workload_hours >= 180
-                )
-                status = "adjacent_offer" if is_adjacent else "direct_offer"
-                modality = _extract_modality(f"{best.title} {best.summary}")
-                rows.append(
+                relation = str(item.key_metrics.get("competition_relation") or "unclassified")
+                modality = _extract_modality(f"{item.title} {item.summary}")
+                offers.append(
                     {
                         "competitor_id": comp_id,
-                        "name": comp_name,
-                        "category_label": cat_label,
-                        "status": status,
-                        "observed_offer_title": best.title,
+                        "evidence_id": item.evidence_id,
+                        "evidence_ids": [item.evidence_id],
+                        "title": item.title,
+                        "source_url": item.source_url,
+                        "relation": relation,
+                        "relation_reason": item.key_metrics.get("competition_reason"),
                         "modality": modality,
                         "workload_hours": hours_display,
                         "price_display": price_display,
-                        "ens_differentiation": _differentiation_note(category, has_offer=True),
-                        "evidence_ids": list(dict.fromkeys(it.evidence_id for it in matched_items)),
+                        "collected_at": item.key_metrics.get("collected_at"),
                     }
                 )
-            else:
-                domains = [str(d).lower() for d in comp.get("domains", []) if d]
-                was_queried = (not has_any_plan_calls) or any(
-                    f"site:{d}" in queried_text or d in queried_text for d in domains
-                )
-                status = "no_offer_observed" if was_queried else "not_queried"
-                title_msg = (
-                    "Nenhuma oferta específica observada no tema"
-                    if was_queried
-                    else "Domínio fora do lote consultado nesta rodada"
-                )
-                rows.append(
-                    {
-                        "competitor_id": comp_id,
-                        "name": comp_name,
-                        "category_label": cat_label,
-                        "status": status,
-                        "observed_offer_title": title_msg,
-                        "modality": "—",
-                        "workload_hours": "—",
-                        "price_display": "—",
-                        "ens_differentiation": _differentiation_note(category, has_offer=False),
-                        "evidence_ids": [],
-                    }
-                )
-
-        whitespace_count = sum(1 for r in rows if r["status"] == "no_offer_observed")
+        projection = build_competitor_coverage(
+            competitors=competitors,
+            calls=plan_calls,
+            runs=facts.research_plan.get("tool_runs", []),
+            offers=offers,
+        )
+        rows: list[dict[str, Any]] = []
+        by_id = {str(comp["id"]): comp for comp in competitors}
+        for coverage_row in projection["rows"]:
+            comp = by_id[coverage_row["competitor_id"]]
+            category = str(comp.get("category") or "executive_business")
+            row_offers = coverage_row["offers"]
+            first = row_offers[0] if row_offers else {}
+            status = (
+                coverage_row["evidence_status"]
+                if row_offers
+                else "no_offer_observed"
+                if coverage_row["complete"]
+                else "not_queried"
+                if coverage_row["execution_status"] == "not_started"
+                else coverage_row["execution_status"]
+            )
+            title = (
+                first.get("title") or "Nenhuma oferta qualificada encontrada no recorte pesquisado."
+                if coverage_row["complete"] or row_offers
+                else "Pesquisa incompleta; consulte o estado da coleta e suas lacunas."
+            )
+            rows.append(
+                {
+                    **coverage_row,
+                    "category_label": CATEGORY_LABELS.get(category, "Instituição de Ensino"),
+                    "status": status,
+                    "observed_offer_title": title,
+                    "modality": first.get("modality", "—"),
+                    "workload_hours": first.get("workload_hours", "—"),
+                    "price_display": first.get("price_display", "—"),
+                    "ens_differentiation": _differentiation_note(
+                        category, has_offer=bool(row_offers)
+                    ),
+                }
+            )
+        complete_label = (
+            "Cobertura do recorte concluída."
+            if projection["coverage_complete"]
+            else "Benchmark incompleto: há instituições sem pesquisa ou validação concluída."
+        )
         result["competitive_benchmark"] = {
+            **projection,
             "monitored_total": len(competitors),
-            "offers_found_count": offers_found,
+            "offers_found_count": projection["institutions_with_offers"],
             "whitespace_summary": (
-                f"{offers_found} de {len(competitors)} instituições concorrentes monitoradas apresentaram "
-                f"oferta correlata observada; {whitespace_count} consultadas não exibiram curso específico no recorte."
+                f"{projection['searched_total']} de {len(competitors)} instituições pesquisadas; "
+                f"{projection['total_offers']} ofertas qualificadas em {projection['institutions_with_offers']} instituições. "
+                f"{complete_label} Ausência de oferta no recorte não comprova ausência de concorrência."
             ),
             "rows": rows,
         }
@@ -257,7 +238,9 @@ def build_ecosystem_presentation_blocks(
                     "name": str(item.key_metrics.get("matched_actor_name") or item.title),
                     "priority": "secondary",
                     "monitoring_focus": [],
-                    "social": {"linkedin_scope": item.key_metrics.get("linkedin_scope", "national")},
+                    "social": {
+                        "linkedin_scope": item.key_metrics.get("linkedin_scope", "national")
+                    },
                 }
             elif radar_actors:
                 matched_actor = match_sector_radar_actor(
@@ -275,9 +258,8 @@ def build_ecosystem_presentation_blocks(
             seen_actor_urls.add(key)
 
             channel_label, scope_badge = _channel_and_scope(url, matched_actor)
-            if (
-                str(item.key_metrics.get("linkedin_scope") or "") == "global"
-                and ("linkedin" in url.lower() or "linkedin" in item.title.lower())
+            if str(item.key_metrics.get("linkedin_scope") or "") == "global" and (
+                "linkedin" in url.lower() or "linkedin" in item.title.lower()
             ):
                 channel_label = "LinkedIn"
                 scope_badge = "Global (contextual)"

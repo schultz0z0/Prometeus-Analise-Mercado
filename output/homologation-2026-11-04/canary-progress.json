@@ -1,0 +1,2286 @@
+{
+  "analysis_id": "0fe55f2d-6b58-4177-9185-25255c860526",
+  "tenant_id": "ens",
+  "course_name": "Governança de Inteligência Artificial e Proteção de Dados no Mercado Segurador",
+  "status": "BLOCKED",
+  "recommendation": null,
+  "created_at": "2026-11-04T17:24:37.353309+00:00",
+  "updated_at": "2026-11-04T17:57:26.342569+00:00",
+  "blocking": {
+    "reason": "Erro inesperado no julgamento do pack 'market-relevance-v1': Inferência via plano ChatGPT falhou: subscription_sharing_usage_limit_exceeded",
+    "created_at": "2026-11-04T17:57:26.342569+00:00"
+  },
+  "steps": [
+    {
+      "step_number": 1,
+      "name": "runtime_preflight",
+      "status": "COMPLETED",
+      "output_summary": {
+        "ai_mode": "traditional",
+        "jev_enabled": false,
+        "required_sources": [
+          "google_search",
+          "web_crawler",
+          "meta_ads_library",
+          "linkedin",
+          "linkedin_jobs",
+          "instagram",
+          "tiktok",
+          "youtube_comments"
+        ],
+        "synthetic_sources": [
+          "institutional_history"
+        ],
+        "guidance_snapshots": [
+          {
+            "name": "auditing-course-curriculum",
+            "version": "2.0.0",
+            "content_hash": "abb604e4cd0af945621b5ada549e1d5b765ff90566bef543ec88e0ba59193f74"
+          },
+          {
+            "name": "building-course-offers",
+            "version": "2.1.0",
+            "content_hash": "8ec0fe50911ae206eb46f692b15abad2a28ba8f8da19814055339a6f4128cdb7"
+          },
+          {
+            "name": "conducting-course-analysis",
+            "version": "1.1.0",
+            "content_hash": "6e93852bb2f680bae81ca3824c762ab80b6769997a9192fcb6ee3258c4dccf6e"
+          },
+          {
+            "name": "extracting-course-offers",
+            "version": "1.0.0",
+            "content_hash": "2eafae4fa141a6039b36a30374699a91f3c3e68856639c54405538fc725f3483"
+          },
+          {
+            "name": "operating-apify-research",
+            "version": "1.0.0",
+            "content_hash": "1f0b23daefe4168244949b8c7eceb87aec72f49458004dbcad5441a16312a3cc"
+          },
+          {
+            "name": "planning-market-research",
+            "version": "3.2.0",
+            "content_hash": "8c1ad8ad28bb72e02dadbb285f04780bde06ec2990e7b18d80b2656bac99e290"
+          },
+          {
+            "name": "researching-job-demand",
+            "version": "1.0.0",
+            "content_hash": "42b1eb5c6b3a9ce0fd8d3fd3cfdec08aacb9758469cdc7a048184f99b46d2b63"
+          },
+          {
+            "name": "researching-search-trends",
+            "version": "1.0.0",
+            "content_hash": "bf4ce6981d66bc93fcf19ff19250cf3e2850492c7bf768ec9d75a03121df8dd5"
+          },
+          {
+            "name": "reviewing-market-evidence",
+            "version": "2.0.0",
+            "content_hash": "2dc665623b432de80b02ef44c41b70f89274b7338b58f9f8a330bb3e9e69f8d4"
+          },
+          {
+            "name": "understanding-course-proposals",
+            "version": "2.0.0",
+            "content_hash": "a6253b468732c5c9ad8e7ad3c035572bbafbaacbe74e077f3300a8262767f5c0"
+          }
+        ],
+        "scoring_profile_id": "portfolio-v2"
+      }
+    },
+    {
+      "step_number": 2,
+      "name": "intake_normalization",
+      "status": "COMPLETED",
+      "output_summary": {
+        "proposal": {
+          "level": "Extensão",
+          "notes": "Caso controlado de homologação técnica. Premissas financeiras fornecidas exclusivamente para testar simulação; não constituem orçamento ENS aprovado. Histórico institucional permanece sintético. Não registrar aprovação humana nem lançamento comercial.",
+          "modules": [
+            {
+              "name": "IA generativa e aplicações no mercado segurador",
+              "workload_hours": 4
+            },
+            {
+              "name": "Riscos, vieses, limitações e avaliação de sistemas de IA",
+              "workload_hours": 4
+            },
+            {
+              "name": "Proteção de dados pessoais e segurança da informação",
+              "workload_hours": 4
+            },
+            {
+              "name": "Governança, compliance e supervisão humana",
+              "workload_hours": 4
+            },
+            {
+              "name": "Desenho e validação de casos de uso em seguros",
+              "workload_hours": 4
+            },
+            {
+              "name": "Oficina de plano de governança e monitoramento",
+              "workload_hours": 4
+            }
+          ],
+          "language": "pt-BR",
+          "modality": "Online ao vivo",
+          "economics": {
+            "installments": 3,
+            "max_capacity": 30,
+            "min_capacity": 15,
+            "tax_rate_pct": 10,
+            "total_price_brl": 1800,
+            "discount_rate_pct": 10,
+            "cac_per_enrolled_brl": 0,
+            "academic_duration_months": 2,
+            "financial_duration_months": 3,
+            "default_and_refund_rate_pct": 3,
+            "marketing_campaign_cost_brl": 3000,
+            "variable_cost_per_student_brl": 100,
+            "instruction_and_coordination_cost_brl": 10000
+          },
+          "geography": "Brasil",
+          "course_type": "Extensão",
+          "validation_run": "homologacao-real-2026-11-04",
+          "workload_hours": 24,
+          "duration_months": 2,
+          "target_audience": "Profissionais de seguradoras, corretoras e insurtechs nas áreas de riscos, compliance, proteção de dados e inovação que avaliam o uso de IA generativa.",
+          "_idempotency_key": "homologacao-20261104-real-01",
+          "learning_outcomes": [
+            "Mapear riscos do uso de IA generativa em processos do setor de seguros.",
+            "Elaborar critérios de governança, proteção de dados e supervisão humana.",
+            "Construir um plano de avaliação e monitoramento de um caso de uso de IA."
+          ],
+          "proposed_price_brl": 1800,
+          "_institution_context": {
+            "id": "ens",
+            "name": "Escola de Negócios e Seguros",
+            "domains": [
+              "ens.edu.br",
+              "enscursos.com.br"
+            ],
+            "competitors": [
+              {
+                "id": "conhecer-seguros",
+                "name": "Conhecer Seguros",
+                "social": {
+                  "youtube_url": "https://www.youtube.com/channel/UCoW6aijItbuOkgmMA-Qgb9Q",
+                  "facebook_url": "https://www.facebook.com/Conhecer-Seguros-107437617767929/",
+                  "linkedin_url": null,
+                  "instagram_url": "https://www.instagram.com/conhecerseguros/",
+                  "linkedin_scope": "national",
+                  "instagram_handle": "conhecerseguros",
+                  "linkedin_company": null
+                },
+                "aliases": [
+                  "ConhecerSeguros"
+                ],
+                "domains": [
+                  "conhecerseguros.com.br"
+                ],
+                "category": "direct_specialist",
+                "portal_url": "https://conhecerseguros.com.br",
+                "focus_notes": "Cursos livres, certificações e conteúdos técnicos especializados em seguros, resseguros e previdência."
+              },
+              {
+                "id": "fgv",
+                "name": "FGV Educação Executiva",
+                "social": {
+                  "youtube_url": "https://www.youtube.com/fgv",
+                  "facebook_url": null,
+                  "linkedin_url": "https://www.linkedin.com/school/fundacao-getulio-vargas/",
+                  "instagram_url": "https://www.instagram.com/fgv.oficial/",
+                  "linkedin_scope": "national",
+                  "instagram_handle": "fgv.oficial",
+                  "linkedin_company": "fundacao-getulio-vargas"
+                },
+                "aliases": [
+                  "Fundação Getulio Vargas",
+                  "FGV",
+                  "FGV IDE"
+                ],
+                "domains": [
+                  "fgv.br",
+                  "portal.fgv.br",
+                  "educacao-executiva.fgv.br"
+                ],
+                "category": "executive_business",
+                "portal_url": "https://educacao-executiva.fgv.br",
+                "focus_notes": "MBAs executivos em Gestão de Seguros e Previdência, Finanças e Gestão de Riscos."
+              },
+              {
+                "id": "ibmec",
+                "name": "Ibmec",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": "https://www.linkedin.com/school/ibmec/",
+                  "instagram_url": "https://www.instagram.com/ibmec/",
+                  "linkedin_scope": "national",
+                  "instagram_handle": "ibmec",
+                  "linkedin_company": "ibmec"
+                },
+                "aliases": [
+                  "Pós Ibmec",
+                  "Faculdade Ibmec"
+                ],
+                "domains": [
+                  "ibmec.br",
+                  "pos.ibmec.br"
+                ],
+                "category": "executive_business",
+                "portal_url": "https://pos.ibmec.br",
+                "focus_notes": "MBAs executivos e pós-graduação em Finanças, Mercado de Capitais e Gestão de Riscos com forte presença RJ/SP e EAD Live."
+              },
+              {
+                "id": "fipecafi",
+                "name": "FIPECAFI",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": "https://www.linkedin.com/school/fipecafi/",
+                  "instagram_url": "https://www.instagram.com/faculdadefipecafi/",
+                  "linkedin_scope": "national",
+                  "instagram_handle": "faculdadefipecafi",
+                  "linkedin_company": "fipecafi"
+                },
+                "aliases": [
+                  "Faculdade FIPECAFI"
+                ],
+                "domains": [
+                  "fipecafi.org"
+                ],
+                "category": "technical_academic",
+                "portal_url": "https://fipecafi.org",
+                "focus_notes": "Pós-graduação e formação técnica em Ciências Atuariais, Contabilidade Securitária e Gestão de Riscos."
+              },
+              {
+                "id": "fia",
+                "name": "FIA Business School",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": "https://www.linkedin.com/school/fia/",
+                  "instagram_url": "https://www.instagram.com/businessschool.fia/",
+                  "linkedin_scope": "national",
+                  "instagram_handle": "businessschool.fia",
+                  "linkedin_company": "fia"
+                },
+                "aliases": [
+                  "Fundação Instituto de Administração",
+                  "FIA"
+                ],
+                "domains": [
+                  "fia.com.br"
+                ],
+                "category": "executive_business",
+                "portal_url": "https://fia.com.br",
+                "focus_notes": "MBAs em Gestão de Riscos, Compliance, Governança e Finanças Corporativas."
+              },
+              {
+                "id": "insper",
+                "name": "Insper",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": "https://www.linkedin.com/school/insper/",
+                  "instagram_url": "https://www.instagram.com/insperedu/",
+                  "linkedin_scope": "national",
+                  "instagram_handle": "insperedu",
+                  "linkedin_company": "insper"
+                },
+                "aliases": [
+                  "Instituto de Ensino e Pesquisa"
+                ],
+                "domains": [
+                  "insper.edu.br"
+                ],
+                "category": "executive_business",
+                "portal_url": "https://www.insper.edu.br",
+                "focus_notes": "Educação executiva de alta liderança em Finanças Quantitativas, Ciência de Dados e Decisão sob Risco."
+              },
+              {
+                "id": "estacio",
+                "name": "Estácio",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": "https://www.linkedin.com/school/estacio/",
+                  "instagram_url": "https://www.instagram.com/estacio_brasil/",
+                  "linkedin_scope": "national",
+                  "instagram_handle": "estacio_brasil",
+                  "linkedin_company": "estacio"
+                },
+                "aliases": [
+                  "Universidade Estácio de Sá",
+                  "Pós Estácio"
+                ],
+                "domains": [
+                  "estacio.br",
+                  "portal.estacio.br"
+                ],
+                "category": "scale_ead",
+                "portal_url": "https://portal.estacio.br/pos-graduacao",
+                "focus_notes": "Graduação tecnológica em Gestão de Seguros e pós-graduação EAD de escala e preço acessível."
+              },
+              {
+                "id": "esa-oab",
+                "name": "ESA OAB-SP",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": null,
+                  "instagram_url": "https://www.instagram.com/esaoabsp/",
+                  "linkedin_scope": "national",
+                  "instagram_handle": "esaoabsp",
+                  "linkedin_company": null
+                },
+                "aliases": [
+                  "Escola Superior de Advocacia",
+                  "ESA OAB"
+                ],
+                "domains": [
+                  "esaoabsp.edu.br"
+                ],
+                "category": "legal_niche",
+                "portal_url": "https://esaoabsp.edu.br",
+                "focus_notes": "Extensão e especialização em Direito Securitário, regulação SUSEP e contencioso de sinistros."
+              },
+              {
+                "id": "fiap",
+                "name": "FIAP",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": "https://www.linkedin.com/school/fiap/",
+                  "instagram_url": "https://www.instagram.com/fiapoficial/",
+                  "linkedin_scope": "national",
+                  "instagram_handle": "fiapoficial",
+                  "linkedin_company": "fiap"
+                },
+                "aliases": [
+                  "Pós Tech FIAP"
+                ],
+                "domains": [
+                  "fiap.com.br"
+                ],
+                "category": "tech_edtech",
+                "portal_url": "https://www.fiap.com.br",
+                "focus_notes": "MBAs e Pós Tech em Inteligência Artificial, Big Data, Cibersegurança e Analytics corporativo."
+              },
+              {
+                "id": "alura",
+                "name": "Alura",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": "https://www.linkedin.com/company/aluraonline/",
+                  "instagram_url": "https://www.instagram.com/aluraonline/",
+                  "linkedin_scope": "national",
+                  "instagram_handle": "aluraonline",
+                  "linkedin_company": "aluraonline"
+                },
+                "aliases": [
+                  "Alura Para Empresas"
+                ],
+                "domains": [
+                  "alura.com.br"
+                ],
+                "category": "tech_edtech",
+                "portal_url": "https://www.alura.com.br",
+                "focus_notes": "Formações rápidas e corporativas em Inteligência Artificial aplicada, Dados e Automação."
+              }
+            ],
+            "sector_radar": [
+              {
+                "id": "porto-seguro",
+                "name": "Porto Seguro",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": null,
+                  "instagram_url": "https://www.instagram.com/porto/",
+                  "linkedin_scope": "national",
+                  "instagram_handle": "porto",
+                  "linkedin_company": "Porto"
+                },
+                "aliases": [
+                  "Porto",
+                  "Porto Educa"
+                ],
+                "domains": [
+                  "portoseguro.com.br"
+                ],
+                "priority": "primary",
+                "monitoring_focus": [
+                  "relacionamento com corretores",
+                  "novos produtos",
+                  "IA e telemetria",
+                  "educação de mercado"
+                ]
+              },
+              {
+                "id": "bradesco-seguros",
+                "name": "Bradesco Seguros",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": null,
+                  "instagram_url": "https://www.instagram.com/bradescoseguros/",
+                  "linkedin_scope": "national",
+                  "instagram_handle": "bradescoseguros",
+                  "linkedin_company": "Bradesco Seguros"
+                },
+                "aliases": [
+                  "Grupo Bradesco Seguros",
+                  "Universo Bradesco Seguros"
+                ],
+                "domains": [
+                  "bradescoseguros.com.br"
+                ],
+                "priority": "primary",
+                "monitoring_focus": [
+                  "saúde suplementar",
+                  "previdência",
+                  "automação de sinistros",
+                  "capacitação de corretores"
+                ]
+              },
+              {
+                "id": "tokio-marine",
+                "name": "Tokio Marine Seguradora",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": null,
+                  "instagram_url": "https://www.instagram.com/tokiomarineseguradora/",
+                  "linkedin_scope": "national",
+                  "instagram_handle": "tokiomarineseguradora",
+                  "linkedin_company": "Tokio Marine"
+                },
+                "aliases": [
+                  "Tokio Marine"
+                ],
+                "domains": [
+                  "tokiomarine.com.br"
+                ],
+                "priority": "primary",
+                "monitoring_focus": [
+                  "riscos corporativos",
+                  "automóvel",
+                  "assessoria a corretores",
+                  "inovação operacional"
+                ]
+              },
+              {
+                "id": "allianz-seguros",
+                "name": "Allianz Seguros",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": null,
+                  "instagram_url": "https://www.instagram.com/allianzbrasil/",
+                  "linkedin_scope": "national",
+                  "instagram_handle": "allianzbrasil",
+                  "linkedin_company": "Allianz Seguros"
+                },
+                "aliases": [
+                  "Allianz Brasil"
+                ],
+                "domains": [
+                  "allianz.com.br"
+                ],
+                "priority": "primary",
+                "monitoring_focus": [
+                  "grandes riscos",
+                  "ESG",
+                  "cibernético",
+                  "parcerias com corretores"
+                ]
+              },
+              {
+                "id": "hdi-seguros",
+                "name": "HDI Seguros",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": null,
+                  "instagram_url": null,
+                  "linkedin_scope": "national",
+                  "instagram_handle": null,
+                  "linkedin_company": "Grupo HDI"
+                },
+                "aliases": [
+                  "Grupo HDI"
+                ],
+                "domains": [
+                  "hdiseguros.com.br"
+                ],
+                "priority": "primary",
+                "monitoring_focus": [
+                  "sinistros digitais",
+                  "seguro auto e patrimonial",
+                  "canal corretor"
+                ]
+              },
+              {
+                "id": "mapfre",
+                "name": "MAPFRE",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": null,
+                  "instagram_url": "https://www.instagram.com/mapfrebrasil/",
+                  "linkedin_scope": "global",
+                  "instagram_handle": "mapfrebrasil",
+                  "linkedin_company": "MAPFRE"
+                },
+                "aliases": [
+                  "MAPFRE Brasil"
+                ],
+                "domains": [
+                  "mapfre.com.br"
+                ],
+                "priority": "secondary",
+                "monitoring_focus": [
+                  "agronegócio",
+                  "vida",
+                  "grandes riscos",
+                  "transformação digital"
+                ]
+              },
+              {
+                "id": "brasilseg-bb",
+                "name": "Brasilseg / BB Seguros",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": null,
+                  "instagram_url": null,
+                  "linkedin_scope": "national",
+                  "instagram_handle": null,
+                  "linkedin_company": "Brasilseg"
+                },
+                "aliases": [
+                  "BB Seguros",
+                  "Brasilseg"
+                ],
+                "domains": [
+                  "bbseguros.com.br",
+                  "brasilseg.com.br"
+                ],
+                "priority": "secondary",
+                "monitoring_focus": [
+                  "seguro rural",
+                  "prestamista",
+                  "vida e previdência",
+                  "bancassurance"
+                ]
+              },
+              {
+                "id": "zurich-seguros",
+                "name": "Zurich Seguros",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": null,
+                  "instagram_url": "https://www.instagram.com/zurichnobrasil/",
+                  "linkedin_scope": "global",
+                  "instagram_handle": "zurichnobrasil",
+                  "linkedin_company": "Zurich"
+                },
+                "aliases": [
+                  "Zurich Brasil"
+                ],
+                "domains": [
+                  "zurich.com.br"
+                ],
+                "priority": "secondary",
+                "monitoring_focus": [
+                  "riscos climáticos",
+                  "seguros corporativos",
+                  "afinidades",
+                  "cibersegurança"
+                ]
+              },
+              {
+                "id": "itau-seguros",
+                "name": "Itaú Seguros",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": null,
+                  "instagram_url": null,
+                  "linkedin_scope": "unconfirmed",
+                  "instagram_handle": null,
+                  "linkedin_company": null
+                },
+                "aliases": [
+                  "Itau Seguros"
+                ],
+                "domains": [
+                  "itau.com.br"
+                ],
+                "priority": "secondary",
+                "monitoring_focus": [
+                  "seguros massificados",
+                  "residencial",
+                  "vida e proteção digital"
+                ]
+              },
+              {
+                "id": "yelum-seguros",
+                "name": "Yelum Seguros",
+                "social": {
+                  "youtube_url": null,
+                  "facebook_url": null,
+                  "linkedin_url": null,
+                  "instagram_url": null,
+                  "linkedin_scope": "national",
+                  "instagram_handle": null,
+                  "linkedin_company": "Grupo HDI"
+                },
+                "aliases": [
+                  "Yelum",
+                  "ex-Liberty Seguros"
+                ],
+                "domains": [
+                  "yelumseguros.com.br"
+                ],
+                "priority": "secondary",
+                "monitoring_focus": [
+                  "posicionamento de marca",
+                  "corretores parceiros",
+                  "auto e vida"
+                ]
+              }
+            ],
+            "radar_ttl_hours": 168
+          },
+          "proposed_price_period": "total"
+        },
+        "course_name": "Governança de Inteligência Artificial e Proteção de Dados no Mercado Segurador"
+      }
+    },
+    {
+      "step_number": 3,
+      "name": "readiness_assessment",
+      "status": "COMPLETED",
+      "output_summary": {
+        "confidence": 1.0,
+        "decision_id": "d1e6ca12-d710-4ccb-b0d6-c832dbe35bb2",
+        "selected_choice": "READY"
+      }
+    },
+    {
+      "step_number": 4,
+      "name": "course_understanding",
+      "status": "COMPLETED",
+      "output_summary": {
+        "level": "Extensão",
+        "summary": "Proposta da Escola de Negócios e Seguros (ENS) intitulada “Governança de Inteligência Artificial e Proteção de Dados no Mercado Segurador”: curso de extensão online ao vivo, em português, com 24 horas distribuídas em seis módulos e duração acadêmica de dois meses. O público é composto por profissionais de seguradoras, corretoras e insurtechs que avaliam o uso de IA generativa. O preço total declarado é R$ 1.800, com pagamento em três parcelas e duração financeira de três meses; o valor individual das parcelas não foi informado. A capacidade prevista é de 15 a 30 participantes. Trata-se de caso controlado de homologação técnica: as premissas financeiras servem à simulação, não constituem orçamento aprovado da ENS, e o histórico institucional permanece sintético. Não há aprovação humana ou lançamento comercial declarado.",
+        "language": "pt-BR",
+        "modality": "Online ao vivo",
+        "geography": "Brasil",
+        "created_at": "2026-11-04T17:25:05.558417Z",
+        "hypotheses": [
+          "Uma extensão que combine governança de IA generativa, proteção de dados e aplicações em seguros pode corresponder a necessidades profissionais específicas do público indicado; requer verificação.",
+          "A oficina de plano de governança e monitoramento pode diferenciar a proposta de ofertas mais gerais de IA ou proteção de dados; requer comparação de grades.",
+          "O preço total e as condições de pagamento podem ser competitivos frente a extensões comparáveis no Brasil; requer pesquisa de ofertas e condições efetivas."
+        ],
+        "analysis_id": "0fe55f2d-6b58-4177-9185-25255c860526",
+        "course_title": "Governança de Inteligência Artificial e Proteção de Dados no Mercado Segurador",
+        "uncertainties": [
+          "Pré-requisitos, escolaridade e conhecimento prévio não foram informados; são necessários para avaliar a adequação da extensão ao público.",
+          "O valor por parcela, eventuais juros, outras taxas e a aplicação do desconto não foram especificados; isso limita a interpretação do investimento efetivo.",
+          "A natureza e a base de cálculo da taxa de 10% e da taxa conjunta de inadimplência e reembolso de 3% não foram detalhadas, o que limita a interpretação da simulação financeira.",
+          "Não foram informados cronograma das aulas, plataforma, gravações, critérios de avaliação ou certificação; essas condições afetam a participação e a comparação entre ofertas.",
+          "A grade não especifica normas, ferramentas ou processos de seguros abordados em cada módulo; o detalhamento é necessário para verificar cobertura curricular.",
+          "A lista institucional de organizações é ponto de partida, não comprovação de concorrência direta ou de ofertas comparáveis."
+        ],
+        "schema_version": 1,
+        "duration_months": 2,
+        "subject_domains": [
+          "Governança de inteligência artificial",
+          "IA generativa aplicada ao mercado segurador",
+          "Riscos, vieses, limitações e avaliação de sistemas de IA",
+          "Proteção de dados pessoais e segurança da informação",
+          "Compliance e supervisão humana",
+          "Desenho e validação de casos de uso em seguros",
+          "Monitoramento e plano de governança de IA"
+        ],
+        "institution_name": "Escola de Negócios e Seguros",
+        "target_audiences": [
+          "Profissionais de seguradoras, corretoras e insurtechs nas áreas de riscos, compliance, proteção de dados e inovação que avaliam o uso de IA generativa."
+        ],
+        "learning_outcomes": [
+          "Mapear riscos do uso de IA generativa em processos do setor de seguros.",
+          "Elaborar critérios de governança, proteção de dados e supervisão humana.",
+          "Construir um plano de avaliação e monitoramento de um caso de uso de IA."
+        ],
+        "proposed_price_brl": 1800.0,
+        "supplied_materials": [
+          "Título, categoria, público, modalidade, localização, idioma, objetivos e condições comerciais da proposta.",
+          "Grade de 24 horas: IA generativa e aplicações no mercado segurador (4h); riscos, vieses, limitações e avaliação de sistemas de IA (4h); proteção de dados pessoais e segurança da informação (4h); governança, compliance e supervisão humana (4h); desenho e validação de casos de uso em seguros (4h); oficina de plano de governança e monitoramento (4h).",
+          "Premissas de simulação: preço total de R$ 1.800, três parcelas, duração financeira de três meses, desconto de 10%, taxa de 10%, inadimplência e reembolso de 3%, capacidade mínima de 15 e máxima de 30 alunos, custo de campanha de R$ 3.000, CAC por matriculado de R$ 0, custo variável por aluno de R$ 100 e custo de instrução e coordenação de R$ 10.000.",
+          "Contexto institucional da ENS, com lista de organizações indicadas como pontos de partida para pesquisa de ofertas e radar setorial."
+        ],
+        "institution_domains": [
+          "ens.edu.br",
+          "enscursos.com.br"
+        ],
+        "proposed_price_period": "unknown"
+      }
+    },
+    {
+      "step_number": 5,
+      "name": "keyword_entity_mapping",
+      "status": "COMPLETED",
+      "output_summary": {
+        "primary_keywords": [
+          "curso governança de inteligência artificial no mercado segurador",
+          "curso proteção de dados e lgpd para seguradoras",
+          "extensão governança de ia e proteção de dados em seguros",
+          "treinamento de compliance em inteligência artificial para seguros",
+          "curso gestão de riscos de inteligência artificial no setor de seguros"
+        ],
+        "negative_keywords": [],
+        "secondary_keywords": [
+          "curso ia generativa para seguros online ao vivo",
+          "capacitação em inteligência artificial para seguradoras e corretoras",
+          "curso lgpd para profissionais de seguros e corretoras",
+          "curso governança de dados para seguradoras",
+          "certificação governança de inteligência artificial e privacidade",
+          "como implementar governança de ia em seguradoras",
+          "riscos do uso de ia generativa em seguradoras",
+          "proteção de dados pessoais em sistemas de ia para seguros",
+          "vieses e discriminação em modelos de inteligência artificial para seguros",
+          "regulação de inteligência artificial e lgpd no mercado segurador"
+        ],
+        "evaluated_candidates": [
+          {
+            "term": "curso governança de inteligência artificial no mercado segurador",
+            "notes": "",
+            "category": "PRIMARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.99
+          },
+          {
+            "term": "curso proteção de dados e lgpd para seguradoras",
+            "notes": "",
+            "category": "PRIMARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.99
+          },
+          {
+            "term": "curso ia generativa para seguros online ao vivo",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "MEDIUM_RELEVANCE",
+            "confidence": 0.88
+          },
+          {
+            "term": "extensão governança de ia e proteção de dados em seguros",
+            "notes": "",
+            "category": "PRIMARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.99
+          },
+          {
+            "term": "capacitação em inteligência artificial para seguradoras e corretoras",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "MEDIUM_RELEVANCE",
+            "confidence": 0.86
+          },
+          {
+            "term": "treinamento de compliance em inteligência artificial para seguros",
+            "notes": "",
+            "category": "PRIMARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.98
+          },
+          {
+            "term": "curso gestão de riscos de inteligência artificial no setor de seguros",
+            "notes": "",
+            "category": "PRIMARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.98
+          },
+          {
+            "term": "curso lgpd para profissionais de seguros e corretoras",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.94
+          },
+          {
+            "term": "curso governança de dados para seguradoras",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.88
+          },
+          {
+            "term": "certificação governança de inteligência artificial e privacidade",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.96
+          },
+          {
+            "term": "como implementar governança de ia em seguradoras",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.99
+          },
+          {
+            "term": "riscos do uso de ia generativa em seguradoras",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.93
+          },
+          {
+            "term": "proteção de dados pessoais em sistemas de ia para seguros",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.98
+          },
+          {
+            "term": "vieses e discriminação em modelos de inteligência artificial para seguros",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.94
+          },
+          {
+            "term": "regulação de inteligência artificial e lgpd no mercado segurador",
+            "notes": "",
+            "category": "SECONDARY",
+            "relevance": "HIGH_RELEVANCE",
+            "confidence": 0.98
+          }
+        ]
+      }
+    },
+    {
+      "step_number": 6,
+      "name": "research_planning",
+      "status": "COMPLETED",
+      "output_summary": {
+        "id": "plan-586c2413c897",
+        "questions": [
+          {
+            "id": "q-1",
+            "track": "direct_competitors",
+            "priority": 1,
+            "question": "Quais extensões ativas no Brasil combinam governança de IA, proteção de dados e aplicação em seguros, e como se comparam em grade, formato e investimento total?",
+            "hypothesis": "Existem extensões comparáveis, mas a combinação com casos de seguros e oficina de governança pode diferenciar a proposta.",
+            "scope_filter": "Brasil, português; extensão em governança de IA e proteção de dados com aplicação a seguros; ENS separada como contexto próprio.",
+            "evidence_need": "Ofertas externas confirmadas em páginas originais, com categoria e condições comerciais atribuídas ao curso.",
+            "sample_target": 5,
+            "capable_sources": [
+              "google_search",
+              "web_crawler",
+              "meta_ads_library"
+            ],
+            "expected_evidence": "Nome, instituição, categoria declarada, atividade da oferta, modalidade, carga horária, módulos, preço total em BRL ou parcelas explicitamente quantificadas e condições.",
+            "budget_allocated_usd": 1.25,
+            "sufficiency_criteria": "Identificar até cinco ofertas distintas e confirmar em páginas originais categoria e conteúdo; comparar preço somente quando valor e condições forem inequívocos. Relatar separadamente os campos ausentes.",
+            "fallback_or_stop_rule": "Se não houver extensão setorial suficiente, preservar a lacuna e analisar extensões gerais como adjacentes; não converter pós, curso livre ou preço de seguro em comparação direta.",
+            "counter_evidence_hypothesis": "As ofertas comparáveis já cobrem seguros e prática de governança, ou são escassas e não permitem benchmark confiável."
+          },
+          {
+            "id": "q-2",
+            "track": "adjacent_offers",
+            "priority": 2,
+            "question": "Quais cursos livres, certificações e outras formações substitutas disputam a atenção do público e quais diferenciais práticos oferecem?",
+            "hypothesis": "Formações gerais de governança de IA ou LGPD oferecem alternativas próximas, mesmo sem foco no mercado segurador.",
+            "scope_filter": "Brasil, português; ofertas gerais de IA responsável, proteção de dados e governança; categorias mantidas separadas.",
+            "evidence_need": "Ofertas educacionais externas de IA, governança e privacidade, com categoria e conteúdo efetivamente observados.",
+            "sample_target": 5,
+            "capable_sources": [
+              "google_search",
+              "web_crawler",
+              "meta_ads_library"
+            ],
+            "expected_evidence": "Página original ou anúncio identificável com instituição, categoria, tema, formato, conteúdo e preço e condições quando publicados.",
+            "budget_allocated_usd": 0.65,
+            "sufficiency_criteria": "Descrever até cinco ofertas distintas e pelo menos suas categorias e conteúdos observáveis, sem misturar preços de categorias diferentes.",
+            "fallback_or_stop_rule": "Se páginas não comprovarem categoria ou programa, manter somente como descoberta ou posicionamento publicitário e registrar lacuna.",
+            "counter_evidence_hypothesis": "As ofertas identificadas tratam apenas de ferramentas genéricas ou de temas jurídicos sem aplicação comparável."
+          },
+          {
+            "id": "q-3",
+            "track": "workforce_needs",
+            "priority": 1,
+            "question": "Quais funções, competências e dificuldades de governança de IA e privacidade são observáveis entre profissionais e empregadores de seguros?",
+            "hypothesis": "Profissionais de riscos, compliance e privacidade em seguros precisam avaliar dados, vieses, supervisão e aplicações de IA.",
+            "scope_filter": "Brasil, português; seguradoras, corretoras e insurtechs; cargos e atividades compatíveis com riscos, compliance, privacidade e IA.",
+            "evidence_need": "Vagas pertinentes com atividades e requisitos, corroboradas por discussões públicas e contexto de empregadores.",
+            "sample_target": 12,
+            "capable_sources": [
+              "linkedin_jobs",
+              "linkedin",
+              "instagram",
+              "tiktok",
+              "google_search",
+              "youtube_comments"
+            ],
+            "expected_evidence": "Vaga identificável com empregador, localização e descrição; publicações ou comentários textuais com origem; perfis de empregadores apenas como contexto.",
+            "budget_allocated_usd": 1.6,
+            "sufficiency_criteria": "Buscar até 12 vagas distintas e registrar competências efetivamente descritas; complementar com até 10 observações sociais úteis quando disponíveis. Deduplicar vagas e não generalizar amostras truncadas.",
+            "fallback_or_stop_rule": "Excluir cargos de setores ou localidades incompatíveis; conteúdo sem descrição permanece contextual. Se não houver vagas pertinentes, registrar lacuna sem inferir inexistência de necessidade.",
+            "counter_evidence_hypothesis": "As vagas e discussões enfatizam outras competências ou não evidenciam conexão entre IA, privacidade e seguros."
+          },
+          {
+            "id": "q-4",
+            "track": "educational_search",
+            "priority": 2,
+            "question": "Há sinais de interesse relativo por formação em governança de IA e proteção de dados, distintos do interesse geral pelo setor?",
+            "hypothesis": "Termos de formação apresentam comportamento temporal observável que pode diferir de termos gerais de IA em seguros.",
+            "scope_filter": "Brasil, português; últimos 12 meses na mesma janela e região para todos os termos.",
+            "evidence_need": "Séries temporais válidas de termos curtos educacionais e setoriais, no mesmo recorte.",
+            "sample_target": 3,
+            "capable_sources": [
+              "google_trends"
+            ],
+            "expected_evidence": "Termo, região, intervalo e pontos temporais válidos por série; distinguir zero observado de ausência e erro.",
+            "budget_allocated_usd": 0.3,
+            "sufficiency_criteria": "Obter pontos válidos para pelo menos um termo educacional e, se disponível, o termo setorial na mesma consulta; tratar índice como interesse relativo, não volume absoluto.",
+            "fallback_or_stop_rule": "Se não houver série válida, registrar indisponibilidade ou falha específica; não substituir por contagem de resultados nem afirmar procura zero.",
+            "counter_evidence_hypothesis": "Termos educacionais têm série indisponível ou insuficiente, ou não apresentam evolução interpretável na janela."
+          },
+          {
+            "id": "q-5",
+            "track": "economic_context",
+            "priority": 2,
+            "question": "Que mudanças econômicas, regulatórias e operacionais do setor podem afetar investimento em governança de IA, e há evidência direta de disposição a pagar por formação?",
+            "hypothesis": "A adoção de IA e as exigências de proteção de dados podem incentivar investimentos em capacitação.",
+            "scope_filter": "Brasil; seguros, IA e proteção de dados; prioridade a documentos dos últimos 24 meses, identificando data e natureza da fonte.",
+            "evidence_need": "Fontes primárias recentes sobre contexto de seguros e IA; evidência específica de investimento educacional quando disponível.",
+            "sample_target": 4,
+            "capable_sources": [
+              "google_search",
+              "web_crawler",
+              "linkedin"
+            ],
+            "expected_evidence": "Publicações datadas de órgão setorial, regulador ou seguradora sobre tecnologia, risco ou investimento; pesquisa de compra de formação com método e valor quando encontrada.",
+            "budget_allocated_usd": 0.6,
+            "sufficiency_criteria": "Examinar até quatro fontes identificáveis e datadas, com ao menos uma fonte primária; tratar disposição a pagar como não comprovada se não houver evidência específica.",
+            "fallback_or_stop_rule": "Se houver somente declarações genéricas ou antigas, usar como contexto limitado e não inferir orçamento, margem ou capacidade de pagamento.",
+            "counter_evidence_hypothesis": "O contexto setorial não demonstra orçamento para formação nem disposição a pagar o preço proposto."
+          },
+          {
+            "id": "q-6",
+            "track": "primary_institutional",
+            "priority": 1,
+            "question": "Que histórico e diretrizes institucionais podem informar viabilidade e desenho da extensão, e quais premissas permanecem simuladas?",
+            "hypothesis": "Histórico e diretrizes institucionais confiáveis podem informar a decisão sem substituir evidência externa.",
+            "scope_filter": "ENS; cursos internos pertinentes de extensão ou mesma família quando apropriado; preservar categoria e distinguir simulação de dado real.",
+            "evidence_need": "Dados internos autorizados sobre cursos comparáveis, funil, matrículas, custos e diretrizes, com identificação de dados sintéticos.",
+            "sample_target": 3,
+            "capable_sources": [
+              "supplied_materials"
+            ],
+            "expected_evidence": "Registros internos autorizados de até três cursos comparáveis, janela, categoria, grade, leads, inscrições e matrículas; premissas financeiras e status de aprovação identificados.",
+            "budget_allocated_usd": 0.0,
+            "sufficiency_criteria": "Conferir os materiais fornecidos e identificar até três cursos com dados e janela verificáveis; registrar separadamente histórico sintético, lacunas e ausência de aprovação.",
+            "fallback_or_stop_rule": "Não há capability de acesso a histórico interno no catálogo; solicitar dados autorizados fora da coleta planejada ou seguir com histórico não verificável como lacuna, sem fabricar IPD.",
+            "counter_evidence_hypothesis": "O histórico disponível é sintético ou insuficiente e não sustenta inferência sobre demanda ou aprovação."
+          },
+          {
+            "id": "q-ecosystem-competitors",
+            "track": "direct_competitors",
+            "priority": 1,
+            "question": "Quais ofertas ativas, cargas horárias, modalidades e preços os 10 concorrentes educacionais monitorados praticam em governança inteligência artificial ia?",
+            "hypothesis": "Instituições concorrentes monitoradas possuem cursos diretos ou adjacentes em governança inteligência artificial ia",
+            "scope_filter": "Brasil",
+            "evidence_need": "Ofertas comparáveis, ementas, carga horária e investimento em instituições concorrentes",
+            "sample_target": 10,
+            "capable_sources": [
+              "google_search",
+              "web_crawler"
+            ],
+            "expected_evidence": "Páginas oficiais de cursos concorrentes com ementa e condições comerciais",
+            "budget_allocated_usd": 0.55,
+            "sufficiency_criteria": "Cobertura verificada dos domínios concorrentes configurados",
+            "fallback_or_stop_rule": "Registrar ausência observada por concorrente sem inventar oferta",
+            "counter_evidence_hypothesis": "Os concorrentes monitorados ainda não oferecem formação específica em governança inteligência artificial ia (whitespace acadêmico)"
+          },
+          {
+            "id": "q-sector-radar",
+            "track": "workforce_needs",
+            "priority": 2,
+            "question": "Quais iniciativas estratégicas, produtos e demandas para corretores e especialistas as seguradoras do Radar Setorial sinalizam em governança inteligência artificial ia?",
+            "hypothesis": "Seguradoras líderes sinalizam investimentos, produtos ou gargalos técnicos em governança inteligência artificial ia",
+            "scope_filter": "Brasil",
+            "evidence_need": "Sinais corporativos, lançamento de produtos, automação e dores operacionais de corretores",
+            "sample_target": 10,
+            "capable_sources": [
+              "google_search",
+              "instagram"
+            ],
+            "expected_evidence": "Páginas institucionais e comunicados públicos de seguradoras (contexto setorial)",
+            "budget_allocated_usd": 0.5,
+            "sufficiency_criteria": "Amostra contextual dos atores prioritários do Radar Setorial",
+            "fallback_or_stop_rule": "Utilizar snapshot persistente do Radar Setorial quando disponível",
+            "counter_evidence_hypothesis": "Tema governança inteligência artificial ia ainda incipiente nos canais públicos das seguradoras"
+          }
+        ],
+        "created_at": "2026-11-04T17:27:33.445431Z",
+        "tool_calls": [
+          {
+            "id": "call-1",
+            "query": "extensão governança inteligência artificial proteção dados seguros curso preço",
+            "required": true,
+            "max_items": 10,
+            "rationale": "Descoberta aberta de extensões setoriais e condições comerciais.",
+            "capability": "google_search",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "URLs de ofertas educacionais pertinentes, distinguindo extensão de outras categorias."
+            },
+            "question_ids": [
+              "q-1",
+              "q-2"
+            ]
+          },
+          {
+            "id": "call-2",
+            "query": "curso extensão governança IA LGPD preço carga horária",
+            "required": false,
+            "max_items": 10,
+            "rationale": "Descobrir extensões gerais e substitutos sem restringir a pesquisa às marcas indicadas.",
+            "capability": "google_search",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "URLs de cursos com instituição e programa identificáveis para confirmação nas páginas originais."
+            },
+            "question_ids": [
+              "q-1",
+              "q-2"
+            ]
+          },
+          {
+            "id": "call-3",
+            "query": "FGV FIAP Insper curso governança inteligência artificial proteção dados",
+            "required": false,
+            "max_items": 10,
+            "rationale": "Investigar instituições indicadas como sementes, sem limitar a descoberta a elas.",
+            "capability": "google_search",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Páginas oficiais de ofertas identificáveis; confirmar separadamente categoria e condições."
+            },
+            "question_ids": [
+              "q-1",
+              "q-2"
+            ]
+          },
+          {
+            "id": "call-4",
+            "query": "SUSEP CNseg seguradoras inteligência artificial proteção dados governança",
+            "required": false,
+            "max_items": 10,
+            "rationale": "Descobrir fontes primárias setoriais e regulatórias para contexto, não ofertas concorrentes.",
+            "capability": "google_search",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "time_range": "últimos 24 meses",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Documentos originais datados sobre IA, dados ou riscos no setor segurador brasileiro."
+            },
+            "question_ids": [
+              "q-5"
+            ]
+          },
+          {
+            "id": "call-5",
+            "query": "Ler páginas originais de ofertas educacionais e documentos setoriais descobertos",
+            "required": true,
+            "max_items": 8,
+            "rationale": "Confirmar oferta, categoria, grade e condições ou conteúdo da fonte primária, conforme a origem.",
+            "capability": "web_crawler",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "depends_on": [
+                "call-1",
+                "call-2",
+                "call-3",
+                "call-4"
+              ],
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Páginas originais utilizáveis com oferta e campos atribuíveis ou documento setorial datado; marcar cookies, placeholders e preços ambíguos."
+            },
+            "question_ids": [
+              "q-1",
+              "q-2",
+              "q-5"
+            ]
+          },
+          {
+            "id": "call-6",
+            "query": "curso governança inteligência artificial",
+            "required": true,
+            "max_items": 10,
+            "rationale": "Identificar anunciantes de formação e linguagem de posicionamento, não medir matrículas.",
+            "capability": "meta_ads_library",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "time_range": "anúncios ativos no momento da coleta",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Anúncios identificáveis de formação pertinente com anunciante e texto ou destino verificável; separar ENS e deduplicar."
+            },
+            "question_ids": [
+              "q-1",
+              "q-2"
+            ]
+          },
+          {
+            "id": "call-7",
+            "query": "analista proteção de dados seguros",
+            "required": true,
+            "max_items": 10,
+            "rationale": "Observar atribuições de privacidade em empregadores do setor.",
+            "capability": "linkedin_jobs",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "time_range": "últimos 30 dias quando disponível",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Vagas identificáveis com empregador, localização compatível e atividades ou requisitos pertinentes."
+            },
+            "question_ids": [
+              "q-3"
+            ]
+          },
+          {
+            "id": "call-8",
+            "query": "gerente riscos inteligência artificial seguradora",
+            "required": false,
+            "max_items": 10,
+            "rationale": "Pesquisar função complementar de riscos e governança de IA no setor.",
+            "capability": "linkedin_jobs",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "time_range": "últimos 30 dias quando disponível",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Vagas de risco ou governança com atribuições observáveis e vínculo setorial e geográfico verificável."
+            },
+            "question_ids": [
+              "q-3"
+            ]
+          },
+          {
+            "id": "call-9",
+            "query": "seguradora insurtech Brasil",
+            "required": true,
+            "max_items": 8,
+            "rationale": "Mapear empregadores do ecossistema para contextualização, sem contá-los como vagas ou concorrentes educacionais.",
+            "capability": "linkedin",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Organizações identificadas com descrição setorial, região e página original."
+            },
+            "question_ids": [
+              "q-3",
+              "q-5"
+            ]
+          },
+          {
+            "id": "call-10",
+            "query": "governancadeia",
+            "required": true,
+            "max_items": 10,
+            "rationale": "Buscar publicações públicas com linguagem e dificuldades práticas sobre governança de IA.",
+            "capability": "instagram",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "time_range": "últimos 12 meses quando disponível",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Posts ou comentários com texto profissional pertinente e URL; diretório de hashtag não conta como post."
+            },
+            "question_ids": [
+              "q-3"
+            ]
+          },
+          {
+            "id": "call-11",
+            "query": "LGPD inteligência artificial dados clientes seguros",
+            "required": true,
+            "max_items": 10,
+            "rationale": "Observar dúvidas e linguagem profissional relativas a dados de clientes e IA.",
+            "capability": "tiktok",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "time_range": "últimos 12 meses quando disponível",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Vídeos públicos com texto ou transcrição pertinente e URL; verificar contexto geográfico e não usar visualizações como demanda."
+            },
+            "question_ids": [
+              "q-3"
+            ]
+          },
+          {
+            "id": "call-12",
+            "query": "site:youtube.com/watch inteligência artificial seguros proteção dados",
+            "required": false,
+            "max_items": 5,
+            "rationale": "Descobrir vídeos pertinentes antes de coletar comentários reais.",
+            "capability": "google_search",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "URLs de vídeos públicos pertinentes a IA, seguros ou proteção de dados para coleta dependente."
+            },
+            "question_ids": [
+              "q-3"
+            ]
+          },
+          {
+            "id": "call-13",
+            "query": "Comentários de vídeos descobertos sobre IA e proteção de dados em seguros",
+            "required": true,
+            "max_items": 10,
+            "rationale": "Observar perguntas e dificuldades expressas em comentários, não inferidas do título dos vídeos.",
+            "capability": "youtube_comments",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "depends_on": [
+                "call-12"
+              ],
+              "sample_scope": "capped_sample",
+              "sufficiency_criterion": "Comentários textuais com vínculo ao vídeo e conteúdo pertinente; distinguir ausência de comentários de falha de descoberta."
+            },
+            "question_ids": [
+              "q-3"
+            ]
+          },
+          {
+            "id": "call-14",
+            "query": "Interesse educacional e setorial em IA",
+            "required": false,
+            "max_items": 3,
+            "rationale": "Comparar sinais relativos com termos independentes na mesma região e janela.",
+            "capability": "google_trends",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "time_range": "today 12-m",
+              "sample_scope": "capped_sample",
+              "search_terms": [
+                "curso governança IA",
+                "curso LGPD",
+                "IA seguros"
+              ],
+              "sufficiency_criterion": "Séries com termos, período e pontos válidos; não converter ausência de dados em zero ou índice em volume absoluto."
+            },
+            "question_ids": [
+              "q-4"
+            ]
+          },
+          {
+            "id": "eco-competitors-gsearch-1",
+            "query": "(site:conhecerseguros.com.br OR site:fgv.br OR site:ibmec.br OR site:fipecafi.org OR site:fia.com.br) curso governança inteligência artificial ia",
+            "required": false,
+            "max_items": 10,
+            "rationale": "Varredura clusterizada (1/2) nos concorrentes educacionais fixos",
+            "capability": "google_search",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "sample_scope": "capped_sample",
+              "cluster_index": 1,
+              "ecosystem_role": "configured_competitor",
+              "sufficiency_criterion": "URL, título, trecho e ranking por resultado; SERP não é oferta comprovada."
+            },
+            "question_ids": [
+              "q-ecosystem-competitors"
+            ]
+          },
+          {
+            "id": "eco-competitors-gsearch-2",
+            "query": "(site:insper.edu.br OR site:estacio.br OR site:esaoabsp.edu.br OR site:fiap.com.br OR site:alura.com.br) curso governança inteligência artificial ia",
+            "required": false,
+            "max_items": 10,
+            "rationale": "Varredura clusterizada (2/2) nos concorrentes educacionais fixos",
+            "capability": "google_search",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "sample_scope": "capped_sample",
+              "cluster_index": 2,
+              "ecosystem_role": "configured_competitor",
+              "sufficiency_criterion": "URL, título, trecho e ranking por resultado; SERP não é oferta comprovada."
+            },
+            "question_ids": [
+              "q-ecosystem-competitors"
+            ]
+          },
+          {
+            "id": "eco-competitors-crawler",
+            "query": "Ofertas concorrentes governança inteligência artificial ia",
+            "required": false,
+            "max_items": 8,
+            "rationale": "Extrair ementa, carga horária e preço real das páginas oficiais dos concorrentes",
+            "capability": "web_crawler",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "depends_on": [
+                "eco-competitors-gsearch-1",
+                "eco-competitors-gsearch-2"
+              ],
+              "sample_scope": "capped_sample",
+              "ecosystem_role": "configured_competitor",
+              "sufficiency_criterion": "Página original, instituição, preço e periodicidade, carga horária e diferenciais quando publicados."
+            },
+            "question_ids": [
+              "q-ecosystem-competitors"
+            ]
+          },
+          {
+            "id": "eco-sector-radar-gsearch-1",
+            "query": "(site:portoseguro.com.br OR site:bradescoseguros.com.br OR site:tokiomarine.com.br OR site:allianz.com.br OR site:hdiseguros.com.br) governança inteligência artificial ia",
+            "required": false,
+            "max_items": 8,
+            "rationale": "Radar Setorial (1/2): mapear tendências e dores do mercado segurador",
+            "capability": "google_search",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "sample_scope": "capped_sample",
+              "cluster_index": 1,
+              "ecosystem_role": "sector_radar",
+              "sufficiency_criterion": "URL, título, trecho e ranking por resultado; SERP não é oferta comprovada."
+            },
+            "question_ids": [
+              "q-sector-radar"
+            ]
+          },
+          {
+            "id": "eco-sector-radar-gsearch-2",
+            "query": "(site:mapfre.com.br OR site:bbseguros.com.br OR site:zurich.com.br OR site:itau.com.br OR site:yelumseguros.com.br) governança inteligência artificial ia",
+            "required": false,
+            "max_items": 8,
+            "rationale": "Radar Setorial (2/2): mapear tendências e dores do mercado segurador",
+            "capability": "google_search",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "sample_scope": "capped_sample",
+              "cluster_index": 2,
+              "ecosystem_role": "sector_radar",
+              "sufficiency_criterion": "URL, título, trecho e ranking por resultado; SERP não é oferta comprovada."
+            },
+            "question_ids": [
+              "q-sector-radar"
+            ]
+          },
+          {
+            "id": "eco-sector-radar-ig-porto-seguro",
+            "query": "porto",
+            "required": false,
+            "max_items": 5,
+            "rationale": "Pulso social nacional confirmado da seguradora Porto Seguro (@porto) no Radar Setorial",
+            "capability": "instagram",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "actor_id": "porto-seguro",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "search_type": "user",
+              "results_type": "posts",
+              "sample_scope": "capped_sample",
+              "ecosystem_role": "sector_radar",
+              "sufficiency_criterion": "Publicação real com legenda ou comentário e URL original."
+            },
+            "question_ids": [
+              "q-sector-radar"
+            ]
+          },
+          {
+            "id": "eco-sector-radar-ig-bradesco-seguros",
+            "query": "bradescoseguros",
+            "required": false,
+            "max_items": 5,
+            "rationale": "Pulso social nacional confirmado da seguradora Bradesco Seguros (@bradescoseguros) no Radar Setorial",
+            "capability": "instagram",
+            "parameters": {
+              "geo": "BR",
+              "country": "BR",
+              "actor_id": "bradesco-seguros",
+              "language": "pt-BR",
+              "location": "Brazil",
+              "search_type": "user",
+              "results_type": "posts",
+              "sample_scope": "capped_sample",
+              "ecosystem_role": "sector_radar",
+              "sufficiency_criterion": "Publicação real com legenda ou comentário e URL original."
+            },
+            "question_ids": [
+              "q-sector-radar"
+            ]
+          }
+        ],
+        "analysis_id": "0fe55f2d-6b58-4177-9185-25255c860526",
+        "schema_version": 1,
+        "skill_snapshots": [
+          {
+            "name": "planning-market-research",
+            "version": "3.2.0",
+            "content_hash": "8c1ad8ad28bb72e02dadbb285f04780bde06ec2990e7b18d80b2656bac99e290"
+          },
+          {
+            "name": "conducting-course-analysis",
+            "version": "1.1.0",
+            "content_hash": "6e93852bb2f680bae81ca3824c762ab80b6769997a9192fcb6ee3258c4dccf6e"
+          },
+          {
+            "name": "operating-apify-research",
+            "version": "1.0.0",
+            "content_hash": "1f0b23daefe4168244949b8c7eceb87aec72f49458004dbcad5441a16312a3cc"
+          },
+          {
+            "name": "extracting-course-offers",
+            "version": "1.0.0",
+            "content_hash": "2eafae4fa141a6039b36a30374699a91f3c3e68856639c54405538fc725f3483"
+          },
+          {
+            "name": "researching-search-trends",
+            "version": "1.0.0",
+            "content_hash": "bf4ce6981d66bc93fcf19ff19250cf3e2850492c7bf768ec9d75a03121df8dd5"
+          },
+          {
+            "name": "researching-job-demand",
+            "version": "1.0.0",
+            "content_hash": "42b1eb5c6b3a9ce0fd8d3fd3cfdec08aacb9758469cdc7a048184f99b46d2b63"
+          }
+        ],
+        "budget_limit_usd": 5.0,
+        "understanding_hash": "e671ecef08772fb4ab04ef7b2d4e94c7cad7d811e29c76470d54fbc4afb74468"
+      }
+    },
+    {
+      "step_number": 7,
+      "name": "institutional_history",
+      "status": "COMPLETED",
+      "output_summary": {
+        "audit": {
+          "family": "extensao",
+          "method": "ipd-family-percentile-v1",
+          "weights": {
+            "leads": 0.2,
+            "enrolled": 0.5,
+            "applicants": 0.3
+          },
+          "comparables": [],
+          "limitations": [
+            "Nenhum curso da família possui proximidade temática e curricular verificável suficiente."
+          ],
+          "reference_n": 10,
+          "observed_prices": [],
+          "skill_snapshots": [
+            {
+              "name": "reviewing-market-evidence",
+              "version": "2.0.0",
+              "content_hash": "2dc665623b432de80b02ef44c41b70f89274b7338b58f9f8a330bb3e9e69f8d4"
+            },
+            {
+              "name": "conducting-course-analysis",
+              "version": "1.1.0",
+              "content_hash": "6e93852bb2f680bae81ca3824c762ab80b6769997a9192fcb6ee3258c4dccf6e"
+            }
+          ],
+          "reference_period": "2025",
+          "percentile_convention": "midrank_0_100"
+        },
+        "features": {}
+      }
+    },
+    {
+      "step_number": 8,
+      "name": "external_tool_execution",
+      "status": "COMPLETED",
+      "output_summary": {
+        "spent_usd": 0.154057,
+        "evidence_ids": [
+          "98ddac15-4c20-43e8-b007-9c37b2c6efb5",
+          "98864847-d43a-41f8-8569-9e489067f9ee",
+          "e0245762-de2f-4448-99ff-02a8af55552c",
+          "8d82af2f-a1cb-4911-8991-5d52d3818561",
+          "df26313c-7ba1-4bbc-87a8-966c2e9effb6",
+          "480bb32c-fb27-45ab-9531-e7348ec37a2d",
+          "01ef361c-b68d-42cb-a3b3-1bb2c066cdf8",
+          "553cdc2c-4542-43fd-a821-08ac94920bde",
+          "94275666-8f9c-4df1-b27f-bb94ccc6bc7e",
+          "029023fc-c16c-4121-bfc4-95b24527ed71",
+          "058230f9-9ea4-4e5d-b638-68ca4cb147f1",
+          "bbbb316c-abe2-4127-b59d-92b4af7ae946",
+          "8135b60c-b16b-4d32-8bd0-2116050c9011",
+          "87228b53-3c39-43eb-bb0c-09f5b6f42c6a",
+          "e6be0d36-ab5e-4dae-9e9d-b76433fab982",
+          "9188814f-a598-4ef2-81ff-2dc155a0730f",
+          "2e529b5d-8c0d-4b89-8ade-6a284961740a",
+          "fa204e27-b124-488c-be88-782f3b5c4282",
+          "87b92508-5e57-4a32-a454-5fbd72da49bd",
+          "fcfc9470-d952-4983-bf1f-130b88e1c730",
+          "6b50ab4d-a795-459e-8c59-fa1f76fcb312",
+          "164b4ab6-db54-4196-bbec-2225bbeb950e",
+          "52f40952-4032-4363-badd-70d1ac2c4f95",
+          "fb1ab37d-dfbc-48df-a3c2-4e7b6df833ad",
+          "05a34560-fb3d-4b22-958d-8c1283b42417",
+          "7e6577ed-5549-4157-88a7-807cbdc0754b",
+          "9c25251e-0ab1-435a-aea0-d05ed7c836fa",
+          "6c6cfef7-ad5c-4ea6-90c1-7f3be9f35f99",
+          "9e051d8b-42f7-4013-a753-ea78e30097dd",
+          "f46b7d58-e89b-4131-b5da-9ba485698a62",
+          "9347a5eb-9bc1-4298-803e-2f73d2f59c5d",
+          "f17c43fe-0609-48c7-ade7-1a25ec6f60c3",
+          "9c7d4619-773a-4ff2-8415-80f163ae3d0e",
+          "d557f8b2-b023-4246-a168-d036ae7ffb98",
+          "ca7634c3-5884-4108-91de-b0c224dab803",
+          "d1525955-3d07-4168-94ed-4601db8bad04",
+          "1ce9360b-8164-40c8-b0e9-af2c7bf7c97f",
+          "68e6b181-b171-4fac-a364-69f74935c6f2",
+          "c2ff5f9d-fb9f-4229-aae2-5469c25c4a80",
+          "0906615b-9b56-4e6f-b456-015ac1c42b51",
+          "ff04c016-576e-432e-9275-8f56895c3be8",
+          "a46de374-3b4f-45bd-957b-512e121e7914",
+          "aea5957c-3164-4e0f-8e22-d9d3a853ddcf",
+          "abb5f41d-5505-4673-a7f1-15c8b9d65c86",
+          "94f60f59-85d2-4c95-8935-5a02c1a7c881",
+          "f9cfa4f8-6e57-4186-89ee-a9e8b1aca2e1",
+          "f2898e3a-4c71-4c22-aba4-60c7adb81d5c",
+          "6f6ac264-19b7-4c10-bc80-0113a62ead3f",
+          "15e90ffe-a361-4f69-8847-67bc40f0811b",
+          "d51593ba-78c7-4f27-afb1-0d02ee0e5d5c",
+          "c17ce234-51f2-4fe0-b590-5df905517772",
+          "90c81ef6-2dad-45af-9c40-3219487be96d",
+          "c7fee6ef-6944-4670-9858-570fa757bbf9",
+          "6c67aeba-abda-4cd0-93fe-e99df014d3f0",
+          "707c5ab0-0dea-48b5-987d-7abf931fba80",
+          "087bfe82-e694-4ff1-b3e0-7a14fe251744",
+          "4a6487a8-78f4-4109-ac8d-82c5e86f60cf",
+          "7f8ea57c-944d-4353-99af-82117be83082",
+          "79b6d3e7-986a-4564-b33b-7d79835066d8",
+          "cb210614-49df-4df8-a8ef-f50d46aeec7c",
+          "5aad21a1-9a8e-4cfb-b72f-42a2b71579ed",
+          "8cd3fb95-4f49-42b8-8492-415dfc42ab34",
+          "fd07dd87-223d-4d96-a105-b77b18824c1a",
+          "44b9c123-e803-43bb-ab86-d4b4d425b3d6",
+          "a978a0ec-e000-4079-bd18-50c8bba7602f",
+          "a2c3ceb0-cc07-4254-b999-1df54b30f526",
+          "ae9b8b22-b9c6-42ce-9008-137940d4cc93",
+          "06df6a0c-ef8f-4aa9-8276-253e6ce57d2a",
+          "ad627c59-4660-4143-a1d7-b3e36ea376d5",
+          "45f1893a-75eb-4a7d-93e9-cf3b5af23649",
+          "db9fdc74-264d-4cf4-8b4c-35a453cc35ec",
+          "909a3b1e-47ca-49d6-8bfa-796d54f67168",
+          "7869ceb2-6c06-4965-ac2e-8ed34b5d0e99",
+          "37a121dc-890c-4a2f-85d7-ea3bc3cbc963",
+          "45182e97-d38d-4709-9537-a2d7d3f31be5",
+          "4a4cb3d7-32b7-4710-b2cb-d88360be3839",
+          "ef8d4188-375b-4cfe-974c-d7a89382901e",
+          "a279452f-abf8-4388-9422-51bd3be9aec0",
+          "c84da1f3-31b2-43c2-a72c-287a1264e9e9",
+          "69c46156-e3a0-42c9-bfac-a69b10385565",
+          "4f2b2b1f-e844-4f78-9fc2-15ca2ee08e25",
+          "50e15069-5806-4806-92cf-439c7cdbf9be",
+          "67d7e30b-9fcd-4dd5-9032-ced97a32d582",
+          "408eeeda-900b-43c9-acad-9c4e128ceb8e",
+          "6c33e479-7c27-418d-8f8d-bb4b10c07989",
+          "467c6239-4472-43b2-8e73-1c4f1bf20773",
+          "e0a25d96-c39f-457a-9dde-ac1386284977",
+          "1670e694-201a-40e0-a639-eabb2948085c",
+          "b7b23d29-805d-4130-b9a8-73e029544a33",
+          "c709c5b0-aac8-4517-aafc-8d2e1890ea05",
+          "6d808300-8e31-4fcd-8b71-872070aa1257",
+          "22340504-cd53-4790-a647-1cfe34fe091b",
+          "f95d0099-90f2-42d1-a106-a3786471fe6a",
+          "3fada54b-5e36-460a-87ed-0e1414821e74",
+          "3a4f1f24-206c-4278-9822-722fff15ed2b",
+          "4bbe99bd-c4a1-4825-a9fe-f2e70e908b07",
+          "2c012958-721f-4047-8516-efe449b467ff",
+          "568c9ee3-ce50-4cb6-b393-7b1af94d7446",
+          "1cf0e1a1-4f3d-4db3-9bed-bbdf7681d42c",
+          "3f57179a-46c8-4080-8190-92067e55f2c1",
+          "9ebedbcb-7f58-4aaa-934d-57d668cde8c0",
+          "31e1bff5-eeb1-47cb-807a-1e7838716658",
+          "17f9060d-f6c4-427f-98c5-d77a035300dd",
+          "fe1e88a9-749f-4768-be9a-e28f556a2b18",
+          "aa7e4bdc-d276-434d-9948-df72ce71d1c4",
+          "cfa2250a-d4e7-48c7-9973-4631e1295569",
+          "4de4fd0e-1c13-4fb2-bf0c-008ac441ed8b",
+          "c324eb4b-b715-4a47-b7b0-de2d215faf18",
+          "ef27cdc8-ca16-4b49-b12e-22b6c68f43ff"
+        ],
+        "research_plan_id": "plan-586c2413c897",
+        "optional_failures": [
+          "call-10",
+          "call-13",
+          "call-14",
+          "eco-sector-radar-ig-porto-seguro",
+          "eco-sector-radar-ig-bradesco-seguros"
+        ],
+        "completed_call_ids": [
+          "call-1",
+          "call-2",
+          "call-3",
+          "call-4",
+          "call-5",
+          "call-6",
+          "call-7",
+          "call-8",
+          "call-9",
+          "call-11",
+          "call-12",
+          "eco-competitors-gsearch-1",
+          "eco-competitors-gsearch-2",
+          "eco-competitors-crawler",
+          "eco-sector-radar-gsearch-1",
+          "eco-sector-radar-gsearch-2"
+        ]
+      }
+    },
+    {
+      "step_number": 9,
+      "name": "evidence_sanitization",
+      "status": "FAILED",
+      "output_summary": {}
+    }
+  ],
+  "audit_events": [
+    {
+      "from_status": null,
+      "to_status": "QUEUED",
+      "reason": "Análise aceita e enfileirada",
+      "correlation_id": "128e4804-6a51-4c9b-8432-23253fb36b42",
+      "created_at": "2026-11-04T17:24:37.353309+00:00"
+    },
+    {
+      "from_status": "QUEUED",
+      "to_status": "RUNNING",
+      "reason": "Início da auditoria real",
+      "correlation_id": "128e4804-6a51-4c9b-8432-23253fb36b42",
+      "created_at": "2026-11-04T17:24:38.370951+00:00"
+    },
+    {
+      "from_status": "RUNNING",
+      "to_status": "BLOCKED",
+      "reason": "Erro inesperado no julgamento do pack 'market-relevance-v1': Inferência via plano ChatGPT falhou: subscription_sharing_usage_limit_exceeded",
+      "correlation_id": "128e4804-6a51-4c9b-8432-23253fb36b42",
+      "created_at": "2026-11-04T17:57:26.342569+00:00"
+    }
+  ],
+  "tool_runs": [
+    {
+      "capability": "google_search",
+      "query": "extensão governança inteligência artificial proteção dados seguros curso preço",
+      "required": true,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "hQPWVh5wI5V9WT4ID",
+      "dataset_id": "mTYjZSVjOjZwobF4g",
+      "raw_items_count": 1,
+      "valid_items_count": 9,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:27:33.699362+00:00",
+      "finished_at": "2026-11-04T17:27:53.949751+00:00"
+    },
+    {
+      "capability": "google_search",
+      "query": "curso extensão governança IA LGPD preço carga horária",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "WZ7UuzwH1SOSkgth4",
+      "dataset_id": "Vhz0DfmgMc7Mw3xjN",
+      "raw_items_count": 1,
+      "valid_items_count": 9,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:27:53.996812+00:00",
+      "finished_at": "2026-11-04T17:28:06.918447+00:00"
+    },
+    {
+      "capability": "google_search",
+      "query": "FGV FIAP Insper curso governança inteligência artificial proteção dados",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "JadHY4dXxmiatrg7b",
+      "dataset_id": "Pl4pg7G5ldg0Ad68e",
+      "raw_items_count": 1,
+      "valid_items_count": 9,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:28:06.963335+00:00",
+      "finished_at": "2026-11-04T17:28:34.880278+00:00"
+    },
+    {
+      "capability": "google_search",
+      "query": "SUSEP CNseg seguradoras inteligência artificial proteção dados governança",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "4WnRf46uGZ3dzVmj7",
+      "dataset_id": "CwAWmMUvsdoRymhhe",
+      "raw_items_count": 1,
+      "valid_items_count": 8,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:28:34.916371+00:00",
+      "finished_at": "2026-11-04T17:29:06.340049+00:00"
+    },
+    {
+      "capability": "web_crawler",
+      "query": "Ler páginas originais de ofertas educacionais e documentos setoriais descobertos",
+      "required": true,
+      "provider": "apify",
+      "actor_id": "apify/website-content-crawler",
+      "actor_build": "0.3.102",
+      "status": "SUCCEEDED",
+      "run_id": "zXMbZqNjVVpl6mX7Y",
+      "dataset_id": "AbNG01uPKwwmZGxfe",
+      "raw_items_count": 7,
+      "valid_items_count": 7,
+      "observation_status": "observed",
+      "cost_usd": 0.040673,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:29:06.401096+00:00",
+      "finished_at": "2026-11-04T17:31:02.765359+00:00"
+    },
+    {
+      "capability": "meta_ads_library",
+      "query": "curso governança inteligência artificial",
+      "required": true,
+      "provider": "apify",
+      "actor_id": "igolaizola/facebook-ad-library-scraper",
+      "actor_build": "0.0.59",
+      "status": "SUCCEEDED",
+      "run_id": "4t2jo0QxMa05VIlrL",
+      "dataset_id": "NoixgdFCw8kxgNAq7",
+      "raw_items_count": 10,
+      "valid_items_count": 10,
+      "observation_status": "observed",
+      "cost_usd": 0.0075,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:31:02.866006+00:00",
+      "finished_at": "2026-11-04T17:31:12.650807+00:00"
+    },
+    {
+      "capability": "linkedin_jobs",
+      "query": "analista proteção de dados seguros",
+      "required": true,
+      "provider": "apify",
+      "actor_id": "curious_coder/linkedin-jobs-scraper",
+      "actor_build": "1.7.18",
+      "status": "SUCCEEDED",
+      "run_id": "m5rgQiHvEpzKmk1Uv",
+      "dataset_id": "GYzlSupffNU1O2hFX",
+      "raw_items_count": 10,
+      "valid_items_count": 10,
+      "observation_status": "observed",
+      "cost_usd": 0.01605,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:31:12.691640+00:00",
+      "finished_at": "2026-11-04T17:31:58.226885+00:00"
+    },
+    {
+      "capability": "linkedin_jobs",
+      "query": "gerente riscos inteligência artificial seguradora",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "curious_coder/linkedin-jobs-scraper",
+      "actor_build": "1.7.18",
+      "status": "SUCCEEDED",
+      "run_id": "t7nIPs4UtZrDrRn42",
+      "dataset_id": "8clDPHBDLikVVgQVl",
+      "raw_items_count": 10,
+      "valid_items_count": 10,
+      "observation_status": "observed",
+      "cost_usd": 0.01805,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:31:58.277154+00:00",
+      "finished_at": "2026-11-04T17:32:30.803558+00:00"
+    },
+    {
+      "capability": "linkedin",
+      "query": "seguradora insurtech Brasil",
+      "required": true,
+      "provider": "apify",
+      "actor_id": "harvestapi/linkedin-company-search",
+      "actor_build": "0.0.21",
+      "status": "EMPTY",
+      "run_id": "6DSSgBU0A664P7fzT",
+      "dataset_id": "sj6t4JMNZYwQitfEs",
+      "raw_items_count": 0,
+      "valid_items_count": 0,
+      "observation_status": "observed_empty",
+      "cost_usd": 0.0,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:32:30.863401+00:00",
+      "finished_at": "2026-11-04T17:32:32.562813+00:00"
+    },
+    {
+      "capability": "instagram",
+      "query": "governancadeia",
+      "required": true,
+      "provider": "apify",
+      "actor_id": "apify/instagram-scraper",
+      "actor_build": "0.0.831",
+      "status": "EMPTY",
+      "run_id": "xh7up3tbBKOIdbFrN",
+      "dataset_id": "3AD3eWACyNBZioIJk",
+      "raw_items_count": 1,
+      "valid_items_count": 0,
+      "observation_status": "rejected_items",
+      "cost_usd": 0.0,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:32:32.593143+00:00",
+      "finished_at": "2026-11-04T17:32:50.159542+00:00"
+    },
+    {
+      "capability": "tiktok",
+      "query": "LGPD inteligência artificial dados clientes seguros",
+      "required": true,
+      "provider": "apify",
+      "actor_id": "clockworks/tiktok-scraper",
+      "actor_build": "0.0.625",
+      "status": "SUCCEEDED",
+      "run_id": "pgIY7exw3OZn8dbYd",
+      "dataset_id": "zsLs8giB0qWFgIsJE",
+      "raw_items_count": 10,
+      "valid_items_count": 10,
+      "observation_status": "observed",
+      "cost_usd": 0.001,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:32:50.186907+00:00",
+      "finished_at": "2026-11-04T17:34:07.928720+00:00"
+    },
+    {
+      "capability": "google_search",
+      "query": "site:youtube.com/watch inteligência artificial seguros proteção dados",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "O6AaqKre4tIT5oT2j",
+      "dataset_id": "ahDfoKF48V5u61tfW",
+      "raw_items_count": 1,
+      "valid_items_count": 4,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:34:07.982997+00:00",
+      "finished_at": "2026-11-04T17:35:40.002485+00:00"
+    },
+    {
+      "capability": "youtube_comments",
+      "query": "Comentários de vídeos descobertos sobre IA e proteção de dados em seguros",
+      "required": true,
+      "provider": "apify",
+      "actor_id": "streamers/youtube-comments-scraper",
+      "actor_build": "0.0.257",
+      "status": "EMPTY",
+      "run_id": "cxIZIh8bGV9F1hA2s",
+      "dataset_id": "kmzbFofSxQPmI1K34",
+      "raw_items_count": 1,
+      "valid_items_count": 0,
+      "observation_status": "rejected_items",
+      "cost_usd": 0.006,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:35:40.029907+00:00",
+      "finished_at": "2026-11-04T17:37:40.429739+00:00"
+    },
+    {
+      "capability": "google_trends",
+      "query": "Interesse educacional e setorial em IA",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-trends-scraper",
+      "actor_build": "0.0.143",
+      "status": "FAILED",
+      "run_id": null,
+      "dataset_id": null,
+      "raw_items_count": 0,
+      "valid_items_count": 0,
+      "observation_status": null,
+      "cost_usd": 0.0,
+      "error_code": "http_502",
+      "error_message": "Server error '502 Bad Gateway' for url 'https://api.apify.com/v2/actor-runs/0g2XRUqe7wr2um7PU' For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/502",
+      "started_at": "2026-11-04T17:37:40.457648+00:00",
+      "finished_at": "2026-11-04T17:39:07.483199+00:00"
+    },
+    {
+      "capability": "google_search",
+      "query": "(site:conhecerseguros.com.br OR site:fgv.br OR site:ibmec.br OR site:fipecafi.org OR site:fia.com.br) curso governança inteligência artificial ia",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "Dh3ePTI4HBc8Gd32O",
+      "dataset_id": "hTNtrp6BRni627h64",
+      "raw_items_count": 1,
+      "valid_items_count": 2,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:39:07.514462+00:00",
+      "finished_at": "2026-11-04T17:39:28.717022+00:00"
+    },
+    {
+      "capability": "google_search",
+      "query": "(site:insper.edu.br OR site:estacio.br OR site:esaoabsp.edu.br OR site:fiap.com.br OR site:alura.com.br) curso governança inteligência artificial ia",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "CYGwA6zybYnHxoWrz",
+      "dataset_id": "YHjSzEkyoEN2VOSue",
+      "raw_items_count": 1,
+      "valid_items_count": 4,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:39:28.744885+00:00",
+      "finished_at": "2026-11-04T17:39:48.626979+00:00"
+    },
+    {
+      "capability": "web_crawler",
+      "query": "Ofertas concorrentes governança inteligência artificial ia",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/website-content-crawler",
+      "actor_build": "0.3.102",
+      "status": "SUCCEEDED",
+      "run_id": "hN8dxuxdhFbqAq2Tz",
+      "dataset_id": "txLAROryanbdCznEU",
+      "raw_items_count": 5,
+      "valid_items_count": 5,
+      "observation_status": "observed",
+      "cost_usd": 0.040034,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:39:48.664087+00:00",
+      "finished_at": "2026-11-04T17:41:27.341342+00:00"
+    },
+    {
+      "capability": "google_search",
+      "query": "(site:portoseguro.com.br OR site:bradescoseguros.com.br OR site:tokiomarine.com.br OR site:allianz.com.br OR site:hdiseguros.com.br) governança inteligência artificial ia",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "JyNyDLwu0YSyZXzP1",
+      "dataset_id": "FvXRcS0zAa6BrfXYI",
+      "raw_items_count": 1,
+      "valid_items_count": 4,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:41:27.464065+00:00",
+      "finished_at": "2026-11-04T17:41:46.463665+00:00"
+    },
+    {
+      "capability": "google_search",
+      "query": "(site:mapfre.com.br OR site:bbseguros.com.br OR site:zurich.com.br OR site:itau.com.br OR site:yelumseguros.com.br) governança inteligência artificial ia",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "3jf3dUWqTNCeCXKzb",
+      "dataset_id": "pQztLMyfsAuZkrzn6",
+      "raw_items_count": 1,
+      "valid_items_count": 8,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:41:46.619306+00:00",
+      "finished_at": "2026-11-04T17:42:14.847290+00:00"
+    },
+    {
+      "capability": "instagram",
+      "query": "porto",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/instagram-scraper",
+      "actor_build": "0.0.831",
+      "status": "EMPTY",
+      "run_id": "oOkPDo3q7AxLfwUTw",
+      "dataset_id": "EYzEXMKiVnlbHyD2p",
+      "raw_items_count": 5,
+      "valid_items_count": 0,
+      "observation_status": "rejected_items",
+      "cost_usd": 0.0243,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:42:14.890483+00:00",
+      "finished_at": "2026-11-04T17:42:38.131431+00:00"
+    },
+    {
+      "capability": "instagram",
+      "query": "bradescoseguros",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/instagram-scraper",
+      "actor_build": "0.0.831",
+      "status": "EMPTY",
+      "run_id": "THg76mNpMuvubg8Y7",
+      "dataset_id": "uaK8uW687WdGDLzhy",
+      "raw_items_count": 1,
+      "valid_items_count": 0,
+      "observation_status": "rejected_items",
+      "cost_usd": 0.0,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:42:38.162193+00:00",
+      "finished_at": "2026-11-04T17:43:03.102496+00:00"
+    },
+    {
+      "capability": "google_search",
+      "query": "extensão riscos inteligência artificial curso investimento horas",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "shMztV9ad25kOaxhj",
+      "dataset_id": "f3N8Evsh7RPvgUjbO",
+      "raw_items_count": 1,
+      "valid_items_count": 9,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:52:05.403745+00:00",
+      "finished_at": "2026-11-04T17:52:26.888457+00:00"
+    },
+    {
+      "capability": "google_search",
+      "query": "curso extensão privacidade inteligência artificial investimento inscrições",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "ecQksi3iAfhIi023e",
+      "dataset_id": "KbmwcZXtdswv8G710",
+      "raw_items_count": 1,
+      "valid_items_count": 9,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:52:26.925551+00:00",
+      "finished_at": "2026-11-04T17:52:56.247800+00:00"
+    },
+    {
+      "capability": "google_search",
+      "query": "certificação riscos algoritmos proteção dados curso investimento",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "0TG3HaoBvVfqyNuRf",
+      "dataset_id": "88xQE7ocGbm2cXPFm",
+      "raw_items_count": 1,
+      "valid_items_count": 9,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:52:56.282924+00:00",
+      "finished_at": "2026-11-04T17:53:18.538500+00:00"
+    },
+    {
+      "capability": "web_crawler",
+      "query": "Confirmar extensão e alternativas em novas páginas oficiais descobertas",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/website-content-crawler",
+      "actor_build": "0.3.102",
+      "status": "SUCCEEDED",
+      "run_id": "QYa73ZVoGi5REyLZd",
+      "dataset_id": "80dlHKhiYStFW4WSs",
+      "raw_items_count": 6,
+      "valid_items_count": 6,
+      "observation_status": "observed",
+      "cost_usd": 0.053712,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:53:18.574168+00:00",
+      "finished_at": "2026-11-04T17:55:40.321480+00:00"
+    },
+    {
+      "capability": "meta_ads_library",
+      "query": "curso riscos inteligência artificial",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "igolaizola/facebook-ad-library-scraper",
+      "actor_build": "0.0.59",
+      "status": "SUCCEEDED",
+      "run_id": "TZKHd4FCsdxcpS9ry",
+      "dataset_id": "vDZrLvj4EmhfbtTXP",
+      "raw_items_count": 15,
+      "valid_items_count": 15,
+      "observation_status": "observed",
+      "cost_usd": 0.0075,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:55:40.357254+00:00",
+      "finished_at": "2026-11-04T17:55:46.999123+00:00"
+    },
+    {
+      "capability": "meta_ads_library",
+      "query": "curso proteção de dados LGPD",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "igolaizola/facebook-ad-library-scraper",
+      "actor_build": "0.0.59",
+      "status": "SUCCEEDED",
+      "run_id": "b8HxFHIJIHduStgNW",
+      "dataset_id": "IBbsvB4QHtZhh5biX",
+      "raw_items_count": 10,
+      "valid_items_count": 10,
+      "observation_status": "observed",
+      "cost_usd": 0.0,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:55:47.032618+00:00",
+      "finished_at": "2026-11-04T17:55:51.984633+00:00"
+    },
+    {
+      "capability": "google_search",
+      "query": "pesquisas curso inteligência artificial Brasil evolução buscas Google dados",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/google-search-scraper",
+      "actor_build": "0.0.474",
+      "status": "SUCCEEDED",
+      "run_id": "vRQfEflMhFNlXstqN",
+      "dataset_id": "bqR9Od3VZQY2VhuXw",
+      "raw_items_count": 1,
+      "valid_items_count": 9,
+      "observation_status": "observed",
+      "cost_usd": 5e-05,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:55:52.015505+00:00",
+      "finished_at": "2026-11-04T17:56:00.318141+00:00"
+    },
+    {
+      "capability": "web_crawler",
+      "query": "Verificar fonte primária descoberta sobre buscas por formação em IA",
+      "required": false,
+      "provider": "apify",
+      "actor_id": "apify/website-content-crawler",
+      "actor_build": "0.3.102",
+      "status": "SUCCEEDED",
+      "run_id": "Fw036Gqamm0JxliHK",
+      "dataset_id": "1QmhgbOK83ALyMJTx",
+      "raw_items_count": 3,
+      "valid_items_count": 3,
+      "observation_status": "observed",
+      "cost_usd": 0.013453,
+      "error_code": null,
+      "error_message": null,
+      "started_at": "2026-11-04T17:56:00.359828+00:00",
+      "finished_at": "2026-11-04T17:56:41.518773+00:00"
+    }
+  ]
+}

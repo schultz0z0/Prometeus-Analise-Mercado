@@ -1,8 +1,33 @@
+import json
 import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
+
+
+def test_monitoring_only_live_view_shows_retry_diagnosis_without_reserved_budget():
+    source = Path("web/js/views/live-view.js").resolve().as_uri()
+    script = f"""import {{ renderLiveView }} from {json.dumps(source)};
+      console.log(renderLiveView({{getState:()=>({{liveJob:{{id:'analysis',name:'IA',status:'RUNNING',steps:[],toolRuns:[{{
+        capability:'google_search',status:'RETRY_SCHEDULED',spending_mode:'monitor_only',attempts_count:1,
+        query:'FGV IA',cost_status:'observed_provisional',cost_usd:0.01,valid_items_count:8,raw_items_count:1,
+        attempts:[{{attempt_index:1,status:'FAILED',cause:'rate_limited',action:'backoff',next_attempt_at:'2026-11-05T12:00:00Z'}}]
+      }}]}}}})}}));"""
+    result = subprocess.run(
+        ["node", "--input-type=module", "-e", script],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=True,
+    )
+    assert "Retentativa agendada" in result.stdout
+    assert "Aguardar e tentar novamente" in result.stdout
+    assert "Limite temporário de requisições" in result.stdout
+    assert "Sem teto monetário da aplicação" in result.stdout
+    assert "continuam reservados" not in result.stdout
+    assert "8 / 1" not in result.stdout
+    assert "1 registro(s) bruto(s)" in result.stdout
 
 
 def test_reopening_analysis_uses_read_only_backend_state_and_respects_tenant():
@@ -36,9 +61,13 @@ def test_reopening_analysis_uses_read_only_backend_state_and_respects_tenant():
       assert.equal(store.state.liveJob,previous);
       assert.equal(await store.openAnalysis('invalid'),false);
     """
-    result = subprocess.run([node, "--input-type=module", "-e", script],
-                            cwd=Path(__file__).resolve().parents[2], capture_output=True,
-                            text=True, encoding="utf-8")
+    result = subprocess.run(
+        [node, "--input-type=module", "-e", script],
+        cwd=Path(__file__).resolve().parents[2],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
     assert result.returncode == 0, result.stdout + result.stderr
 
 
@@ -78,6 +107,9 @@ def test_polling_survives_five_minutes_and_connection_loss_until_real_completion
       const html=view.renderLiveView(store);
       assert.match(html,/Instagram/);
       assert.match(html,/dados parciais/);
+      assert.match(html,/Custo observado/);
+      assert.match(html,/Limites comprometidos/);
+      assert.match(html,/provisório/);
       assert.doesNotMatch(html,/Processamento interrompido/);
       globalThis.fetch=async()=>({ok:true,json:async()=>({status:'COMPLETED'})});
       store.completeRealAnalysis=async()=>{throw new Error('dossier offline')};

@@ -33,7 +33,7 @@ def validate_required() -> list[str]:
 
 def validate_links() -> list[str]:
     errors: list[str] = []
-    for document in ROOT.rglob("*.md"):
+    for document in project_documents():
         text = document.read_text(encoding="utf-8")
         for target in LINK_RE.findall(text):
             target = target.strip().split("#", 1)[0]
@@ -43,6 +43,11 @@ def validate_links() -> list[str]:
             if not resolved.exists():
                 errors.append(f"broken link: {document.relative_to(ROOT)} -> {target}")
     return errors
+
+
+def project_documents() -> list[Path]:
+    """A documentação do produto exclui dependências e artefatos operacionais."""
+    return [*ROOT.glob("*.md"), *(ROOT / "docs").rglob("*.md")]
 
 
 def validate_env() -> list[str]:
@@ -93,7 +98,7 @@ def main() -> int:
         for error in errors:
             print(f"- {error}")
         return 1
-    md_count = sum(1 for _ in ROOT.rglob("*.md"))
+    md_count = len(project_documents())
     print(f"Documentation validation passed: {md_count} Markdown files checked.")
     return 0
 

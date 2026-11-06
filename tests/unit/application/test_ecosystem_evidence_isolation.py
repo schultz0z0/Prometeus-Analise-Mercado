@@ -81,9 +81,7 @@ def test_matches_competitor_and_sector_actor_by_domain_and_handle() -> None:
     assert insurer is not None
     assert insurer["id"] == "porto-seguro"
 
-    global_insurer = match_sector_radar_actor(
-        {}, "https://www.mapfre.com.br/para-voce/", ENS_CTX
-    )
+    global_insurer = match_sector_radar_actor({}, "https://www.mapfre.com.br/para-voce/", ENS_CTX)
     assert global_insurer is not None
     assert global_insurer["id"] == "mapfre"
     assert global_insurer["social"]["linkedin_scope"] == "global"
@@ -192,9 +190,7 @@ async def test_qualification_routes_sector_radar_to_context_and_blocks_direct_co
     )
 
     svc = EvidenceQualificationService(session=session, decisions=decisions)
-    summary = await svc.qualify(
-        analysis, understanding, "corr-1", institution_context=ENS_CTX
-    )
+    summary = await svc.qualify(analysis, understanding, "corr-1", institution_context=ENS_CTX)
 
     assert summary["accepted"] == 1
     porto_q = porto_row.sanitized_data["_qualification"]
@@ -282,9 +278,10 @@ def test_dossier_verifier_flags_insurer_as_competitor_and_global_linkedin_as_nat
     assert "global_social_metric_as_national" in issue_codes
 
 
-
 @pytest.mark.asyncio
-async def test_sector_radar_social_voice_is_context_only_not_accepted_while_job_market_is_accepted_without_context_only() -> None:
+async def test_sector_radar_social_voice_is_context_only_not_accepted_while_job_market_is_accepted_without_context_only() -> (
+    None
+):
     ig_row = SimpleNamespace(
         id="ev-porto-ig",
         evidence_type="SOCIAL_VOICE",
@@ -353,9 +350,7 @@ async def test_sector_radar_social_voice_is_context_only_not_accepted_while_job_
     )
 
     svc = EvidenceQualificationService(session=session, decisions=decisions)
-    summary = await svc.qualify(
-        analysis, understanding, "corr-ig-job", institution_context=ENS_CTX
-    )
+    summary = await svc.qualify(analysis, understanding, "corr-ig-job", institution_context=ENS_CTX)
 
     # Only the employer JOB_MARKET vacancy is accepted into quantitative features;
     # the corporate Instagram post stays context_only for #sec-sector-radar & curriculum!
@@ -372,7 +367,9 @@ async def test_sector_radar_social_voice_is_context_only_not_accepted_while_job_
     assert job_q["use_assessments"]["employability_signal"]["usable"] is True
 
 
-def test_dossier_verifier_catches_short_insurer_aliases_and_inverted_global_linkedin_claims() -> None:
+def test_dossier_verifier_catches_short_insurer_aliases_and_inverted_global_linkedin_claims() -> (
+    None
+):
     from pathlib import Path
 
     from prometeus.application.research_scope import (

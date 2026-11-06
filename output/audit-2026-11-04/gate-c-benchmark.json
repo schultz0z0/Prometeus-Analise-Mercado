@@ -1,0 +1,284 @@
+{
+  "timestamp": "2026-11-04T14:39:49.415114+00:00",
+  "gate": "Gate C — AI ready",
+  "gate_status": "APPROVED",
+  "total_packs_evaluated": 8,
+  "all_packs_passed": true,
+  "pinned_model": "jev-2026.1-pinned",
+  "pack_evaluations": [
+    {
+      "pack_id": "comparable-fit-v1",
+      "pack_version": "1.0.0",
+      "decision_type": "SCORE",
+      "model_version": "jev-2026.1-pinned",
+      "sample_count": 8,
+      "review_threshold": 0.75,
+      "review_trigger_rate": 0.0,
+      "noul_count": 0,
+      "average_confidence": 0.9,
+      "metrics": {
+        "mae": 1.2,
+        "rmse": 1.2,
+        "max_acceptable_mae": 8.0
+      },
+      "status": "PASSED"
+    },
+    {
+      "pack_id": "contradiction-check-v1",
+      "pack_version": "1.0.0",
+      "decision_type": "CHOICE",
+      "model_version": "jev-2026.1-pinned",
+      "sample_count": 6,
+      "review_threshold": 0.85,
+      "review_trigger_rate": 0.0,
+      "noul_count": 0,
+      "average_confidence": 0.92,
+      "metrics": {
+        "accuracy": 1.0,
+        "min_acceptable_accuracy": 0.9,
+        "confusion_matrix": {
+          "NO_CONTRADICTION": {
+            "NO_CONTRADICTION": 2,
+            "MINOR_DISCREPANCY": 0,
+            "DIRECT_CONTRADICTION": 0
+          },
+          "MINOR_DISCREPANCY": {
+            "NO_CONTRADICTION": 0,
+            "MINOR_DISCREPANCY": 2,
+            "DIRECT_CONTRADICTION": 0
+          },
+          "DIRECT_CONTRADICTION": {
+            "NO_CONTRADICTION": 0,
+            "MINOR_DISCREPANCY": 0,
+            "DIRECT_CONTRADICTION": 2
+          }
+        }
+      },
+      "status": "PASSED"
+    },
+    {
+      "pack_id": "evidence-support-v1",
+      "pack_version": "1.0.0",
+      "decision_type": "CHOICE",
+      "model_version": "jev-2026.1-pinned",
+      "sample_count": 6,
+      "review_threshold": 0.75,
+      "review_trigger_rate": 0.0,
+      "noul_count": 0,
+      "average_confidence": 0.92,
+      "metrics": {
+        "accuracy": 1.0,
+        "min_acceptable_accuracy": 0.85,
+        "confusion_matrix": {
+          "OBSERVED": {
+            "OBSERVED": 2,
+            "SUGGESTIVE": 0,
+            "UNSUPPORTED": 0
+          },
+          "SUGGESTIVE": {
+            "OBSERVED": 0,
+            "SUGGESTIVE": 2,
+            "UNSUPPORTED": 0
+          },
+          "UNSUPPORTED": {
+            "OBSERVED": 0,
+            "SUGGESTIVE": 0,
+            "UNSUPPORTED": 2
+          }
+        }
+      },
+      "status": "PASSED"
+    },
+    {
+      "pack_id": "keywords-relevance-v1",
+      "pack_version": "1.0.0",
+      "decision_type": "CHOICE",
+      "model_version": "jev-2026.1-pinned",
+      "sample_count": 10,
+      "review_threshold": 0.7,
+      "review_trigger_rate": 0.0,
+      "noul_count": 0,
+      "average_confidence": 0.92,
+      "metrics": {
+        "accuracy": 1.0,
+        "min_acceptable_accuracy": 0.8,
+        "confusion_matrix": {
+          "HIGH_RELEVANCE": {
+            "HIGH_RELEVANCE": 5,
+            "MEDIUM_RELEVANCE": 0,
+            "IRRELEVANT": 0
+          },
+          "MEDIUM_RELEVANCE": {
+            "HIGH_RELEVANCE": 0,
+            "MEDIUM_RELEVANCE": 2,
+            "IRRELEVANT": 0
+          },
+          "IRRELEVANT": {
+            "HIGH_RELEVANCE": 0,
+            "MEDIUM_RELEVANCE": 0,
+            "IRRELEVANT": 3
+          }
+        }
+      },
+      "status": "PASSED"
+    },
+    {
+      "pack_id": "readiness-v1",
+      "pack_version": "1.0.0",
+      "decision_type": "CHOICE",
+      "model_version": "jev-2026.1-pinned",
+      "sample_count": 10,
+      "review_threshold": 0.75,
+      "review_trigger_rate": 0.0,
+      "noul_count": 0,
+      "average_confidence": 0.92,
+      "metrics": {
+        "accuracy": 1.0,
+        "min_acceptable_accuracy": 0.85,
+        "confusion_matrix": {
+          "READY": {
+            "READY": 6,
+            "NEEDS_CLARIFICATION": 0,
+            "INSUFFICIENT_INFORMATION": 0
+          },
+          "NEEDS_CLARIFICATION": {
+            "READY": 0,
+            "NEEDS_CLARIFICATION": 2,
+            "INSUFFICIENT_INFORMATION": 0
+          },
+          "INSUFFICIENT_INFORMATION": {
+            "READY": 0,
+            "NEEDS_CLARIFICATION": 0,
+            "INSUFFICIENT_INFORMATION": 2
+          }
+        }
+      },
+      "status": "PASSED"
+    },
+    {
+      "pack_id": "sentiment-v1",
+      "pack_version": "1.0.0",
+      "decision_type": "CHOICE",
+      "model_version": "jev-2026.1-pinned",
+      "sample_count": 8,
+      "review_threshold": 0.7,
+      "review_trigger_rate": 0.0,
+      "noul_count": 0,
+      "average_confidence": 0.92,
+      "metrics": {
+        "accuracy": 1.0,
+        "min_acceptable_accuracy": 0.85,
+        "confusion_matrix": {
+          "POSITIVE_INTEREST": {
+            "POSITIVE_INTEREST": 2,
+            "PAIN_POINT_OR_COMPLAINT": 0,
+            "NEUTRAL_INFORMATIONAL": 0,
+            "NEGATIVE_CRITIQUE": 0
+          },
+          "PAIN_POINT_OR_COMPLAINT": {
+            "POSITIVE_INTEREST": 0,
+            "PAIN_POINT_OR_COMPLAINT": 2,
+            "NEUTRAL_INFORMATIONAL": 0,
+            "NEGATIVE_CRITIQUE": 0
+          },
+          "NEUTRAL_INFORMATIONAL": {
+            "POSITIVE_INTEREST": 0,
+            "PAIN_POINT_OR_COMPLAINT": 0,
+            "NEUTRAL_INFORMATIONAL": 2,
+            "NEGATIVE_CRITIQUE": 0
+          },
+          "NEGATIVE_CRITIQUE": {
+            "POSITIVE_INTEREST": 0,
+            "PAIN_POINT_OR_COMPLAINT": 0,
+            "NEUTRAL_INFORMATIONAL": 0,
+            "NEGATIVE_CRITIQUE": 2
+          }
+        }
+      },
+      "status": "PASSED"
+    },
+    {
+      "pack_id": "syllabus-fit-v1",
+      "pack_version": "1.0.0",
+      "decision_type": "SCORE",
+      "model_version": "jev-2026.1-pinned",
+      "sample_count": 6,
+      "review_threshold": 0.8,
+      "review_trigger_rate": 0.0,
+      "noul_count": 0,
+      "average_confidence": 0.9,
+      "metrics": {
+        "mae": 1.2,
+        "rmse": 1.2,
+        "max_acceptable_mae": 8.0
+      },
+      "status": "PASSED"
+    },
+    {
+      "pack_id": "taxonomy-v1",
+      "pack_version": "1.0.0",
+      "decision_type": "CHOICE",
+      "model_version": "jev-2026.1-pinned",
+      "sample_count": 10,
+      "review_threshold": 0.8,
+      "review_trigger_rate": 0.0,
+      "noul_count": 0,
+      "average_confidence": 0.92,
+      "metrics": {
+        "accuracy": 1.0,
+        "min_acceptable_accuracy": 0.85,
+        "confusion_matrix": {
+          "SEGUROS_E_RESSEGUROS": {
+            "SEGUROS_E_RESSEGUROS": 2,
+            "GESTAO_E_NEGOCIOS": 0,
+            "TECNOLOGIA_E_DADOS": 0,
+            "DIREITO_E_REGULACAO": 0,
+            "SAUDE_E_PREVIDENCIA": 0,
+            "OUTROS": 0
+          },
+          "GESTAO_E_NEGOCIOS": {
+            "SEGUROS_E_RESSEGUROS": 0,
+            "GESTAO_E_NEGOCIOS": 2,
+            "TECNOLOGIA_E_DADOS": 0,
+            "DIREITO_E_REGULACAO": 0,
+            "SAUDE_E_PREVIDENCIA": 0,
+            "OUTROS": 0
+          },
+          "TECNOLOGIA_E_DADOS": {
+            "SEGUROS_E_RESSEGUROS": 0,
+            "GESTAO_E_NEGOCIOS": 0,
+            "TECNOLOGIA_E_DADOS": 2,
+            "DIREITO_E_REGULACAO": 0,
+            "SAUDE_E_PREVIDENCIA": 0,
+            "OUTROS": 0
+          },
+          "DIREITO_E_REGULACAO": {
+            "SEGUROS_E_RESSEGUROS": 0,
+            "GESTAO_E_NEGOCIOS": 0,
+            "TECNOLOGIA_E_DADOS": 0,
+            "DIREITO_E_REGULACAO": 2,
+            "SAUDE_E_PREVIDENCIA": 0,
+            "OUTROS": 0
+          },
+          "SAUDE_E_PREVIDENCIA": {
+            "SEGUROS_E_RESSEGUROS": 0,
+            "GESTAO_E_NEGOCIOS": 0,
+            "TECNOLOGIA_E_DADOS": 0,
+            "DIREITO_E_REGULACAO": 0,
+            "SAUDE_E_PREVIDENCIA": 1,
+            "OUTROS": 0
+          },
+          "OUTROS": {
+            "SEGUROS_E_RESSEGUROS": 0,
+            "GESTAO_E_NEGOCIOS": 0,
+            "TECNOLOGIA_E_DADOS": 0,
+            "DIREITO_E_REGULACAO": 0,
+            "SAUDE_E_PREVIDENCIA": 0,
+            "OUTROS": 1
+          }
+        }
+      },
+      "status": "PASSED"
+    }
+  ]
+}

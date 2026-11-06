@@ -6,8 +6,7 @@ cenários de sensibilidade e cronograma de fluxo de caixa mensal.
 
 from __future__ import annotations
 
-import math
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_CEILING, ROUND_DOWN, ROUND_HALF_UP, Decimal
 
 from prometeus.domain.economics import (
     CashFlowMonth,
@@ -64,9 +63,13 @@ class CourseEconomicsService:
         variable_cost_per_student = _quantize(inputs.variable_cost_per_student_brl + effective_cac)
 
         # 4. Margem de contribuição por aluno
-        contribution_margin_per_student = _quantize(net_revenue_per_student - variable_cost_per_student)
+        contribution_margin_per_student = _quantize(
+            net_revenue_per_student - variable_cost_per_student
+        )
         cm_ratio_pct = (
-            _quantize((contribution_margin_per_student / net_revenue_per_student) * Decimal("100.0"))
+            _quantize(
+                (contribution_margin_per_student / net_revenue_per_student) * Decimal("100.0")
+            )
             if net_revenue_per_student > Decimal("0.00")
             else Decimal("0.00")
         )
@@ -77,7 +80,11 @@ class CourseEconomicsService:
             break_even_students = None
             is_break_even_compatible = False
         else:
-            be_calc = math.ceil(float(total_fixed_costs / contribution_margin_per_student))
+            be_calc = int(
+                (total_fixed_costs / contribution_margin_per_student).to_integral_value(
+                    rounding=ROUND_CEILING
+                )
+            )
             break_even_students = be_calc
             is_break_even_compatible = break_even_students <= inputs.max_capacity
 
@@ -91,15 +98,15 @@ class CourseEconomicsService:
                 min(Decimal("100.0"), inputs.discount_rate_pct + Decimal("5.0")),
                 [
                     f"Quórum mínimo de {inputs.min_capacity} alunos",
-                    f"Desconto aumentado para {inputs.discount_rate_pct + Decimal('5.0')}%",
+                    f"Desconto aumentado para {min(Decimal('100.0'), inputs.discount_rate_pct + Decimal('5.0'))}%",
                 ],
             ),
             (
                 "base",
-                max(inputs.min_capacity, int(round(inputs.max_capacity * 0.65))),
+                max(inputs.min_capacity, int(Decimal(inputs.max_capacity) * Decimal("0.65"))),
                 inputs.discount_rate_pct,
                 [
-                    f"Ocupação de {max(inputs.min_capacity, int(round(inputs.max_capacity * 0.65)))} alunos (65% da capacidade)",
+                    "Ocupação hipotética de pelo menos o quórum mínimo ou 65% da capacidade (arredondado para baixo)",
                     f"Desconto padrão de {inputs.discount_rate_pct}%",
                 ],
             ),
@@ -115,7 +122,9 @@ class CourseEconomicsService:
         ]
 
         for sc_name, students, discount, assumptions in scenario_configs:
-            sc_gross_price = _quantize(inputs.total_price_brl * (Decimal("1.0") - (discount / Decimal("100.0"))))
+            sc_gross_price = _quantize(
+                inputs.total_price_brl * (Decimal("1.0") - (discount / Decimal("100.0")))
+            )
             sc_net_price = _quantize(sc_gross_price * default_factor * tax_factor)
             sc_gross_rev = _quantize(sc_gross_price * Decimal(str(students)))
             sc_net_rev = _quantize(sc_net_price * Decimal(str(students)))
@@ -150,34 +159,25 @@ class CourseEconomicsService:
         cumulative = Decimal("0.00")
 
         # Recebimento mensal distribuído no prazo financeiro
-        monthly_receipt = (
-            _quantize(base_sc.net_revenue_brl / Decimal(str(inputs.financial_duration_months)))
-            if inputs.financial_duration_months > 0
-            else Decimal("0.00")
-        )
-        # Desembolso docente distribuído no prazo acadêmico
-        monthly_instruction = (
-            _quantize(
-                inputs.instruction_and_coordination_cost_brl / Decimal(str(inputs.academic_duration_months))
-            )
-            if inputs.academic_duration_months > 0
-            else Decimal("0.00")
-        )
-        # Desembolso variável distribuído no prazo acadêmico
-        monthly_variable = (
-            _quantize(base_sc.total_variable_costs_brl / Decimal(str(inputs.academic_duration_months)))
-            if inputs.academic_duration_months > 0
-            else Decimal("0.00")
-        )
+        def allocated_month(total: Decimal, months: int, month: int) -> Decimal:
+            """Reconcile the final cent remainder without creating or losing money."""
+            if month > months:
+                return Decimal("0.00")
+            regular = (total / Decimal(months)).quantize(Decimal("0.01"), rounding=ROUND_DOWN)
+            return total - regular * (months - 1) if month == months else regular
 
         for m in range(1, total_months + 1):
-            receipts = monthly_receipt if m <= inputs.financial_duration_months else Decimal("0.00")
+            receipts = allocated_month(base_sc.net_revenue_brl, inputs.financial_duration_months, m)
             disbursements = Decimal("0.00")
             # Mídia paga concentrada no mês 1 de lançamento
             if m == 1:
                 disbursements += inputs.marketing_campaign_cost_brl
             if m <= inputs.academic_duration_months:
-                disbursements += monthly_instruction + monthly_variable
+                disbursements += allocated_month(
+                    inputs.instruction_and_coordination_cost_brl, inputs.academic_duration_months, m
+                ) + allocated_month(
+                    base_sc.total_variable_costs_brl, inputs.academic_duration_months, m
+                )
 
             disbursements = _quantize(disbursements)
             net_month = _quantize(receipts - disbursements)
@@ -197,6 +197,7 @@ class CourseEconomicsService:
             status="calculable",
             inputs=inputs,
             net_revenue_per_student_brl=net_revenue_per_student,
+            effective_variable_cost_per_student_brl=variable_cost_per_student,
             contribution_margin_per_student_brl=contribution_margin_per_student,
             contribution_margin_ratio_pct=cm_ratio_pct,
             total_fixed_costs_cohort_brl=total_fixed_costs,

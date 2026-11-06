@@ -1,0 +1,174 @@
+{
+  "timestamp": "2026-11-04T14:39:54.083685+00:00",
+  "gate": "Gate D — Score ready",
+  "profile_id": "portfolio-v2",
+  "sample_count": 10,
+  "metrics": {
+    "model_accuracy": 0.0,
+    "naive_baseline_accuracy": 0.5,
+    "baseline_improvement": -0.5,
+    "pearson_correlation_with_enrollments": 0.9546
+  },
+  "modality_breakdown": {
+    "EAD": {
+      "total": 5,
+      "accuracy": 0.0
+    },
+    "Presencial": {
+      "total": 3,
+      "accuracy": 0.0
+    },
+    "Híbrido": {
+      "total": 2,
+      "accuracy": 0.0
+    }
+  },
+  "criteria": {
+    "baseline_beaten": false,
+    "strong_correlation": true,
+    "accuracy_above_80pct": false
+  },
+  "gate_status": "REJECTED",
+  "evaluations": [
+    {
+      "course_id": "hist-001",
+      "course_name": "MBA Executivo em Seguros e Resseguros",
+      "modality": "EAD",
+      "actual_outcome": "SUCCESS",
+      "predicted_outcome": "UNCERTAIN",
+      "recommendation": "INSUFFICIENT_EVIDENCE",
+      "viability_score": 83.9,
+      "coverage_score": 0.8,
+      "is_correct": false,
+      "reasons": [
+        "Pilar obrigatório ausente: 'internal_history'"
+      ]
+    },
+    {
+      "course_id": "hist-002",
+      "course_name": "Gestão Comercial e Estratégia de Vendas para Corretoras",
+      "modality": "Presencial",
+      "actual_outcome": "SUCCESS",
+      "predicted_outcome": "UNCERTAIN",
+      "recommendation": "INSUFFICIENT_EVIDENCE",
+      "viability_score": 73.91,
+      "coverage_score": 0.8,
+      "is_correct": false,
+      "reasons": [
+        "Pilar obrigatório ausente: 'internal_history'"
+      ]
+    },
+    {
+      "course_id": "hist-003",
+      "course_name": "Introdução Genérica à Inteligência Artificial",
+      "modality": "EAD",
+      "actual_outcome": "FAILED",
+      "predicted_outcome": "UNCERTAIN",
+      "recommendation": "INSUFFICIENT_EVIDENCE",
+      "viability_score": 26.27,
+      "coverage_score": 0.8,
+      "is_correct": false,
+      "reasons": [
+        "Pilar obrigatório ausente: 'internal_history'"
+      ]
+    },
+    {
+      "course_id": "hist-004",
+      "course_name": "Perícia e Regulação Técnica de Sinistros Automóveis",
+      "modality": "Híbrido",
+      "actual_outcome": "SUCCESS",
+      "predicted_outcome": "UNCERTAIN",
+      "recommendation": "INSUFFICIENT_EVIDENCE",
+      "viability_score": 72.7,
+      "coverage_score": 0.8,
+      "is_correct": false,
+      "reasons": [
+        "Pilar obrigatório ausente: 'internal_history'"
+      ]
+    },
+    {
+      "course_id": "hist-005",
+      "course_name": "Compliance, LGPD e Cibersegurança no Setor Segurador",
+      "modality": "EAD",
+      "actual_outcome": "MARGINAL",
+      "predicted_outcome": "UNCERTAIN",
+      "recommendation": "INSUFFICIENT_EVIDENCE",
+      "viability_score": 63.46,
+      "coverage_score": 0.8,
+      "is_correct": false,
+      "reasons": [
+        "Pilar obrigatório ausente: 'internal_history'"
+      ]
+    },
+    {
+      "course_id": "hist-006",
+      "course_name": "Filosofia e Ética Clássica para Negócios",
+      "modality": "Presencial",
+      "actual_outcome": "FAILED",
+      "predicted_outcome": "UNCERTAIN",
+      "recommendation": "INSUFFICIENT_EVIDENCE",
+      "viability_score": 19.65,
+      "coverage_score": 0.8,
+      "is_correct": false,
+      "reasons": [
+        "Pilar obrigatório ausente: 'internal_history'"
+      ]
+    },
+    {
+      "course_id": "hist-007",
+      "course_name": "Atuária e Modelagem Estatística em Previdência Fechada",
+      "modality": "EAD",
+      "actual_outcome": "SUCCESS",
+      "predicted_outcome": "UNCERTAIN",
+      "recommendation": "INSUFFICIENT_EVIDENCE",
+      "viability_score": 77.85,
+      "coverage_score": 0.8,
+      "is_correct": false,
+      "reasons": [
+        "Pilar obrigatório ausente: 'internal_history'"
+      ]
+    },
+    {
+      "course_id": "hist-008",
+      "course_name": "Seguros Paramétricos no Agronegócio Brasileiro",
+      "modality": "Híbrido",
+      "actual_outcome": "MARGINAL",
+      "predicted_outcome": "UNCERTAIN",
+      "recommendation": "INSUFFICIENT_EVIDENCE",
+      "viability_score": 61.91,
+      "coverage_score": 0.8,
+      "is_correct": false,
+      "reasons": [
+        "Pilar obrigatório ausente: 'internal_history'"
+      ]
+    },
+    {
+      "course_id": "hist-009",
+      "course_name": "Culinária Mediterrânea e Coquetelaria Básica",
+      "modality": "Presencial",
+      "actual_outcome": "FAILED",
+      "predicted_outcome": "UNCERTAIN",
+      "recommendation": "INSUFFICIENT_EVIDENCE",
+      "viability_score": 8.73,
+      "coverage_score": 0.8,
+      "is_correct": false,
+      "reasons": [
+        "Pilar obrigatório ausente: 'internal_history'"
+      ]
+    },
+    {
+      "course_id": "hist-010",
+      "course_name": "Subscrição Técnica de Riscos de Engenharia e Obras Civis",
+      "modality": "EAD",
+      "actual_outcome": "SUCCESS",
+      "predicted_outcome": "UNCERTAIN",
+      "recommendation": "INSUFFICIENT_EVIDENCE",
+      "viability_score": 78.14,
+      "coverage_score": 0.8,
+      "is_correct": false,
+      "reasons": [
+        "Pilar obrigatório ausente: 'internal_history'"
+      ]
+    }
+  ]
+}

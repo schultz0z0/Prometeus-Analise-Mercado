@@ -1,5 +1,13 @@
 # Relatórios de conclusão das fases
 
+- [Cobertura competitiva e recuperação Apify — 05–06/11/2026](collection-recovery-homologation-2026-11-05.md) — implementação aplicada, testes Windows/Linux e backup validados; dossiê final verificado, dez instituições pesquisadas e dez ofertas em sete instituições; histórico ENS preservado.
+
+- [Homologação em execução real — 04/11/2026](runtime-homologation-2026-11-04.md) — ambiente Docker atualizado, 713 testes aprovados, backup/restauração e canário tradicional real concluído com dossiê verificado; SLA e produção ampla permanecem pendentes.
+
+- [Correções da auditoria sistêmica — 04/11/2026](audit-remediation-2026-11-04.md) — A01–A13 implementados, 691 testes aprovados, validação PostgreSQL e navegador; homologação manual pendente, sem implantação no stack ativo.
+
+- [Auditoria do sistema e do código — 04/11/2026](system-audit-2026-11-04.md) — fluxo observado, 13 achados priorizados, verificações executadas e provas locais; não aprova homologação final ou produção.
+
 - [Conclusão da Fase 6 — JEV Híbrido, após Baseline Tradicional — 2026-10-30](phase-06-senior-market-intelligence.md) — orquestração de Shadow Mode sem blast radius na produção, telemetria comparativa primário vs shadow, avaliação de não inferioridade por tarefa com limiares pré-acordados, aprovação seletiva para rota híbrida e retenção da rota tradicional.
 - [Conclusão da Fase 5 — Redator, Revisores e Homologação do Modo Tradicional — 2026-10-30](phase-05-senior-market-intelligence.md) — separação dos 3 revisores (integridade dos dados, qualidade analítica sênior e factualidade da redação), runner de avaliação offline de mercado contra o gold standard, 3 casos adversariais e homologação E2E canary nos 3 contextos de decisão.
 - [Conclusão da Fase 4 — Critérios de Decisão, SWOT e Economia — 2026-10-30](phase-04-senior-market-intelligence.md) — matriz de alcançabilidade de features, unit economics determinístico em Decimal com break-even e capacidade, cenários e fluxo de caixa mensal, parecer estratégico SWOT/TOWS e 5 regras analíticas em código.

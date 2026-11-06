@@ -10,7 +10,7 @@ O primeiro deployment será dedicado à ENS (Escola de Negócios e Seguros). O m
 
 ## Estado atual
 
-O projeto está na fase de documentação e validação. Ainda não existe implementação funcional. Não confunda a estrutura de diretórios com funcionalidades concluídas.
+O sistema possui implementação funcional e testes automatizados. A revisão de 04/11/2026 corrige integridade de dossiês, economia, controle de acesso, concorrência, fila, MCP e recuperação; consulte o [plano](docs/plans/2026-11-04-audit-remediation.md) e o [guia operacional das correções](docs/operations/audit-remediation.md). A homologação manual com a ENS e a calibração comercial permanecem pendentes. O histórico sintético ENS é preservado para testes.
 
 ## Ordem de leitura
 
@@ -25,13 +25,13 @@ O projeto está na fase de documentação e validação. Ainda não existe imple
 
 ## Princípios
 
-- JEV é obrigatório para julgamentos semânticos delimitados.
+- Sem JEV, a LLM tradicional assume planejamento, julgamentos semânticos delimitados e redação, inclusive via ChatGPT OAuth. O modo híbrido explícito exige credencial JEV, conforme ADR-0008.
 - Fórmulas, permissões e regras invariáveis são implementadas em código.
 - A LLM generativa não altera scores nem evidências.
 - Toda recomendação relevante deve ser rastreável até suas fontes.
 - Cada instituição recebe deployment, banco, segredos e configuração isolados.
 - Integrações externas são adaptadores substituíveis e nunca fatos presumidos.
 
-## Desenvolvimento futuro
+## Operação
 
-A stack planejada é Python, FastAPI, PostgreSQL, Redis, workers assíncronos, MCP e Docker Compose. Consulte [.env.example](.env.example) e a [arquitetura de deployment](docs/architecture/deployment.md).
+A stack usa Python, FastAPI, PostgreSQL, Redis, Celery, MCP stdio e Docker Compose. A interface e a API exigem credencial própria do Prometeus, independente do OAuth ChatGPT. Consulte [.env.example](.env.example), o [guia de acesso e migração](docs/operations/audit-remediation.md) e a [arquitetura de deployment](docs/architecture/deployment.md).

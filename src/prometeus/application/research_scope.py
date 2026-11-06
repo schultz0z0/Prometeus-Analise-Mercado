@@ -275,7 +275,8 @@ def _match_actor_list(
         if isinstance(domains, list) and _host_matches_domains(host, domains):
             return entry
 
-        social = entry.get("social") if isinstance(entry.get("social"), dict) else {}
+        raw_social = entry.get("social")
+        social = raw_social if isinstance(raw_social, dict) else {}
         ig_handle = str(social.get("instagram_handle") or "").strip().lstrip("@").lower()
         if ig_handle and ig_handle in observed_handles:
             return entry
@@ -313,7 +314,6 @@ def match_sector_radar_actor(
     return _match_actor_list(payload, source_url, context.get("sector_radar", []))
 
 
-
 def extract_sector_radar_actor_terms(entries: list[dict[str, Any]]) -> list[str]:
     """Extrai nomes canônicos, aliases e nomes corporativos LinkedIn das seguradoras do radar."""
     terms: list[str] = []
@@ -321,7 +321,8 @@ def extract_sector_radar_actor_terms(entries: list[dict[str, Any]]) -> list[str]
     for entry in entries:
         if not isinstance(entry, dict):
             continue
-        social = entry.get("social") if isinstance(entry.get("social"), dict) else {}
+        raw_social = entry.get("social")
+        social = raw_social if isinstance(raw_social, dict) else {}
         candidates = [entry.get("name"), social.get("linkedin_company")]
         aliases = entry.get("aliases")
         if isinstance(aliases, list):

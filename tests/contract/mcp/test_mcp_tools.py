@@ -22,10 +22,10 @@ async def session_factory():
 
 @pytest.mark.asyncio
 async def test_mcp_initialize_and_ping(session_factory) -> None:
-    server = PrometeusMCPServer(session_factory)
+    server = PrometeusMCPServer(session_factory, publisher=lambda *_: None)
 
     init_resp = await server.handle_request({"jsonrpc": "2.0", "id": 1, "method": "initialize"})
-    assert init_resp["result"]["protocolVersion"] == "2024-11-05"
+    assert init_resp["result"]["protocolVersion"] == "2025-11-25"
     assert "Prometeus" in init_resp["result"]["serverInfo"]["name"]
 
     ping_resp = await server.handle_request({"jsonrpc": "2.0", "id": 2, "method": "ping"})
@@ -34,7 +34,7 @@ async def test_mcp_initialize_and_ping(session_factory) -> None:
 
 @pytest.mark.asyncio
 async def test_mcp_tools_list_contains_high_level_tools(session_factory) -> None:
-    server = PrometeusMCPServer(session_factory)
+    server = PrometeusMCPServer(session_factory, publisher=lambda *_: None)
 
     resp = await server.handle_request({"jsonrpc": "2.0", "id": 3, "method": "tools/list"})
     tools = resp["result"]["tools"]
@@ -54,7 +54,7 @@ async def test_mcp_tools_list_contains_high_level_tools(session_factory) -> None
 
 @pytest.mark.asyncio
 async def test_mcp_tools_call_lifecycle(session_factory) -> None:
-    server = PrometeusMCPServer(session_factory)
+    server = PrometeusMCPServer(session_factory, publisher=lambda *_: None)
 
     # 1. create_course_analysis
     call_create = {
@@ -64,6 +64,7 @@ async def test_mcp_tools_call_lifecycle(session_factory) -> None:
         "params": {
             "name": "create_course_analysis",
             "arguments": {
+                "idempotency_key": "test-mcp-create",
                 "course_name": "MBA em Sinistros Cibernéticos",
                 "tenant_id": "ens",
                 "proposal_data": {"price": 1400.0},

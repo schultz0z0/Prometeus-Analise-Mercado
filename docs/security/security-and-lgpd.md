@@ -6,6 +6,8 @@ Processar somente dados necessários, proteger segredos e manter rastreabilidade
 
 ## Controles
 
+Desde 04/11/2026, `/v1/` exige principal institucional por Bearer ou sessão HttpOnly, com papéis e validação de todos os identificadores de instituição e da propriedade persistida de análises. Decisões humanas usam a identidade autenticada; dados do corpo não elevam papéis. Login ChatGPT autentica inferência e não substitui esse acesso. Mutações de navegador verificam origem, e a CSP da SPA não permite scripts inline. Consulte [ADR-0009](../architecture/adr/0009-access-and-workflow-recovery.md) e [operação](../operations/audit-remediation.md).
+
 - TLS em todas as conexões externas.
 - Segredos fora do Git e da imagem.
 - Credenciais distintas por ambiente.

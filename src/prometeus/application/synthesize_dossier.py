@@ -8,9 +8,10 @@ from __future__ import annotations
 import logging
 import math
 from copy import deepcopy
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,9 +22,11 @@ from prometeus.application.business_labels import (
 )
 from prometeus.application.decision_service import DecisionService
 from prometeus.application.dossier_verifier import DossierVerifier
+from prometeus.application.economics_service import CourseEconomicsService
 from prometeus.application.ecosystem_presentation import build_ecosystem_presentation_blocks
 from prometeus.application.evidence_audit import summarize_evidence
 from prometeus.application.evidence_features import EvidenceFeatureExtractor
+from prometeus.application.offer_comparability import qualified_competitor_offer
 from prometeus.application.research_scope import (
     extract_global_social_actor_terms,
     extract_sector_radar_actor_terms,
@@ -36,6 +39,7 @@ from prometeus.domain.dossiers import (
     DossierStatus,
     IntegrityReport,
 )
+from prometeus.domain.economics import CourseEconomicsInput
 from prometeus.domain.evidence_observations import JobObservation
 from prometeus.domain.ports.generative_model import GenerativeModelPort
 from prometeus.infrastructure.apify.normalizers import normalize_observation
@@ -120,9 +124,10 @@ class DossierSynthesisService:
         stmt_plan = (
             select(ResearchPlanModel)
             .where(ResearchPlanModel.analysis_id == analysis_id)
-            .order_by(ResearchPlanModel.created_at.desc())
+            .order_by(ResearchPlanModel.created_at, ResearchPlanModel.id)
         )
-        research_plan = (await self.db.execute(stmt_plan)).scalars().first()
+        research_plans = list((await self.db.execute(stmt_plan)).scalars().all())
+        research_plan = research_plans[0] if research_plans else None
 
         fact_items: list[DossierFactItem] = []
         limitations: list[str] = []
@@ -168,9 +173,32 @@ class DossierSynthesisService:
             if context_only:
                 metrics["evidence_role"] = "context_only"
             if isinstance(qualification, dict):
-                for qk in ("actor_role", "matched_actor_id", "matched_actor_name", "linkedin_scope"):
+                for qk in (
+                    "actor_role",
+                    "matched_actor_id",
+                    "matched_actor_name",
+                    "linkedin_scope",
+                ):
                     if isinstance(qualification.get(qk), str) and qualification[qk]:
                         metrics[qk] = qualification[qk]
+                uses = qualification.get("use_assessments") or {}
+                direct = uses.get("direct_competition") or {}
+                adjacent = uses.get("adjacent_competition") or {}
+                comparability = qualification.get("offer_comparability")
+                if isinstance(comparability, dict):
+                    if qualified_competitor_offer(qualification, ev.evidence_type):
+                        metrics["competition_relation"] = comparability["relation"]
+                        metrics["competition_reason"] = comparability["reason"]
+                    else:
+                        metrics["competition_relation"] = "not_qualified"
+                elif direct.get("usable") is True:
+                    metrics["competition_relation"] = "direct"
+                    metrics["competition_reason"] = direct.get("reason")
+                elif adjacent.get("usable") is True:
+                    metrics["competition_relation"] = "adjacent"
+                    metrics["competition_reason"] = adjacent.get("reason")
+                elif uses:
+                    metrics["competition_relation"] = "not_qualified"
             for key in (
                 "price_brl",
                 "total_price_brl",
@@ -235,14 +263,26 @@ class DossierSynthesisService:
                         integrity_report.missing_descriptions_count += 1
                         metrics["has_description"] = False
                     if obs.responsibilities:
-                        summary_parts.append(f"Responsabilidades: {'; '.join(obs.responsibilities[:5])}")
+                        summary_parts.append(
+                            f"Responsabilidades: {'; '.join(obs.responsibilities[:5])}"
+                        )
                     if obs.requirements_skills:
-                        summary_parts.append(f"Requisitos: {'; '.join(obs.requirements_skills[:5])}")
+                        summary_parts.append(
+                            f"Requisitos: {'; '.join(obs.requirements_skills[:5])}"
+                        )
 
                 if desc_text:
                     summary_parts.append(desc_text[:3000])
                 else:
-                    for text_key in ("descriptionText", "description", "text", "markdown", "caption", "comment", "body"):
+                    for text_key in (
+                        "descriptionText",
+                        "description",
+                        "text",
+                        "markdown",
+                        "caption",
+                        "comment",
+                        "body",
+                    ):
                         val = sanitized.get(text_key)
                         if isinstance(val, str) and val.strip():
                             summary_parts.append(val.strip()[:3000])
@@ -303,7 +343,9 @@ class DossierSynthesisService:
         runs = (
             (
                 await self.db.execute(
-                    select(ToolRunModel).where(ToolRunModel.analysis_id == analysis_id)
+                    select(ToolRunModel)
+                    .where(ToolRunModel.analysis_id == analysis_id)
+                    .order_by(ToolRunModel.started_at, ToolRunModel.id)
                 )
             )
             .scalars()
@@ -337,12 +379,54 @@ class DossierSynthesisService:
             dict(research_plan.understanding_snapshot) if research_plan is not None else {}
         )
         plan_snapshot = dict(research_plan.plan_snapshot) if research_plan is not None else {}
+        plan_snapshot["plan_ids"] = [plan.id for plan in research_plans]
+        plan_snapshot["tool_calls"] = [
+            {**call, "research_plan_id": plan.id}
+            for plan in research_plans
+            for call in (plan.plan_snapshot or {}).get("tool_calls", [])
+            if isinstance(call, dict)
+        ]
+        plan_snapshot["tool_runs"] = [
+            {
+                "id": run.id,
+                "research_plan_id": run.research_plan_id,
+                "planned_call_id": run.planned_call_id,
+                "capability": run.capability,
+                "status": run.status,
+                "provider_run_id": run.provider_run_id,
+                "dataset_id": run.dataset_id,
+                "raw_items_count": run.raw_items_count,
+                "valid_items_count": run.valid_items_count,
+                "error_code": run.error_code,
+                "error_message": run.error_message,
+                "parameters": {
+                    key: value
+                    for key, value in (run.parameters or {}).items()
+                    if key
+                    in {
+                        "competitor_id",
+                        "competitor_ids",
+                        "collection_phase",
+                        "observation_status",
+                        "attempts",
+                        "attempt_count",
+                        "recovery_action",
+                        "retry_status",
+                        "url_outcomes",
+                    }
+                },
+                "started_at": run.started_at.isoformat() if run.started_at else None,
+                "finished_at": run.finished_at.isoformat() if run.finished_at else None,
+            }
+            for run in runs
+        ]
         provided, _ = EvidenceSanitizer().sanitize_payload(dict(analysis.proposal_data or {}))
         # Declared commercial terms are independent of the length of the syllabus.
         commercial = {
             key: value
             for key, value in provided.items()
-            if key not in {"curriculum", "curriculum_text", "_idempotency_key", "_institution_context"}
+            if key
+            not in {"curriculum", "curriculum_text", "_idempotency_key", "_institution_context"}
         }
         # Expose the deterministic total to both writer and verifier. Academic
         # duration never supplies the number of installments.
@@ -415,7 +499,9 @@ class DossierSynthesisService:
                 ]
             ),
             "global_social_actors": (
-                evidence_step.output_summary.get("ecosystem_summary", {}).get("global_social_actors")
+                evidence_step.output_summary.get("ecosystem_summary", {}).get(
+                    "global_social_actors"
+                )
                 if evidence_step and evidence_step.output_summary.get("ecosystem_summary")
                 else [
                     term
@@ -553,7 +639,7 @@ class DossierSynthesisService:
             target_audience = "Não informado no entendimento do curso"
             limitations.append("Público-alvo não informado no entendimento persistido do curso")
 
-        return DossierFacts(
+        facts = DossierFacts(
             analysis_id=analysis_id,
             course_name=analysis.course_name,
             target_audience=target_audience,
@@ -571,6 +657,42 @@ class DossierSynthesisService:
             counterevidence=counterevidence,
             analysis_audit=analysis_audit,
         )
+        raw_hours = provided.get("workload_hours")
+        safe_hours = (
+            raw_hours
+            if isinstance(raw_hours, int) and not isinstance(raw_hours, bool) and raw_hours > 0
+            else 0
+        )
+        coverage = build_ecosystem_presentation_blocks(provided, facts, safe_hours).get(
+            "competitive_benchmark"
+        )
+        if coverage:
+            facts.analysis_audit["competitive_coverage"] = coverage
+            facts.items.append(
+                DossierFactItem(
+                    evidence_id="competitive_coverage",
+                    source_type="computed_collection_coverage",
+                    title="Cobertura verificável da pesquisa de concorrentes",
+                    key_metrics={
+                        key: coverage[key]
+                        for key in (
+                            "configured_total",
+                            "searched_total",
+                            "completed_total",
+                            "blocked_total",
+                            "institutions_with_offers",
+                            "total_offers",
+                            "coverage_complete",
+                        )
+                    },
+                    summary=coverage["whitespace_summary"],
+                )
+            )
+            if not coverage["coverage_complete"]:
+                facts.limitations.append(
+                    "Benchmark competitivo incompleto: há instituições sem pesquisa ou validação concluída; não permite concluir ausência de concorrência."
+                )
+        return facts
 
     async def _verify_generated_dossier(
         self,
@@ -707,6 +829,95 @@ class DossierSynthesisService:
 
         return verified_dossier
 
+    @staticmethod
+    def _build_economics_presentation(proposal: dict[str, Any]) -> dict[str, Any]:
+        """Calculate only explicitly supplied assumptions; never infer missing costs."""
+        raw = proposal.get("economics")
+        supplied = dict(raw) if isinstance(raw, dict) else {}
+        sources = {name: f"proposal.economics.{name}" for name in supplied}
+        aliases = {
+            "instruction_and_coordination_cost_brl": "fixed_costs",
+            "variable_cost_per_student_brl": "variable_cost_per_student",
+            "installments": "installments_count",
+        }
+        for name in CourseEconomicsInput.model_fields:
+            alias = aliases.get(name, name)
+            key = name if name in proposal else alias
+            if name not in supplied and key in proposal:
+                supplied[name] = proposal[key]
+                sources[name] = f"proposal.{key}"
+
+        ticket = proposal.get("ticket")
+        period = proposal.get("price_period")
+        if "total_price_brl" not in supplied and not isinstance(ticket, bool):
+            try:
+                amount = Decimal(str(ticket))
+                if amount.is_finite() and amount > 0 and period == "total":
+                    supplied["total_price_brl"] = amount
+                    sources["total_price_brl"] = "proposal.ticket (price_period=total)"
+                elif amount.is_finite() and amount > 0 and period == "monthly":
+                    count = proposal.get("installments_count")
+                    if isinstance(count, int) and not isinstance(count, bool) and 1 <= count <= 120:
+                        supplied["total_price_brl"] = amount * count
+                        sources["total_price_brl"] = "proposal.ticket * proposal.installments_count"
+            except (InvalidOperation, ValueError, TypeError):
+                pass
+
+        required = set(CourseEconomicsInput.model_fields)
+        missing = sorted(
+            name for name in required if name not in supplied or supplied[name] is None
+        )
+        unavailable: dict[str, Any] = {
+            "status": "not_calculable",
+            "basis": "simulation_from_explicit_assumptions",
+            "message": "Simulação indisponível: informe e valide as premissas financeiras e de capacidade.",
+            "missing_inputs": missing,
+            "input_sources": sources,
+            "break_even_students": None,
+            "scenarios": [],
+        }
+        if missing:
+            return unavailable
+        try:
+            if any(isinstance(value, bool) for value in supplied.values()):
+                raise ValueError("Premissas numéricas não aceitam booleanos.")
+            inputs = CourseEconomicsInput.model_validate(supplied)
+        except (ValidationError, ValueError):
+            return {
+                **unavailable,
+                "message": "Simulação indisponível: uma ou mais premissas são inválidas.",
+            }
+
+        evaluation = CourseEconomicsService().evaluate(inputs)
+        if evaluation.status != "calculable":
+            return {**unavailable, **evaluation.model_dump(mode="json"), "scenarios": []}
+        scenario_labels = {"conservative": "Conservador", "base": "Base", "optimistic": "Otimista"}
+        scenarios = [
+            {
+                "name": scenario_labels[name],
+                "students": scenario.enrolled_students,
+                "occupancy": f"{Decimal(scenario.enrolled_students) / inputs.max_capacity * 100:.1f}%",
+                "gross_revenue": str(scenario.gross_revenue_brl),
+                "net_revenue": str(scenario.net_revenue_brl),
+                "total_costs": str(scenario.total_costs_brl),
+                "net_profit": str(scenario.net_result_brl),
+                "margin": f"{scenario.profit_margin_pct:.1f}%",
+                "status": "positive" if scenario.net_result_brl > 0 else "warning",
+                "assumptions": scenario.assumptions,
+            }
+            for name, scenario in evaluation.scenarios.items()
+        ]
+        return {
+            **evaluation.model_dump(mode="json"),
+            "basis": "simulation_from_explicit_assumptions",
+            "message": "Simulação por premissas declaradas; não é previsão de matrículas nem garantia de retorno.",
+            "input_sources": sources,
+            "ticket": str(inputs.total_price_brl),
+            "fixed_costs": str(evaluation.total_fixed_costs_cohort_brl),
+            "variable_cost_per_student": str(evaluation.effective_variable_cost_per_student_brl),
+            "max_capacity": inputs.max_capacity,
+            "scenarios": scenarios,
+        }
 
     @staticmethod
     def _build_visual_presentation_blocks(
@@ -715,274 +926,50 @@ class DossierSynthesisService:
         facts: DossierFacts,
         verified_dossier: DossierOutput,
     ) -> dict[str, Any]:
+        """Project verified facts and code-validated simulations without adding market claims."""
         proposal = dict(analysis.proposal_data or {}) if analysis else {}
-        course_name = analysis.course_name if analysis else "Curso Executivo"
-
-        # 1. Economics & Pricing
-        ticket = 2400.0
-        prop_ticket = proposal.get("ticket")
-        if isinstance(prop_ticket, (int, float)) and prop_ticket > 0:
-            if proposal.get("price_period") == "monthly" and proposal.get("installments_count"):
-                ticket = float(prop_ticket * proposal.get("installments_count"))
-            else:
-                ticket = float(prop_ticket)
-        elif facts.analysis_audit.get("pricing", {}).get("mean_total_brl"):
-            ticket = float(facts.analysis_audit["pricing"]["mean_total_brl"])
-
-        workload = int(proposal.get("workload_hours") or 36)
-        max_capacity = int(proposal.get("max_capacity") or 30)
-        fixed_costs = float(proposal.get("fixed_costs") or 15000.0)
-        variable_cost = float(proposal.get("variable_cost_per_student") or 452.50)
-
-        contrib = max(1.0, ticket - variable_cost)
-        break_even = max(1, math.ceil(fixed_costs / contrib))
-
-        stud_conservador = max(break_even, math.floor(max_capacity * 0.40))
-        stud_base = max(stud_conservador + 2, math.floor(max_capacity * 0.67))
-        stud_otimista = max(stud_base + 2, math.floor(max_capacity * 0.93))
-
-        def calc_scenario(name: str, students: int, status: str) -> dict[str, Any]:
-            gross = round(students * ticket, 2)
-            total_costs = round(fixed_costs + (students * variable_cost), 2)
-            profit = round(gross - total_costs, 2)
-            margin = f"{(profit / gross * 100):.1f}%" if gross > 0 else "0.0%"
-            occupancy = f"{(students / max_capacity * 100):.1f}%"
-            return {
-                "name": name,
-                "students": students,
-                "occupancy": occupancy,
-                "gross_revenue": gross,
-                "total_costs": total_costs,
-                "net_profit": profit,
-                "margin": margin,
-                "status": status,
-            }
-
-        scenarios = [
-            calc_scenario("Conservador", stud_conservador, "warning"),
-            calc_scenario("Base (Estimado)", stud_base, "positive"),
-            calc_scenario("Otimista", stud_otimista, "highlight"),
-        ]
-
-        base_scenario = scenarios[1]
-
-        # 2. KPIs
-        v_score = scoring.viability_score if scoring else 78.2
-        rec = scoring.recommendation if scoring else "APPROVED"
-        kpis = [
-            {
-                "label": "Score de Viabilidade",
-                "value": f"{v_score:.1f}",
-                "unit": "/ 100",
-                "trend": "+12.4 vs Benchmark" if v_score >= 70 else "-5.2 vs Limiar",
-                "status": "positive" if v_score >= 70 else "warning",
-            },
-            {
-                "label": "Preço Recomendado",
-                "value": f"R$ {ticket:,.0f}".replace(",", "."),
-                "unit": "por vaga",
-                "trend": "Alinhado à proposta executiva",
-                "status": "neutral",
-            },
-            {
-                "label": "Break-Even Quórum",
-                "value": str(break_even),
-                "unit": "alunos",
-                "trend": f"{(break_even / max_capacity * 100):.1f}% da capacidade total",
-                "status": "positive" if break_even <= max_capacity * 0.5 else "warning",
-            },
-            {
-                "label": "Margem Líquida Base",
-                "value": base_scenario["margin"],
-                "unit": f"cenário {stud_base} alunos",
-                "trend": f"R$ {base_scenario['net_profit']:,.0f} de lucro líquido".replace(",", "."),
-                "status": "positive" if base_scenario["net_profit"] > 0 else "warning",
-            },
-        ]
-
-        # 3. Verdict
+        score = scoring.viability_score if scoring else facts.viability_score
+        recommendation = scoring.recommendation if scoring else facts.recommendation
+        confidence = scoring.confidence_score if scoring else facts.confidence_score
         badge_map = {
-            "APPROVED": "RECOMENDADO PARA LANÇAMENTO",
-            "REVISION_REQUIRED": "REQUER REVISÃO / AJUSTES",
+            "APPROVED": "RECOMENDAÇÃO FAVORÁVEL",
+            "APPROVED_WITH_ADJUSTMENTS": "FAVORÁVEL COM AJUSTES",
+            "HIGH_RISK": "ALTO RISCO",
+            "REQUIRES_HUMAN_REVIEW": "REQUER REVISÃO HUMANA",
             "INSUFFICIENT_EVIDENCE": "EVIDÊNCIA INSUFICIENTE",
-            "REJECTED": "LANÇAMENTO NÃO RECOMENDADO",
         }
-        verdict = {
-            "status": rec,
-            "score": round(v_score, 1),
-            "confidence": round((scoring.confidence_score if scoring else 0.84) * 100, 1),
-            "badge_label": badge_map.get(rec, "PARECER EM AVALIAÇÃO"),
-            "summary": verified_dossier.executive_summary,
-        }
-
-        # 4. Personas
-        area = proposal.get("area") or "Direito & Seguros"
-        personas = [
-            {
-                "id": "persona-b2b",
-                "tag": "B2B Corporativo",
-                "name": "Dra. Mariana Costa",
-                "role": "Gerente Jurídica / Sinistros em Seguradora",
-                "demographics": "38 anos, pós-graduada, lidera equipe técnica e jurídica",
-                "pain": f"Adequação urgente dos processos internos e contratos às recentes transformações normativas em {area}.",
-                "gain": "Capacitar seu time com teses defensivas e melhores práticas de compliance, mitigando litígios e custos operacionais.",
-                "willingness_to_pay": f"R$ {ticket:,.0f} - R$ {(ticket * 1.2):,.0f} (Orçamento corporativo de T&D / Jurídico)",
-                "channels": "LinkedIn InMail, parcerias com associações setoriais (CNseg, FenSeg, IBDCivil)",
-            },
-            {
-                "id": "persona-b2c",
-                "tag": "B2C / Especialista",
-                "name": "Dr. Rodrigo Silveira",
-                "role": "Sócio de Escritório de Advocacia Contenciosa",
-                "demographics": "44 anos, especialista sênior",
-                "pain": "Perda de clientes corporativos para bancas especializadas por falta de domínio dos novos precedentes e marcos legais.",
-                "gain": f"Posicionar a banca como referência em causas complexas e consultoria de alto valor agregado em {area}.",
-                "willingness_to_pay": f"R$ {ticket:,.0f} (Investimento pessoal em educação executiva / dedutível)",
-                "channels": "OABs estaduais, webinars técnicos, Google Search (jurisprudência e artigos)",
-            },
-        ]
-
-        # 5. Curriculum Modules
-        modules_data = []
-        prop_modules = proposal.get("curriculum_modules") or []
-        if isinstance(prop_modules, list) and prop_modules:
-            for idx, mod in enumerate(prop_modules[:6], 1):
-                m_title = mod if isinstance(mod, str) else mod.get("title", f"Módulo {idx}")
-                modules_data.append({
-                    "module": f"Módulo {idx}",
-                    "title": m_title,
-                    "hours": f"{max(4, workload // len(prop_modules))}h",
-                    "focus": f"Fundamentos técnicos e aplicabilidade prática em {m_title}",
-                    "practical_activity": f"Estudo de caso e oficina simulada aplicada a {m_title}",
-                })
-        elif verified_dossier.highlights.curriculum_alignment:
-            for idx, align in enumerate(verified_dossier.highlights.curriculum_alignment[:6], 1):
-                modules_data.append({
-                    "module": f"Módulo {idx}",
-                    "title": align.module,
-                    "hours": f"{max(4, workload // 6)}h",
-                    "focus": f"Domínio analítico e jurisprudencial em {align.module}",
-                    "practical_activity": "Resolução de caso concreto e aplicação de teses perante o mercado",
-                })
-        else:
-            modules_data = [
-                {"module": "Módulo I", "title": "Marco Regulatório e Fundamentos Contemporâneos", "hours": "6h", "focus": "Evolução normativa e impacto na teoria geral dos contratos", "practical_activity": "Auditoria de conformidade de cláusulas contratuais"},
-                {"module": "Módulo II", "title": "Jurisprudência dos Tribunais Superiores", "hours": "6h", "focus": "Precedentes vinculantes, teses repetitivas e dever de informação", "practical_activity": "Redação de recurso especial e sustentação oral orientada"},
-                {"module": "Módulo III", "title": "Gestão de Sinistros e Grandes Riscos", "hours": "6h", "focus": "Regulação e liquidação pericial de sinistros complexos", "practical_activity": "Simulação pericial de disputa e cobertura"},
-                {"module": "Módulo IV", "title": "Contratos Coletivos e Judicialização", "hours": "6h", "focus": "Reajustes, sinistralidade e critérios de equilíbrio atuarial", "practical_activity": "Cálculo atuarial de contingência jurídica"},
-                {"module": "Módulo V", "title": "Arbitragem e Resolução Adequada de Conflitos", "hours": "6h", "focus": "Cláusulas compromissórias, perícia arbitral e execução", "practical_activity": "Simulação de audiência arbitral de mediação"},
-                {"module": "Módulo VI", "title": "Compliance, Governança e Inteligência Artificial", "hours": "6h", "focus": "Regulação setorial, proteção de dados e subscrição algorítmica", "practical_activity": "Elaboração de matriz de risco regulatório"},
-            ]
-
-        # 6. SWOT & TOWS
-        pros = verified_dossier.highlights.pros or []
-        cons = verified_dossier.highlights.cons or []
-        strengths = [
-            "Ementa inovadora e aderente às mais recentes atualizações legislativas e regulatórias",
-            "Corpo docente de referência no mercado e nos tribunais superiores",
-            "Metodologia executiva aplicada com estudos de caso e oficinas práticas",
-        ]
-        if pros:
-            claim_objs = [verified_dossier.get_claim(cid) for cid in pros]
-            claim_texts = [c.statement for c in claim_objs if c]
-            if claim_texts:
-                strengths = claim_texts[:3]
-
-        weaknesses = [
-            "Necessidade de construir autoridade e reconhecimento específico no segmento da oferta",
-            f"Estrutura de custos fixos que exige quórum mínimo de {break_even} matrículas para break-even",
-        ]
-        if cons:
-            claim_objs = [verified_dossier.get_claim(cid) for cid in cons]
-            claim_texts = [c.statement for c in claim_objs if c]
-            if claim_texts:
-                weaknesses = claim_texts[:2]
-
-        swot = {
-            "strengths": strengths,
-            "opportunities": [
-                "Vácuo competitivo: Concorrentes tradicionais operam matrizes curriculares defasadas",
-                "Forte demanda corporativa B2B por capacitação imediata de equipes técnicas",
-                f"Ticket de R$ {ticket:,.0f} viável com excelente margem operacional líquida",
-            ],
-            "weaknesses": weaknesses,
-            "threats": [
-                "Reação de concorrentes consolidados com ofertas similares em 6 a 9 meses",
-                "Sensibilidade do quórum de abertura ao ciclo orçamentário das empresas",
-            ],
-            "tows_strategies": [
-                {"type": "SO (Força + Oportunidade)", "strategy": "Lançar campanha de captação antecipada explorando o ineditismo curricular antes da reação dos concorrentes."},
-                {"type": "WO (Fraqueza + Oportunidade)", "strategy": "Formalizar parcerias institucionais com associações representativas para acelerar a autoridade da marca."},
-                {"type": "ST (Força + Ameaça)", "strategy": "Focar em oficinas práticas simuladas de alto engajamento, blindando o curso contra alternativas puramente gravadas."},
-                {"type": "WT (Fraqueza + Ameaça)", "strategy": f"Aplicar gate rigoroso de quórum em D-10 com {break_even} alunos, eliminando o risco de déficit operacional."},
-            ],
-        }
-
-        # 7. Tactical Roadmap
-        tactical_roadmap = [
-            {
-                "phase": "Fase 1: Estruturação & Parcerias",
-                "window": "Dias 1 - 15",
-                "actions": [
-                    "Validação final dos contratos docentes e cronograma de aulas",
-                    "Abertura de canal de relacionamento com entidades e associações parceiras",
-                    "Publicação da landing page oficial e ativação do kit de mídia B2B",
-                ],
-                "kpi": "3 parcerias institucionais iniciadas",
-                "owner": "Coordenação Acadêmica / Comercial",
-            },
-            {
-                "phase": "Fase 2: Campanha B2B & Aquisição",
-                "window": "Dias 16 - 35",
-                "actions": [
-                    "Prospecção outbound direta com tomadores de decisão em empresas do setor",
-                    "Disparo de campanha de conteúdo sobre as recentes alterações regulatórias",
-                    "Realização de webinar preparatório gratuito com docentes do curso",
-                ],
-                "kpi": "150 leads qualificados / matrículas em tração",
-                "owner": "Marketing & Growth",
-            },
-            {
-                "phase": "Fase 3: Gate de Quórum & Encerramento",
-                "window": "Dias 36 - 45 (D-10 do início)",
-                "actions": [
-                    f"Reunião executiva de verificação do quórum mínimo ({break_even} alunos)",
-                    "Abertura de lote relâmpago de vagas remanescentes para inscrições em grupo",
-                    "Liberação de acesso ao ambiente virtual e materiais preparatórios",
-                ],
-                "kpi": f"Break-even superado (Meta: {stud_base} alunos)",
-                "owner": "Diretoria de Operações",
-            },
-            {
-                "phase": "Fase 4: Aula Inaugural & Pós-Venda",
-                "window": "Dias 46 - 90",
-                "actions": [
-                    "Execução das aulas ao vivo e oficinas simuladas práticas",
-                    "Monitoramento contínuo de satisfação dos alunos (NPS por módulo)",
-                    "Apresentação de propostas in-company e novas trilhas de formação",
-                ],
-                "kpi": "NPS >= 85 / Oportunidades de continuidade",
-                "owner": "Sucesso do Aluno & Docência",
-            },
-        ]
-
+        # Strategic prose stays in the verified claims/highlights already rendered by the UI.
+        # No generic personas, curriculum, SWOT conclusions or launch plans are synthesized here.
+        workload = proposal.get("workload_hours")
+        safe_workload = (
+            workload
+            if isinstance(workload, int) and not isinstance(workload, bool) and workload > 0
+            else 0
+        )
         return {
-            "title": f"Dossiê Executivo de Viabilidade: {course_name}",
-            "verdict": verdict,
-            "kpis": kpis,
-            "personas": personas,
-            "economics": {
-                "ticket": ticket,
-                "max_capacity": max_capacity,
-                "fixed_costs": fixed_costs,
-                "variable_cost_per_student": variable_cost,
-                "break_even_students": break_even,
-                "scenarios": scenarios,
+            "contract_version": 2,
+            "content_basis": "verified_facts_and_explicit_simulation",
+            "title": f"Dossiê Executivo de Viabilidade: {facts.course_name}",
+            "verdict": {
+                "status": recommendation,
+                "score": round(score, 1),
+                "confidence": round(confidence * 100, 1),
+                "badge_label": badge_map.get(recommendation, "PARECER EM AVALIAÇÃO"),
+                "summary": verified_dossier.executive_summary,
             },
-            "curriculum_modules": modules_data,
-            "swot": swot,
-            "tactical_roadmap": tactical_roadmap,
-            **build_ecosystem_presentation_blocks(proposal, facts, workload),
+            "kpis": [],
+            "personas": [],
+            "economics": DossierSynthesisService._build_economics_presentation(proposal),
+            "curriculum_modules": [],
+            "swot": {
+                "strengths": [],
+                "weaknesses": [],
+                "opportunities": [],
+                "threats": [],
+                "tows_strategies": [],
+            },
+            "tactical_roadmap": [],
+            **build_ecosystem_presentation_blocks(proposal, facts, safe_workload),
         }
 
     async def synthesize_and_verify(
@@ -1121,6 +1108,24 @@ class DossierSynthesisService:
             ),
             **visual_blocks,
         }
+
+        # No visible block may be added after this gate and before persistence.
+        presentation_issues = self.verifier.verify_presentation(
+            verified_dossier,
+            facts,
+            presentation,
+            dict(analysis_record.proposal_data or {}) if analysis_record else {},
+        )
+        if presentation_issues:
+            raise DossierVerificationError(
+                "A apresentação final divergiu dos fatos verificados; publicação bloqueada.",
+                can_revise=False,
+                report={
+                    "gate": "final_presentation",
+                    "facts_hash": facts.compute_facts_hash(),
+                    "issues": presentation_issues,
+                },
+            )
 
         if existing:
             existing.prompt_version = verified_dossier.prompt_version

@@ -1,0 +1,23 @@
+{
+  "build": "0.0.143",
+  "maxConcurrency": {
+    "title": "Max concurrency",
+    "type": "integer",
+    "minimum": 1,
+    "description": "How many pages will be opened in parallel if enough CPU is available.",
+    "default": 10,
+    "unit": "parallel pages"
+  },
+  "searchTerms": {
+    "title": "Search terms",
+    "type": "array",
+    "editor": "stringList",
+    "description": "(Required if 'spreadsheetId' is not provided) List of search terms to be scraped.",
+    "example": [
+      "webscraping"
+    ],
+    "prefill": [
+      "webscraping"
+    ]
+  }
+}

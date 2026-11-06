@@ -86,7 +86,9 @@ async def test_responses_stream_without_usage_keeps_usage_unknown() -> None:
 
 
 async def test_jev_records_attempts_and_pinned_model() -> None:
-    responses = iter([httpx.Response(503), httpx.Response(200, json={"choice": "A", "confidence": 0.9})])
+    responses = iter(
+        [httpx.Response(503), httpx.Response(200, json={"choice": "A", "confidence": 0.9})]
+    )
 
     def handler(request: httpx.Request) -> httpx.Response:
         return next(responses)

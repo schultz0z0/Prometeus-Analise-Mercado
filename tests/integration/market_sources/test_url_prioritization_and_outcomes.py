@@ -57,7 +57,9 @@ class UrlMockExecutor:
     payloads: dict[str, list[dict]]
     calls: list[PlannedToolCall] = field(default_factory=list)
 
-    async def execute(self, planned: PlannedToolCall, *, max_total_charge_usd: float) -> ApifyExecutionResult:
+    async def execute(
+        self, planned: PlannedToolCall, *, max_total_charge_usd: float
+    ) -> ApifyExecutionResult:
         self.calls.append(planned)
         registry = make_registry()
         spec = registry.require(planned.capability)
@@ -83,6 +85,91 @@ def test_malformed_urls_are_rejected_before_crawl():
 
     valid = "https://www.pucsp.br/pos-graduacao/mba-gestao-de-riscos-e-fraudes"
     assert CollectMarketEvidenceService._is_usable_discovered_url("web_crawler", valid) is True
+
+
+@pytest.mark.asyncio
+async def test_directed_competitor_crawl_retains_many_offers_and_filters_other_domains(session):
+    from prometeus.domain.collection_execution import CollectionExecutionPolicy
+
+    urls = [f"https://fgv.br/curso/ia-{i}" for i in range(5)]
+    foreign = "https://fgv.br.example.org/curso/ia"
+    executor = UrlMockExecutor({"search": [{"organicResults": [{"url": u, "title": "Curso IA"} for u in [*urls, foreign]]}]})
+    research = CourseResearchPlan(
+        id="directed", analysis_id="analysis-urls", understanding_hash="hash", budget_limit_usd=None,
+        execution_policy=CollectionExecutionPolicy(), tool_calls=[
+            PlannedToolCall(id="search", capability="google_search", query="site:fgv.br curso ia", rationale="test"),
+            PlannedToolCall(id="crawl", capability="web_crawler", query="Ofertas FGV", rationale="test", max_items=8,
+                            parameters={"competitor_id": "fgv", "target_domains": ["fgv.br"], "depends_on": ["search"]}),
+        ],
+    )
+    await CollectMarketEvidenceService(session, executor, make_registry()).collect(tenant_id="ens", plan=research)
+    crawler = next(c for c in executor.calls if c.id == "crawl")
+    assert set(crawler.parameters["urls"]) == set(urls)
+
+
+def test_collection_orders_explicit_priority_without_breaking_dependencies():
+    research = CourseResearchPlan(analysis_id="a", understanding_hash="h", tool_calls=[
+        PlannedToolCall(id="social", capability="instagram", query="ia", rationale="test"),
+        PlannedToolCall(id="search", capability="google_search", query="curso ia", rationale="test", parameters={"priority": 1}),
+        PlannedToolCall(id="crawl", capability="web_crawler", query="curso ia", rationale="test", parameters={"priority": 1, "depends_on": ["search"]}),
+    ])
+    assert [c.id for c in CollectMarketEvidenceService._ordered_calls(research)] == ["search", "crawl", "social"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("interrupted", [False, True])
+async def test_blocked_page_in_successful_actor_retries_only_gap_and_preserves_offer(session, interrupted):
+    from datetime import timedelta
+
+    from prometeus.application.recover_market_collection import CollectionRetryScheduled
+    from prometeus.domain.collection_execution import CollectionExecutionPolicy
+    from prometeus.infrastructure.db.models import ToolRunAttemptModel
+
+    first, second = "https://fgv.br/curso/ia-1", "https://fgv.br/curso/ia-2"
+
+    class MixedExecutor:
+        def __init__(self):
+            self.calls = []
+
+        async def execute(self, call, *, max_total_charge_usd):
+            self.calls.append(call)
+            spec = make_registry().require(call.capability)
+            if call.capability == "google_search":
+                items = [{"organicResults": [{"url": u, "title": "Curso IA"} for u in (first, second)]}]
+            elif len(self.calls) == 2:
+                items = [{"url": first, "title": "Curso IA 1", "text": "Curso de inteligência artificial e governança"}]
+                if not interrupted:
+                    items.append({"url": second, "httpStatusCode": 403, "title": "Forbidden"})
+            else:
+                assert call.parameters["urls"] == [second]
+                items = [{"url": second, "title": "Curso IA 2", "text": "Curso de governança da inteligência artificial"}]
+            partial = interrupted and len(self.calls) == 2
+            return ApifyExecutionResult(run=ApifyRunMetadata(run_id=f"mixed-{len(self.calls)}", dataset_id=f"dataset-{len(self.calls)}", status="ABORTED" if partial else "SUCCEEDED", actor_id=spec.actor_id, build_number=spec.build, cost_usd=0.03, incomplete_reason="timeout confirmed" if partial else None), items=items, total_items=len(items))
+
+    from datetime import UTC, datetime
+    executor = MixedExecutor()
+    research = CourseResearchPlan(id="mixed", analysis_id="analysis-urls", understanding_hash="h", budget_limit_usd=None, execution_policy=CollectionExecutionPolicy(), tool_calls=[
+        PlannedToolCall(id="search", capability="google_search", query="site:fgv.br ia", rationale="test"),
+        PlannedToolCall(id="crawl", capability="web_crawler", query="Validar FGV", rationale="test", max_items=8, parameters={"depends_on": ["search"], "competitor_id": "fgv", "target_domains": ["fgv.br"]}),
+    ])
+    service = CollectMarketEvidenceService(session, executor, make_registry())
+    with pytest.raises(CollectionRetryScheduled):
+        await service.collect(tenant_id="ens", plan=research)
+    first_offer = (await session.execute(select(MarketEvidenceModel).where(MarketEvidenceModel.collector.contains("website-content-crawler")))).scalars().all()
+    assert len(first_offer) == 1
+    pending_run = (await session.execute(select(ToolRunModel).where(ToolRunModel.planned_call_id == "crawl"))).scalar_one()
+    assert pending_run.parameters["url_outcomes"][second] == ("extraction_failed" if interrupted else "blocked")
+    for attempt in (await session.execute(select(ToolRunAttemptModel))).scalars():
+        if attempt.next_attempt_at:
+            attempt.next_attempt_at = datetime.now(UTC) - timedelta(seconds=1)
+    await session.commit()
+    outcome = await CollectMarketEvidenceService(session, executor, make_registry()).collect(tenant_id="ens", plan=research)
+    assert outcome.optional_failures == []
+    assert len(executor.calls) == 3
+    run = (await session.execute(select(ToolRunModel).where(ToolRunModel.planned_call_id == "crawl"))).scalar_one()
+    assert run.parameters["url_outcomes"] == {first: "fetched", second: "fetched"}
+    assert run.valid_items_count == 2
+    assert run.cost_usd == pytest.approx(0.06)
 
 
 def test_url_prioritization_and_domain_diversity():
@@ -181,12 +268,22 @@ async def test_crawler_page_confirmation_sets_max_crawl_depth_zero(session):
 
     discovered_url = "https://pucsp.br/pos/mba-fraudes"
     disc_items = [
-        {"url": "https://google.com/search", "organicResults": [{"url": discovered_url, "title": "MBA Fraudes PUC"}]}
+        {
+            "url": "https://google.com/search",
+            "organicResults": [{"url": discovered_url, "title": "MBA Fraudes PUC"}],
+        }
     ]
     crawl_items = [
-        {"url": discovered_url, "httpStatusCode": 200, "title": "MBA em Fraudes", "text": "Conteúdo do curso..."}
+        {
+            "url": discovered_url,
+            "httpStatusCode": 200,
+            "title": "MBA em Fraudes",
+            "text": "Conteúdo do curso...",
+        }
     ]
-    executor = UrlMockExecutor(payloads={"call-disc-depth": disc_items, "call-crawl-depth": crawl_items})
+    executor = UrlMockExecutor(
+        payloads={"call-disc-depth": disc_items, "call-crawl-depth": crawl_items}
+    )
 
     service = CollectMarketEvidenceService(
         session=session,
@@ -237,13 +334,26 @@ async def test_audit_records_explicit_outcome_per_url(session):
     url_404 = "https://escola2.com.br/inexistente"
 
     disc_items = [
-        {"url": "https://google.com", "organicResults": [{"url": url_success, "title": "Curso 1"}, {"url": url_404, "title": "Curso 2"}]}
+        {
+            "url": "https://google.com",
+            "organicResults": [
+                {"url": url_success, "title": "Curso 1"},
+                {"url": url_404, "title": "Curso 2"},
+            ],
+        }
     ]
     crawl_items = [
         {"url": url_success, "httpStatusCode": 200, "title": "Curso Válido", "text": "Detalhes"},
-        {"url": url_404, "httpStatusCode": 404, "title": "Página não encontrada", "text": "404 Not Found"},
+        {
+            "url": url_404,
+            "httpStatusCode": 404,
+            "title": "Página não encontrada",
+            "text": "404 Not Found",
+        },
     ]
-    executor = UrlMockExecutor(payloads={"call-disc-outcomes": disc_items, "call-crawl-outcomes": crawl_items})
+    executor = UrlMockExecutor(
+        payloads={"call-disc-outcomes": disc_items, "call-crawl-outcomes": crawl_items}
+    )
 
     service = CollectMarketEvidenceService(
         session=session,
@@ -302,7 +412,10 @@ async def test_pdf_prioritized_has_explicit_outcome_and_mime_tracking(session):
     )
 
     disc_items = [
-        {"url": "https://google.com", "organicResults": [{"url": pdf_url, "title": "Treinamento Antifraude 2021 PDF"}]}
+        {
+            "url": "https://google.com",
+            "organicResults": [{"url": pdf_url, "title": "Treinamento Antifraude 2021 PDF"}],
+        }
     ]
     crawl_items = [
         {
@@ -313,7 +426,9 @@ async def test_pdf_prioritized_has_explicit_outcome_and_mime_tracking(session):
             "text": "Ementa do treinamento corporativo de detecção de fraudes em regulação de sinistros 2021...",
         }
     ]
-    executor = UrlMockExecutor(payloads={"call-disc-pdf": disc_items, "call-crawl-pdf": crawl_items})
+    executor = UrlMockExecutor(
+        payloads={"call-disc-pdf": disc_items, "call-crawl-pdf": crawl_items}
+    )
 
     service = CollectMarketEvidenceService(
         session=session,
@@ -347,4 +462,3 @@ async def test_pdf_prioritized_has_explicit_outcome_and_mime_tracking(session):
 
     assert evidence_row.source_url == pdf_url
     assert "application/pdf" in str(evidence_row.raw_payload.get("contentType"))
-

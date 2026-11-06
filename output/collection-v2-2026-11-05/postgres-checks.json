@@ -1,0 +1,17 @@
+{
+  "postgres_concurrency": "passed",
+  "executor": "offline-only",
+  "paid_posts_simulated": 1,
+  "outcomes": [
+    "completed",
+    "inflight_preserved"
+  ],
+  "backup_restore": "RESTORED",
+  "backup_records": 2998,
+  "backup_attempts": 1,
+  "history_courses": 33,
+  "history_funnels": 66,
+  "history_hashes_preserved": true,
+  "migration": "0014_collection_attempts",
+  "checked_at": "2026-11-05T18:55:40.523205+00:00"
+}

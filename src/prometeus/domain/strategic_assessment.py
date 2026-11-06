@@ -88,4 +88,3 @@ class StrategicAssessment(BaseModel):
     tows_actions: list[TOWSAction] = Field(default_factory=list)
     assumptions: list[str] = Field(default_factory=list)
     limitations_and_risks: list[str] = Field(default_factory=list)
-

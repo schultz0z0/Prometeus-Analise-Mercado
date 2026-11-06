@@ -20,9 +20,10 @@ from prometeus.domain.evidence_observations import (
     SocialObservation,
     TrendSeries,
 )
-from prometeus.infrastructure.apify.normalizers import normalize_observation
+from prometeus.infrastructure.apify.normalizers import normalize_ad, normalize_observation
 
-PROJECTOR_VERSION = "typed-projection-v2"
+PROJECTOR_VERSION = "typed-projection-v3"
+AD_PROJECTOR_VERSION = "ad-projection-v2"
 
 
 def build_qualification_context(
@@ -46,7 +47,7 @@ def build_qualification_context(
     base_title = title or getattr(obs, "title", None)
     if base_title is not None and hasattr(base_title, "value"):
         base_title = getattr(base_title, "value", None)
-    base_url = url or getattr(obs, "url", "")
+    base_url = url or getattr(obs, "source_url", "")
 
     context: dict[str, Any] = {
         "purpose": purpose,
@@ -107,7 +108,9 @@ def _project_trend_series(series: TrendSeries, context: dict[str, Any]) -> None:
             partial_points += 1
 
     density = round(valid_points / total, 4) if total > 0 else 0.0
-    avg_interest = series.average_interest or (round(sum(values) / len(values), 2) if values else 0.0)
+    avg_interest = series.average_interest or (
+        round(sum(values) / len(values), 2) if values else 0.0
+    )
     growth_pct = series.growth_trend_pct
     max_val = max(values) if values else 0.0
     latest_val = values[-1] if values else 0.0
@@ -204,6 +207,33 @@ def _project_offer_observation(offer: OfferObservation, context: dict[str, Any])
     context["category"] = offer.category.value or ""
     context["modality"] = offer.modality.value or ""
     context["workload_hours"] = offer.workload_hours.value
+    context["field_provenance"] = {
+        name: {"pointer": field.pointer, "status": field.status.value}
+        for name, field in (
+            ("title", offer.title),
+            ("institution", offer.institution_name),
+            ("category", offer.category),
+            ("modality", offer.modality),
+            ("workload_hours", offer.workload_hours),
+            ("syllabus", offer.curriculum_text),
+        )
+        if field.value is not None
+    }
+    # A page body, a SERP snippet and a syllabus are different observations.
+    # Retain content as untrusted data without turning a news page into a syllabus.
+    raw = offer.raw_payload or {}
+    for output, keys in (
+        ("page_text", ("text", "markdown", "content", "body")),
+        ("description", ("description", "snippet", "descriptionText")),
+    ):
+        candidates = [(key, raw.get(key)) for key in keys]
+        observed = [
+            (key, value) for key, value in candidates if isinstance(value, str) and value.strip()
+        ]
+        if observed:
+            key, value = max(observed, key=lambda candidate: len(candidate[1]))
+            context[output] = value.strip()
+            context["field_provenance"][output] = {"pointer": f"/{key}", "status": "observed"}
 
     if offer.pricing:
         pr = offer.pricing
@@ -224,6 +254,10 @@ def _project_offer_observation(offer: OfferObservation, context: dict[str, Any])
     context["key_metrics"] = {
         "workload_hours": offer.workload_hours.value,
         "institution": offer.institution_name.value or "",
+        "has_page_text": bool(context.get("page_text")),
+        "has_description": bool(context.get("description")),
+        "page_text_length": len(context.get("page_text", "")),
+        "description_length": len(context.get("description", "")),
     }
 
 
@@ -246,6 +280,48 @@ def _project_ad_observation(ad: AdObservation, context: dict[str, Any]) -> None:
     context["headline"] = ad.headline.value or ""
     context["ad_copy"] = ad.ad_text.value or ""
     context["target_url"] = ad.cta_url.value or ""
+    context["field_provenance"] = {
+        name: {"pointer": field.pointer, "status": field.status.value}
+        for name, field in (
+            ("advertiser", ad.page_name),
+            ("headline", ad.headline),
+            ("ad_copy", ad.ad_text),
+            ("target_url", ad.cta_url),
+        )
+        if field.value is not None
+    }
+    snapshot = (ad.raw_payload or {}).get("snapshot")
+    cards = snapshot.get("cards") if isinstance(snapshot, dict) else None
+    if isinstance(cards, list):
+        creative_cards = []
+        for index, card in enumerate(cards):
+            if not isinstance(card, dict):
+                continue
+            creative = normalize_ad(card)
+            fields = {
+                name: field
+                for name, field in (
+                    ("headline", creative.headline),
+                    ("ad_copy", creative.ad_text),
+                    ("target_url", creative.cta_url),
+                )
+                if field.value is not None
+            }
+            if fields:
+                creative_cards.append(
+                    {
+                        **{name: field.value for name, field in fields.items()},
+                        "field_provenance": {
+                            name: {
+                                "pointer": f"/snapshot/cards/{index}{field.pointer}",
+                                "status": field.status.value,
+                            }
+                            for name, field in fields.items()
+                        },
+                    }
+                )
+        if creative_cards:
+            context["creative_cards"] = creative_cards
 
     context["key_metrics"] = {
         "advertiser": ad.page_name.value or "",
@@ -262,6 +338,7 @@ def _project_generic_dict(data: dict[str, Any], context: dict[str, Any]) -> None
         "location",
         "descriptionText",
         "description",
+        "page_text",
         "text",
         "body",
         "price_brl",
@@ -278,6 +355,59 @@ def _enforce_budget(
     omissions: list[dict[str, Any]],
 ) -> dict[str, Any]:
     """Ajusta deterministamente o conteúdo ao orçamento sem cortes cegos de JSON."""
+
+    def record_reduction(field: str, original: int, retained: int) -> None:
+        previous = next((item for item in omissions if item.get("field") == field), None)
+        if previous is not None:
+            previous["retained_length"] = retained
+        else:
+            omissions.append(
+                {
+                    "field": field,
+                    "reason": "budget_exceeded",
+                    "original_length": original,
+                    "retained_length": retained,
+                }
+            )
+
+    # Material lists can exceed the budget even when every string is short.
+    # Keep a deterministic prefix with a count diagnostic; never mutate source data.
+    for field, value in list(context.items()):
+        if field not in {"curriculum_modules", "creative_cards"} or not isinstance(value, list):
+            continue
+        original_length = len(value)
+        while (
+            context[field]
+            and len(json.dumps({**context, "omissions": omissions}, ensure_ascii=False)) > budget
+        ):
+            if field == "creative_cards" and len(context[field]) == 1:
+                break
+            retained = (
+                max(1, len(context[field]) // 2)
+                if field == "creative_cards"
+                else len(context[field]) // 2
+            )
+            context[field] = context[field][:retained]
+            record_reduction(field, original_length, retained)
+    # Keep useful evidence from at least one carousel card, instead of dropping
+    # a lone long creative while leaving most of the context budget unused.
+    for index, card in enumerate(context.get("creative_cards", [])):
+        for field in ("ad_copy", "headline", "target_url"):
+            value = card.get(field)
+            if not isinstance(value, str):
+                continue
+            excess = (
+                len(json.dumps({**context, "omissions": omissions}, ensure_ascii=False)) - budget
+            )
+            if excess > 0 and len(value) > 50:
+                retained = max(50, len(value) - excess - 200)
+                if retained < len(value):
+                    card[field] = value[:retained]
+                    pointer = (
+                        card.get("field_provenance", {}).get(field, {}).get("pointer")
+                        or f"creative_cards/{index}/{field}"
+                    )
+                    record_reduction(pointer, len(value), retained)
     # 1. Reduz primeiro campos secundários (ex.: timeline_summary)
     if "timeline_summary" in context and isinstance(context["timeline_summary"], list):
         orig_len = len(context["timeline_summary"])
@@ -299,7 +429,15 @@ def _enforce_budget(
         return context
 
     # 2. Reduz campos de texto longo levando em conta overhead do diagnóstico
-    for text_field in ("description_text", "description", "requirements", "syllabus", "content_text"):
+    for text_field in (
+        "description_text",
+        "description",
+        "page_text",
+        "requirements",
+        "syllabus",
+        "content_text",
+        "ad_copy",
+    ):
         if text_field in context and isinstance(context[text_field], str):
             orig_text = context[text_field]
             orig_len = len(orig_text)
@@ -307,14 +445,7 @@ def _enforce_budget(
             new_len = max(50, orig_len - excess)
             if new_len < orig_len:
                 context[text_field] = orig_text[:new_len] + "..."
-                omissions.append(
-                    {
-                        "field": text_field,
-                        "reason": "budget_exceeded",
-                        "original_length": orig_len,
-                        "retained_length": len(context[text_field]),
-                    }
-                )
+                record_reduction(text_field, orig_len, len(context[text_field]))
                 context["omissions"] = omissions
                 serialized = json.dumps(context, ensure_ascii=False)
                 if len(serialized) <= budget:
@@ -337,8 +468,13 @@ def _enforce_budget(
         if longest_field and max_flen > 30:
             cut_len = max(20, max_flen - excess)
             context[longest_field] = context[longest_field][:cut_len]
+            record_reduction(longest_field, max_flen, cut_len)
         else:
             break
 
+    if len(json.dumps({**context, "omissions": omissions}, ensure_ascii=False)) > budget:
+        raise ValueError(
+            "Projection budget cannot preserve minimum identity and omission diagnostics."
+        )
     context.pop("omissions", None)
     return context

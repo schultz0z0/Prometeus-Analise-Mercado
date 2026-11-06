@@ -1,0 +1,23 @@
+[
+  {
+    "container": "/prometeus-api",
+    "image_id": "sha256:05cf07d08832aa3dae2bd0df1ae4445cbe2e9a403ad7c8404fece37e670af190",
+    "image_tag": "pesquisademercado-ia-api",
+    "created": "2026-11-06T20:41:22.313781985Z",
+    "health": "healthy"
+  },
+  {
+    "container": "/prometeus-worker",
+    "image_id": "sha256:78f881343c6262bd718c111815cc0516c6da3da73b90f3678570402700ef17ab",
+    "image_tag": "pesquisademercado-ia-worker",
+    "created": "2026-11-06T20:41:22.031939352Z",
+    "health": "healthy"
+  },
+  {
+    "container": "/pesquisademercado-ia-scheduler-1",
+    "image_id": "sha256:05f161cb48b3dc91adc77b0e966cd2fbf2bfbde5e6671bed82e6176f3d02125c",
+    "image_tag": "pesquisademercado-ia-scheduler",
+    "created": "2026-11-06T20:41:24.132805956Z",
+    "health": "healthy"
+  }
+]

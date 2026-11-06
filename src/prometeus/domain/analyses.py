@@ -83,6 +83,14 @@ class InvalidRecommendationError(DomainError):
     pass
 
 
+class ConcurrentAnalysisUpdateError(DomainError):
+    """Uma instância antiga tentou sobrescrever uma revisão já persistida."""
+
+
+class WorkflowStoppedError(DomainError):
+    """Execução interrompida porque a análise chegou a um estado terminal."""
+
+
 @dataclass
 class AuditEvent:
     """Registro auditável e imutável de transição de estado (ADR-0005)."""
@@ -124,6 +132,7 @@ class Analysis:
     created_at: datetime
     updated_at: datetime
     previous_analysis_id: str | None = None
+    revision: int = 0
     audit_events: list[AuditEvent] = field(default_factory=list)
     steps: list[AnalysisStep] = field(default_factory=list)
 

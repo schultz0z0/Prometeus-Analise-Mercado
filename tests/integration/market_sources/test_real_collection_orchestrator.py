@@ -266,7 +266,7 @@ async def test_url_dependent_calls_use_urls_discovered_by_prior_search(
         # O plano da LLM pode vir fora da ordem de dependência; o executor deve
         # executar descoberta antes de ferramentas que exigem URLs.
         tool_calls=[crawl, youtube, search],
-        budget_limit_usd=1.0,
+        budget_limit_usd=1.5,
     )
 
     @dataclass

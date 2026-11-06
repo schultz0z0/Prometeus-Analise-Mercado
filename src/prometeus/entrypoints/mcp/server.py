@@ -17,7 +17,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from prometeus import __descriptor__, __product__, __version__
-from prometeus.domain.analyses import Analysis
+from prometeus.application.analysis_jobs import publish_analysis_job
+from prometeus.application.create_analysis import CreateAnalysisCommand, CreateAnalysisUseCase
+from prometeus.domain.configuration import AppSettings
+from prometeus.infrastructure.access import AccessPrincipal
 from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
 from prometeus.infrastructure.db.models import (
     CourseOutcomeModel,
@@ -36,6 +39,10 @@ MCP_TOOLS: list[dict[str, Any]] = [
         "inputSchema": {
             "type": "object",
             "properties": {
+                "idempotency_key": {
+                    "type": "string",
+                    "description": "Chave estável do pedido para recuperar a mesma análise em retries",
+                },
                 "course_name": {
                     "type": "string",
                     "description": "Nome proposto do curso (ex: 'MBA em Inteligência de Dados em Seguros')",
@@ -50,7 +57,7 @@ MCP_TOOLS: list[dict[str, Any]] = [
                     "description": "Dados opcionais da proposta (ementa, público-alvo, preço proposto)",
                 },
             },
-            "required": ["course_name"],
+            "required": ["course_name", "idempotency_key"],
         },
     },
     {
@@ -147,21 +154,45 @@ MCP_TOOLS: list[dict[str, Any]] = [
 class PrometeusMCPServer:
     """Servidor MCP JSON-RPC 2.0 integrado ao domínio do Prometeus."""
 
-    def __init__(self, db_session_factory: Callable[[], AsyncSession]) -> None:
+    def __init__(
+        self,
+        db_session_factory: Callable[[], AsyncSession],
+        *,
+        publisher: Callable[[str, str], Any] | None = None,
+        settings: AppSettings | None = None,
+        principal: AccessPrincipal | None = None,
+    ) -> None:
         self.session_factory = db_session_factory
+        self.settings = settings or AppSettings()
+        self.principal = principal or AccessPrincipal(
+            "local-mcp", self.settings.INSTITUTION_ID, "admin"
+        )
+        self.publisher = publisher
 
-    async def handle_request(self, request: dict[str, Any]) -> dict[str, Any]:
+    async def handle_request(self, request: dict[str, Any]) -> dict[str, Any] | None:
         """Processa requisição JSON-RPC 2.0 do protocolo MCP."""
         msg_id = request.get("id")
         method = request.get("method")
         params = request.get("params", {})
+
+        if not isinstance(params, dict):
+            return {
+                "jsonrpc": "2.0",
+                "id": msg_id,
+                "error": {"code": -32602, "message": "params deve ser objeto"},
+            }
+        if "id" not in request:
+            return None
 
         if method == "initialize":
             return {
                 "jsonrpc": "2.0",
                 "id": msg_id,
                 "result": {
-                    "protocolVersion": "2024-11-05",
+                    "protocolVersion": params.get("protocolVersion")
+                    if params.get("protocolVersion")
+                    in {"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"}
+                    else "2025-11-25",
                     "capabilities": {"tools": {}},
                     "serverInfo": {
                         "name": __product__,
@@ -182,7 +213,7 @@ class PrometeusMCPServer:
             }
 
         elif method == "tools/call":
-            tool_name = params.get("name")
+            tool_name = str(params.get("name") or "")
             arguments = params.get("arguments", {})
             try:
                 content = await self.execute_tool(tool_name, arguments)
@@ -215,28 +246,62 @@ class PrometeusMCPServer:
 
     async def execute_tool(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
         """Despacho determinístico para as 5 ferramentas suportadas."""
+        if not isinstance(args, dict):
+            raise ValueError("Os argumentos devem ser um objeto.")
+        scope = {
+            "create_course_analysis": "analyze",
+            "submit_decision": "decide",
+            "record_course_outcome": "outcome",
+        }.get(name, "read")
+        self.principal.require(scope)
+        if args.get("tenant_id", self.principal.tenant_id) != self.principal.tenant_id:
+            raise ValueError("Acesso a outra instituição não autorizado.")
         async with self.session_factory() as session:
             repo = AnalysisRepository(session)
+            if name != "create_course_analysis" and args.get("analysis_id"):
+                target = await repo.get_by_id(str(args["analysis_id"]))
+                if target and target.tenant_id != self.principal.tenant_id:
+                    raise ValueError("Acesso a outra instituição não autorizado.")
 
             if name == "create_course_analysis":
                 course_name = args["course_name"]
-                tenant_id = args.get("tenant_id", "ens")
+                tenant_id = args.get("tenant_id", self.principal.tenant_id)
                 proposal_data = args.get("proposal_data", {})
                 corr_id = f"mcp-corr-{uuid.uuid4().hex[:8]}"
 
-                analysis = Analysis.create(
-                    tenant_id=tenant_id,
-                    course_name=course_name,
-                    correlation_id=corr_id,
-                    proposal_data=proposal_data,
+                key = str(args.get("idempotency_key", "")).strip()
+                if not key:
+                    raise ValueError("idempotency_key é obrigatório.")
+                if self.settings.KILL_SWITCH_ACTIVE:
+                    raise ValueError("Submissão suspensa pelo kill switch.")
+                if (
+                    not isinstance(course_name, str)
+                    or not course_name.strip()
+                    or not isinstance(proposal_data, dict)
+                ):
+                    raise ValueError("Proposta inválida.")
+                result = await CreateAnalysisUseCase(session, self.settings).execute(
+                    CreateAnalysisCommand(
+                        tenant_id=tenant_id,
+                        course_name=course_name,
+                        correlation_id=corr_id,
+                        proposal_data=proposal_data,
+                        idempotency_key=key,
+                    )
                 )
-                await repo.save(analysis)
                 await session.commit()
+                if not result.is_existing:
+                    publisher = self.publisher
+                    if publisher is None:
+                        from prometeus.workers.tasks import run_analysis_workflow
+
+                        publisher = run_analysis_workflow.delay
+                    await publish_analysis_job(session, result.analysis_id, publisher)
 
                 return {
-                    "analysis_id": analysis.id,
-                    "status": analysis.status.value,
-                    "course_name": analysis.course_name,
+                    "analysis_id": result.analysis_id,
+                    "status": result.status.value,
+                    "course_name": course_name,
                     "message": "Análise iniciada com sucesso via MCP.",
                 }
 
@@ -279,6 +344,12 @@ class PrometeusMCPServer:
                 }
 
             elif name == "submit_decision":
+                if args.get("decision") not in {
+                    "APPROVED",
+                    "APPROVED_WITH_ADJUSTMENTS",
+                    "REJECTED",
+                }:
+                    raise ValueError("Decisão institucional inválida.")
                 analysis_id = args["analysis_id"]
                 target_analysis = await repo.get_by_id(analysis_id)
                 if not target_analysis:
@@ -287,8 +358,8 @@ class PrometeusMCPServer:
                 decision_model = HumanDecisionModel(
                     id=f"dec_{uuid.uuid4().hex[:12]}",
                     analysis_id=analysis_id,
-                    user_id=args["user_id"],
-                    user_role=args["user_role"],
+                    user_id=self.principal.subject,
+                    user_role=self.principal.role,
                     decision=args["decision"].upper(),
                     rationale=args["rationale"],
                     adjustments=args.get("adjustments", {}),
@@ -305,6 +376,12 @@ class PrometeusMCPServer:
                 }
 
             elif name == "record_course_outcome":
+                from prometeus.entrypoints.rest.app import RecordOutcomeRequest
+
+                outcome_input = RecordOutcomeRequest.model_validate(
+                    {key: value for key, value in args.items() if key != "analysis_id"}
+                )
+                args = {**args, **outcome_input.model_dump()}
                 analysis_id = args["analysis_id"]
                 target_analysis = await repo.get_by_id(analysis_id)
                 if not target_analysis:

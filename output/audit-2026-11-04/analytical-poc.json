@@ -1,0 +1,552 @@
+{
+  "missing_financial_inputs": {
+    "input_proposal": {},
+    "input_fact_count": 0,
+    "recommendation": "INSUFFICIENT_EVIDENCE",
+    "kpis": [
+      {
+        "label": "Score de Viabilidade",
+        "value": "0.0",
+        "unit": "/ 100",
+        "trend": "-5.2 vs Limiar",
+        "status": "warning"
+      },
+      {
+        "label": "Preço Recomendado",
+        "value": "R$ 2.400",
+        "unit": "por vaga",
+        "trend": "Alinhado à proposta executiva",
+        "status": "neutral"
+      },
+      {
+        "label": "Break-Even Quórum",
+        "value": "8",
+        "unit": "alunos",
+        "trend": "26.7% da capacidade total",
+        "status": "positive"
+      },
+      {
+        "label": "Margem Líquida Base",
+        "value": "49.9%",
+        "unit": "cenário 20 alunos",
+        "trend": "R$ 23.950 de lucro líquido",
+        "status": "positive"
+      }
+    ],
+    "economics": {
+      "ticket": 2400.0,
+      "max_capacity": 30,
+      "fixed_costs": 15000.0,
+      "variable_cost_per_student": 452.5,
+      "break_even_students": 8,
+      "scenarios": [
+        {
+          "name": "Conservador",
+          "students": 12,
+          "occupancy": "40.0%",
+          "gross_revenue": 28800.0,
+          "total_costs": 20430.0,
+          "net_profit": 8370.0,
+          "margin": "29.1%",
+          "status": "warning"
+        },
+        {
+          "name": "Base (Estimado)",
+          "students": 20,
+          "occupancy": "66.7%",
+          "gross_revenue": 48000.0,
+          "total_costs": 24050.0,
+          "net_profit": 23950.0,
+          "margin": "49.9%",
+          "status": "positive"
+        },
+        {
+          "name": "Otimista",
+          "students": 27,
+          "occupancy": "90.0%",
+          "gross_revenue": 64800.0,
+          "total_costs": 27217.5,
+          "net_profit": 37582.5,
+          "margin": "58.0%",
+          "status": "highlight"
+        }
+      ]
+    },
+    "personas": [
+      {
+        "id": "persona-b2b",
+        "tag": "B2B Corporativo",
+        "name": "Dra. Mariana Costa",
+        "role": "Gerente Jurídica / Sinistros em Seguradora",
+        "demographics": "38 anos, pós-graduada, lidera equipe técnica e jurídica",
+        "pain": "Adequação urgente dos processos internos e contratos às recentes transformações normativas em Direito & Seguros.",
+        "gain": "Capacitar seu time com teses defensivas e melhores práticas de compliance, mitigando litígios e custos operacionais.",
+        "willingness_to_pay": "R$ 2,400 - R$ 2,880 (Orçamento corporativo de T&D / Jurídico)",
+        "channels": "LinkedIn InMail, parcerias com associações setoriais (CNseg, FenSeg, IBDCivil)"
+      },
+      {
+        "id": "persona-b2c",
+        "tag": "B2C / Especialista",
+        "name": "Dr. Rodrigo Silveira",
+        "role": "Sócio de Escritório de Advocacia Contenciosa",
+        "demographics": "44 anos, especialista sênior",
+        "pain": "Perda de clientes corporativos para bancas especializadas por falta de domínio dos novos precedentes e marcos legais.",
+        "gain": "Posicionar a banca como referência em causas complexas e consultoria de alto valor agregado em Direito & Seguros.",
+        "willingness_to_pay": "R$ 2,400 (Investimento pessoal em educação executiva / dedutível)",
+        "channels": "OABs estaduais, webinars técnicos, Google Search (jurisprudência e artigos)"
+      }
+    ],
+    "swot": {
+      "strengths": [
+        "Ementa inovadora e aderente às mais recentes atualizações legislativas e regulatórias",
+        "Corpo docente de referência no mercado e nos tribunais superiores",
+        "Metodologia executiva aplicada com estudos de caso e oficinas práticas"
+      ],
+      "opportunities": [
+        "Vácuo competitivo: Concorrentes tradicionais operam matrizes curriculares defasadas",
+        "Forte demanda corporativa B2B por capacitação imediata de equipes técnicas",
+        "Ticket de R$ 2,400 viável com excelente margem operacional líquida"
+      ],
+      "weaknesses": [
+        "Necessidade de construir autoridade e reconhecimento específico no segmento da oferta",
+        "Estrutura de custos fixos que exige quórum mínimo de 8 matrículas para break-even"
+      ],
+      "threats": [
+        "Reação de concorrentes consolidados com ofertas similares em 6 a 9 meses",
+        "Sensibilidade do quórum de abertura ao ciclo orçamentário das empresas"
+      ],
+      "tows_strategies": [
+        {
+          "type": "SO (Força + Oportunidade)",
+          "strategy": "Lançar campanha de captação antecipada explorando o ineditismo curricular antes da reação dos concorrentes."
+        },
+        {
+          "type": "WO (Fraqueza + Oportunidade)",
+          "strategy": "Formalizar parcerias institucionais com associações representativas para acelerar a autoridade da marca."
+        },
+        {
+          "type": "ST (Força + Ameaça)",
+          "strategy": "Focar em oficinas práticas simuladas de alto engajamento, blindando o curso contra alternativas puramente gravadas."
+        },
+        {
+          "type": "WT (Fraqueza + Ameaça)",
+          "strategy": "Aplicar gate rigoroso de quórum em D-10 com 8 alunos, eliminando o risco de déficit operacional."
+        }
+      ]
+    },
+    "curriculum_modules": [
+      {
+        "module": "Módulo I",
+        "title": "Marco Regulatório e Fundamentos Contemporâneos",
+        "hours": "6h",
+        "focus": "Evolução normativa e impacto na teoria geral dos contratos",
+        "practical_activity": "Auditoria de conformidade de cláusulas contratuais"
+      },
+      {
+        "module": "Módulo II",
+        "title": "Jurisprudência dos Tribunais Superiores",
+        "hours": "6h",
+        "focus": "Precedentes vinculantes, teses repetitivas e dever de informação",
+        "practical_activity": "Redação de recurso especial e sustentação oral orientada"
+      },
+      {
+        "module": "Módulo III",
+        "title": "Gestão de Sinistros e Grandes Riscos",
+        "hours": "6h",
+        "focus": "Regulação e liquidação pericial de sinistros complexos",
+        "practical_activity": "Simulação pericial de disputa e cobertura"
+      },
+      {
+        "module": "Módulo IV",
+        "title": "Contratos Coletivos e Judicialização",
+        "hours": "6h",
+        "focus": "Reajustes, sinistralidade e critérios de equilíbrio atuarial",
+        "practical_activity": "Cálculo atuarial de contingência jurídica"
+      },
+      {
+        "module": "Módulo V",
+        "title": "Arbitragem e Resolução Adequada de Conflitos",
+        "hours": "6h",
+        "focus": "Cláusulas compromissórias, perícia arbitral e execução",
+        "practical_activity": "Simulação de audiência arbitral de mediação"
+      },
+      {
+        "module": "Módulo VI",
+        "title": "Compliance, Governança e Inteligência Artificial",
+        "hours": "6h",
+        "focus": "Regulação setorial, proteção de dados e subscrição algorítmica",
+        "practical_activity": "Elaboração de matriz de risco regulatório"
+      }
+    ]
+  },
+  "negative_contribution": {
+    "input_proposal": {
+      "ticket": 100,
+      "fixed_costs": 15000,
+      "variable_cost_per_student": 452.5,
+      "max_capacity": 30
+    },
+    "input_fact_count": 0,
+    "recommendation": "INSUFFICIENT_EVIDENCE",
+    "kpis": [
+      {
+        "label": "Score de Viabilidade",
+        "value": "0.0",
+        "unit": "/ 100",
+        "trend": "-5.2 vs Limiar",
+        "status": "warning"
+      },
+      {
+        "label": "Preço Recomendado",
+        "value": "R$ 100",
+        "unit": "por vaga",
+        "trend": "Alinhado à proposta executiva",
+        "status": "neutral"
+      },
+      {
+        "label": "Break-Even Quórum",
+        "value": "15000",
+        "unit": "alunos",
+        "trend": "50000.0% da capacidade total",
+        "status": "warning"
+      },
+      {
+        "label": "Margem Líquida Base",
+        "value": "-353.5%",
+        "unit": "cenário 15002 alunos",
+        "trend": "R$ -5.303.205 de lucro líquido",
+        "status": "warning"
+      }
+    ],
+    "economics": {
+      "ticket": 100.0,
+      "max_capacity": 30,
+      "fixed_costs": 15000.0,
+      "variable_cost_per_student": 452.5,
+      "break_even_students": 15000,
+      "scenarios": [
+        {
+          "name": "Conservador",
+          "students": 15000,
+          "occupancy": "50000.0%",
+          "gross_revenue": 1500000.0,
+          "total_costs": 6802500.0,
+          "net_profit": -5302500.0,
+          "margin": "-353.5%",
+          "status": "warning"
+        },
+        {
+          "name": "Base (Estimado)",
+          "students": 15002,
+          "occupancy": "50006.7%",
+          "gross_revenue": 1500200.0,
+          "total_costs": 6803405.0,
+          "net_profit": -5303205.0,
+          "margin": "-353.5%",
+          "status": "positive"
+        },
+        {
+          "name": "Otimista",
+          "students": 15004,
+          "occupancy": "50013.3%",
+          "gross_revenue": 1500400.0,
+          "total_costs": 6804310.0,
+          "net_profit": -5303910.0,
+          "margin": "-353.5%",
+          "status": "highlight"
+        }
+      ]
+    },
+    "personas": [
+      {
+        "id": "persona-b2b",
+        "tag": "B2B Corporativo",
+        "name": "Dra. Mariana Costa",
+        "role": "Gerente Jurídica / Sinistros em Seguradora",
+        "demographics": "38 anos, pós-graduada, lidera equipe técnica e jurídica",
+        "pain": "Adequação urgente dos processos internos e contratos às recentes transformações normativas em Direito & Seguros.",
+        "gain": "Capacitar seu time com teses defensivas e melhores práticas de compliance, mitigando litígios e custos operacionais.",
+        "willingness_to_pay": "R$ 100 - R$ 120 (Orçamento corporativo de T&D / Jurídico)",
+        "channels": "LinkedIn InMail, parcerias com associações setoriais (CNseg, FenSeg, IBDCivil)"
+      },
+      {
+        "id": "persona-b2c",
+        "tag": "B2C / Especialista",
+        "name": "Dr. Rodrigo Silveira",
+        "role": "Sócio de Escritório de Advocacia Contenciosa",
+        "demographics": "44 anos, especialista sênior",
+        "pain": "Perda de clientes corporativos para bancas especializadas por falta de domínio dos novos precedentes e marcos legais.",
+        "gain": "Posicionar a banca como referência em causas complexas e consultoria de alto valor agregado em Direito & Seguros.",
+        "willingness_to_pay": "R$ 100 (Investimento pessoal em educação executiva / dedutível)",
+        "channels": "OABs estaduais, webinars técnicos, Google Search (jurisprudência e artigos)"
+      }
+    ],
+    "swot": {
+      "strengths": [
+        "Ementa inovadora e aderente às mais recentes atualizações legislativas e regulatórias",
+        "Corpo docente de referência no mercado e nos tribunais superiores",
+        "Metodologia executiva aplicada com estudos de caso e oficinas práticas"
+      ],
+      "opportunities": [
+        "Vácuo competitivo: Concorrentes tradicionais operam matrizes curriculares defasadas",
+        "Forte demanda corporativa B2B por capacitação imediata de equipes técnicas",
+        "Ticket de R$ 100 viável com excelente margem operacional líquida"
+      ],
+      "weaknesses": [
+        "Necessidade de construir autoridade e reconhecimento específico no segmento da oferta",
+        "Estrutura de custos fixos que exige quórum mínimo de 15000 matrículas para break-even"
+      ],
+      "threats": [
+        "Reação de concorrentes consolidados com ofertas similares em 6 a 9 meses",
+        "Sensibilidade do quórum de abertura ao ciclo orçamentário das empresas"
+      ],
+      "tows_strategies": [
+        {
+          "type": "SO (Força + Oportunidade)",
+          "strategy": "Lançar campanha de captação antecipada explorando o ineditismo curricular antes da reação dos concorrentes."
+        },
+        {
+          "type": "WO (Fraqueza + Oportunidade)",
+          "strategy": "Formalizar parcerias institucionais com associações representativas para acelerar a autoridade da marca."
+        },
+        {
+          "type": "ST (Força + Ameaça)",
+          "strategy": "Focar em oficinas práticas simuladas de alto engajamento, blindando o curso contra alternativas puramente gravadas."
+        },
+        {
+          "type": "WT (Fraqueza + Ameaça)",
+          "strategy": "Aplicar gate rigoroso de quórum em D-10 com 15000 alunos, eliminando o risco de déficit operacional."
+        }
+      ]
+    },
+    "curriculum_modules": [
+      {
+        "module": "Módulo I",
+        "title": "Marco Regulatório e Fundamentos Contemporâneos",
+        "hours": "6h",
+        "focus": "Evolução normativa e impacto na teoria geral dos contratos",
+        "practical_activity": "Auditoria de conformidade de cláusulas contratuais"
+      },
+      {
+        "module": "Módulo II",
+        "title": "Jurisprudência dos Tribunais Superiores",
+        "hours": "6h",
+        "focus": "Precedentes vinculantes, teses repetitivas e dever de informação",
+        "practical_activity": "Redação de recurso especial e sustentação oral orientada"
+      },
+      {
+        "module": "Módulo III",
+        "title": "Gestão de Sinistros e Grandes Riscos",
+        "hours": "6h",
+        "focus": "Regulação e liquidação pericial de sinistros complexos",
+        "practical_activity": "Simulação pericial de disputa e cobertura"
+      },
+      {
+        "module": "Módulo IV",
+        "title": "Contratos Coletivos e Judicialização",
+        "hours": "6h",
+        "focus": "Reajustes, sinistralidade e critérios de equilíbrio atuarial",
+        "practical_activity": "Cálculo atuarial de contingência jurídica"
+      },
+      {
+        "module": "Módulo V",
+        "title": "Arbitragem e Resolução Adequada de Conflitos",
+        "hours": "6h",
+        "focus": "Cláusulas compromissórias, perícia arbitral e execução",
+        "practical_activity": "Simulação de audiência arbitral de mediação"
+      },
+      {
+        "module": "Módulo VI",
+        "title": "Compliance, Governança e Inteligência Artificial",
+        "hours": "6h",
+        "focus": "Regulação setorial, proteção de dados e subscrição algorítmica",
+        "practical_activity": "Elaboração de matriz de risco regulatório"
+      }
+    ]
+  },
+  "break_even_above_capacity": {
+    "input_proposal": {
+      "ticket": 2400,
+      "fixed_costs": 100000,
+      "variable_cost_per_student": 452.5,
+      "max_capacity": 30
+    },
+    "input_fact_count": 0,
+    "recommendation": "INSUFFICIENT_EVIDENCE",
+    "kpis": [
+      {
+        "label": "Score de Viabilidade",
+        "value": "0.0",
+        "unit": "/ 100",
+        "trend": "-5.2 vs Limiar",
+        "status": "warning"
+      },
+      {
+        "label": "Preço Recomendado",
+        "value": "R$ 2.400",
+        "unit": "por vaga",
+        "trend": "Alinhado à proposta executiva",
+        "status": "neutral"
+      },
+      {
+        "label": "Break-Even Quórum",
+        "value": "52",
+        "unit": "alunos",
+        "trend": "173.3% da capacidade total",
+        "status": "warning"
+      },
+      {
+        "label": "Margem Líquida Base",
+        "value": "4.0%",
+        "unit": "cenário 54 alunos",
+        "trend": "R$ 5.165 de lucro líquido",
+        "status": "positive"
+      }
+    ],
+    "economics": {
+      "ticket": 2400.0,
+      "max_capacity": 30,
+      "fixed_costs": 100000.0,
+      "variable_cost_per_student": 452.5,
+      "break_even_students": 52,
+      "scenarios": [
+        {
+          "name": "Conservador",
+          "students": 52,
+          "occupancy": "173.3%",
+          "gross_revenue": 124800.0,
+          "total_costs": 123530.0,
+          "net_profit": 1270.0,
+          "margin": "1.0%",
+          "status": "warning"
+        },
+        {
+          "name": "Base (Estimado)",
+          "students": 54,
+          "occupancy": "180.0%",
+          "gross_revenue": 129600.0,
+          "total_costs": 124435.0,
+          "net_profit": 5165.0,
+          "margin": "4.0%",
+          "status": "positive"
+        },
+        {
+          "name": "Otimista",
+          "students": 56,
+          "occupancy": "186.7%",
+          "gross_revenue": 134400.0,
+          "total_costs": 125340.0,
+          "net_profit": 9060.0,
+          "margin": "6.7%",
+          "status": "highlight"
+        }
+      ]
+    },
+    "personas": [
+      {
+        "id": "persona-b2b",
+        "tag": "B2B Corporativo",
+        "name": "Dra. Mariana Costa",
+        "role": "Gerente Jurídica / Sinistros em Seguradora",
+        "demographics": "38 anos, pós-graduada, lidera equipe técnica e jurídica",
+        "pain": "Adequação urgente dos processos internos e contratos às recentes transformações normativas em Direito & Seguros.",
+        "gain": "Capacitar seu time com teses defensivas e melhores práticas de compliance, mitigando litígios e custos operacionais.",
+        "willingness_to_pay": "R$ 2,400 - R$ 2,880 (Orçamento corporativo de T&D / Jurídico)",
+        "channels": "LinkedIn InMail, parcerias com associações setoriais (CNseg, FenSeg, IBDCivil)"
+      },
+      {
+        "id": "persona-b2c",
+        "tag": "B2C / Especialista",
+        "name": "Dr. Rodrigo Silveira",
+        "role": "Sócio de Escritório de Advocacia Contenciosa",
+        "demographics": "44 anos, especialista sênior",
+        "pain": "Perda de clientes corporativos para bancas especializadas por falta de domínio dos novos precedentes e marcos legais.",
+        "gain": "Posicionar a banca como referência em causas complexas e consultoria de alto valor agregado em Direito & Seguros.",
+        "willingness_to_pay": "R$ 2,400 (Investimento pessoal em educação executiva / dedutível)",
+        "channels": "OABs estaduais, webinars técnicos, Google Search (jurisprudência e artigos)"
+      }
+    ],
+    "swot": {
+      "strengths": [
+        "Ementa inovadora e aderente às mais recentes atualizações legislativas e regulatórias",
+        "Corpo docente de referência no mercado e nos tribunais superiores",
+        "Metodologia executiva aplicada com estudos de caso e oficinas práticas"
+      ],
+      "opportunities": [
+        "Vácuo competitivo: Concorrentes tradicionais operam matrizes curriculares defasadas",
+        "Forte demanda corporativa B2B por capacitação imediata de equipes técnicas",
+        "Ticket de R$ 2,400 viável com excelente margem operacional líquida"
+      ],
+      "weaknesses": [
+        "Necessidade de construir autoridade e reconhecimento específico no segmento da oferta",
+        "Estrutura de custos fixos que exige quórum mínimo de 52 matrículas para break-even"
+      ],
+      "threats": [
+        "Reação de concorrentes consolidados com ofertas similares em 6 a 9 meses",
+        "Sensibilidade do quórum de abertura ao ciclo orçamentário das empresas"
+      ],
+      "tows_strategies": [
+        {
+          "type": "SO (Força + Oportunidade)",
+          "strategy": "Lançar campanha de captação antecipada explorando o ineditismo curricular antes da reação dos concorrentes."
+        },
+        {
+          "type": "WO (Fraqueza + Oportunidade)",
+          "strategy": "Formalizar parcerias institucionais com associações representativas para acelerar a autoridade da marca."
+        },
+        {
+          "type": "ST (Força + Ameaça)",
+          "strategy": "Focar em oficinas práticas simuladas de alto engajamento, blindando o curso contra alternativas puramente gravadas."
+        },
+        {
+          "type": "WT (Fraqueza + Ameaça)",
+          "strategy": "Aplicar gate rigoroso de quórum em D-10 com 52 alunos, eliminando o risco de déficit operacional."
+        }
+      ]
+    },
+    "curriculum_modules": [
+      {
+        "module": "Módulo I",
+        "title": "Marco Regulatório e Fundamentos Contemporâneos",
+        "hours": "6h",
+        "focus": "Evolução normativa e impacto na teoria geral dos contratos",
+        "practical_activity": "Auditoria de conformidade de cláusulas contratuais"
+      },
+      {
+        "module": "Módulo II",
+        "title": "Jurisprudência dos Tribunais Superiores",
+        "hours": "6h",
+        "focus": "Precedentes vinculantes, teses repetitivas e dever de informação",
+        "practical_activity": "Redação de recurso especial e sustentação oral orientada"
+      },
+      {
+        "module": "Módulo III",
+        "title": "Gestão de Sinistros e Grandes Riscos",
+        "hours": "6h",
+        "focus": "Regulação e liquidação pericial de sinistros complexos",
+        "practical_activity": "Simulação pericial de disputa e cobertura"
+      },
+      {
+        "module": "Módulo IV",
+        "title": "Contratos Coletivos e Judicialização",
+        "hours": "6h",
+        "focus": "Reajustes, sinistralidade e critérios de equilíbrio atuarial",
+        "practical_activity": "Cálculo atuarial de contingência jurídica"
+      },
+      {
+        "module": "Módulo V",
+        "title": "Arbitragem e Resolução Adequada de Conflitos",
+        "hours": "6h",
+        "focus": "Cláusulas compromissórias, perícia arbitral e execução",
+        "practical_activity": "Simulação de audiência arbitral de mediação"
+      },
+      {
+        "module": "Módulo VI",
+        "title": "Compliance, Governança e Inteligência Artificial",
+        "hours": "6h",
+        "focus": "Regulação setorial, proteção de dados e subscrição algorítmica",
+        "practical_activity": "Elaboração de matriz de risco regulatório"
+      }
+    ]
+  }
+}

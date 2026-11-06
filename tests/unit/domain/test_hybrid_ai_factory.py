@@ -151,6 +151,12 @@ def test_factory_prefers_protected_chatgpt_credential_store(tmp_path: Path) -> N
     assert client.api_key == "stored-access"
 
     assert client.model == "gpt-from-account"
+    decision = get_decision_model(
+        settings.model_copy(update={"AI_MODE": "auto", "TYPESAFE_API_KEY": ""})
+    )
+    assert isinstance(decision, LLMDecisionAdapter)
+    assert isinstance(decision.generative_model, ChatGPTPlanGenerativeClient)
+    assert decision.generative_model.model == "gpt-from-account"
 
 
 @pytest.mark.asyncio

@@ -2,6 +2,12 @@
 
 Este documento detalha o procedimento operacional completo para implantar o **Prometeus** em ambiente de homologação (staging) e conduzir com segurança a operação do piloto com a **Escola de Negócios e Seguros (ENS)**.
 
+## Procedimento vigente — 04/11/2026
+
+Para a versão corrigida, seguir primeiro [operação após a auditoria](audit-remediation.md) e consultar a [homologação real](../implementation/reports/runtime-homologation-2026-11-04.md). O ambiente local existente foi atualizado com backup/restauração prévios, migrações 0011–0013, acesso próprio autenticado e scheduler. `AI_MODE=traditional` funciona integralmente com ChatGPT OAuth, sem API JEV; exemplos híbridos abaixo não são pré-requisitos dessa rota. MCP é um subprocesso stdio separado da API REST. Preservar volumes, credenciais e o histórico sintético ENS identificado como tal.
+
+As metas de piloto abaixo são critérios a medir, não resultados já atingidos. O canário real de 04/11 ultrapassou 180 segundos; não há aprovação da meta de latência ou de rollout amplo. A imagem de runtime não inclui a pasta de testes ou Node: executar a suíte pelo ambiente de desenvolvimento ou imagem de QA com fixtures isoladas das variáveis reais de conectores. Não tentar inferir aprovação a partir de um comando de testes indisponível no contêiner de serviço.
+
 ---
 
 ## 1. Visão Geral da Infraestrutura

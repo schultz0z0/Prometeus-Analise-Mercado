@@ -14,6 +14,7 @@ from prometeus.application.research_scope import (
 )
 from prometeus.application.skill_registry import SkillRegistry
 from prometeus.application.tool_capabilities import CAPABILITY_CONTRACTS
+from prometeus.domain.collection_execution import CollectionExecutionPolicy
 from prometeus.domain.configuration import AppSettings, TenantEcosystemConfig
 from prometeus.domain.ports.generative_model import GenerativeModelPort
 from prometeus.domain.research import (
@@ -90,10 +91,17 @@ _TOPIC_FILLER_WORDS = {
 }
 
 
-def compact_topic_terms(understanding: CourseUnderstanding, max_tokens: int = 4) -> str:
+def compact_topic_terms(
+    understanding: CourseUnderstanding, max_tokens: int = 4, *, prefer_title: bool = True,
+) -> str:
     """Extrai até `max_tokens` palavras-chave nucleares do curso para evitar truncamento (>32 termos no Google)."""
     limit = max(1, max_tokens)
-    candidates = [*understanding.subject_domains, understanding.course_title]
+    # A broad first domain must not displace the distinguishing focus declared
+    # in the course title. Supporting domains remain useful for adjacent offers.
+    candidates = (
+        [understanding.course_title, *understanding.subject_domains]
+        if prefer_title else [*understanding.subject_domains, understanding.course_title]
+    )
     picked: list[str] = []
     seen: set[str] = set()
     for phrase in candidates:
@@ -108,8 +116,7 @@ def compact_topic_terms(understanding: CourseUnderstanding, max_tokens: int = 4)
     if picked:
         return " ".join(picked[:limit])
     fallback = [
-        tok.lower()
-        for tok in re.findall(r"[A-Za-zÀ-ÿ0-9]{2,}", understanding.course_title)
+        tok.lower() for tok in re.findall(r"[A-Za-zÀ-ÿ0-9]{2,}", understanding.course_title)
     ][:limit]
     return " ".join(fallback) or "mercado"
 
@@ -124,23 +131,19 @@ def build_ecosystem_seed_calls(
     understanding: CourseUnderstanding,
     ecosystem: TenantEcosystemConfig,
     allowed_capabilities: list[str],
-    budget_usd: float,
+    budget_usd: float | None,
 ) -> tuple[list[ResearchQuestion], list[PlannedToolCall]]:
-    """Constrói perguntas e chamadas clusterizadas para concorrentes fixos e Radar Setorial respeitando o teto Apify."""
-    if budget_usd <= 0.0 or (not ecosystem.competitors and not ecosystem.sector_radar):
+    """Cobre instituições individualmente, sem cortar escopo por reserva monetária."""
+    if not ecosystem.competitors and not ecosystem.sector_radar:
         return [], []
 
     allowed_set = set(allowed_capabilities)
-    compact_mode = budget_usd < 1.50
     topic = compact_topic_terms(understanding, max_tokens=4)
     questions: list[ResearchQuestion] = []
     calls: list[PlannedToolCall] = []
-    remaining_budget = round(max(0.0, budget_usd), 2)
 
-    # 1. Cluster de Concorrentes Educacionais Fixos (comparação de ofertas, ementas e preços)
-    if ecosystem.competitors and "google_search" in allowed_set and remaining_budget >= 0.15:
-        comp_budget = round(min(0.55 if not compact_mode else 0.35, remaining_budget * 0.5), 2)
-        remaining_budget = round(max(0.0, remaining_budget - comp_budget), 2)
+    # 1. Cada instituição precisa de busca própria: um cluster não comprova cobertura.
+    if ecosystem.competitors and "google_search" in allowed_set:
         capable = ["google_search"] + (["web_crawler"] if "web_crawler" in allowed_set else [])
         questions.append(
             ResearchQuestion(
@@ -153,79 +156,75 @@ def build_ecosystem_seed_calls(
                 priority=1,
                 track=ResearchTrack.DIRECT_COMPETITORS,
                 hypothesis=f"Instituições concorrentes monitoradas possuem cursos diretos ou adjacentes em {topic}",
-                counter_evidence_hypothesis=f"Os concorrentes monitorados ainda não oferecem formação específica em {topic} (whitespace acadêmico)",
+                counter_evidence_hypothesis=f"O recorte pesquisado pode não revelar ofertas comparáveis em {topic}, sem provar ausência de concorrência",
                 expected_evidence="Páginas oficiais de cursos concorrentes com ementa e condições comerciais",
                 capable_sources=capable,
                 scope_filter=understanding.geography,
                 sample_target=len(ecosystem.competitors),
-                budget_allocated_usd=comp_budget,
+                budget_allocated_usd=0.0,
                 sufficiency_criteria="Cobertura verificada dos domínios concorrentes configurados",
-                fallback_or_stop_rule="Registrar ausência observada por concorrente sem inventar oferta",
+                fallback_or_stop_rule="Ampliar termos em até três variantes e registrar lacuna por instituição sem inventar oferta",
             )
         )
 
-        comp_domains = [comp.domains[0] for comp in ecosystem.competitors if comp.domains]
-        comp_chunks = _chunk_domains(comp_domains, chunk_size=5)
-        comp_search_ids: list[str] = []
-        for idx, chunk in enumerate(comp_chunks, start=1):
-            call_id = f"eco-competitors-gsearch-{idx}"
-            comp_search_ids.append(call_id)
-            site_clause = " OR ".join(f"site:{domain}" for domain in chunk)
+        for comp in ecosystem.competitors:
+            if not comp.domains:
+                continue
+            call_id = f"eco-competitor-{comp.id}-discovery"
+            site_clause = " OR ".join(f"site:{domain}" for domain in comp.domains[:2])
             query = f"({site_clause}) curso {topic}".strip()
             calls.append(
                 PlannedToolCall(
                     id=call_id,
                     capability="google_search",
                     query=query,
-                    required=False,
-                    rationale=(
-                        f"Varredura clusterizada ({idx}/{len(comp_chunks)}) nos concorrentes educacionais fixos"
-                    ),
-                    max_items=10 if not compact_mode else 6,
+                    required=True,
+                    rationale=f"Descobrir ofertas diretas e adjacentes de {comp.name}",
+                    max_items=10,
                     parameters={
                         "ecosystem_role": "configured_competitor",
-                        "cluster_index": idx,
+                        "competitor_id": comp.id,
+                        "target_domains": list(comp.domains),
+                        "collection_phase": "discovery",
+                        "priority": 1,
+                        "semantic_variant": 1,
+                        "max_semantic_variants": 3,
                     },
                     question_ids=["q-ecosystem-competitors"],
                 )
             )
 
-        if "web_crawler" in allowed_set and comp_search_ids:
-            calls.append(
-                PlannedToolCall(
-                    id="eco-competitors-crawler",
-                    capability="web_crawler",
-                    query=f"Ofertas concorrentes {topic}",
-                    required=False,
-                    rationale="Extrair ementa, carga horária e preço real das páginas oficiais dos concorrentes",
-                    max_items=8 if not compact_mode else 4,
-                    parameters={
-                        "depends_on": list(comp_search_ids),
-                        "ecosystem_role": "configured_competitor",
-                    },
-                    question_ids=["q-ecosystem-competitors"],
+            if "web_crawler" in allowed_set:
+                calls.append(
+                    PlannedToolCall(
+                        id=f"eco-competitor-{comp.id}-validation",
+                        capability="web_crawler",
+                        query=f"Validar ofertas de {comp.name}: {topic}",
+                        required=True,
+                        rationale="Confirmar cursos e condições nas páginas oficiais descobertas",
+                        max_items=8,
+                        parameters={
+                            "depends_on": [call_id],
+                            "ecosystem_role": "configured_competitor",
+                            "competitor_id": comp.id,
+                            "target_domains": list(comp.domains),
+                            "collection_phase": "validation",
+                            "priority": 1,
+                        },
+                        question_ids=["q-ecosystem-competitors"],
+                    )
                 )
-            )
 
     # 2. Cluster do Radar Setorial Permanente (seguradoras = mercado empregador/tendências/dores, NUNCA concorrentes)
-    if ecosystem.sector_radar and remaining_budget >= 0.10:
+    if ecosystem.sector_radar:
         primary_actors = [a for a in ecosystem.sector_radar if a.priority == "primary"]
         secondary_actors = [a for a in ecosystem.sector_radar if a.priority != "primary"]
-        active_actors = (
-            (primary_actors or ecosystem.sector_radar[:5])
-            if compact_mode
-            else [*primary_actors, *secondary_actors]
-        )
+        active_actors = [*primary_actors, *secondary_actors]
 
-        radar_capable = [
+        radar_capable: list[str] = [
             cap for cap in ("google_search", "instagram") if cap in allowed_set
         ]
         if radar_capable and active_actors:
-            radar_budget = round(
-                min(0.50 if not compact_mode else 0.25, remaining_budget),
-                2,
-            )
-            remaining_budget = round(max(0.0, remaining_budget - radar_budget), 2)
             questions.append(
                 ResearchQuestion(
                     id="q-sector-radar",
@@ -242,7 +241,7 @@ def build_ecosystem_seed_calls(
                     capable_sources=radar_capable,
                     scope_filter=understanding.geography,
                     sample_target=len(active_actors),
-                    budget_allocated_usd=radar_budget,
+                    budget_allocated_usd=0.0,
                     sufficiency_criteria="Amostra contextual dos atores prioritários do Radar Setorial",
                     fallback_or_stop_rule="Utilizar snapshot persistente do Radar Setorial quando disponível",
                 )
@@ -263,7 +262,7 @@ def build_ecosystem_seed_calls(
                             rationale=(
                                 f"Radar Setorial ({idx}/{len(radar_chunks)}): mapear tendências e dores do mercado segurador"
                             ),
-                            max_items=8 if not compact_mode else 5,
+                            max_items=8,
                             parameters={
                                 "ecosystem_role": "sector_radar",
                                 "cluster_index": idx,
@@ -272,12 +271,11 @@ def build_ecosystem_seed_calls(
                         )
                     )
 
-            if not compact_mode and "instagram" in allowed_set:
+            if "instagram" in allowed_set:
                 confirmed_ig_actors = [
                     actor
                     for actor in active_actors
-                    if actor.social.instagram_handle
-                    and actor.social.instagram_handle.strip()
+                    if actor.social.instagram_handle and actor.social.instagram_handle.strip()
                 ]
                 for actor in confirmed_ig_actors[:2]:
                     handle = str(actor.social.instagram_handle).strip().lstrip("@")
@@ -302,6 +300,91 @@ def build_ecosystem_seed_calls(
                     )
 
     return questions, calls
+
+
+def build_competitor_followup_calls(
+    understanding: CourseUnderstanding,
+    ecosystem: TenantEcosystemConfig,
+    existing_calls: list[PlannedToolCall],
+    coverage: dict[str, Any],
+) -> list[PlannedToolCall]:
+    """Amplia uma pesquisa concluída sem ofertas, sem reiniciar retries técnicos.
+
+    Uma invocação emite somente a próxima variante por instituição. O chamador
+    deve passar chamadas de todos os planos já persistidos para limitar a três
+    variantes semânticas no conjunto da análise.
+    """
+    rows = {
+        str(row.get("competitor_id")): row
+        for row in coverage.get("rows", [])
+        if isinstance(row, dict)
+    }
+    can_validate = any(call.capability == "web_crawler" for call in existing_calls)
+    calls: list[PlannedToolCall] = []
+    for competitor in ecosystem.competitors:
+        row = rows.get(competitor.id, {})
+        if row.get("execution_status") != "completed" or row.get("offers"):
+            continue
+        if row.get("evidence_status") in {"direct_offer", "adjacent_offer", "validation_pending"}:
+            continue
+        previous = [
+            call for call in existing_calls
+            if call.parameters.get("competitor_id") == competitor.id
+            and call.capability == "google_search"
+        ]
+        if not previous or not competitor.domains:
+            continue
+        variants = [
+            value if isinstance(value, int) and not isinstance(value, bool) else 1
+            for value in (call.parameters.get("semantic_variant", 1) for call in previous)
+        ]
+        variant = max(variants) + 1
+        if variant > 3:
+            continue
+        sites = " OR ".join(f"site:{domain}" for domain in competitor.domains[:2])
+        topic = compact_topic_terms(
+            understanding, max_tokens=6 if variant == 2 else 2, prefer_title=variant == 2,
+        )
+        formats = "curso OR formação OR extensão" if variant == 2 else "especialização OR capacitação OR treinamento"
+        query = f"({sites}) ({formats}) {topic}"
+        if any(call.query.casefold() == query.casefold() for call in previous):
+            continue
+        call_id = f"eco-competitor-{competitor.id}-discovery-v{variant}"
+        parameters = {
+            "competitor_id": competitor.id,
+            "ecosystem_role": "configured_competitor",
+            "target_domains": list(competitor.domains),
+            "collection_phase": "discovery",
+            "priority": 1,
+            "semantic_variant": variant,
+            "max_semantic_variants": 3,
+            "country": country_code(understanding.geography),
+            "location": normalize_geography(understanding.geography),
+            "language": normalize_language(understanding.language),
+            "sample_scope": "capped_sample",
+        }
+        calls.append(PlannedToolCall(
+            id=call_id,
+            capability="google_search",
+            query=query,
+            required=True,
+            rationale=f"Ampliar formatos educacionais na pesquisa de {competitor.name}, variante {variant}/3",
+            max_items=10,
+            parameters=parameters,
+            question_ids=["q-ecosystem-competitors"],
+        ))
+        if can_validate:
+            calls.append(PlannedToolCall(
+                id=f"eco-competitor-{competitor.id}-validation-v{variant}",
+                capability="web_crawler",
+                query=f"Validar ofertas de {competitor.name}: {topic}",
+                required=True,
+                rationale="Validar páginas oficiais descobertas na pesquisa ampliada",
+                max_items=8,
+                parameters={**parameters, "collection_phase": "validation", "depends_on": [call_id]},
+                question_ids=["q-ecosystem-competitors"],
+            ))
+    return calls
 
 
 def _normalize_priority(value: Any) -> int:
@@ -392,6 +475,13 @@ def _normalize_call(item: Any, index: int) -> dict[str, Any]:
         max_items = 5
     params = item.get("parameters")
     parameters = dict(params) if isinstance(params, dict) else {}
+    # Institution identity and execution precedence are assigned by backend seeds.
+    # A model-provided label must not manufacture coverage or override that order.
+    for reserved in (
+        "competitor_id", "competitor_ids", "target_domains", "collection_phase", "priority",
+        "ecosystem_role", "semantic_variant", "max_semantic_variants",
+    ):
+        parameters.pop(reserved, None)
     q_ids = item.get("question_ids")
     if isinstance(q_ids, list):
         question_ids = [str(q) for q in q_ids if q]
@@ -436,11 +526,9 @@ class CourseResearchPlanner:
     ) -> CourseResearchPlan:
         allowed = list(ApifyActorRegistry.from_settings(self.settings).capabilities)
         required = [] if gaps is not None else self.settings.required_market_sources
-        budget = (
-            self.settings.APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS
-            if budget_limit_usd is None
-            else budget_limit_usd
-        )
+        # The deprecated monetary argument is not a scope filter for new policies.
+        # Resuming a persisted legacy plan does not invoke this planner.
+        budget = None
         catalog = [{"capability": name, **CAPABILITY_CONTRACTS[name]} for name in allowed]
         understanding_json = understanding.model_dump_json(exclude={"created_at"}, indent=2)
         ecosystem_context = ""
@@ -503,7 +591,8 @@ class CourseResearchPlanner:
             f"Allowlist de capabilities: {json.dumps(allowed, ensure_ascii=False)}\n"
             f"Fontes obrigatórias (todas devem ter pelo menos uma chamada com required=true): "
             f"{json.dumps(required)}\n"
-            f"Orçamento restante USD: {budget}\n"
+            "Política de custo: monitoramento, sem teto monetário por chamada ou análise.\n"
+            "Mantenha escopo finito de itens, páginas, variantes e tempo; não omita fontes por custo estimado.\n"
             "Regras de execução:\n"
             "1. Inclua todas as fontes obrigatórias listadas acima com required=true.\n"
             "2. Dimensione a amostra por fonte e pergunta, respeitando o orçamento. Lotes iniciais sugeridos: "
@@ -706,8 +795,7 @@ class CourseResearchPlanner:
                     existing_c_ids.add(sc.id)
 
             if "google_search" in allowed and not any(
-                c.capability == "google_search" and "site:" not in c.query.lower()
-                for c in calls
+                c.capability == "google_search" and "site:" not in c.query.lower() for c in calls
             ):
                 topic = compact_topic_terms(understanding, max_tokens=4)
                 calls.append(
@@ -771,7 +859,22 @@ class CourseResearchPlanner:
                 )
             )
 
-        stopwords = {"em", "de", "da", "do", "das", "dos", "para", "com", "a", "o", "as", "os", "no", "na"}
+        stopwords = {
+            "em",
+            "de",
+            "da",
+            "do",
+            "das",
+            "dos",
+            "para",
+            "com",
+            "a",
+            "o",
+            "as",
+            "os",
+            "no",
+            "na",
+        }
 
         def query_sig(cap: str, q: str) -> tuple[str, str]:
             tokens = [
@@ -860,7 +963,7 @@ class CourseResearchPlanner:
                     }
                 )
             )
-        calls = normalized
+        calls = sorted(normalized, key=lambda call: int(call.parameters.get("priority", 10)))
 
         return CourseResearchPlan(
             analysis_id=understanding.analysis_id,
@@ -868,6 +971,7 @@ class CourseResearchPlanner:
             questions=questions,
             tool_calls=calls,
             budget_limit_usd=budget,
+            execution_policy=CollectionExecutionPolicy(),
             skill_snapshots=[
                 skill.snapshot()
                 for skill in {

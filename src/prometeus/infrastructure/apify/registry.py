@@ -252,6 +252,7 @@ def _google_trends_input(call: PlannedToolCall) -> dict[str, Any]:
         "maxItems": call.max_items,
         "geo": _non_empty_string(call.parameters.get("geo"), "BR"),
         "timeRange": time_range,
+        **({"maxConcurrency": 1} if call.parameters.get("recovery_max_concurrency") == 1 else {}),
     }
 
 

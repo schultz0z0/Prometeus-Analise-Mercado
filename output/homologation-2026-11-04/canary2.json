@@ -1,0 +1,9 @@
+{
+  "analysis_id": "dffd0359-4a40-4cc4-be00-fc5bb74bf687",
+  "previous_analysis_id": "0fe55f2d-6b58-4177-9185-25255c860526",
+  "status": "QUEUED",
+  "message": "Rean\u00e1lise enfileirada com sucesso a partir de 0fe55f2d-6b58-4177-9185-25255c860526.",
+  "idempotency_verified": true,
+  "budget_policy": "analysis-caps-v1",
+  "root_limit_usd": 5.0
+}

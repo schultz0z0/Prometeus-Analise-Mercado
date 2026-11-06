@@ -124,9 +124,7 @@ def classify_research_gaps(
         for cap in related_capabilities:
             related_evidence_types.update(CAPABILITY_EVIDENCE_TYPE_MAP.get(cap, set()))
 
-        related_runs = [
-            r for r in runs_list if r.get("capability") in related_capabilities
-        ]
+        related_runs = [r for r in runs_list if r.get("capability") in related_capabilities]
 
         # 1. Verificar se dados já foram persistidos em evidences (perda de projeção de contexto)
         matching_evidences = []
@@ -183,7 +181,11 @@ def classify_research_gaps(
 
             # Falha técnica de provedor / timeout
             failed_run = next(
-                (r for r in related_runs if r.get("status") in {"FAILED", "PARTIAL"} or r.get("error_code")),
+                (
+                    r
+                    for r in related_runs
+                    if r.get("status") in {"FAILED", "PARTIAL"} or r.get("error_code")
+                ),
                 None,
             )
             if failed_run:

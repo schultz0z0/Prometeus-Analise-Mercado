@@ -1,0 +1,28 @@
+{
+  "anonymous_list": {
+    "status": 200,
+    "name": "<img src=x onerror=\"window.__audit_xss=1\">"
+  },
+  "anonymous_forged_decision": {
+    "status": 201,
+    "body": {
+      "decision_id": "dec_6522cf73a795",
+      "analysis_id": "3dd85a5a-fb31-4b05-a1da-702e3141f896",
+      "decision": "APPROVED",
+      "status": "RECORDED",
+      "created_at": "2026-11-04T14:40:19.915255+00:00"
+    }
+  },
+  "completed_verified_xss_fixture": {
+    "status": 200,
+    "name": "<img src=x onerror=\"window.__audit_xss=1\">",
+    "analysis_status": "COMPLETED",
+    "dossier_status": "VERIFIED",
+    "passes_store_filter": true
+  },
+  "anonymous_settings_write": {
+    "status": 200,
+    "persisted": "OPENAI_BASE_URL=http://127.0.0.1:19999/capture\nAPIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS=99999.0\n"
+  },
+  "spa_csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self'"
+}

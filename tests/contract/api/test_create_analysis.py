@@ -37,7 +37,11 @@ async def client(test_session: AsyncSession) -> AsyncGenerator[AsyncClient, None
 
     app.dependency_overrides[get_db_session] = override_get_db_session
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://testserver") as ac:
+    async with AsyncClient(
+        transport=transport,
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://testserver",
+    ) as ac:
         yield ac
     app.dependency_overrides.clear()
 

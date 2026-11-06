@@ -1,0 +1,29 @@
+{
+  "/health/live": {
+    "status": 200,
+    "result": "live"
+  },
+  "/health/ready": {
+    "status": 200,
+    "result": "ready"
+  },
+  "session_cookie_httponly": true,
+  "identity": {
+    "subject": "local-admin",
+    "tenant_id": "ens",
+    "role": "admin"
+  },
+  "historical_courses": 33,
+  "runtime": {
+    "ai_mode": "traditional",
+    "jev_enabled": false,
+    "gen_llm_provider": "chatgpt_oauth",
+    "gen_llm_model": "gpt-6.1-terra",
+    "chatgpt_oauth_connected": true,
+    "apify_max_charge": 5.0
+  },
+  "anonymous_protected": true,
+  "cross_tenant_rejected": true,
+  "cross_origin_rejected": true,
+  "logout_revokes_browser_session": true
+}

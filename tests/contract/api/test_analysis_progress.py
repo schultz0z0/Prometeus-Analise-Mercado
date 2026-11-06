@@ -7,7 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from prometeus.domain.analyses import Analysis
 from prometeus.entrypoints.rest.app import app
 from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
-from prometeus.infrastructure.db.models import Base, ResearchPlanModel, ToolRunModel
+from prometeus.infrastructure.db.models import (
+    Base,
+    ResearchPlanModel,
+    ToolRunAttemptModel,
+    ToolRunModel,
+)
 from prometeus.infrastructure.db.session import get_db_session
 
 
@@ -30,6 +35,7 @@ async def client(test_session: AsyncSession) -> httpx.AsyncClient:
     app.dependency_overrides[get_db_session] = override_session
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app),
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
         base_url="http://test",
     ) as http_client:
         yield http_client
@@ -80,7 +86,14 @@ async def test_progress_exposes_safe_tool_provenance_and_blocking_reason(
             status="FAILED",
             provider_run_id="apify-run-id",
             dataset_id="dataset-id",
-            parameters={"secret_like_input": "must-not-leak"},
+            parameters={
+                "secret_like_input": "must-not-leak",
+                "authorized_cap_usd": 0.5,
+                "authorization_status": "committed",
+                "cost_status": "observed_provisional",
+                "cost_source": "apify.usageTotalUsd",
+                "cost_observed_at": "2026-11-04T17:00:00+00:00",
+            },
             raw_items_count=12,
             valid_items_count=9,
             cost_usd=0.13,
@@ -90,6 +103,15 @@ async def test_progress_exposes_safe_tool_provenance_and_blocking_reason(
             finished_at=datetime.now(UTC),
         )
     )
+    test_session.add(ToolRunAttemptModel(
+        id="attempt-safe", tool_run_id="run-progress", analysis_id=analysis.id,
+        tenant_id="ens", task_key="task-hash", attempt_index=1, input_hash="input-hash",
+        actor_id="owner/actor", actor_build="1.2.3", provider_run_id="apify-run-id",
+        dataset_id="dataset-id", status="FAILED", cost_usd=0.13,
+        input_snapshot={"secret": "never-expose"},
+        diagnosis={"cause": "rate_limited", "action": "wait_backoff", "raw": "never-expose"},
+        started_at=datetime.now(UTC), next_attempt_at=datetime.now(UTC),
+    ))
     await test_session.commit()
 
     response = await client.get(f"/v1/analyses/{analysis.id}")
@@ -113,6 +135,21 @@ async def test_progress_exposes_safe_tool_provenance_and_blocking_reason(
             "valid_items_count": 9,
             "observation_status": None,
             "cost_usd": 0.13,
+            "cost_status": "observed_provisional",
+            "cost_source": "apify.usageTotalUsd",
+            "cost_observed_at": "2026-11-04T17:00:00+00:00",
+            "authorized_cap_usd": 0.5,
+            "authorization_status": "committed",
+            "spending_mode": "legacy_caps",
+            "attempts_count": 1,
+            "attempts": [{
+                "attempt_index": 1, "status": "FAILED", "run_id": "apify-run-id",
+                "dataset_id": "dataset-id", "cost_usd": 0.13,
+                "cause": "rate_limited", "action": "wait_backoff",
+                "started_at": payload["tool_runs"][0]["attempts"][0]["started_at"],
+                "finished_at": None,
+                "next_attempt_at": payload["tool_runs"][0]["attempts"][0]["next_attempt_at"],
+            }],
             "error_code": "http_500",
             "error_message": "Falha sanitizada",
             "started_at": payload["tool_runs"][0]["started_at"],
@@ -120,3 +157,4 @@ async def test_progress_exposes_safe_tool_provenance_and_blocking_reason(
         }
     ]
     assert "parameters" not in payload["tool_runs"][0]
+    assert "never-expose" not in response.text

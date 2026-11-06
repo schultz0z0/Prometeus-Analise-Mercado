@@ -1,0 +1,67 @@
+{
+  "suites": {
+    "apify-schemas": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "1",
+        "time": "7.816",
+        "timestamp": "2026-11-06T11:32:43.282125-03:00",
+        "hostname": "RJM22156"
+      }
+    ],
+    "linux-suite": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "5",
+        "tests": "824",
+        "time": "31.422",
+        "timestamp": "2026-11-06T20:38:27.081220+00:00",
+        "hostname": "c3c42658072c"
+      }
+    ],
+    "llm-controls": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "0",
+        "tests": "4",
+        "time": "14.311",
+        "timestamp": "2026-11-05T16:37:32.358130-03:00",
+        "hostname": "RJM22156"
+      }
+    ],
+    "start-contract-regressions": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "1",
+        "tests": "98",
+        "time": "17.417",
+        "timestamp": "2026-11-05T16:15:24.517214-03:00",
+        "hostname": "RJM22156"
+      }
+    ],
+    "windows-suite": [
+      {
+        "name": "pytest",
+        "errors": "0",
+        "failures": "0",
+        "skipped": "5",
+        "tests": "824",
+        "time": "75.918",
+        "timestamp": "2026-11-06T17:36:59.171131-03:00",
+        "hostname": "RJM22156"
+      }
+    ]
+  },
+  "ruff": "passed",
+  "mypy_source_files": 96,
+  "canonical_docs_checked": 134
+}

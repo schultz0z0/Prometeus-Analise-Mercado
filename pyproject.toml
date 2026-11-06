@@ -33,6 +33,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+apify-mcp = ["mcp==1.28.1"]
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
@@ -46,6 +47,7 @@ dev = [
 
 [project.scripts]
 prometeus = "prometeus.entrypoints.cli.main:app"
+prometeus-mcp = "prometeus.entrypoints.mcp.__main__:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/prometeus"]
@@ -53,6 +55,7 @@ packages = ["src/prometeus"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+extend-exclude = [".security", "output", "artifacts", "docs", "*.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "C4"]
@@ -82,4 +85,5 @@ addopts = "-ra -q -p no:cacheprovider"
 testpaths = ["tests"]
 pythonpath = ["src"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 python_files = ["test_*.py"]

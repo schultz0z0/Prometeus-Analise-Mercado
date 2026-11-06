@@ -1,0 +1,5 @@
+{
+  "rollback_0013_to_0012": "passed",
+  "upgrade_0012_to_0013": "passed",
+  "prior_analyses_and_scores_preserved": true
+}

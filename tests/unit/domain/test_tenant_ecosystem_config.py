@@ -122,6 +122,8 @@ def test_rejects_non_https_social_or_portal_urls() -> None:
 @pytest.mark.asyncio
 async def test_create_analysis_freezes_ecosystem_into_institution_context() -> None:
     session = AsyncMock()
+    session.begin_nested = MagicMock()
+    session.add = MagicMock()
     exec_result = MagicMock()
     exec_result.scalar_one_or_none.return_value = None
     session.execute.return_value = exec_result
@@ -149,13 +151,14 @@ async def test_create_analysis_freezes_ecosystem_into_institution_context() -> N
     assert len(inst_ctx["sector_radar"]) == 10
 
 
-
 @pytest.mark.asyncio
 async def test_create_analysis_isolates_infnet_from_ens_ecosystem() -> None:
     from prometeus.application.run_course_analysis import RunCourseAnalysis
     from prometeus.domain.analyses import Analysis
 
     session = AsyncMock()
+    session.begin_nested = MagicMock()
+    session.add = MagicMock()
     exec_result = MagicMock()
     exec_result.scalar_one_or_none.return_value = None
     session.execute.return_value = exec_result
@@ -206,7 +209,9 @@ async def test_create_analysis_isolates_infnet_from_ens_ecosystem() -> None:
     assert resolved_ctx["id"] == "infnet"
 
 
-def test_domains_preserve_primary_yaml_declaration_order_and_reject_duplicate_sector_radar_domains() -> None:
+def test_domains_preserve_primary_yaml_declaration_order_and_reject_duplicate_sector_radar_domains() -> (
+    None
+):
     cfg = load_tenant_config(Path("config/tenants/ens.example.yaml"))
     fgv = next(c for c in cfg.ecosystem.competitors if c.id == "fgv")
     assert fgv.domains[0] == "fgv.br"

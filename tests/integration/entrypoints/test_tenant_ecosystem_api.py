@@ -36,7 +36,11 @@ async def client(test_session: AsyncSession) -> httpx.AsyncClient:
 
     app.dependency_overrides[get_db_session] = override_session
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+    async with httpx.AsyncClient(
+        transport=transport,
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
+    ) as c:
         yield c
     app.dependency_overrides.clear()
 
@@ -85,7 +89,10 @@ async def test_get_ens_ecosystem_returns_ten_competitors_ten_insurers_and_no_sec
 async def test_get_legacy_tenant_ecosystem_returns_empty_lists(
     client: httpx.AsyncClient,
 ) -> None:
-    resp = await client.get("/v1/tenants/infnet/ecosystem")
+    resp = await client.get(
+        "/v1/tenants/infnet/ecosystem",
+        headers={"Authorization": "Bearer test-infnet-key-12345678901234567890"},
+    )
     assert resp.status_code == 200
     data = resp.json()
     assert data["tenant_id"] == "infnet"
@@ -98,10 +105,10 @@ async def test_get_unknown_or_invalid_tenant_ecosystem_returns_404(
     client: httpx.AsyncClient,
 ) -> None:
     resp_unknown = await client.get("/v1/tenants/instituicao-inexistente/ecosystem")
-    assert resp_unknown.status_code == 404
+    assert resp_unknown.status_code == 403
 
     resp_traversal = await client.get("/v1/tenants/..%2Fsecret/ecosystem")
-    assert resp_traversal.status_code == 404
+    assert resp_traversal.status_code in {403, 404}
 
 
 @pytest.mark.asyncio
@@ -161,7 +168,7 @@ async def test_post_sector_radar_refresh_returns_fresh_snapshot_and_404_for_unkn
     assert refresh_data["spent_usd"] == 0.12
 
     resp_404 = await client.post("/v1/tenants/instituicao-inexistente/sector-radar/refresh")
-    assert resp_404.status_code == 404
+    assert resp_404.status_code == 403
 
 
 def test_intake_view_renders_automatic_ecosystem_panel_and_preserves_optional_seed_input() -> None:
@@ -172,7 +179,12 @@ def test_intake_view_renders_automatic_ecosystem_panel_and_preserves_optional_se
         "allow_extra_intake_competitors": True,
         "competitors": [c.model_dump(mode="json") for c in ens_cfg.ecosystem.competitors],
         "sector_radar": [s.model_dump(mode="json") for s in ens_cfg.ecosystem.sector_radar],
-        "radar_status": {"has_snapshot": True, "is_fresh": True, "status": "READY", "signals_count": 6},
+        "radar_status": {
+            "has_snapshot": True,
+            "is_fresh": True,
+            "status": "READY",
+            "signals_count": 6,
+        },
     }
     source = Path("web/js/views/intake-view.js").resolve().as_uri()
     script = f"""import {{renderIntakeView}} from {json.dumps(source)};
@@ -206,7 +218,9 @@ console.log(renderIntakeView({{getState:()=>payload}}));"""
     infnet_state = {
         "tenants": [{"id": "infnet", "name": "Instituto Infnet"}],
         "currentTenantId": "infnet",
-        "tenantEcosystems": {"infnet": {"tenant_id": "infnet", "competitors": [], "sector_radar": []}},
+        "tenantEcosystems": {
+            "infnet": {"tenant_id": "infnet", "competitors": [], "sector_radar": []}
+        },
     }
     html_infnet = subprocess.run(
         ["node", "--input-type=module", "-e", script],
@@ -218,8 +232,6 @@ console.log(renderIntakeView({{getState:()=>payload}}));"""
 
     assert "intake-ecosystem-panel" not in html_infnet
     assert 'id="course-competitors"' in html_infnet
-
-
 
 
 @pytest.mark.asyncio

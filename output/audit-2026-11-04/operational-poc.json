@@ -1,0 +1,76 @@
+{
+  "keyword_concurrent_session": {
+    "provider_behavior": "HIGH_RELEVANCE para todos os 15 termos, sem falhas",
+    "judged": {
+      "HIGH_RELEVANCE": 1,
+      "IRRELEVANT": 14
+    },
+    "unnecessarily_rejected": [
+      "seguros 1",
+      "seguros 2",
+      "seguros 3",
+      "seguros 4",
+      "seguros 5",
+      "seguros 6",
+      "seguros 7",
+      "seguros 8",
+      "seguros 9",
+      "seguros 10",
+      "seguros 11",
+      "seguros 12",
+      "seguros 13",
+      "seguros 14"
+    ],
+    "db_envelopes": 15,
+    "envelopes_without_analysis": 15
+  },
+  "backup_loses_scoring": {
+    "source_scores": 1,
+    "restored_scores": 0,
+    "restore_status": "RESTORED",
+    "manifest_tables": [
+      "analyses",
+      "analysis_steps",
+      "audit_events",
+      "config_snapshots",
+      "course_outcomes",
+      "dossiers",
+      "historical_courses",
+      "historical_funnel_records",
+      "human_decisions",
+      "webhook_deliveries"
+    ],
+    "omitted_tables": [
+      "decision_results",
+      "execution_envelopes",
+      "market_evidences",
+      "research_plans",
+      "scoring_results",
+      "sector_radar_snapshots",
+      "tool_runs"
+    ]
+  },
+  "idempotency_cross_tenant": {
+    "requested_tenant": "infnet",
+    "returned_tenant": "ens",
+    "same_analysis_as_ens": true,
+    "second_is_existing": true
+  },
+  "evaluation_target_leakage": {
+    "provider": "BenchmarkEvaluationModel (sem chamada JEV)",
+    "identical_blank_input_different_labels": [
+      {
+        "expected_injected": "HIGH_RELEVANCE",
+        "returned": "HIGH_RELEVANCE"
+      },
+      {
+        "expected_injected": "MEDIUM_RELEVANCE",
+        "returned": "MEDIUM_RELEVANCE"
+      },
+      {
+        "expected_injected": "IRRELEVANT",
+        "returned": "IRRELEVANT"
+      }
+    ]
+  }
+}

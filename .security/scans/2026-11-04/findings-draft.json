@@ -1,0 +1,167 @@
+[
+  {
+    "verdict": "confirmed",
+    "title": "API permite decisões institucionais e configuração administrativa sem autenticação",
+    "description": "As rotas REST não verificam identidade ou escopo. Em banco SQLite em memória, GET /v1/analyses sem Authorization retornou 200 e dados da proposta; POST /decisions com user_id='forged-director' e user_role='director' retornou 201. POST /v1/settings anônimo gravou OPENAI_BASE_URL=http://127.0.0.1:19999/capture e APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS=99999.0 em arquivo temporário e retornou 200. Isso permite falsificar deliberação, ler propostas e alterar provedores/orçamento. Mudar a base URL ainda direciona prompts e o cabeçalho Bearer do cliente LLM ao destino configurado, dependendo do provedor/modo ativo. Nenhum segredo real foi lido ou transmitido.",
+    "root_cause": "submit_human_decision em src/prometeus/entrypoints/rest/app.py confia em user_id/user_role fornecidos pelo solicitante e não exige autenticação/autorização, permitindo registrar decisões institucionais forjadas.",
+    "intended_behavior": "RNF-004 exige autenticação máquina-a-máquina e autorização por escopo; mudanças administrativas e decisões humanas devem ter principal e permissão verificáveis.",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "src/prometeus/entrypoints/rest/app.py",
+        "line": 736,
+        "scope": "submit_human_decision",
+        "description": "Recebe análise e identidade/decisão declaradas pelo solicitante sem dependência de autenticação."
+      },
+      {
+        "kind": "propagation",
+        "file": "src/prometeus/entrypoints/rest/app.py",
+        "line": 752,
+        "scope": "submit_human_decision",
+        "description": "Copia user_id e user_role do payload para o registro de decisão."
+      },
+      {
+        "kind": "sink",
+        "file": "src/prometeus/entrypoints/rest/app.py",
+        "line": 759,
+        "scope": "submit_human_decision",
+        "description": "Faz commit do registro institucional sem validar principal ou escopo."
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "network_routing",
+        "description": "O atacante precisa alcançar uma porta da API; firewall/proxy externo pode restringir acesso, mas não foi testado. compose.yaml publica 8000 e 1455 sem binding ao loopback."
+      },
+      {
+        "kind": "data_state",
+        "description": "Para falsificar decisão, uma análise deve existir. A listagem também está sem autenticação."
+      },
+      {
+        "kind": "system_configuration",
+        "description": "Para exfiltração de chave por troca de base URL, a execução posterior deve usar um provedor que envie o Bearer à base configurada. Esta cadeia não foi exercitada com credenciais reais."
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Solicitante que alcança a API da instituição; no XSS, um proponente capaz de introduzir metadado HTML em uma análise posteriormente concluída.",
+      "payloads": [
+        "GET /v1/analyses?tenant_id=ens",
+        "POST /v1/analyses/{id}/decisions {\"user_id\":\"forged-director\",\"user_role\":\"director\",\"decision\":\"APPROVED\",\"rationale\":\"Isolated audit proof\"}",
+        "POST /v1/settings {\"openai_base_url\":\"http://127.0.0.1:19999/capture\",\"apify_max_charge\":99999}"
+      ],
+      "instructions": [
+        "Execute security_probe.py com o Python do ambiente virtual.",
+        "Inspecione anonymous_list, anonymous_forged_decision e anonymous_settings_write em security-probe-output.json.",
+        "Nenhum request usa Authorization. O banco e o arquivo de configuração são isolados e temporários."
+      ],
+      "expected_result": "Listagem 200, decisão forjada 201 e alteração de configuração 200 com os novos valores persistidos."
+    },
+    "remediation": {
+      "strategy": "Exigir principal autenticado e escopos em todas as rotas de negócio; restringir settings/OAuth/seed a administradores; derivar ator de decisão do principal. Vincular recursos ao tenant do deployment e do principal. Restringir portas publicadas e validar destinos de provedores conforme política operacional."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "high",
+        "reason": "Acesso depende da exposição da API; o compose não restringe as portas ao loopback. XSS exige dossiê concluído e abertura do portfólio."
+      },
+      "impact": {
+        "score": "high",
+        "reason": "Configurações e decisões institucionais podem ser alteradas sem principal; XSS executa código na origem do portal, sem sessão autenticada existente a roubar."
+      },
+      "overall_severity": "high"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Código e chamadas ASGI isoladas confirmam leitura/gravação sem credencial. Exposição pública não foi testada e depende da rede real."
+    }
+  },
+  {
+    "verdict": "confirmed",
+    "title": "Portfólio executa HTML armazenado nos metadados de diagnósticos verificados",
+    "description": "O portfólio interpola name, area, level e modality sem escape antes de atribuir o template a innerHTML. A listagem REST preserva course_name bruto e a CSP da SPA permite handlers inline. Um Chromium isolado com o renderer real e payload <img src=x onerror=window.__audit_xss=1> retornou marker=1. A fixture SQLite em memória com transições válidas COMPLETED, scoring e dossiê VERIFIED mantém o payload e passa o filtro de loadCompletedAnalyses. A prova não executa LLM/Actors reais: o atacante precisa que metadado malicioso alcance uma análise concluída e verificada. Uma análise apenas QUEUED não é exibida nessa lista.",
+    "root_cause": "renderPortfolioView em web/js/views/portfolio-view.js não escapa metadados de cursos antes de interpolá-los em HTML, permitindo execução de handlers na origem do portal.",
+    "intended_behavior": "Metadados de propostas devem aparecer como texto, inclusive quando contêm HTML; verificação factual do dossiê não autoriza tratar os metadados como código HTML.",
+    "trace": [
+      {
+        "kind": "entrypoint",
+        "file": "src/prometeus/entrypoints/rest/app.py",
+        "line": 233,
+        "scope": "create_analysis",
+        "description": "Encaminha course_name recebido no corpo à criação da análise."
+      },
+      {
+        "kind": "propagation",
+        "file": "src/prometeus/application/create_analysis.py",
+        "line": 91,
+        "scope": "CreateAnalysisUseCase.execute",
+        "description": "Preserva o nome no agregado a persistir."
+      },
+      {
+        "kind": "propagation",
+        "file": "src/prometeus/entrypoints/rest/app.py",
+        "line": 420,
+        "scope": "list_analyses",
+        "description": "Devolve o course_name persistido como name sem sanitização HTML."
+      },
+      {
+        "kind": "propagation",
+        "file": "web/js/views/portfolio-view.js",
+        "line": 240,
+        "scope": "renderPortfolioView",
+        "description": "Interpola course.name em conteúdo HTML sem escapeHtml."
+      },
+      {
+        "kind": "sink",
+        "file": "web/js/app.js",
+        "line": 49,
+        "scope": "PrometeusApp.render",
+        "description": "Atribui template das views a root.innerHTML, interpretando handlers HTML."
+      }
+    ],
+    "conditions": [
+      {
+        "kind": "data_state",
+        "description": "Uma análise com metadado HTML deve estar COMPLETED e ter dossiê VERIFIED; store.js filtra ambos antes de inserir no portfólio. A prova usou fixture isolada, sem provar que uma LLM real aprovará um título malicioso."
+      },
+      {
+        "kind": "user_interaction",
+        "description": "Um usuário abre a aba Novos Diagnósticos do portfólio."
+      },
+      {
+        "kind": "system_configuration",
+        "description": "A CSP entregue pela aplicação permite script-src 'unsafe-inline'."
+      }
+    ],
+    "execution": {
+      "attacker_perspective": "Solicitante que alcança a API da instituição; no XSS, um proponente capaz de introduzir metadado HTML em uma análise posteriormente concluída.",
+      "payloads": [
+        "course_name=<img src=x onerror=window.__audit_xss=1>"
+      ],
+      "instructions": [
+        "Execute security_probe.py para confirmar que uma fixture completed/verified preserva o payload e passa o filtro do store.",
+        "Sirva somente a pasta web em loopback e abra-a em um Chromium isolado.",
+        "Passe o payload a renderPortfolioView e atribua o resultado a app-root.innerHTML, como faz PrometeusApp.render.",
+        "Inspecione window.__audit_xss; o valor observado é 1."
+      ],
+      "expected_result": "O handler do elemento img é interpretado e altera window.__audit_xss para 1 na origem do portal."
+    },
+    "remediation": {
+      "strategy": "Aplicar escapeHtml a todos os metadados interpolados no portfólio, inclusive atributos, ou renderizar textos com textContent. Validar URLs separadamente e remover handlers inline/unsafe-inline após adequar a SPA. Acrescentar regressão de renderização com dados retornados por loadCompletedAnalyses."
+    },
+    "severity": {
+      "likelihood": {
+        "score": "medium",
+        "reason": "Acesso depende da exposição da API; o compose não restringe as portas ao loopback. XSS exige dossiê concluído e abertura do portfólio."
+      },
+      "impact": {
+        "score": "medium",
+        "reason": "Configurações e decisões institucionais podem ser alteradas sem principal; XSS executa código na origem do portal, sem sessão autenticada existente a roubar."
+      },
+      "overall_severity": "medium"
+    },
+    "confidence": {
+      "score": "high",
+      "reason": "Execução no Chromium confirmada; persistência/listagem/filtro confirmados em fixture válida. A conclusão pelo workflow real não foi executada e é pré-condição explícita."
+    }
+  }
+]

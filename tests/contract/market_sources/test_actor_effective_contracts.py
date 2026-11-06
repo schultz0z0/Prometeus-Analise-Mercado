@@ -85,7 +85,10 @@ def test_linkedin_company_search_does_not_silently_broaden_to_seguros():
         parameters={"locations": ["São Paulo"]},
     )
     input_default = registry.build_input(call_default)
-    assert input_default["searchQuery"] == "empresas de tecnologia e inteligência artificial em seguros"
+    assert (
+        input_default["searchQuery"]
+        == "empresas de tecnologia e inteligência artificial em seguros"
+    )
 
     # Caso 2: Com broaden_query=True explícito -> broadening contextual permitido
     call_broadened = PlannedToolCall(
@@ -107,9 +110,33 @@ def test_all_27_brazilian_ufs_are_recognized_in_geographic_contract():
     """
     assert len(BRAZILIAN_STATES) == 27
     expected_ufs = {
-        "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
-        "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN",
-        "RS", "RO", "RR", "SC", "SP", "SE", "TO",
+        "AC",
+        "AL",
+        "AP",
+        "AM",
+        "BA",
+        "CE",
+        "DF",
+        "ES",
+        "GO",
+        "MA",
+        "MT",
+        "MS",
+        "MG",
+        "PA",
+        "PB",
+        "PR",
+        "PE",
+        "PI",
+        "RJ",
+        "RN",
+        "RS",
+        "RO",
+        "RR",
+        "SC",
+        "SP",
+        "SE",
+        "TO",
     }
     assert set(BRAZILIAN_STATES.keys()) == expected_ufs
 
@@ -138,7 +165,9 @@ def test_narrow_state_geography_matches_only_its_own_uf_and_rejects_others():
 
     # Escopo Minas Gerais
     assert matches_narrow_geography("Brasil; somente Minas Gerais", "Belo Horizonte, MG, Brasil")
-    assert matches_narrow_geography("Brasil; somente Minas Gerais", "Uberlândia, Minas Gerais, Brasil")
+    assert matches_narrow_geography(
+        "Brasil; somente Minas Gerais", "Uberlândia, Minas Gerais, Brasil"
+    )
     assert not matches_narrow_geography("Brasil; somente Minas Gerais", "São Paulo, SP, Brasil")
 
 
@@ -178,4 +207,3 @@ def test_youtube_comments_input_preserves_per_video_limit_semantics():
     payload = registry.build_input(call)
     assert payload["maxComments"] == 15
     assert payload["startUrls"] == [{"url": "https://www.youtube.com/watch?v=video123"}]
-

@@ -103,7 +103,11 @@ def test_quality_degradation_reduces_confidence_and_prevents_false_approval():
         result = await service.execute_scoring(
             profile_id="portfolio-v2",
             pillar_inputs={
-                "pricing": {"is_present": True, "market_median_price_brl": 12000, "confidence": 0.30},
+                "pricing": {
+                    "is_present": True,
+                    "market_median_price_brl": 12000,
+                    "confidence": 0.30,
+                },
                 "paid_competition": {"is_present": True, "ad_count": 1, "confidence": 0.20},
             },
         )
@@ -124,7 +128,11 @@ def test_strict_quality_gate_thresholds_in_portfolio_v2():
             profile_id="portfolio-v2",
             pillar_inputs={
                 "internal_history": {"is_present": True, "ipd_score": 90, "confidence": 0.60},
-                "pricing": {"is_present": True, "market_median_price_brl": 15000, "confidence": 0.60},
+                "pricing": {
+                    "is_present": True,
+                    "market_median_price_brl": 15000,
+                    "confidence": 0.60,
+                },
                 "market_demand": {"is_present": True, "demand_score": 85, "confidence": 0.60},
                 "paid_competition": {"is_present": True, "ad_count": 5, "confidence": 0.60},
                 "syllabus_fit": {"is_present": True, "fit_score": 90, "confidence": 0.60},

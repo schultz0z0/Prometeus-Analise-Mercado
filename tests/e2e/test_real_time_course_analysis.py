@@ -209,8 +209,8 @@ class RecordedToolExecutor:
         }[call.capability]
         return ApifyExecutionResult(
             run=ApifyRunMetadata(
-                run_id=f"run-{call.capability}",
-                dataset_id=f"dataset-{call.capability}",
+                run_id=f"run-{call.id}",
+                dataset_id=f"dataset-{call.id}",
                 status="SUCCEEDED",
                 actor_id=spec.actor_id,
                 build_number=spec.build,
@@ -228,6 +228,7 @@ def workflow_settings() -> AppSettings:
         GEN_LLM_PROVIDER="openai",
         OPENAI_API_KEY="test-key",
         APIFY_TOKEN="test-apify-token",
+        APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS=6.0,
         APIFY_REQUIRED_SOURCES=(
             "google_search,meta_ads_library,linkedin_jobs,instagram,google_trends"
         ),
@@ -251,7 +252,9 @@ async def session() -> AsyncSession:
 
 
 async def seed_analysis_and_history(session: AsyncSession, settings=None) -> str:
-    settings=settings or workflow_settings().model_copy(update={'SCORING_PROFILE_PATH':'config/scoring/default-v1.example.yaml'})
+    settings = settings or workflow_settings().model_copy(
+        update={"SCORING_PROFILE_PATH": "config/scoring/default-v1.example.yaml"}
+    )
     created = await CreateAnalysisUseCase(session, settings=settings).execute(
         CreateAnalysisCommand(
             tenant_id="ens",
@@ -309,9 +312,12 @@ async def test_database_flush_failure_persists_failed_checkpoint_and_analysis(se
     registry = ApifyActorRegistry.from_settings(settings)
     llm = WorkflowLLM()
     workflow = RunCourseAnalysis(
-        session=session, settings=settings, llm=llm,
+        session=session,
+        settings=settings,
+        llm=llm,
         decision_model=LLMDecisionAdapter(llm),
-        tool_executor=RecordedToolExecutor(registry), registry=registry,
+        tool_executor=RecordedToolExecutor(registry),
+        registry=registry,
     )
     original_checkpoint = workflow._checkpoint
 
@@ -320,6 +326,7 @@ async def test_database_flush_failure_persists_failed_checkpoint_and_analysis(se
             session.add(AnalysisModel(id="invalid-row"))
             await session.flush()
             return {}
+
         return await original_checkpoint(analysis, step_number, broken_flush)
 
     workflow._checkpoint = failing_checkpoint
@@ -354,10 +361,19 @@ async def test_full_workflow_uses_persisted_real_source_contracts_and_resumes_id
     assert result.status == AnalysisStatus.COMPLETED
     assert len(result.steps) == 15
     assert all(step.status == "COMPLETED" for step in result.steps)
-    assert executor.calls == settings.required_market_sources
+    # A pesquisa dirigida dos dez concorrentes tem prioridade sobre fontes gerais.
+    assert executor.calls[:10] == ["google_search"] * 10
+    assert set(settings.required_market_sources) <= set(executor.calls)
+    initial_plan = (await session.execute(select(ResearchPlanModel))).scalar_one()
+    targeted = [c for c in initial_plan.plan_snapshot["tool_calls"] if c["parameters"].get("competitor_id")]
+    assert len({c["parameters"]["competitor_id"] for c in targeted}) == 10
+    assert initial_plan.plan_snapshot["execution_policy"]["spending_mode"] == "monitor_only"
+    assert initial_plan.budget_limit_usd is None
+    assert len(initial_plan.plan_snapshot["tool_calls"]) == 19
+    assert len(executor.calls) == 19
     assert await session.scalar(select(func.count()).select_from(ResearchPlanModel)) == 1
-    assert await session.scalar(select(func.count()).select_from(ToolRunModel)) == 5
-    assert await session.scalar(select(func.count()).select_from(MarketEvidenceModel)) == 5
+    assert await session.scalar(select(func.count()).select_from(ToolRunModel)) == 19
+    assert await session.scalar(select(func.count()).select_from(MarketEvidenceModel)) == 17
     scoring = (await session.execute(select(ScoringResultModel))).scalar_one()
     assert scoring.viability_score != 86.4
     assert scoring.pillar_scores["paid_competition"]["features"]["evidence_ids"]
@@ -374,13 +390,13 @@ async def test_full_workflow_uses_persisted_real_source_contracts_and_resumes_id
         .scalars()
         .all()
     )
-    assert len(decisions) == 5
+    assert len(decisions) == 17
 
     repeated = await use_case.execute(analysis_id, "corr-resume")
 
     assert repeated.status == AnalysisStatus.COMPLETED
-    assert len(executor.calls) == 5
-    assert await session.scalar(select(func.sum(ToolRunModel.cost_usd))) == pytest.approx(0.05)
+    assert len(executor.calls) == 19
+    assert await session.scalar(select(func.sum(ToolRunModel.cost_usd))) == pytest.approx(0.19)
 
 
 @pytest.mark.asyncio
@@ -462,29 +478,40 @@ async def test_research_repair_has_one_round_and_cumulative_budget_on_resume(ses
     result = await use_case.execute(analysis_id, "repair")
     assert result.status == AnalysisStatus.COMPLETED
     assert await session.scalar(select(func.count()).select_from(ResearchPlanModel)) == 2
-    assert len(executor.calls) == 6
-    assert await session.scalar(select(func.sum(ToolRunModel.cost_usd))) == pytest.approx(0.06)
+    assert len(executor.calls) == 20  # dezenove iniciais + uma recuperação semântica
+    assert await session.scalar(select(func.sum(ToolRunModel.cost_usd))) == pytest.approx(0.20)
     await use_case.execute(analysis_id, "repair-resume")
-    assert len(executor.calls) == 6
-    assert await session.scalar(select(func.sum(ToolRunModel.cost_usd))) == pytest.approx(0.06)
+    assert len(executor.calls) == 20
+    assert await session.scalar(select(func.sum(ToolRunModel.cost_usd))) == pytest.approx(0.20)
 
 
-async def test_portfolio_v2_persists_internal_pricing_and_evidence_audit_without_faking_history(session):
-    settings=workflow_settings().model_copy(update={'SCORING_PROFILE_PATH':'config/scoring/portfolio-v2.yaml'})
-    analysis_id=await seed_analysis_and_history(session,settings)
-    registry=ApifyActorRegistry.from_settings(settings)
-    llm=WorkflowLLM()
-    executor=RecordedToolExecutor(registry)
-    result=await RunCourseAnalysis(session=session,settings=settings,llm=llm,decision_model=LLMDecisionAdapter(llm),tool_executor=executor,registry=registry).execute(analysis_id,'v2')
-    assert result.status==AnalysisStatus.COMPLETED
-    score=(await session.execute(select(ScoringResultModel))).scalar_one()
-    assert score.profile_id=='portfolio-v2'
-    assert score.gate_details['profile_id']=='portfolio-v2'
-    assert score.pillar_scores['internal_history']['is_present'] is False
-    dossier=(await session.execute(select(DossierModel))).scalar_one()
-    audit=dossier.presentation['analysis_audit']
-    assert 'internal' in audit and 'pricing' in audit and 'evidence' in audit
-    assert audit['internal']['limitations']
-    assert audit['evidence']['collected_records']==5
-    assert len(executor.calls) == 5
-    assert await session.scalar(select(func.sum(ToolRunModel.cost_usd))) == pytest.approx(0.05)
+async def test_portfolio_v2_persists_internal_pricing_and_evidence_audit_without_faking_history(
+    session,
+):
+    settings = workflow_settings().model_copy(
+        update={"SCORING_PROFILE_PATH": "config/scoring/portfolio-v2.yaml"}
+    )
+    analysis_id = await seed_analysis_and_history(session, settings)
+    registry = ApifyActorRegistry.from_settings(settings)
+    llm = WorkflowLLM()
+    executor = RecordedToolExecutor(registry)
+    result = await RunCourseAnalysis(
+        session=session,
+        settings=settings,
+        llm=llm,
+        decision_model=LLMDecisionAdapter(llm),
+        tool_executor=executor,
+        registry=registry,
+    ).execute(analysis_id, "v2")
+    assert result.status == AnalysisStatus.COMPLETED
+    score = (await session.execute(select(ScoringResultModel))).scalar_one()
+    assert score.profile_id == "portfolio-v2"
+    assert score.gate_details["profile_id"] == "portfolio-v2"
+    assert score.pillar_scores["internal_history"]["is_present"] is False
+    dossier = (await session.execute(select(DossierModel))).scalar_one()
+    audit = dossier.presentation["analysis_audit"]
+    assert "internal" in audit and "pricing" in audit and "evidence" in audit
+    assert audit["internal"]["limitations"]
+    assert audit["evidence"]["collected_records"] == 17
+    assert len(executor.calls) == 19
+    assert await session.scalar(select(func.sum(ToolRunModel.cost_usd))) == pytest.approx(0.19)

@@ -48,9 +48,14 @@ def validate_ens_brand_does_not_prove_course_quality(item: SWOTItem) -> None:
     """A marca ou tradição institucional não comprova a qualidade docente do curso novo."""
     if item.dimension == SWOTDimension.STRENGTH:
         plain_text = _plain(item.statement)
-        if "ens" in plain_text and any(
-            w in plain_text for w in ["comprovam", "garantem", "provam", "asseguram"]
-        ) and any(w in plain_text for w in ["qualidade docente", "excelencia docente", "qualidade academica"]):
+        if (
+            "ens" in plain_text
+            and any(w in plain_text for w in ["comprovam", "garantem", "provam", "asseguram"])
+            and any(
+                w in plain_text
+                for w in ["qualidade docente", "excelencia docente", "qualidade academica"]
+            )
+        ):
             raise ValueError(
                 "A marca ou tradição institucional não comprova a qualidade docente ou adequação "
                 "pedagógica de um curso novo sem avaliação específica."
@@ -66,14 +71,24 @@ def validate_job_posting_is_not_course_demand(finding_or_item: MarketFinding | S
     )
     plain_text = _plain(text)
     if any(w in plain_text for w in ["vaga", "vagas", "job", "linkedin"]):
-        if any(w in plain_text for w in ["garantem demanda", "comprovam demanda de", "matriculas garantidas", "viram demanda"]):
+        if any(
+            w in plain_text
+            for w in [
+                "garantem demanda",
+                "comprovam demanda de",
+                "matriculas garantidas",
+                "viram demanda",
+            ]
+        ):
             raise ValueError(
                 "Vagas de emprego representam demanda do mercado de trabalho por competências profissionais, "
                 "não demanda direta ou garantia de matrículas no curso."
             )
 
 
-def validate_insurance_premium_growth_is_not_enrollment(finding_or_item: MarketFinding | SWOTItem) -> None:
+def validate_insurance_premium_growth_is_not_enrollment(
+    finding_or_item: MarketFinding | SWOTItem,
+) -> None:
     """Crescimento de prêmio de seguros (SUSEP/CNseg) é contexto macro, não potencial de matrícula."""
     text = (
         finding_or_item.finding
@@ -82,7 +97,14 @@ def validate_insurance_premium_growth_is_not_enrollment(finding_or_item: MarketF
     )
     plain_text = _plain(text)
     if any(w in plain_text for w in ["susep", "cnseg", "premio", "premios emitidos"]):
-        if any(w in plain_text for w in ["potencial direto de matricula", "potencial de matricula", "multiplicador de aluno"]):
+        if any(
+            w in plain_text
+            for w in [
+                "potencial direto de matricula",
+                "potencial de matricula",
+                "multiplicador de aluno",
+            ]
+        ):
             raise ValueError(
                 "O crescimento de prêmios emitidos no setor segurador (dados SUSEP/CNseg) é contexto "
                 "macroeconômico e não constitui potencial direto de matrículas."
@@ -93,7 +115,15 @@ def validate_own_source_is_not_external_competitor(item: SWOTItem) -> None:
     """Ofertas ou canais da própria instituição não viram concorrência externa."""
     if item.dimension == SWOTDimension.THREAT:
         source_text = _plain(item.evidence_source + " " + item.statement)
-        if any(d in source_text for d in ["ens.edu.br", "enscursos.com.br", "propria instituicao", "escola de negocios e seguros"]):
+        if any(
+            d in source_text
+            for d in [
+                "ens.edu.br",
+                "enscursos.com.br",
+                "propria instituicao",
+                "escola de negocios e seguros",
+            ]
+        ):
             raise ValueError(
                 "Cursos ou páginas da própria instituição são contexto institucional interno e "
                 "não podem ser classificados como ameaça ou concorrência externa."

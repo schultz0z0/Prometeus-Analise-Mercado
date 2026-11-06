@@ -1,0 +1,8 @@
+{
+  "target": "http://127.0.0.1:18777/ (servidor isolado somente da pasta web)",
+  "browser": "Chromium via playwright-cli",
+  "payload": "<img src=x onerror=window.__audit_xss=1>",
+  "operation": "renderPortfolioView({getState:()=>({portfolioTab:'diagnostics',courses:[{id:'audit',name:payload,area:'A',level:'B',modality:'EAD',ticket:null,viability_score:0,coverage_index:null,recommendation:'INSUFFICIENT_EVIDENCE'}],historicalCourses:[]})}) atribuido a app-root.innerHTML",
+  "observed_result": {"marker": 1, "handler": "window.__audit_xss=1"},
+  "scope_note": "Execução isolada do renderer real; armazenamento/recuperação testados separadamente por security_probe.py. Sem acesso ao stack ativo."
+}

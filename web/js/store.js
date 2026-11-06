@@ -27,10 +27,11 @@ class PrometeusStore {
 
   loadState() {
     let savedSettings = INITIAL_SETTINGS;
-    let savedCourses = INITIAL_COURSES;
     try {
       savedSettings = JSON.parse(localStorage.getItem('prometeus_settings')) || INITIAL_SETTINGS;
-      savedCourses = JSON.parse(localStorage.getItem(REAL_COURSES_STORAGE_KEY)) || INITIAL_COURSES;
+      // Dossiês são dados do servidor; o cache legado pode exceder a quota e
+      // pertencer a outra sessão. Recarregar pela API autenticada.
+      localStorage.removeItem(REAL_COURSES_STORAGE_KEY);
     } catch (error) {
       console.warn('Estado local inválido; iniciando interface limpa.', error);
     }
@@ -38,7 +39,7 @@ class PrometeusStore {
       tenants: INITIAL_TENANTS,
       currentTenantId: localStorage.getItem('prometeus_tenant') || 'ens',
       settings: savedSettings,
-      courses: savedCourses,
+      courses: INITIAL_COURSES,
       historicalCourses: INITIAL_HISTORICAL_COURSES,
       tenantEcosystems: {},
       portfolioTab: 'historical',
@@ -53,7 +54,6 @@ class PrometeusStore {
     try {
       localStorage.setItem('prometeus_tenant', this.state.currentTenantId);
       localStorage.setItem('prometeus_settings', JSON.stringify(this.state.settings));
-      localStorage.setItem(REAL_COURSES_STORAGE_KEY, JSON.stringify(this.state.courses));
     } catch (error) {
       console.warn('Falha ao salvar preferências locais.', error);
     }

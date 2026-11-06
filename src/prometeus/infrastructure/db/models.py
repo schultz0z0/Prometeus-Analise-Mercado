@@ -11,6 +11,7 @@ from typing import Any
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     DateTime,
     ForeignKey,
     Index,
@@ -46,6 +47,8 @@ class AnalysisModel(Base):
     recommendation: Mapped[str | None] = mapped_column(String(32), nullable=True)
     proposal_data: Mapped[dict[str, Any]] = mapped_column(JsonType, nullable=False, default=dict)
     previous_analysis_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    revision: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
+    idempotency_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
@@ -137,7 +140,33 @@ class AnalysisModel(Base):
         order_by="ExecutionEnvelopeModel.started_at",
     )
 
-    __table_args__ = (Index("ix_analyses_tenant_created", "tenant_id", "created_at"),)
+    __table_args__ = (
+        Index("ix_analyses_tenant_created", "tenant_id", "created_at"),
+        UniqueConstraint("tenant_id", "idempotency_key", name="uq_analysis_tenant_idempotency"),
+    )
+
+
+class AnalysisJobModel(Base):
+    """Outbox transacional e lease exclusivo para o consumidor de análise."""
+
+    __tablename__ = "analysis_jobs"
+    analysis_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("analyses.id", ondelete="CASCADE"), primary_key=True
+    )
+    correlation_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="PENDING", index=True)
+    attempt_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    next_attempt_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+    lease_token: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    lease_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_error: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
 
 
 class AnalysisStepModel(Base):
@@ -349,7 +378,7 @@ class ResearchPlanModel(Base):
     tenant_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     cache_key: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
     enabled_sources: Mapped[list[str]] = mapped_column(JsonType, nullable=False, default=list)
-    budget_limit_usd: Mapped[float] = mapped_column(nullable=False, default=2.0)
+    budget_limit_usd: Mapped[float | None] = mapped_column(nullable=True)
     spent_usd: Mapped[float] = mapped_column(nullable=False, default=0.0)
     allocated_budget: Mapped[dict[str, float]] = mapped_column(
         JsonType, nullable=False, default=dict
@@ -426,6 +455,40 @@ class ToolRunModel(Base):
     )
 
 
+class ToolRunAttemptModel(Base):
+    """Tentativas de uma tarefa, preservadas entre planos e retomadas."""
+
+    __tablename__ = "tool_run_attempts"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tool_run_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("tool_runs.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    analysis_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("analyses.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    tenant_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    task_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    attempt_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    input_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    actor_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    actor_build: Mapped[str] = mapped_column(String(32), nullable=False)
+    provider_run_id: Mapped[str | None] = mapped_column(String(128), nullable=True, unique=True)
+    dataset_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    diagnosis: Mapped[dict[str, Any]] = mapped_column(JsonType, nullable=False, default=dict)
+    input_snapshot: Mapped[dict[str, Any]] = mapped_column(JsonType, nullable=False, default=dict)
+    cost_usd: Mapped[float | None] = mapped_column(nullable=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    next_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("analysis_id", "task_key", "attempt_index", name="uq_collection_task_attempt"),
+        CheckConstraint("attempt_index >= 1 AND attempt_index <= 4", name="ck_collection_attempt_range"),
+    )
+
+
 class MarketEvidenceModel(Base):
     """Tabela de evidências de mercado coletadas e higienizadas (PostgreSQL)."""
 
@@ -440,6 +503,9 @@ class MarketEvidenceModel(Base):
     )
     tool_run_id: Mapped[str | None] = mapped_column(
         String(64), ForeignKey("tool_runs.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    tool_run_attempt_id: Mapped[str | None] = mapped_column(
+        String(64), ForeignKey("tool_run_attempts.id", ondelete="SET NULL"), nullable=True
     )
     evidence_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     source_name: Mapped[str] = mapped_column(String(64), nullable=False)
@@ -603,6 +669,7 @@ class WebhookDeliveryModel(Base):
     response_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
     response_body: Mapped[str | None] = mapped_column(Text, nullable=True)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    next_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
     )
@@ -617,7 +684,10 @@ class WebhookDeliveryModel(Base):
         "AnalysisModel", back_populates="webhook_deliveries"
     )
 
-    __table_args__ = (Index("ix_webhook_event_status", "event_id", "status"),)
+    __table_args__ = (
+        Index("ix_webhook_event_status", "event_id", "status"),
+        UniqueConstraint("event_id", "target_url", name="uq_webhook_event_target"),
+    )
 
 
 class ExecutionEnvelopeModel(Base):
@@ -636,7 +706,9 @@ class ExecutionEnvelopeModel(Base):
     input_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     cache_key: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     source_ids: Mapped[list[str]] = mapped_column(JsonType, nullable=False, default=list)
-    component_versions: Mapped[dict[str, Any]] = mapped_column(JsonType, nullable=False, default=dict)
+    component_versions: Mapped[dict[str, Any]] = mapped_column(
+        JsonType, nullable=False, default=dict
+    )
     provider: Mapped[str] = mapped_column(String(64), nullable=False)
     configured_model: Mapped[str] = mapped_column(String(64), nullable=False)
     model: Mapped[str] = mapped_column(String(64), nullable=False)
@@ -669,7 +741,6 @@ class ExecutionEnvelopeModel(Base):
     )
 
 
-
 class SectorRadarSnapshotModel(Base):
     """Snapshot persistente do Radar Setorial Permanente por tenant (ex.: seguradoras ENS)."""
 
@@ -693,6 +764,4 @@ class SectorRadarSnapshotModel(Base):
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
     )
 
-    __table_args__ = (
-        Index("ix_sector_radar_tenant_collected", "tenant_id", "collected_at"),
-    )
+    __table_args__ = (Index("ix_sector_radar_tenant_collected", "tenant_id", "collected_at"),)

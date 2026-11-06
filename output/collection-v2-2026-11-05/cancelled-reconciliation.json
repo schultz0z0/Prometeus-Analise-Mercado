@@ -1,0 +1,12 @@
+{
+  "analysis_id": "8c609307-e515-4a14-aafe-5cf38c3c21f8",
+  "action": "cancelled-run reconciliation only",
+  "runs": [
+    {
+      "run_id": "0i6KmFuwBYBNrjSS4",
+      "provider_status": "ABORTED",
+      "local_status": "CANCELLED",
+      "cost_usd_observed": 0
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "Service": "scheduler",
+    "State": "running",
+    "Health": "healthy",
+    "Ports": "8000/tcp"
+  },
+  {
+    "Service": "api",
+    "State": "running",
+    "Health": "healthy",
+    "Ports": "127.0.0.1:8000->8000/tcp, 127.0.0.1:1455->8000/tcp"
+  },
+  {
+    "Service": "backup",
+    "State": "running",
+    "Health": "",
+    "Ports": "5432/tcp"
+  },
+  {
+    "Service": "postgres",
+    "State": "running",
+    "Health": "healthy",
+    "Ports": "5432/tcp"
+  },
+  {
+    "Service": "redis",
+    "State": "running",
+    "Health": "healthy",
+    "Ports": "6379/tcp"
+  },
+  {
+    "Service": "worker",
+    "State": "running",
+    "Health": "healthy",
+    "Ports": "8000/tcp"
+  }
+]

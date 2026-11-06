@@ -1,0 +1,8 @@
+{
+  "bytes": 2681542,
+  "sha256": "0316aaf3dd15eb7fb06040de24c82c78f4d740d4985567f0207967fdf3e82563",
+  "pg_restore_list": "passed",
+  "historical_unchanged": true,
+  "rollback_images_tagged": true,
+  "private_backup_path": "C:\\Users\\raphaeloliveira\\Desktop\\Projetos Saas\\Pesquisa de mercado - IA\\var\\backups\\homologation-2026-11-04\\pre-migration.dump"
+}

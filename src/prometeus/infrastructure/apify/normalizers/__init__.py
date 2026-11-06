@@ -32,9 +32,18 @@ def _clean_html(text: str) -> str:
     return re.sub(r"\s+", " ", html.unescape(cleaned)).strip()
 
 
-def normalize_trends(
-    raw: dict[str, Any], source_url: str = "", *, url: str = ""
-) -> TrendSeries:
+def _observed_text(raw: dict[str, Any], *paths: str) -> ObservationField[str]:
+    """Preserve only actual string values and their exact source JSON pointer."""
+    for path in paths:
+        value: Any = raw
+        for part in path.split("/"):
+            value = value.get(part) if isinstance(value, dict) else None
+        if isinstance(value, str) and value.strip():
+            return ObservationField.observed(value.strip(), pointer=f"/{path}")
+    return ObservationField.missing()
+
+
+def normalize_trends(raw: dict[str, Any], source_url: str = "", *, url: str = "") -> TrendSeries:
     """Normaliza séries do Google Trends tratando variantes de lista/escalar em isPartial e hasData."""
     effective_url = url or source_url
     term = str(raw.get("term") or raw.get("query") or "termo_pesquisado")
@@ -110,9 +119,7 @@ def normalize_trends(
     )
 
 
-def normalize_job(
-    raw: dict[str, Any], source_url: str = "", *, url: str = ""
-) -> JobObservation:
+def normalize_job(raw: dict[str, Any], source_url: str = "", *, url: str = "") -> JobObservation:
     """Normaliza vagas do LinkedIn ou Indeed extraindo descrições completas e competências."""
     effective_url = url or source_url
     title = raw.get("title") or raw.get("jobTitle") or ""
@@ -181,8 +188,9 @@ def normalize_crawler_page(
             raw_payload=raw,
         )
 
-    title = raw.get("pageTitle") or raw.get("title") or ""
-    text_content = raw.get("text") or raw.get("content") or ""
+    title = _observed_text(raw, "pageTitle", "title", "course_name", "metadata/title")
+    body = _observed_text(raw, "text", "markdown", "content", "body")
+    text_content = body.value or ""
 
     # Extração de carga horária se informada
     hours = None
@@ -213,10 +221,14 @@ def normalize_crawler_page(
             total_price=ObservationField.observed(float(total), pointer="/pricing/total_price")
             if total is not None
             else ObservationField.missing(pointer="/pricing/total_price"),
-            installments=ObservationField.observed(int(installments), pointer="/pricing/installments")
+            installments=ObservationField.observed(
+                int(installments), pointer="/pricing/installments"
+            )
             if installments is not None
             else ObservationField.missing(pointer="/pricing/installments"),
-            installment_value=ObservationField.observed(float(inst_val), pointer="/pricing/installment_value")
+            installment_value=ObservationField.observed(
+                float(inst_val), pointer="/pricing/installment_value"
+            )
             if inst_val is not None
             else ObservationField.missing(pointer="/pricing/installment_value"),
             currency=ObservationField.observed(str(currency), pointer="/pricing/currency")
@@ -227,45 +239,64 @@ def normalize_crawler_page(
     return OfferObservation(
         source_name="apify_web_crawler",
         source_url=effective_url,
-        title=ObservationField.observed(str(title), pointer="/pageTitle")
-        if title
-        else ObservationField.missing(pointer="/pageTitle"),
-        workload_hours=ObservationField.observed(hours, pointer="/workload_hours", unit="h")
+        normalizer_version="offer-observation-v2",
+        title=title,
+        institution_name=_observed_text(
+            raw, "institution_name", "institution", "school_name", "school", "provider/name"
+        ),
+        category=_observed_text(raw, "category", "course_category", "educationLevel", "level"),
+        modality=_observed_text(raw, "modality", "teachingMethod"),
+        workload_hours=ObservationField.observed(
+            hours,
+            pointer="/workload_hours" if raw.get("workload_hours") else body.pointer,
+            unit="h",
+        )
         if hours is not None
         else ObservationField.missing(pointer="/workload_hours"),
+        curriculum_text=_observed_text(raw, "curriculum_text", "syllabus", "curriculum"),
+        curriculum_modules=[
+            item.strip()
+            for item in raw.get("curriculum_modules", [])
+            if isinstance(item, str) and item.strip()
+        ]
+        if isinstance(raw.get("curriculum_modules"), list)
+        else [],
         pricing=price_obs,
         raw_payload=raw,
     )
 
 
-def normalize_ad(
-    raw: dict[str, Any], source_url: str = "", *, url: str = ""
-) -> AdObservation:
+def normalize_ad(raw: dict[str, Any], source_url: str = "", *, url: str = "") -> AdObservation:
     """Normaliza anúncios da Meta Ads Library."""
     effective_url = url or source_url
-    ad_id = str(raw.get("adArchiveId") or raw.get("ad_id") or raw.get("id") or "")
-    page_name = raw.get("pageName") or raw.get("page_name") or ""
-    text = raw.get("text") or raw.get("ad_creative_body") or ""
-    headline = raw.get("headline") or raw.get("ad_creative_link_title") or ""
-    cta_url = raw.get("cta_url") or raw.get("link_url") or ""
+    ad_id = str(
+        raw.get("adArchiveId")
+        or raw.get("ad_archive_id")
+        or raw.get("ad_id")
+        or raw.get("id")
+        or ""
+    )
 
     return AdObservation(
         source_name="apify_meta_ads_library",
         source_url=effective_url or f"https://www.facebook.com/ads/library/?id={ad_id}",
         ad_id=ad_id,
-        page_name=ObservationField.observed(str(page_name), pointer="/pageName")
-        if page_name
-        else ObservationField.missing(pointer="/pageName"),
-        headline=ObservationField.observed(str(headline), pointer="/headline")
-        if headline
-        else ObservationField.missing(pointer="/headline"),
-        ad_text=ObservationField.observed(str(text), pointer="/text")
-        if text
-        else ObservationField.missing(pointer="/text"),
-        cta_url=ObservationField.observed(str(cta_url), pointer="/cta_url")
-        if cta_url
-        else ObservationField.missing(pointer="/cta_url"),
+        page_name=_observed_text(raw, "pageName", "page_name", "snapshot/page_name"),
+        headline=_observed_text(
+            raw, "headline", "ad_creative_link_title", "snapshot/title", "title"
+        ),
+        ad_text=_observed_text(
+            raw,
+            "text",
+            "ad_creative_body",
+            "snapshot/body/text",
+            "snapshot/body",
+            "body/text",
+            "body",
+        ),
+        cta_url=_observed_text(raw, "cta_url", "link_url", "snapshot/link_url"),
         raw_payload=raw,
+        normalizer_version="ad-observation-v2",
     )
 
 

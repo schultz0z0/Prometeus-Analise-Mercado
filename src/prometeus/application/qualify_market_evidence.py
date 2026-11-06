@@ -11,9 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from prometeus.application.decision_service import DecisionService
 from prometeus.application.evidence_features import EvidenceFeatureExtractor
 from prometeus.application.evidence_projection import (
+    AD_PROJECTOR_VERSION,
     PROJECTOR_VERSION,
     build_qualification_context,
 )
+from prometeus.application.offer_comparability import classify_competitor_offer
 from prometeus.application.research_scope import (
     is_own_institution,
     match_configured_competitor,
@@ -33,7 +35,7 @@ from prometeus.domain.research import CourseUnderstanding
 from prometeus.infrastructure.db.models import DecisionResultModel, MarketEvidenceModel
 
 PACK = "market-relevance-v1"
-QUALIFICATION_VERSION = 3
+QUALIFICATION_VERSION = 4
 
 
 class EvidenceQualificationService:
@@ -190,6 +192,8 @@ class EvidenceQualificationService:
                 "projector": PROJECTOR_VERSION,
                 "qualification_service": f"v{QUALIFICATION_VERSION}",
             }
+            if row.evidence_type == "PAID_COMPETITION":
+                comp_versions["ad_projector"] = AD_PROJECTOR_VERSION
             cache_key = self.decisions.cache_key_for(
                 PACK, judgment_context, component_versions=comp_versions
             )
@@ -234,6 +238,24 @@ class EvidenceQualificationService:
                 and not own
                 and not sector_context_only_signal
             )
+            offer_comparability = classify_competitor_offer(
+                evidence_type=row.evidence_type,
+                title=row.title,
+                source_url=row.source_url,
+                data=data,
+                understanding=understanding,
+                relevant=relevant,
+                own=own,
+                sector=is_sector,
+                contextual=scoped and trusted and result.selected_choice == "CONTEXT",
+            )
+            offer_unconfirmed = (
+                row.evidence_type == "OFFER" and relevant and not offer_comparability["is_offer"]
+            )
+            if offer_unconfirmed:
+                relevant = False
+            elif offer_comparability["is_offer"]:
+                relevant = True
             reason = (
                 "Localização fora do escopo ou não comprovada"
                 if not scoped
@@ -259,6 +281,10 @@ class EvidenceQualificationService:
                 )
             if own:
                 reason = "Conteúdo da própria instituição; preservado como contexto, sem contar como concorrência externa"
+            elif offer_unconfirmed:
+                reason = str(offer_comparability["reason"])
+            elif offer_comparability["is_offer"]:
+                reason = str(offer_comparability["reason"])
             elif (
                 sector_context_only_signal
                 and scoped
@@ -281,7 +307,12 @@ class EvidenceQualificationService:
             )
             if own:
                 use_for = ["institution_context"]
-            elif is_sector and scoped and trusted and result.selected_choice in {"RELEVANT", "CONTEXT"}:
+            elif (
+                is_sector
+                and scoped
+                and trusted
+                and result.selected_choice in {"RELEVANT", "CONTEXT"}
+            ):
                 extra_uses = (
                     {"sector_radar", "curriculum"}
                     if row.evidence_type == "JOB_MARKET"
@@ -289,9 +320,16 @@ class EvidenceQualificationService:
                 )
                 use_for = sorted({*use_for, *extra_uses})
                 use_for = [
-                    u for u in use_for if u not in {"competitive_offers", "pricing", "paid_competition"}
+                    u
+                    for u in use_for
+                    if u not in {"competitive_offers", "pricing", "paid_competition"}
                 ]
-            elif scoped and result.selected_choice == "CONTEXT" and trusted:
+            elif (
+                scoped
+                and result.selected_choice == "CONTEXT"
+                and trusted
+                and not offer_comparability["is_offer"]
+            ):
                 use_for = ["sector_context"]
 
             exclusion_codes = []
@@ -315,23 +353,42 @@ class EvidenceQualificationService:
             assessments: dict[str, EvidenceUseAssessment] = {}
 
             # 1. Descoberta (discovery)
-            discovery_usable = scoped and result.selected_choice in {"RELEVANT", "CONTEXT"} and not result.is_noul
+            discovery_usable = (
+                scoped and result.selected_choice in {"RELEVANT", "CONTEXT"} and not result.is_noul
+            )
             assessments[EvidencePurpose.DISCOVERY.value] = EvidenceUseAssessment(
                 purpose=EvidencePurpose.DISCOVERY,
                 usable=discovery_usable,
                 confidence=result.confidence if discovery_usable else 0.5,
-                observable_factors=["Escopo compatível"] if scoped else ["Escopo geográfico fora ou não comprovado"],
+                observable_factors=["Escopo compatível"]
+                if scoped
+                else ["Escopo geográfico fora ou não comprovado"],
                 quote_snippets=[row.title] if row.title else [],
-                reason="Sinal útil para descoberta de termos, atores ou contexto" if discovery_usable else "Conteúdo fora de escopo ou inconclusivo para descoberta",
-                rejection_cause=None if discovery_usable else ("out_of_scope" if not scoped else "unsupported_or_inconclusive"),
-                next_step=None if discovery_usable else ("Revisar escopo geográfico" if not scoped else "Verificar se novos termos de busca são necessários"),
+                reason="Sinal útil para descoberta de termos, atores ou contexto"
+                if discovery_usable
+                else "Conteúdo fora de escopo ou inconclusivo para descoberta",
+                rejection_cause=None
+                if discovery_usable
+                else ("out_of_scope" if not scoped else "unsupported_or_inconclusive"),
+                next_step=None
+                if discovery_usable
+                else (
+                    "Revisar escopo geográfico"
+                    if not scoped
+                    else "Verificar se novos termos de busca são necessários"
+                ),
             )
 
             # 2. Preço (pricing)
             has_price = False
             price_val = None
             if isinstance(data, dict):
-                price_val = data.get("total_price") or data.get("price_brl") or data.get("price") or (data.get("pricing") or {}).get("total_price")
+                price_val = (
+                    data.get("total_price")
+                    or data.get("price_brl")
+                    or data.get("price")
+                    or (data.get("pricing") or {}).get("total_price")
+                )
                 has_price = price_val is not None
             pricing_usable = (
                 row.evidence_type == "OFFER"
@@ -340,79 +397,165 @@ class EvidenceQualificationService:
                 and scoped
                 and has_price
                 and not result.is_noul
+                and trusted
+                and offer_comparability["relation"] == "direct"
             )
             assessments[EvidencePurpose.PRICING.value] = EvidenceUseAssessment(
                 purpose=EvidencePurpose.PRICING,
                 usable=pricing_usable,
                 confidence=result.confidence if pricing_usable else 0.0,
-                observable_factors=[f"Preço observado: {price_val}"] if (has_price and not is_sector) else ["Preço de curso aplicável não observado"],
-                quote_snippets=[f"{row.title} - R$ {price_val}"] if (has_price and not is_sector) else [],
-                reason="Oferta educacional com preço total observável e verificado" if pricing_usable else ("Seguradora do ecossistema não constitui oferta educacional precificável" if is_sector else ("Oferta educacional sem preço explícito público" if row.evidence_type == "OFFER" else "Tipo de evidência não contém preço de curso")),
-                rejection_cause=None if pricing_usable else ("sector_ecosystem_not_course_offer" if is_sector else ("price_missing_or_lead_wall" if row.evidence_type == "OFFER" else "not_a_course_offer")),
-                next_step=None if pricing_usable else (None if is_sector else ("Consultar página de checkout ou contato comercial para obter precificação" if row.evidence_type == "OFFER" else None)),
+                observable_factors=[f"Preço observado: {price_val}"]
+                if (has_price and not is_sector)
+                else ["Preço de curso aplicável não observado"],
+                quote_snippets=[f"{row.title} - R$ {price_val}"]
+                if (has_price and not is_sector)
+                else [],
+                reason="Oferta educacional com preço total observável e verificado"
+                if pricing_usable
+                else (
+                    "Seguradora do ecossistema não constitui oferta educacional precificável"
+                    if is_sector
+                    else (
+                        "Oferta educacional sem preço explícito público"
+                        if row.evidence_type == "OFFER"
+                        else "Tipo de evidência não contém preço de curso"
+                    )
+                ),
+                rejection_cause=None
+                if pricing_usable
+                else (
+                    "sector_ecosystem_not_course_offer"
+                    if is_sector
+                    else (
+                        "price_missing_or_lead_wall"
+                        if row.evidence_type == "OFFER"
+                        else "not_a_course_offer"
+                    )
+                ),
+                next_step=None
+                if pricing_usable
+                else (
+                    None
+                    if is_sector
+                    else (
+                        "Consultar página de checkout ou contato comercial para obter precificação"
+                        if row.evidence_type == "OFFER"
+                        else None
+                    )
+                ),
             )
 
             # 3. Concorrência direta (direct_competition)
-            direct_usable = (
-                row.evidence_type in {"OFFER", "PAID_COMPETITION"}
-                and not own
-                and not is_sector
-                and scoped
-                and result.selected_choice == "RELEVANT"
-                and trusted
-            )
+            direct_usable = offer_comparability["relation"] == "direct"
             assessments[EvidencePurpose.DIRECT_COMPETITION.value] = EvidenceUseAssessment(
                 purpose=EvidencePurpose.DIRECT_COMPETITION,
                 usable=direct_usable,
                 confidence=result.confidence if direct_usable else 0.5,
-                observable_factors=["Concorrente externo verificado"] if (not own and not is_sector and row.evidence_type in {"OFFER", "PAID_COMPETITION"}) else ["Oferta própria, ecossistema segurador ou tipo não concorrente"],
+                observable_factors=["Concorrente externo verificado"]
+                if (
+                    not own and not is_sector and row.evidence_type in {"OFFER", "PAID_COMPETITION"}
+                )
+                else ["Oferta própria, ecossistema segurador ou tipo não concorrente"],
                 quote_snippets=[row.title] if row.title else [],
-                reason="Concorrente direto na mesma temática e categoria" if direct_usable else ("Oferta da própria instituição não concorre externamente" if own else ("Seguradora do Radar Setorial não disputa matrícula acadêmica" if is_sector else "Não é concorrente direto")),
-                rejection_cause=None if direct_usable else ("own_institution_not_competitor" if own else ("sector_ecosystem_not_educational_competitor" if is_sector else "not_a_direct_competitor")),
-                next_step=None if direct_usable else ("Preservar como contexto interno da instituição" if own else ("Utilizar sinal no Radar Setorial e na matriz curricular" if is_sector else "Analisar se atua como oferta adjacente")),
+                reason=str(offer_comparability["reason"])
+                if direct_usable
+                else (
+                    "Oferta da própria instituição não concorre externamente"
+                    if own
+                    else (
+                        "Seguradora do Radar Setorial não disputa matrícula acadêmica"
+                        if is_sector
+                        else "Não é concorrente direto"
+                    )
+                ),
+                rejection_cause=None
+                if direct_usable
+                else (
+                    "own_institution_not_competitor"
+                    if own
+                    else (
+                        "sector_ecosystem_not_educational_competitor"
+                        if is_sector
+                        else "not_a_direct_competitor"
+                    )
+                ),
+                next_step=None
+                if direct_usable
+                else (
+                    "Preservar como contexto interno da instituição"
+                    if own
+                    else (
+                        "Utilizar sinal no Radar Setorial e na matriz curricular"
+                        if is_sector
+                        else "Analisar se atua como oferta adjacente"
+                    )
+                ),
             )
 
             # 4. Concorrência adjacente (adjacent_competition)
-            adjacent_usable = (
-                row.evidence_type in {"OFFER", "PAID_COMPETITION"}
-                and not own
-                and not is_sector
-                and scoped
-                and result.selected_choice in {"RELEVANT", "CONTEXT"}
-                and trusted
-            )
+            adjacent_usable = offer_comparability["relation"] == "adjacent"
             assessments[EvidencePurpose.ADJACENT_COMPETITION.value] = EvidenceUseAssessment(
                 purpose=EvidencePurpose.ADJACENT_COMPETITION,
                 usable=adjacent_usable,
                 confidence=result.confidence if adjacent_usable else 0.5,
-                observable_factors=["Oferta externa adjacente ou substituta"] if adjacent_usable else [],
+                observable_factors=["Oferta externa adjacente ou substituta"]
+                if adjacent_usable
+                else [],
                 quote_snippets=[row.title] if row.title else [],
-                reason="Oferta adjacente (cursos livres, extensões ou certificações)" if adjacent_usable else "Não atua como oferta adjacente",
-                rejection_cause=None if adjacent_usable else ("sector_ecosystem_not_educational_competitor" if is_sector else "not_an_adjacent_offer"),
+                reason=str(offer_comparability["reason"])
+                if adjacent_usable
+                else "Não atua como oferta adjacente",
+                rejection_cause=None
+                if adjacent_usable
+                else (
+                    "sector_ecosystem_not_educational_competitor"
+                    if is_sector
+                    else "not_an_adjacent_offer"
+                ),
             )
 
             # 5. Competências profissionais (workforce_competencies)
-            workforce_usable = row.evidence_type == "JOB_MARKET" and scoped and result.selected_choice in {"RELEVANT", "CONTEXT"} and trusted
+            workforce_usable = (
+                row.evidence_type == "JOB_MARKET"
+                and scoped
+                and result.selected_choice in {"RELEVANT", "CONTEXT"}
+                and trusted
+            )
             assessments[EvidencePurpose.WORKFORCE_COMPETENCIES.value] = EvidenceUseAssessment(
                 purpose=EvidencePurpose.WORKFORCE_COMPETENCIES,
                 usable=workforce_usable,
                 confidence=result.confidence if workforce_usable else 0.5,
-                observable_factors=["Competências profissionais demandadas em vagas"] if workforce_usable else [],
+                observable_factors=["Competências profissionais demandadas em vagas"]
+                if workforce_usable
+                else [],
                 quote_snippets=[row.title] if row.title else [],
-                reason="Vaga de trabalho expressa competências e requisitos do mercado" if workforce_usable else "Tipo de evidência não é vaga de emprego",
+                reason="Vaga de trabalho expressa competências e requisitos do mercado"
+                if workforce_usable
+                else "Tipo de evidência não é vaga de emprego",
                 rejection_cause=None if workforce_usable else "not_a_job_posting",
-                next_step=None if workforce_usable else "Buscar vagas de trabalho para mapear competências profissionais",
+                next_step=None
+                if workforce_usable
+                else "Buscar vagas de trabalho para mapear competências profissionais",
             )
 
             # 6. Sinal de empregabilidade (employability_signal)
-            employability_usable = row.evidence_type == "JOB_MARKET" and scoped and result.selected_choice in {"RELEVANT", "CONTEXT"} and trusted
+            employability_usable = (
+                row.evidence_type == "JOB_MARKET"
+                and scoped
+                and result.selected_choice in {"RELEVANT", "CONTEXT"}
+                and trusted
+            )
             assessments[EvidencePurpose.EMPLOYABILITY_SIGNAL.value] = EvidenceUseAssessment(
                 purpose=EvidencePurpose.EMPLOYABILITY_SIGNAL,
                 usable=employability_usable,
                 confidence=result.confidence if employability_usable else 0.5,
-                observable_factors=["Absorção profissional no mercado"] if employability_usable else [],
+                observable_factors=["Absorção profissional no mercado"]
+                if employability_usable
+                else [],
                 quote_snippets=[row.title] if row.title else [],
-                reason="Sinal de absorção profissional e demanda de contratação" if employability_usable else "Não representa sinal de contratação",
+                reason="Sinal de absorção profissional e demanda de contratação"
+                if employability_usable
+                else "Não representa sinal de contratação",
                 rejection_cause=None if employability_usable else "not_an_employment_signal",
             )
 
@@ -429,10 +572,24 @@ class EvidenceQualificationService:
                 purpose=EvidencePurpose.LEARNER_DEMAND,
                 usable=learner_usable,
                 confidence=result.confidence if learner_usable else 0.5,
-                observable_factors=["Interesse ou manifestação espontânea"] if learner_usable else [],
+                observable_factors=["Interesse ou manifestação espontânea"]
+                if learner_usable
+                else [],
                 quote_snippets=[row.title] if row.title else [],
-                reason="Sinal de interesse ou dúvidas de potenciais alunos" if learner_usable else ("Comunicação corporativa de seguradora pertence ao Radar Setorial, não à demanda espontânea de alunos" if is_sector else "Evidência não representa manifestação espontânea ou busca de alunos"),
-                rejection_cause=None if learner_usable else ("sector_corporate_voice_not_learner_demand" if is_sector else "not_learner_voice_or_search"),
+                reason="Sinal de interesse ou dúvidas de potenciais alunos"
+                if learner_usable
+                else (
+                    "Comunicação corporativa de seguradora pertence ao Radar Setorial, não à demanda espontânea de alunos"
+                    if is_sector
+                    else "Evidência não representa manifestação espontânea ou busca de alunos"
+                ),
+                rejection_cause=None
+                if learner_usable
+                else (
+                    "sector_corporate_voice_not_learner_demand"
+                    if is_sector
+                    else "not_learner_voice_or_search"
+                ),
             )
 
             # 8. Contexto próprio (own_context)
@@ -441,21 +598,29 @@ class EvidenceQualificationService:
                 purpose=EvidencePurpose.OWN_CONTEXT,
                 usable=own_usable,
                 confidence=1.0 if own_usable else 0.0,
-                observable_factors=["Domínio ou identidade institucional própria"] if own_usable else [],
+                observable_factors=["Domínio ou identidade institucional própria"]
+                if own_usable
+                else [],
                 quote_snippets=[row.title] if row.title and own_usable else [],
-                reason="Evidência interna da própria instituição" if own_usable else "Evidência proveniente de fonte externa",
+                reason="Evidência interna da própria instituição"
+                if own_usable
+                else "Evidência proveniente de fonte externa",
                 rejection_cause=None if own_usable else "external_source",
             )
 
             # 9. Contexto de setor (industry_context)
-            industry_usable = scoped and result.selected_choice in {"RELEVANT", "CONTEXT"} and not result.is_noul
+            industry_usable = (
+                scoped and result.selected_choice in {"RELEVANT", "CONTEXT"} and not result.is_noul
+            )
             assessments[EvidencePurpose.INDUSTRY_CONTEXT.value] = EvidenceUseAssessment(
                 purpose=EvidencePurpose.INDUSTRY_CONTEXT,
                 usable=industry_usable,
                 confidence=result.confidence if industry_usable else 0.5,
                 observable_factors=["Contexto setorial geral"] if industry_usable else [],
                 quote_snippets=[row.title] if row.title else [],
-                reason="Contexto setorial ou profissional pertinente" if industry_usable else "Conteúdo fora de escopo do setor",
+                reason="Contexto setorial ou profissional pertinente"
+                if industry_usable
+                else "Conteúdo fora de escopo do setor",
                 rejection_cause=None if industry_usable else "out_of_scope_or_inconclusive",
             )
 
@@ -464,6 +629,7 @@ class EvidenceQualificationService:
             data["_qualification"] = {
                 "accepted": relevant,
                 "context_only": own
+                or offer_unconfirmed
                 or (
                     sector_context_only_signal
                     and scoped
@@ -475,6 +641,7 @@ class EvidenceQualificationService:
                     and result.selected_choice == "CONTEXT"
                     and not result.requires_human_review
                     and not result.is_noul
+                    and not offer_comparability["is_offer"]
                 ),
                 "own_institution": own,
                 "actor_role": actor_role,
@@ -483,7 +650,9 @@ class EvidenceQualificationService:
                 "linkedin_scope": linkedin_scope,
                 "use_for": use_for,
                 "usable_purposes": multi_purpose.usable_purposes,
-                "use_assessments": {p: a.model_dump() for p, a in multi_purpose.assessments.items()},
+                "use_assessments": {
+                    p: a.model_dump() for p, a in multi_purpose.assessments.items()
+                },
                 "exclusion_codes": exclusion_codes,
                 "reason": reason,
                 "decision_id": result.id,
@@ -499,6 +668,7 @@ class EvidenceQualificationService:
                 "skill_snapshots": [skill.snapshot() for skill in [*review_skills, *actor_skills]],
                 "confidence": result.confidence,
                 "classification": result.selected_choice,
+                "offer_comparability": offer_comparability,
             }
             row.sanitized_data = data
             accepted += int(relevant)

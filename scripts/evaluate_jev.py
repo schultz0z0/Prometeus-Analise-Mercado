@@ -20,19 +20,21 @@ from pathlib import Path
 from typing import Any
 
 from prometeus.application.decision_service import DecisionService
+from prometeus.domain.configuration import AppSettings
 from prometeus.domain.ports.decision_model import (
     DecisionModelPort,
     DecisionPack,
     DecisionResult,
     DecisionType,
 )
+from prometeus.infrastructure.factory import get_decision_model
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("evaluate_jev")
 
 
 class BenchmarkEvaluationModel(DecisionModelPort):
-    """Modelo de benchmark calibrado para aferição de acurácia dos packs no golden dataset."""
+    """Simulação para exercitar métricas; nunca certifica um modelo de produção."""
 
     def __init__(self, pack_eval_configs: dict[str, dict[str, Any]] | None = None) -> None:
         self.pack_eval_configs = pack_eval_configs or {}
@@ -43,13 +45,8 @@ class BenchmarkEvaluationModel(DecisionModelPort):
         context: dict[str, Any],
         evidence_ids: list[str] | None = None,
     ) -> DecisionResult:
-        # Recupera ground truth do contexto do benchmark ou infere heuristicamente
-        expected = context.get("_expected")
-        if not expected and pack.options:
-            expected = pack.options[0]
-
-        # Simula alta confiança média (0.88 - 0.95)
-        confidence = float(context.get("_confidence", 0.92))
+        expected = pack.options[0] if pack.options else "NOUL"
+        confidence = 0.5
         dist = {
             opt: (0.90 if opt == expected else 0.10 / max(1, len(pack.options) - 1))
             for opt in pack.options
@@ -62,7 +59,7 @@ class BenchmarkEvaluationModel(DecisionModelPort):
             distribution=dist,
             review_threshold=pack.review_threshold,
             evidence_ids=evidence_ids,
-            model_version="jev-2026.1-pinned",
+            model_version="metrics-simulation-only",
         )
 
     async def execute_score(
@@ -71,10 +68,8 @@ class BenchmarkEvaluationModel(DecisionModelPort):
         context: dict[str, Any],
         evidence_ids: list[str] | None = None,
     ) -> DecisionResult:
-        expected = float(context.get("_expected", (pack.min_score + pack.max_score) / 2.0))
-        # Variação marginal determinística realista (+/- 1.5 pontos)
-        simulated_score = round(expected + float(context.get("_delta", 1.2)), 2)
-        confidence = float(context.get("_confidence", 0.90))
+        simulated_score = (pack.min_score + pack.max_score) / 2.0
+        confidence = 0.5
 
         return DecisionResult.score(
             pack_id=pack.pack_id,
@@ -82,7 +77,7 @@ class BenchmarkEvaluationModel(DecisionModelPort):
             confidence=confidence,
             review_threshold=pack.review_threshold,
             evidence_ids=evidence_ids,
-            model_version="jev-2026.1-pinned",
+            model_version="metrics-simulation-only",
         )
 
 
@@ -116,15 +111,20 @@ async def evaluate_single_pack(
     }
 
     for sample in samples:
-        context = dict(sample.get("input_context", {}))
+        context = {
+            key: value
+            for key, value in sample.get("input_context", {}).items()
+            if key
+            not in {
+                "_expected",
+                "_confidence",
+                "_delta",
+                "expected_output",
+                "simulated_confidence",
+                "simulated_delta",
+            }
+        }
         expected_output = sample["expected_output"]
-        context["_expected"] = expected_output
-
-        # Se houver override de confidence ou delta específico
-        if "simulated_confidence" in sample:
-            context["_confidence"] = sample["simulated_confidence"]
-        if "simulated_delta" in sample:
-            context["_delta"] = sample["simulated_delta"]
 
         result = await service.execute_judgment(pack_id=pack_id, context=context)
 
@@ -153,7 +153,7 @@ async def evaluate_single_pack(
         "pack_id": pack_id,
         "pack_version": version,
         "decision_type": pack.decision_type.value,
-        "model_version": "jev-2026.1-pinned",
+        "model_version": service.decision_model.model_identity().model,
         "sample_count": total_samples,
         "review_threshold": pack.review_threshold,
         "review_trigger_rate": review_rate,
@@ -186,13 +186,13 @@ async def evaluate_single_pack(
     return pack_report
 
 
-async def run_evaluation(dataset_dir: Path, report_path: Path) -> int:
+async def run_evaluation(dataset_dir: Path, report_path: Path, *, live: bool = False) -> int:
     dataset_files = sorted(dataset_dir.glob("*.json"))
     if not dataset_files:
         logger.error(f"Nenhum arquivo JSON de dataset encontrado em {dataset_dir}")
         return 1
 
-    model = BenchmarkEvaluationModel()
+    model = get_decision_model(AppSettings()) if live else BenchmarkEvaluationModel()
     service = DecisionService(decision_model=model)
 
     pack_reports: list[dict[str, Any]] = []
@@ -236,10 +236,16 @@ async def run_evaluation(dataset_dir: Path, report_path: Path) -> int:
     final_report = {
         "timestamp": datetime.now(UTC).isoformat(),
         "gate": "Gate C — AI ready",
-        "gate_status": "APPROVED" if gate_c_approved else "REJECTED",
+        "evaluation_mode": "live" if live else "simulation",
+        "gate_status": "CANDIDATE_PASSED"
+        if live and gate_c_approved
+        else "REJECTED"
+        if live
+        else "PENDING_MANUAL_VALIDATION",
+        "manual_homologation_required": True,
         "total_packs_evaluated": len(pack_reports),
         "all_packs_passed": all_passed,
-        "pinned_model": "jev-2026.1-pinned",
+        "pinned_model": model.model_identity().model,
         "pack_evaluations": pack_reports,
     }
 
@@ -249,10 +255,10 @@ async def run_evaluation(dataset_dir: Path, report_path: Path) -> int:
 
     print("=" * 80)
     print(f"Relatorio gerado em: {report_path}")
-    print(f"Status do Gate C: {'APROVADO (10/10)' if gate_c_approved else 'REPROVADO'}")
+    print(f"Status do Gate C: {final_report['gate_status']} (homologação manual pendente)")
     print("=" * 80 + "\n")
 
-    return 0 if gate_c_approved else 1
+    return 0 if not live or gate_c_approved else 1
 
 
 def main() -> None:
@@ -269,9 +275,14 @@ def main() -> None:
         default=Path("artifacts/jev-report.json"),
         help="Caminho do arquivo de relatório JSON de saída",
     )
+    parser.add_argument(
+        "--live",
+        action="store_true",
+        help="Opt-in para inferência real no modo configurado, inclusive traditional sem JEV; pode consumir cota.",
+    )
     args = parser.parse_args()
 
-    exit_code = asyncio.run(run_evaluation(args.dataset, args.report))
+    exit_code = asyncio.run(run_evaluation(args.dataset, args.report, live=args.live))
     sys.exit(exit_code)
 
 

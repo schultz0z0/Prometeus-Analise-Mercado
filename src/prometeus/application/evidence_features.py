@@ -190,6 +190,7 @@ class EvidenceFeatureExtractor:
                     ):
                         # Verifica se nome por extenso de estado brasileiro está presente
                         from prometeus.application.research_scope import BRAZILIAN_STATES
+
                         has_state_name = any(
                             re.search(rf"\b{re.escape(name)}\b", str(location), re.I)
                             for name in BRAZILIAN_STATES.values()

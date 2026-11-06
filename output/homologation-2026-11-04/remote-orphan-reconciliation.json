@@ -1,0 +1,10 @@
+{
+  "run_id": "0g2XRUqe7wr2um7PU",
+  "planned_call_id": "call-14",
+  "input_identity_confirmed": true,
+  "before": "RUNNING",
+  "after": "ABORTED",
+  "observed_cost_usd": 0.04895111111111111,
+  "dataset_id": "oop5LsM6AkU1ZU7se",
+  "reason": "Provider returned HTTP 502 during start/wait; local workflow had no confirmed remote identity. Stop orphaned paid run and reconcile without buying another run."
+}

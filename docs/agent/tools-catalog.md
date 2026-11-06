@@ -25,10 +25,11 @@ As tools são capacidades do domínio, não chamadas diretas de fornecedor. Cada
 
 - O orquestrador controla tools, orçamento e permissões.
 - JEV ou LLM tradicional pode classificar necessidade e relevância, mas nenhum modelo recebe autorização irrestrita para executar ferramentas.
-- Tools externas recebem limites de itens, tempo e custo.
+- Tools externas recebem limites de itens, páginas e tempo. `collection-v2` monitora custos sem teto monetário da aplicação; snapshots legados mantêm sua política financeira.
 - Actor IDs são configuração pinada por deployment após avaliação.
 - Saídas brutas são convertidas para contratos internos antes do uso.
 - Cada execução externa cria `tool_run` com Actor/build, timestamps, custo, dataset e erro seguro.
+- Novas tarefas preservam até quatro tentativas em `tool_run_attempts`, com diagnóstico e próxima data de recuperação. Reuso considera instituição, tarefa, geografia, idioma e período; reparo não zera o contador. MCP de apoio consulta catálogo/documentação e não executa Actors.
 
 ## Contratos por fonte v3
 

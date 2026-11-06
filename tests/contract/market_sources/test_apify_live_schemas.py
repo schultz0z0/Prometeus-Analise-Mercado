@@ -26,7 +26,7 @@ EXPECTED_INPUT_FIELDS: dict[str, set[str]] = {
     "tiktok": {"searchQueries", "resultsPerPage", "searchSection"},
     "youtube_comments": {"startUrls", "maxComments", "sortCommentsBy"},
     "reddit": {"searches", "maxItems", "sort", "time"},
-    "google_trends": {"searchTerms", "maxItems", "geo", "timeRange"},
+    "google_trends": {"searchTerms", "maxItems", "geo", "timeRange", "maxConcurrency"},
 }
 
 
@@ -80,8 +80,28 @@ async def test_configured_actor_builds_and_input_schemas_are_still_current() -> 
                 f"Capability sem contrato de schema: {capability}"
             )
             spec = registry.require(capability)
+            build_id = None
+            # The mutable default may advance while the approved pinned build remains valid.
+            # Resolve the configured build number in the Actor's own build history.
+            for offset in range(0, 1000, 100):
+                builds = await client.get(
+                    f"{settings.APIFY_BASE_URL.rstrip('/')}/actors/{spec.actor_path}/builds",
+                    params={"limit": 100, "offset": offset, "desc": "true"},
+                )
+                builds.raise_for_status()
+                page = builds.json()["data"]
+                match = next(
+                    (item for item in page["items"] if item.get("buildNumber") == spec.build),
+                    None,
+                )
+                if match:
+                    build_id = match["id"]
+                    break
+                if offset + len(page["items"]) >= page["total"]:
+                    break
+            assert build_id, f"{capability}: build fixado {spec.build} não encontrado"
             response = await client.get(
-                f"{settings.APIFY_BASE_URL.rstrip('/')}/actors/{spec.actor_path}/builds/default"
+                f"{settings.APIFY_BASE_URL.rstrip('/')}/actor-builds/{build_id}"
             )
             response.raise_for_status()
             payload: dict[str, Any] = response.json()["data"]
@@ -102,6 +122,7 @@ async def test_configured_actor_builds_and_input_schemas_are_still_current() -> 
                     "language": "pt-BR",
                     "location": "Brazil",
                     "geo": "BR",
+                    "recovery_max_concurrency": 1,
                     "urls": ["https://www.youtube.com/watch?v=contract-test"]
                     if capability == "youtube_comments"
                     else ["https://example.org/curso"],

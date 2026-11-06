@@ -1,0 +1,23 @@
+# Revisão adversarial independente — 04/11/2026
+
+Revisor: agente analytical_audit. Este agente não escreveu os achados operacionais e de workflow abaixo. Leu os caminhos reais e reexecutou as duas reproduções com Python da `.venv`, usando somente SQLite temporário e fakes. Não houve alteração da aplicação nem chamadas pagas.
+
+## Resultados
+
+| Achado | Veredito | Evidência e limites corrigidos |
+|---|---|---|
+| Keywords compartilham AsyncSession em tarefas concorrentes | **CONFIRMED** | `application/keywords.py:69–88` permite cinco tarefas e chama o mesmo DecisionService; `application/decision_service.py:146–147` faz add/flush na sessão compartilhada. `run_course_analysis.py:137,539` confirma uso no runtime. Na reexecução, 15 respostas HIGH_RELEVANCE do fake viraram 1 HIGH_RELEVANCE e 14 IRRELEVANT, com `Session is already flushing`. O `except Exception` transforma falha de persistência em irrelevância. A proporção 14/15 é a reprodução local, não uma taxa medida em produção. Além disso, o call não passa analysis, então os 15 envelopes ficaram sem analysis_id e tenant_id. |
+| Backup Python omite sete tabelas | **CONFIRMED**, escopo limitado | `infrastructure/db/backup.py:31–42` lista somente dez tabelas; a extração e restauração usam essa mesma lista (`89,174,178`). Uma análise com um ScoringResult foi exportada e restaurada com status RESTORED, mas sem score. Faltam scoring_results, decision_results, execution_envelopes, market_evidences, research_plans, tool_runs, sector_radar_snapshots. **Não afirmar que todo backup do deployment perde essas tabelas**: `compose.yaml:136` usa `pg_dump` do banco inteiro, outro mecanismo. O utilitário Python é, porém, chamado de oficial nos runbooks e usado no procedimento de restore documentado. Restore num banco populado também depende de FKs reais; a reprodução demonstrou perda em banco destino vazio. |
+| Cancelamento é sobrescrito pelo worker | **CONFIRMED** | `rest/app.py:636–638` confirma CANCELLED; `_checkpoint` em `application/run_course_analysis.py:282–306` continua com o agregado antigo e chama save. `analysis_repository.py:83` atribui status sem comparação de versão/estado. Reexecução: DURING_OPERATION CANCELLED; AFTER_CHECKPOINT RUNNING. Não existe refresh/gate de cancelamento no limite do checkpoint; a proteção da entidade individual não impede conflito entre duas instâncias carregadas. |
+| Enfileiramento antes do commit | **CONFIRMED** | `rest/app.py:243` chama delay antes do commit da dependência; `db/session.py:66–67` faz commit somente após yield. Reexecução com segunda conexão: VISIBLE_AT_ENQUEUE 0; AFTER_RESPONSE_COMMIT QUEUED. `workers/tasks.py` não configura autoretry e devolve NOT_FOUND quando análise ausente. O defeito é janela de corrida, não falha garantida em toda chamada: worker precisa consumir durante o intervalo. O handler de reanálise (`rest/app.py:598–601`) já faz commit antes de delay; não estender o achado a esse handler. |
+| Idempotência cruza instituições | **CONFIRMED** funcional; **não classificar isoladamente como vazamento de produção** | `application/create_analysis.py:55–58` filtra apenas JSON `_idempotency_key`, sem tenant. Reexecução: pedido infnet com chave existente de ens retorna análise ens e is_existing=true. ADR-0002 estabelece banco e stack separados por instituição: esse isolamento impede colisão entre deployments distintos. O problema se manifesta quando mais de um tenant é aceito no mesmo banco, inclusive uso de teste/configuração. Também há problema independente dentro do mesmo tenant: a reanálise copia a chave antiga e retry da criação passa a causar MultipleResultsFound; a reprodução de workflow confirmou isso e `rest/app.py:594`/`create_analysis.py:58` sustentam o resultado. |
+| Avaliação JEV usa o gabarito na predição | **CONFIRMED** | `scripts/evaluate_jev.py:129` injeta `_expected`; BenchmarkEvaluationModel recupera em choice/score; `run_evaluation` instancia esse fake. Reexecução com o mesmo input vazio e três gabaritos distintos devolveu cada gabarito. Isto prova teste do mecanismo de métricas, não acurácia do JEV real. A incompatibilidade está em usá-lo como evidência de Gate C AI ready. |
+
+## Comandos independentes executados
+
+```text
+rtk proxy .venv\Scripts\python.exe output\audit-2026-11-04\operational-poc.py
+rtk proxy .venv\Scripts\python.exe artifacts\audit-2026-11-04\workflow_repro.py
+```
+
+Ambos encerraram com exit code 0. As falhas reproduzidas são saídas controladas dessas provas, não erros dos scripts. A revisão não certifica PostgreSQL, Redis/Celery ou produção real: estas precisam de execução em staging para medir condições e impacto operacional.

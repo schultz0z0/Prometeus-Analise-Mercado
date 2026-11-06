@@ -42,7 +42,7 @@ async def run_cli() -> None:
     if args.command == "verify":
         is_ok = BackupRestoreManager.verify_integrity(args.file)
         if is_ok:
-            print(f"[OK] Backup {args.file} é íntegro e autêntico.")
+            print(f"[OK] Backup {args.file}: esquema, contagens e checksum íntegros.")
         else:
             print(f"[ERRO] Backup {args.file} está corrompido!")
             exit(1)

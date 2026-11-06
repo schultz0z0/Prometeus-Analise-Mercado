@@ -35,6 +35,7 @@ Esta pasta é a fonte canônica do produto. O PRD original na raiz é mantido co
 - [Política da LLM generativa](agent/llm-generation-policy.md)
 - [Estratégia de skills](agent/skills-strategy.md)
 - [Modelo de scoring](scoring/scoring-model.md)
+- [Simulação econômica e apresentação factual](scoring/economic-simulation.md)
 - [Confiança e cobertura](scoring/confidence-and-coverage.md)
 - [Calibração e backtest](scoring/calibration-and-backtest.md)
 
@@ -53,7 +54,10 @@ Esta pasta é a fonte canônica do produto. O PRD original na raiz é mantido co
 
 ## Entrega
 
+- [Plano de correção: cobertura de concorrentes, custos e recuperação Apify](plans/2026-11-04-collection-coverage-and-apify-recovery.md)
+- [Implementação e homologação de cobertura/recuperação — 05/11/2026](implementation/reports/collection-recovery-homologation-2026-11-05.md)
 - [Configuração](operations/configuration.md)
+- [Correções da auditoria: acesso, migração e recuperação](operations/audit-remediation.md)
 - [Observabilidade](operations/observability.md)
 - [Backup e recuperação](operations/backup-and-recovery.md)
 - [Runbooks](operations/runbooks.md)

@@ -1,0 +1,141 @@
+{
+  "analysis_id": "9cb4f98e-60b5-46d9-998e-5ad81ebe7d86",
+  "status": "COMPLETED",
+  "dossier_status": "VERIFIED",
+  "recommendation": "INSUFFICIENT_EVIDENCE",
+  "final_presentation_gate": "passed",
+  "facts_hash_verified": true,
+  "plan_count": 4,
+  "tool_run_count": 84,
+  "run_statuses": {
+    "SUCCEEDED": 78,
+    "PARTIAL": 1,
+    "EMPTY": 3,
+    "FAILED": 2
+  },
+  "attempt_count": 93,
+  "max_attempt_index": 4,
+  "qualification_rows": 522,
+  "qualification_version": 4,
+  "projector_version": "typed-projection-v3",
+  "ad_projector_version": "ad-projection-v2",
+  "official_offer_sources_verified": true,
+  "unclassified_offer_relations": 3,
+  "observed_cost_usd": 1.271501,
+  "benchmark": {
+    "monitored_total": 10,
+    "searched_total": 10,
+    "completed_total": 10,
+    "blocked_total": 0,
+    "institutions_with_offers": 7,
+    "total_offers": 10,
+    "coverage_complete": true
+  },
+  "institutions": [
+    {
+      "name": "Conhecer Seguros",
+      "execution_status": "completed",
+      "evidence_status": "no_qualified_offer",
+      "evidence_ids": [],
+      "failures": []
+    },
+    {
+      "name": "FGV Educação Executiva",
+      "execution_status": "completed",
+      "evidence_status": "adjacent_offer",
+      "evidence_ids": [
+        "ee14d959-e902-41e1-9151-fee456be6ad5"
+      ],
+      "failures": []
+    },
+    {
+      "name": "Ibmec",
+      "execution_status": "completed",
+      "evidence_status": "adjacent_offer",
+      "evidence_ids": [
+        "ce6ecd5c-4cd6-44a5-9f8a-47b2e1e23c81",
+        "a9d9d658-c103-4c29-a62f-809caad8a7e7"
+      ],
+      "failures": []
+    },
+    {
+      "name": "FIPECAFI",
+      "execution_status": "completed",
+      "evidence_status": "no_qualified_offer",
+      "evidence_ids": [],
+      "failures": []
+    },
+    {
+      "name": "FIA Business School",
+      "execution_status": "completed",
+      "evidence_status": "adjacent_offer",
+      "evidence_ids": [
+        "9558d42a-0787-46f6-ad1b-3a0ac584b4bf",
+        "77c25620-c5b0-4702-a647-7d353df95367"
+      ],
+      "failures": []
+    },
+    {
+      "name": "Insper",
+      "execution_status": "completed",
+      "evidence_status": "no_qualified_offer",
+      "evidence_ids": [],
+      "failures": []
+    },
+    {
+      "name": "Estácio",
+      "execution_status": "completed",
+      "evidence_status": "adjacent_offer",
+      "evidence_ids": [
+        "6389c2b3-b65a-4e8c-957c-5cfcedfe1971"
+      ],
+      "failures": []
+    },
+    {
+      "name": "ESA OAB-SP",
+      "execution_status": "completed",
+      "evidence_status": "adjacent_offer",
+      "evidence_ids": [
+        "54d02a66-762e-4702-94f2-df2421f27b78"
+      ],
+      "failures": []
+    },
+    {
+      "name": "FIAP",
+      "execution_status": "completed",
+      "evidence_status": "adjacent_offer",
+      "evidence_ids": [
+        "73c02b78-3a66-4c5b-ba3f-5c9a3be20757",
+        "44fec03e-caba-47e4-9bbb-5de4d2b6b701"
+      ],
+      "failures": []
+    },
+    {
+      "name": "Alura",
+      "execution_status": "completed",
+      "evidence_status": "offer_relation_pending",
+      "evidence_ids": [
+        "87b98489-6523-4a58-88f9-1bda871f8d2a",
+        "198e8d56-2d25-4820-94a0-a7052ae0379a"
+      ],
+      "failures": []
+    }
+  ],
+  "preservation": {
+    "courses": 33,
+    "courses_hash": "1a78fa9b42b074976f2c1c64a97eca06",
+    "funnels": 66,
+    "funnels_hash": "b06fc7ba93d93e7a4dcbe7419709923a",
+    "old_dossiers_hash": "94236ffd06f20337a6f1655549e6016d",
+    "human_decisions": 4,
+    "course_outcomes": 4
+  },
+  "duration_seconds": 91486.112057,
+  "job_status": "FINISHED",
+  "backup": {
+    "format": 2,
+    "records": 5603,
+    "sha256": "8b7fb57ac4ef1626855c81c8443e33fd189aa1b3f0193e3724d0acb34e7fc8fd",
+    "attempt_rows": 119
+  }
+}

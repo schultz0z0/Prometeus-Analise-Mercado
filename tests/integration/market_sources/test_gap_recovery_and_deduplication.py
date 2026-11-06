@@ -48,7 +48,9 @@ def test_gap_classification_identifies_normalization_loss_without_rebuying():
     features = EvidenceFeatureSet(features={})
 
     gaps = classify_research_gaps(features, runs=runs, evidences=evidences)
-    trends_gaps = [g for g in gaps if g.feature_name in {"monthly_search_volume", "average_interest"}]
+    trends_gaps = [
+        g for g in gaps if g.feature_name in {"monthly_search_volume", "average_interest"}
+    ]
 
     assert len(trends_gaps) > 0
     assert trends_gaps[0].cause == GapCause.NORMALIZATION_LOSS
@@ -78,7 +80,9 @@ def test_gap_classification_identifies_context_projection_loss():
     features = EvidenceFeatureSet(features={})
 
     gaps = classify_research_gaps(features, runs=runs, evidences=evidences)
-    trends_gaps = [g for g in gaps if g.feature_name in {"monthly_search_volume", "average_interest"}]
+    trends_gaps = [
+        g for g in gaps if g.feature_name in {"monthly_search_volume", "average_interest"}
+    ]
 
     assert len(trends_gaps) > 0
     assert trends_gaps[0].cause == GapCause.CONTEXT_PROJECTION_LOSS
@@ -172,9 +176,7 @@ async def test_query_deduplication_via_normalized_effective_input():
 
     # Previous query executed Trends with effective parameters for 'fraudes seguros'
     # ("Fraudes em Seguros" has identical stopword-filtered tokens: 'fraudes seguros')
-    previous_effective_calls = [
-        ("google_trends", "fraudes seguros")
-    ]
+    previous_effective_calls = [("google_trends", "fraudes seguros")]
 
     # New plan should filter out the duplicate Trends call via normalized signature
     plan = await planner.plan(

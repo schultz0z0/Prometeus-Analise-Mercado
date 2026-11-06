@@ -1,0 +1,147 @@
+FFF                                                                      [100%]
+================================== FAILURES ===================================
+_ test_full_workflow_uses_persisted_real_source_contracts_and_resumes_idempotently _
+
+session = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x000001EF7AA63950>
+
+    @pytest.mark.asyncio
+    async def test_full_workflow_uses_persisted_real_source_contracts_and_resumes_idempotently(
+        session: AsyncSession,
+    ) -> None:
+        analysis_id = await seed_analysis_and_history(session)
+        settings = workflow_settings()
+        registry = ApifyActorRegistry.from_settings(settings)
+        llm = WorkflowLLM()
+        executor = RecordedToolExecutor(registry)
+        use_case = RunCourseAnalysis(
+            session=session,
+            settings=settings,
+            llm=llm,
+            decision_model=LLMDecisionAdapter(llm),
+            tool_executor=executor,
+            registry=registry,
+        )
+
+        result = await use_case.execute(analysis_id, "corr-workflow")
+
+        assert result.status == AnalysisStatus.COMPLETED
+        assert len(result.steps) == 15
+        assert all(step.status == "COMPLETED" for step in result.steps)
+>       assert executor.calls == settings.required_market_sources
+E       AssertionError: assert ['google_sear..._search', ...] == ['google_sear...oogle_trends']
+E
+E         Left contains 6 more items, first extra item: 'google_search'
+E         Use -v to get more diff
+
+tests\e2e\test_real_time_course_analysis.py:357: AssertionError
+------------------------------ Captured log call ------------------------------
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'mba p�s em dados aplicados a seguros' no JEV: Session is already flushing
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'especializacao p�s em dados aplicados a seguros' no JEV: Session is already flushing
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'pos graduacao p�s em dados aplicados a seguros' no JEV: Session is already flushing
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'como funciona p�s em dados aplicados a seguros' no JEV: Session is already flushing
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'mercado de trabalho p�s em dados aplicados a seguros' no JEV: Session is already flushing
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'treinamento p�s em dados aplicados a seguros' no JEV: Session is already flushing
+_____ test_research_repair_has_one_round_and_cumulative_budget_on_resume ______
+
+session = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x000001EF7ACA5B50>
+
+    async def test_research_repair_has_one_round_and_cumulative_budget_on_resume(session):
+        class RepairLLM(WorkflowLLM):
+            async def generate_text(self, prompt, system_prompt=None, temperature=0.2):
+                if (
+                    "Allowlist de capabilities" in prompt
+                    and "Consultas j� realizadas, n�o repetir: []" not in prompt
+                ):
+                    return json.dumps(
+                        {
+                            "questions": [],
+                            "tool_calls": [
+                                {
+                                    "id": "repair-search",
+                                    "capability": "google_search",
+                                    "query": "seguros MBA investimento total",
+                                    "required": False,
+                                    "rationale": "Confrontar pre�os",
+                                    "max_items": 5,
+                                }
+                            ],
+                        }
+                    )
+                return await super().generate_text(prompt, system_prompt, temperature)
+
+        analysis_id = await seed_analysis_and_history(session)
+        row = await session.get(AnalysisModel, analysis_id)
+        row.proposal_data = {**row.proposal_data, "price_period": "unknown"}
+        await session.commit()
+        settings = workflow_settings()
+        registry = ApifyActorRegistry.from_settings(settings)
+        llm = RepairLLM()
+        executor = RecordedToolExecutor(registry)
+        use_case = RunCourseAnalysis(
+            session=session,
+            settings=settings,
+            llm=llm,
+            decision_model=LLMDecisionAdapter(llm),
+            tool_executor=executor,
+            registry=registry,
+        )
+        result = await use_case.execute(analysis_id, "repair")
+        assert result.status == AnalysisStatus.COMPLETED
+        assert await session.scalar(select(func.count()).select_from(ResearchPlanModel)) == 2
+>       assert len(executor.calls) == 6
+E       AssertionError: assert 12 == 6
+E        +  where 12 = len(['google_search', 'meta_ads_library', 'linkedin_jobs', 'instagram', 'google_trends', 'google_search', ...])
+E        +    where ['google_search', 'meta_ads_library', 'linkedin_jobs', 'instagram', 'google_trends', 'google_search', ...] = <test_real_time_course_analysis.RecordedToolExecutor object at 0x000001EF7AE13F50>.calls
+
+tests\e2e\test_real_time_course_analysis.py:465: AssertionError
+------------------------------ Captured log call ------------------------------
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'mba p�s em dados aplicados a seguros' no JEV: Session is already flushing
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'especializacao p�s em dados aplicados a seguros' no JEV: Session is already flushing
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'pos graduacao p�s em dados aplicados a seguros' no JEV: Session is already flushing
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'como funciona p�s em dados aplicados a seguros' no JEV: Session is already flushing
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'mercado de trabalho p�s em dados aplicados a seguros' no JEV: Session is already flushing
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'treinamento p�s em dados aplicados a seguros' no JEV: Session is already flushing
+_ test_portfolio_v2_persists_internal_pricing_and_evidence_audit_without_faking_history _
+
+session = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x000001EF7AA8D950>
+
+    async def test_portfolio_v2_persists_internal_pricing_and_evidence_audit_without_faking_history(session):
+        settings=workflow_settings().model_copy(update={'SCORING_PROFILE_PATH':'config/scoring/portfolio-v2.yaml'})
+        analysis_id=await seed_analysis_and_history(session,settings)
+        registry=ApifyActorRegistry.from_settings(settings)
+        llm=WorkflowLLM()
+        executor=RecordedToolExecutor(registry)
+        result=await RunCourseAnalysis(session=session,settings=settings,llm=llm,decision_model=LLMDecisionAdapter(llm),tool_executor=executor,registry=registry).execute(analysis_id,'v2')
+        assert result.status==AnalysisStatus.COMPLETED
+        score=(await session.execute(select(ScoringResultModel))).scalar_one()
+        assert score.profile_id=='portfolio-v2'
+        assert score.gate_details['profile_id']=='portfolio-v2'
+        assert score.pillar_scores['internal_history']['is_present'] is False
+        dossier=(await session.execute(select(DossierModel))).scalar_one()
+        audit=dossier.presentation['analysis_audit']
+        assert 'internal' in audit and 'pricing' in audit and 'evidence' in audit
+        assert audit['internal']['limitations']
+>       assert audit['evidence']['collected_records']==5
+E       assert 9 == 5
+
+tests\e2e\test_real_time_course_analysis.py:488: AssertionError
+------------------------------ Captured log call ------------------------------
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'mba p�s em dados aplicados a seguros' no JEV: Session is already flushing
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'especializacao p�s em dados aplicados a seguros' no JEV: Session is already flushing
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'pos graduacao p�s em dados aplicados a seguros' no JEV: Session is already flushing
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'como funciona p�s em dados aplicados a seguros' no JEV: Session is already flushing
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'mercado de trabalho p�s em dados aplicados a seguros' no JEV: Session is already flushing
+WARNING  prometeus.application.keywords:keywords.py:83 Falha avaliando relev�ncia do termo 'treinamento p�s em dados aplicados a seguros' no JEV: Session is already flushing
+============================== warnings summary ===============================
+tests/e2e/test_real_time_course_analysis.py::test_full_workflow_uses_persisted_real_source_contracts_and_resumes_idempotently
+tests/e2e/test_real_time_course_analysis.py::test_research_repair_has_one_round_and_cumulative_budget_on_resume
+tests/e2e/test_real_time_course_analysis.py::test_portfolio_v2_persists_internal_pricing_and_evidence_audit_without_faking_history
+  C:\Users\raphaeloliveira\Desktop\Projetos Saas\Pesquisa de mercado - IA\src\prometeus\application\decision_service.py:146: SAWarning: Usage of the 'Session.add()' operation is not currently supported within the execution stage of the flush process. Results may not be consistent.  Consider using alternative event listeners or connection-level operations instead.
+    self.session.add(env_model)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/e2e/test_real_time_course_analysis.py::test_full_workflow_uses_persisted_real_source_contracts_and_resumes_idempotently
+FAILED tests/e2e/test_real_time_course_analysis.py::test_research_repair_has_one_round_and_cumulative_budget_on_resume
+FAILED tests/e2e/test_real_time_course_analysis.py::test_portfolio_v2_persists_internal_pricing_and_evidence_audit_without_faking_history
+3 failed, 3 warnings in 2.71s

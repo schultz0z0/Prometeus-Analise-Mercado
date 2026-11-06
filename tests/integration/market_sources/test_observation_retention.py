@@ -38,16 +38,14 @@ from prometeus.infrastructure.apify.normalizers import (
 )
 
 STUDY_DIR = (
-    Path(__file__).parents[3]
-    / "docs"
-    / "Estudo_Prometeus_144_registros_73501c53_2026-10-29"
+    Path(__file__).parents[3] / "docs" / "Estudo_Prometeus_144_registros_73501c53_2026-10-29"
 )
 STUDY_RECORDS_PATH = STUDY_DIR / "registros_para_estudo.json"
 ORIGINALS_PATH = STUDY_DIR / "retornos_originais_e_higienizados.json"
 
 
-def test_projector_version_is_v2():
-    assert PROJECTOR_VERSION == "typed-projection-v2"
+def test_projector_version_is_v3():
+    assert PROJECTOR_VERSION == "typed-projection-v3"
 
 
 def test_exact_timestamps_preservation_for_786_trends_points():
@@ -81,7 +79,9 @@ def test_exact_timestamps_preservation_for_786_trends_points():
             assert int(pt["time"]) > 1_000_000_000
 
     assert total_points == 786
-    assert redacted_time_count == 0, f"{redacted_time_count} timestamps foram indevidamente redigidos!"
+    assert redacted_time_count == 0, (
+        f"{redacted_time_count} timestamps foram indevidamente redigidos!"
+    )
 
     # Verifica que PII real em dados de contato continua sendo estritamente redigida
     dirty_text = "Contato: 11 98888-7777, CPF: 123.456.789-00, Email: analista@empresa.com"
@@ -154,9 +154,7 @@ def test_job_descriptions_and_requirements_reach_projection_for_accepted_jobs():
     # Pelo menos 28 (na verdade 30) têm descriptionText
     assert len(records_with_description) >= 28
 
-    accepted_jobs = [
-        r for r in job_records if r.get("qualification", {}).get("accepted") is True
-    ]
+    accepted_jobs = [r for r in job_records if r.get("qualification", {}).get("accepted") is True]
     assert len(accepted_jobs) == 16
 
     for job in accepted_jobs:
@@ -183,7 +181,9 @@ def test_large_input_generates_partitioning_or_omission_diagnostic_never_silent_
 
     nunca descarte silencioso do campo principal nem truncamento arbitrário de string.
     """
-    huge_description = "Responsabilidade chave sobre regulação e sinistros. " * 800  # ~40.000 caracteres
+    huge_description = (
+        "Responsabilidade chave sobre regulação e sinistros. " * 800
+    )  # ~40.000 caracteres
     raw_payload = {
         "title": "Superintendente de Riscos e Seguros",
         "companyName": "Seguradora Nacional",

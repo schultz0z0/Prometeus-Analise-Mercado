@@ -1,0 +1,1 @@
+{"database": "isolated-PostgreSQL16", "concurrent_collectors": 2, "executed_calls": 1, "committed_cap_usd": "0.5", "root_budget_usd": "0.5", "reservation_visible_before_executor": true, "result": "passed"}

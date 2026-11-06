@@ -42,11 +42,16 @@ def test_extract_canonical_entity_id_by_capability():
 
     # YouTube Comments
     comment_item = {"cid": "Ugx_Comment_ABC", "videoId": "vid_123", "text": "Ótimo curso"}
-    assert extract_canonical_entity_id("youtube_comments", comment_item) == "comment:Ugx_Comment_ABC"
+    assert (
+        extract_canonical_entity_id("youtube_comments", comment_item) == "comment:Ugx_Comment_ABC"
+    )
 
     # Web Crawler Offer
     crawler_item = {"url": "https://escola.com.br/curso-fraudes?utm_source=test", "title": "MBA"}
-    assert extract_canonical_entity_id("web_crawler", crawler_item) == "offer:https://escola.com.br/curso-fraudes"
+    assert (
+        extract_canonical_entity_id("web_crawler", crawler_item)
+        == "offer:https://escola.com.br/curso-fraudes"
+    )
 
 
 def test_entity_lineage_tracker_separates_captures_from_entities():
@@ -55,7 +60,11 @@ def test_entity_lineage_tracker_separates_captures_from_entities():
     # Capture 1 of Ad A
     tracker.record_capture(
         capability="meta_ads",
-        item={"ad_archive_id": "AD_001", "ad_delivery_start_time": "2026-01-01", "page_name": "ENS"},
+        item={
+            "ad_archive_id": "AD_001",
+            "ad_delivery_start_time": "2026-01-01",
+            "page_name": "ENS",
+        },
         tool_run_id="run_1",
         captured_at=datetime(2026, 1, 1, 10, 0, tzinfo=UTC),
     )
@@ -105,12 +114,14 @@ def test_youtube_stratified_sampling_across_three_eligible_videos():
     items = []
     for vid, v_url in [("VIDEO_AAA", urls[0]), ("VIDEO_BBB", urls[1]), ("VIDEO_CCC", urls[2])]:
         for i in range(15):
-            items.append({
-                "cid": f"cid_{vid}_{i}",
-                "videoId": vid,
-                "videoUrl": v_url,
-                "text": f"Comentário {i} do vídeo {vid}",
-            })
+            items.append(
+                {
+                    "cid": f"cid_{vid}_{i}",
+                    "videoId": vid,
+                    "videoUrl": v_url,
+                    "text": f"Comentário {i} do vídeo {vid}",
+                }
+            )
 
     result = ApifyExecutionResult(
         run=ApifyRunMetadata(
@@ -149,8 +160,7 @@ def test_dataset_truncation_diagnostic_is_recorded_in_audit():
         parameters={"urls": ["https://www.youtube.com/watch?v=VIDEO_AAA"]},
     )
     items = [
-        {"cid": f"cid_{i}", "videoId": "VIDEO_AAA", "text": f"Comentário {i}"}
-        for i in range(15)
+        {"cid": f"cid_{i}", "videoId": "VIDEO_AAA", "text": f"Comentário {i}"} for i in range(15)
     ]
     # Dataset total reported by Apify header is 44, but only 15 items read
     result = ApifyExecutionResult(
@@ -186,7 +196,9 @@ async def session():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     async with async_sessionmaker(engine, expire_on_commit=False)() as db:
-        analysis = Analysis.create(tenant_id="ens", course_name="MBA", correlation_id="test-sampling")
+        analysis = Analysis.create(
+            tenant_id="ens", course_name="MBA", correlation_id="test-sampling"
+        )
         analysis.id = "analysis-sampling"
         await AnalysisRepository(db).save(analysis)
         await db.commit()
@@ -213,7 +225,9 @@ class MockExecutor:
     statuses: dict[str, str] = field(default_factory=dict)
     calls: list[PlannedToolCall] = field(default_factory=list)
 
-    async def execute(self, planned: PlannedToolCall, *, max_total_charge_usd: float) -> ApifyExecutionResult:
+    async def execute(
+        self, planned: PlannedToolCall, *, max_total_charge_usd: float
+    ) -> ApifyExecutionResult:
         self.calls.append(planned)
         registry = make_registry()
         spec = registry.require(planned.capability)
@@ -233,8 +247,6 @@ class MockExecutor:
             items=items,
             total_items=total_items,
         )
-
-
 
 
 @pytest.mark.asyncio
@@ -275,10 +287,18 @@ async def test_collect_service_persists_sampling_and_entities_audit(session):
     )
 
     disc_items = [
-        {"url": "https://www.google.com/search?q=test", "organicResults": [{"url": u, "title": f"Video {u}"} for u in urls]}
+        {
+            "url": "https://www.google.com/search?q=test",
+            "organicResults": [{"url": u, "title": f"Video {u}"} for u in urls],
+        }
     ]
     yt_items = [
-        {"cid": f"cid_{v}_{i}", "videoId": v.replace("https://www.youtube.com/watch?v=", ""), "videoUrl": v, "text": f"Comentário {i} em {v}"}
+        {
+            "cid": f"cid_{v}_{i}",
+            "videoId": v.replace("https://www.youtube.com/watch?v=", ""),
+            "videoUrl": v,
+            "text": f"Comentário {i} em {v}",
+        }
         for v in urls
         for i in range(5)
     ]
@@ -333,13 +353,21 @@ async def test_entity_lineage_tracker_distinguishes_multiple_captures_without_mu
     # Call 2 captures same Job 101 (same canonical entity)
     tracker.record_capture(
         capability="linkedin_jobs",
-        item={"jobId": "JOB_101", "title": "Perito de Fraudes Sênior", "companyName": "Seguradora Alpha"},
+        item={
+            "jobId": "JOB_101",
+            "title": "Perito de Fraudes Sênior",
+            "companyName": "Seguradora Alpha",
+        },
         tool_run_id="run_102",
     )
     # Call 3 captures different Job 202
     tracker.record_capture(
         capability="linkedin_jobs",
-        item={"jobId": "JOB_202", "title": "Analista de Sinistro", "companyName": "Seguradora Beta"},
+        item={
+            "jobId": "JOB_202",
+            "title": "Analista de Sinistro",
+            "companyName": "Seguradora Beta",
+        },
         tool_run_id="run_103",
     )
 
@@ -382,7 +410,10 @@ async def test_financial_budget_enforcement_aborts_excessive_run(session):
     )
 
     executor = MockExecutor(
-        payloads={"call-exp-1": [{"url": "https://google.com"}], "call-exp-2": [{"url": "https://google.com"}]},
+        payloads={
+            "call-exp-1": [{"url": "https://google.com"}],
+            "call-exp-2": [{"url": "https://google.com"}],
+        },
     )
 
     service = CollectMarketEvidenceService(
@@ -392,9 +423,10 @@ async def test_financial_budget_enforcement_aborts_excessive_run(session):
     )
 
     outcome = await service.collect(tenant_id="ens", plan=plan)
-    # First call costs $0.02, second call exceeds remaining budget ($0.02 > $0.01)
-    assert "call-exp-1" in outcome.completed_call_ids
-    assert "call-exp-2" in outcome.optional_failures
+    # Neither call fits the minimum authorization; provisional low cost cannot fund a run.
+    assert outcome.completed_call_ids == []
+    assert outcome.optional_failures == ["call-exp-1", "call-exp-2"]
+    assert outcome.spent_usd == 0
 
     run_row = (
         await session.execute(
@@ -406,6 +438,7 @@ async def test_financial_budget_enforcement_aborts_excessive_run(session):
     ).scalar_one()
     assert run_row.status == "FAILED"
     assert run_row.error_code == "budget_exceeded"
+    assert run_row.parameters["observation_status"] == "budget_skipped"
 
 
 @pytest.mark.asyncio
@@ -441,7 +474,10 @@ async def test_partial_failure_in_multi_video_call(session):
 
     urls = ["https://www.youtube.com/watch?v=VID_OK", "https://www.youtube.com/watch?v=VID_ERR"]
     disc_items = [
-        {"url": "https://www.google.com/search?q=test", "organicResults": [{"url": u, "title": f"Video {u}"} for u in urls]}
+        {
+            "url": "https://www.google.com/search?q=test",
+            "organicResults": [{"url": u, "title": f"Video {u}"} for u in urls],
+        }
     ]
     yt_items = [
         {"cid": f"cid_ok_{i}", "videoId": "VID_OK", "videoUrl": urls[0], "text": f"Comentário {i}"}
@@ -473,5 +509,3 @@ async def test_partial_failure_in_multi_video_call(session):
     assert run_row.status == "PARTIAL"
     assert run_row.error_code == "timeout"
     assert "partial error" in (run_row.error_message or "")
-
-

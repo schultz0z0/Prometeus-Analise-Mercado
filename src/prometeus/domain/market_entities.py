@@ -205,4 +205,3 @@ class EntityLineageTracker:
         for entity in self.entities.values():
             counts[entity.entity_type] = counts.get(entity.entity_type, 0) + 1
         return counts
-

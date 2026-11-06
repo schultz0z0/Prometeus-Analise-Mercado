@@ -61,19 +61,16 @@ async def test_model_or_projector_change_requalifies_while_identical_run_reuses(
         assert second["decision_id"] != first["decision_id"]
         assert second["execution_cache_key"] != first["execution_cache_key"]
 
-        monkeypatch.setattr(qualification, "PROJECTOR_VERSION", "typed-projection-v3")
+        monkeypatch.setattr(qualification, "PROJECTOR_VERSION", qualification.PROJECTOR_VERSION + "-changed")
         await service.qualify(analysis, understanding, "q")
         third = row.sanitized_data["_qualification"]
         assert third["decision_id"] != second["decision_id"]
 
         # Qualificações legadas sem chave de execução não são reaproveitadas como replay exato.
         legacy = dict(row.sanitized_data)
-        legacy["_qualification"] = {
-            k: v for k, v in third.items() if k != "execution_cache_key"
-        }
+        legacy["_qualification"] = {k: v for k, v in third.items() if k != "execution_cache_key"}
         row.sanitized_data = legacy
         await db.commit()
         await service.qualify(analysis, understanding, "q")
         assert row.sanitized_data["_qualification"]["decision_id"] != third["decision_id"]
     await engine.dispose()
-

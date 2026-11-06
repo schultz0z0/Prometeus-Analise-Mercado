@@ -1,5 +1,26 @@
 # Gates de release
 
+## Cobertura e recuperação da coleta
+
+Na política `collection-v2`, aprovar a operação exige provar pesquisa por instituição, tentativas limitadas e retomada sem compras duplicadas. Consulta planejada ou bloqueada não conta como instituição pesquisada. A homologação técnica de 04/11/2026 concluiu o fluxo, mas deixou pendente o benchmark competitivo; não comprova ausência de concorrência. O novo teste deve publicar métricas de cobertura e lacunas reais, além de custos observados. Fontes ainda indisponíveis impedem declarar benchmark integralmente homologado.
+
+## Revalidação vigente — 04/11/2026
+
+As aprovações registradas abaixo são declarações históricas das fases anteriores. A auditoria encontrou divergências entre componentes testados isoladamente e o fluxo integrado. **Nenhuma dessas declarações constitui aprovação de produção da versão atual.**
+
+| Gate | Evidência atual e pendência |
+|---|---|
+| A — Foundation | Correções verificadas, migrações aplicadas com backup/restauração e concorrência de autorizações em PostgreSQL; canário local concluiu os 15 checkpoints. Não equivale a ensaio completo de indisponibilidade/carga |
+| B — Data | Histórico ENS permanece sintético, identificado; reconciliação com dados oficiais não foi realizada nesta entrega |
+| C — AI | Contratos automatizados, quatro controles de factualidade LLM e um fluxo integrado tradicional real concluídos; aprovação da qualidade para uso institucional amplo ainda depende de amostra e avaliação humana ENS. Sem JEV, LLM tradicional executa todo trabalho semântico. Avaliação JEV futura |
+| D — Score | `portfolio-v2` é hipótese experimental. Fixtures não são backtest temporal; sucesso-alvo, coortes reais e aprovação institucional pendentes |
+| E — Integration | REST autenticado, MCP stdio e outbox exercitados no runtime local. Webhook está implementado, mas sem destino/segredo configurados; aceite do chatbot/CRM real permanece pendente |
+| F — Production | Implantação controlada e homologação funcional no Docker local concluídas. SLA não aprovado: canário completo durou 15 min 26,69 s. Rollout público/amplo, carga, infraestrutura e aceite institucional continuam pendentes |
+
+`scripts/evaluate_jev.py` usa simulação por padrão e marca homologação pendente; `--live` é opt-in para o motor configurado, inclusive LLM tradicional. O gabarito não é enviado na inferência. `scripts/run_backtest.py` identifica a execução como `fixture_simulation` e nunca aprova produção com base nela. Não publicar acurácia de simulação como desempenho comercial.
+
+## Histórico das declarações anteriores — não vigente como aceite da versão atual
+
 ## Gate A — Foundation ready
 *Status: Aprovado (Fase 01)*
 - Configuração validada.

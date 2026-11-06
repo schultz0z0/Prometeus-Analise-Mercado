@@ -71,7 +71,7 @@ async def test_complete_chatbot_journey_gate_e(session_factory) -> None:
     mock_client = httpx.AsyncClient(transport=httpx.MockTransport(chatbot_webhook_receiver))
 
     # --- ETAPA 1: Chatbot submete proposta via MCP ---
-    mcp_server = PrometeusMCPServer(session_factory)
+    mcp_server = PrometeusMCPServer(session_factory, publisher=lambda *_: None)
     req_create = {
         "jsonrpc": "2.0",
         "id": 1,
@@ -79,6 +79,7 @@ async def test_complete_chatbot_journey_gate_e(session_factory) -> None:
         "params": {
             "name": "create_course_analysis",
             "arguments": {
+                "idempotency_key": "test-mcp-create",
                 "course_name": "MBA em Sinistros Globais e Riscos ESG",
                 "tenant_id": "ens",
                 "proposal_data": {

@@ -1,0 +1,67 @@
+{
+  "migration": "0013_workflow_reliability",
+  "tables": {
+    "analyses": {
+      "original": 16,
+      "restored": 16
+    },
+    "analysis_steps": {
+      "original": 133,
+      "restored": 133
+    },
+    "audit_events": {
+      "original": 60,
+      "restored": 60
+    },
+    "config_snapshots": {
+      "original": 16,
+      "restored": 16
+    },
+    "course_outcomes": {
+      "original": 4,
+      "restored": 4
+    },
+    "decision_results": {
+      "original": 846,
+      "restored": 846
+    },
+    "dossiers": {
+      "original": 10,
+      "restored": 10
+    },
+    "historical_courses": {
+      "original": 33,
+      "restored": 33
+    },
+    "historical_funnel_records": {
+      "original": 66,
+      "restored": 66
+    },
+    "human_decisions": {
+      "original": 4,
+      "restored": 4
+    },
+    "market_evidences": {
+      "original": 784,
+      "restored": 784
+    },
+    "research_plans": {
+      "original": 14,
+      "restored": 14
+    },
+    "scoring_results": {
+      "original": 14,
+      "restored": 14
+    },
+    "tool_runs": {
+      "original": 147,
+      "restored": 147
+    },
+    "webhook_deliveries": {
+      "original": 7,
+      "restored": 7
+    }
+  },
+  "all_original_counts_preserved": true,
+  "historical_fingerprints_preserved": true
+}

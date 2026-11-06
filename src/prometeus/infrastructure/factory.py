@@ -17,7 +17,6 @@ from prometeus.domain.configuration import AppSettings, ConfigurationError
 from prometeus.domain.ports.decision_model import DecisionModelPort
 from prometeus.domain.ports.generative_model import GenerativeModelPort
 from prometeus.infrastructure.jev.client import TypeSafeJEVClient
-from prometeus.infrastructure.jev.fake_client import FakeDecisionClient
 from prometeus.infrastructure.llm.client import (
     ChatGPTPlanGenerativeClient,
     OpenAIGenerativeClient,
@@ -140,10 +139,11 @@ def get_shadow_decision_service(
             max_retries=settings.JEV_MAX_RETRIES,
         )
     else:
-        shadow_model = FakeDecisionClient(model=settings.JEV_MODEL)
+        # Sem JEV, somente o primário tradicional real executa: não fabricar comparação.
+        shadow_model = primary_model
 
     return ShadowDecisionService(
         primary_service=primary_service,
         shadow_model=shadow_model,
-        enabled=True,
+        enabled=settings.is_jev_configured,
     )

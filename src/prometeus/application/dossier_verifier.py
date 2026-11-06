@@ -38,6 +38,134 @@ INJECTION_PATTERNS = [
 class DossierVerifier:
     """Verificador factual que audita cada claim do dossiê contra o DossierFacts canônico."""
 
+    def verify_presentation(
+        self,
+        dossier: DossierOutput,
+        facts: DossierFacts,
+        presentation: dict[str, Any],
+        proposal: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        """Check the final persisted projection, including deterministic visual blocks.
+
+        The proposal is the persisted institution snapshot, never model output.
+        A text-only verification cannot authorize new fields added afterwards.
+        """
+        from prometeus.application.ecosystem_presentation import build_ecosystem_presentation_blocks
+        from prometeus.application.synthesize_dossier import DossierSynthesisService
+
+        issues: list[dict[str, Any]] = []
+
+        def check(path: str, observed: Any, expected: Any) -> None:
+            if observed != expected:
+                issues.append(
+                    {
+                        "path": f"presentation.{path}",
+                        "code": "presentation_fact_mismatch",
+                        "message": "A apresentação final diverge dos fatos ou da redação verificada.",
+                    }
+                )
+
+        check("contract_version", presentation.get("contract_version"), 2)
+        check(
+            "content_basis",
+            presentation.get("content_basis"),
+            "verified_facts_and_explicit_simulation",
+        )
+        check(
+            "title",
+            presentation.get("title"),
+            f"Dossiê Executivo de Viabilidade: {facts.course_name}",
+        )
+        verdict = presentation.get("verdict") or {}
+        for field, expected in {
+            "status": facts.recommendation,
+            "score": round(facts.viability_score, 1),
+            "confidence": round(facts.confidence_score * 100, 1),
+            "summary": dossier.executive_summary,
+        }.items():
+            check(f"verdict.{field}", verdict.get(field), expected)
+        for field in ("kpis", "personas", "curriculum_modules", "tactical_roadmap"):
+            check(field, presentation.get(field), [])
+        check(
+            "swot",
+            presentation.get("swot"),
+            {
+                "strengths": [],
+                "weaknesses": [],
+                "opportunities": [],
+                "threats": [],
+                "tows_strategies": [],
+            },
+        )
+        check(
+            "economics",
+            presentation.get("economics"),
+            DossierSynthesisService._build_economics_presentation(proposal),
+        )
+        raw_hours = proposal.get("workload_hours")
+        hours = (
+            raw_hours
+            if isinstance(raw_hours, int) and not isinstance(raw_hours, bool) and raw_hours > 0
+            else 0
+        )
+        ecosystem = build_ecosystem_presentation_blocks(proposal, facts, hours)
+        for name in ("competitive_benchmark", "sector_radar"):
+            check(name, presentation.get(name), ecosystem.get(name))
+        # These fields are present on the persisted envelope, but not on a bare visual projection.
+        metadata = {
+            "schema_version": dossier.schema_version,
+            "executive_summary_claim_ids": dossier.executive_summary_claim_ids,
+            "highlights": dossier.highlights.model_dump(mode="json"),
+            "limitations": facts.limitations,
+            "counterevidence": facts.counterevidence,
+            "analysis_audit": facts.analysis_audit,
+            "three_fold_review": dossier.three_fold_review.to_dict()
+            if dossier.three_fold_review
+            else None,
+        }
+        for field, expected in metadata.items():
+            if field in presentation:
+                check(field, presentation[field], expected)
+        allowed = {
+            "contract_version",
+            "content_basis",
+            "title",
+            "verdict",
+            "kpis",
+            "personas",
+            "economics",
+            "curriculum_modules",
+            "swot",
+            "tactical_roadmap",
+            "competitive_benchmark",
+            "sector_radar",
+            "verification",
+            *metadata,
+        }
+        for extra in presentation.keys() - allowed:
+            check(extra, presentation[extra], None)
+        coverage = ecosystem.get("competitive_benchmark")
+        if coverage and not coverage.get("coverage_complete"):
+            texts = [
+                dossier.executive_summary,
+                *[claim.statement for claim in dossier.claims],
+                *[section.content for section in dossier.sections],
+            ]
+            for text in texts:
+                if re.search(
+                    r"(?:mercado\s+(?:livre|inexplorado)|n[ãa]o\s+h[áa]\s+concorrentes|aus[êe]ncia\s+de\s+concorr[êe]ncia\s+comprovada)",
+                    text,
+                    re.IGNORECASE,
+                ):
+                    issues.append(
+                        {
+                            "path": "presentation.competitive_benchmark",
+                            "code": "incomplete_benchmark_market_absence_claim",
+                            "message": "Benchmark incompleto não sustenta afirmação de ausência de concorrência.",
+                        }
+                    )
+        return issues
+
     def __init__(self, tolerance_pct: float = 0.0) -> None:
         self.tolerance_pct = tolerance_pct
 
@@ -164,7 +292,16 @@ class DossierVerifier:
             numeric_text = claim.statement
             if "scoring_result" in claim.evidence_ids:
                 # O denominador da escala é metadado do índice, não observação de mercado.
-                numeric_text = re.sub(r"(?<=\d)\s*/\s*100\b", "", numeric_text)
+                numeric_text = re.sub(
+                    r"\b(?P<label>[íi]ndice|score|nota|pontua[cç][aã]o)"
+                    r"(?P<qualifiers>(?:\s+(?:de\s+viabilidade|experimental|observad[oa]|calculad[oa]|provis[oó]ri[oa]))*)"
+                    r"\s*(?:(?:é(?:\s+de)?|de|:|=)\s*)?"
+                    r"(?P<value>\d+(?:[.,]\d+)?)\s*(?:/|em|de|sobre)\s*100(?:\s+pontos)?"
+                    r"(?=\s*(?:[.,](?!\d)|[;:!?)]|$))",
+                    r"\g<label>\g<qualifiers> \g<value>",
+                    numeric_text,
+                    flags=re.IGNORECASE,
+                )
             claim_numbers = self._extract_numbers(numeric_text)
             if not claim_numbers:
                 claim.verification_status = VerificationStatus.VERIFIED
@@ -222,7 +359,9 @@ class DossierVerifier:
             )
         elif raw_status == "DEGRADED" or missing_desc > 0 or omissions:
             status = ReviewStatus.WARN
-            notes.append("Ocorrência de perda de campos ou descrições parciais preservadas como limitações.")
+            notes.append(
+                "Ocorrência de perda de campos ou descrições parciais preservadas como limitações."
+            )
         else:
             status = ReviewStatus.PASS
 
@@ -259,21 +398,33 @@ class DossierVerifier:
             "competitors": bool(
                 dossier.highlights.competitors
                 or any(
-                    re.search(r"\b(?:concorr[êe]ncia|concorrentes?)\b", s.title + " " + s.content, re.I)
+                    re.search(
+                        r"\b(?:concorr[êe]ncia|concorrentes?)\b", s.title + " " + s.content, re.I
+                    )
                     for s in dossier.sections
                 )
             ),
             "professional_demand": any(
-                re.search(r"\b(?:vagas?|compet[êe]ncias?|profissional|empregabilidade)\b", c.statement, re.I)
+                re.search(
+                    r"\b(?:vagas?|compet[êe]ncias?|profissional|empregabilidade)\b",
+                    c.statement,
+                    re.I,
+                )
                 for c in dossier.claims
             ),
             "learner_demand": any(
-                re.search(r"\b(?:p[úu]blico|demanda|interesse|alunos?)\b", s.title + " " + s.content, re.I)
+                re.search(
+                    r"\b(?:p[úu]blico|demanda|interesse|alunos?)\b", s.title + " " + s.content, re.I
+                )
                 for s in dossier.sections
             ),
             "economics_and_pricing": bool(
                 any(
-                    re.search(r"\b(?:pre[çc]o|investimento|viabilidade|mensalidade|parcelas?)\b", c.statement, re.I)
+                    re.search(
+                        r"\b(?:pre[çc]o|investimento|viabilidade|mensalidade|parcelas?)\b",
+                        c.statement,
+                        re.I,
+                    )
                     for c in dossier.claims
                 )
                 or any(
@@ -286,7 +437,9 @@ class DossierVerifier:
                 or dossier.highlights.validation_criteria
                 or dossier.highlights.action_recommendations
                 or any(
-                    re.search(r"\b(?:riscos?|limita[çc][õo]es?|amea[çc]as?|fraquezas?)\b", s.content, re.I)
+                    re.search(
+                        r"\b(?:riscos?|limita[çc][õo]es?|amea[çc]as?|fraquezas?)\b", s.content, re.I
+                    )
                     for s in dossier.sections
                 )
             ),
@@ -294,9 +447,11 @@ class DossierVerifier:
 
         # 2. Independência e não-canibalização: ENS e seguradoras do Radar não são concorrentes educacionais
         independence_verified = True
-        declared_inst = str(
-            facts.analysis_audit.get("declared_offer", {}).get("institution") or "ENS"
-        ).strip().lower()
+        declared_inst = (
+            str(facts.analysis_audit.get("declared_offer", {}).get("institution") or "ENS")
+            .strip()
+            .lower()
+        )
         sector_actors = [
             str(name).strip().lower()
             for name in facts.analysis_audit.get("sector_radar_actors", [])
@@ -304,7 +459,11 @@ class DossierVerifier:
         ]
         for comp in dossier.highlights.competitors:
             label_lower = comp.label.strip().lower()
-            if "ens" in label_lower or "escola nacional de seguros" in label_lower or (declared_inst and declared_inst in label_lower):
+            if (
+                "ens" in label_lower
+                or "escola nacional de seguros" in label_lower
+                or (declared_inst and declared_inst in label_lower)
+            ):
                 if "própria" not in label_lower and "interna" not in label_lower:
                     independence_verified = False
                     issues.append(
@@ -318,7 +477,11 @@ class DossierVerifier:
                         "Módulo de competidores: filtrar e separar ofertas internas do quadro de concorrência externa."
                     )
             elif any(re.search(rf"\b{re.escape(actor)}\b", label_lower) for actor in sector_actors):
-                if "ecossistema" not in label_lower and "radar" not in label_lower and "corporativ" not in label_lower:
+                if (
+                    "ecossistema" not in label_lower
+                    and "radar" not in label_lower
+                    and "corporativ" not in label_lower
+                ):
                     independence_verified = False
                     issues.append(
                         {
@@ -490,7 +653,10 @@ class DossierVerifier:
 
         # 4. Materialidade e alternativas
         material_alternatives_present = True
-        if not dossier.highlights.validation_criteria and not dossier.highlights.action_recommendations:
+        if (
+            not dossier.highlights.validation_criteria
+            and not dossier.highlights.action_recommendations
+        ):
             actionable_recommendations.append(
                 "Redator: estruturar validações prévias e ações recomendadas para a decisão institucional."
             )
@@ -640,7 +806,8 @@ class DossierVerifier:
                     {
                         "path": f"blocks.{index}",
                         "code": checked_text.verification_status.value,
-                        "message": checked_text.verification_note or "Texto sem suporte verificado.",
+                        "message": checked_text.verification_note
+                        or "Texto sem suporte verificado.",
                         "text_excerpt": text[:300],
                         "evidence_ids": checked_text.evidence_ids,
                     }
@@ -800,7 +967,7 @@ class DossierVerifier:
         else:
             dossier.status = DossierStatus.VERIFIED
             overall_status = DossierStatus.VERIFIED
-            summary = "Dossiê verificado e homologado com sucesso nas três frentes de revisão."
+            summary = "Verificações automáticas de integridade, qualidade analítica e factualidade concluídas; a homologação humana permanece separada."
 
         actionable_feedback = list(analytical_review.actionable_recommendations)
         if integrity_review.status == ReviewStatus.FAIL:

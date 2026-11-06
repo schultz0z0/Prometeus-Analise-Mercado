@@ -1,0 +1,9 @@
+FROM pesquisademercado-ia-api:latest
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends nodejs && rm -rf /var/lib/apt/lists/*
+COPY --chown=prometeus:prometeus tests/ /app/tests/
+COPY --chown=prometeus:prometeus docs/ /app/docs/
+COPY --chown=prometeus:prometeus deploy/ /app/deploy/
+COPY --chown=prometeus:prometeus README.md CHANGELOG.md AGENTS.md pyproject.toml .env.example compose.yaml Dockerfile /app/
+USER prometeus
+ENV APP_ENV=test DATABASE_URL=sqlite+aiosqlite:///:memory: AUTO_MIGRATE=false

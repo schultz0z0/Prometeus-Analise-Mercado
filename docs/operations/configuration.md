@@ -1,5 +1,9 @@
 # Configuração
 
+## Controle de acesso e recuperação — 04/11/2026
+
+Consulte o [guia das correções](audit-remediation.md) para `SERVICE_API_KEYS`, bootstrap em `AUTH_ADMIN_KEY_PATH`, sessão do navegador, `WEBHOOK_SECRET`, `WEBHOOK_TARGET_URL`, `API_BIND_HOST` e scheduler. O acesso ao Prometeus é independente do ChatGPT OAuth de inferência. A migração atual é `0013_workflow_reliability`; não há reset da base sintética ENS. A exigência de modelo JEV pinado só se aplica quando o motor JEV estiver selecionado.
+
 O healthcheck do worker consulta somente o próprio nó Celery, usando seu hostname, com espera de resposta de dois segundos e limite externo de vinte segundos para acomodar a inicialização do comando Python no Docker Desktop. Uma resposta ausente continua resultando em falha; não existe fallback de sucesso. O período inicial de quarenta segundos acomoda o início dos processos.
 
 ## Homologação local com LLM tradicional
@@ -75,8 +79,10 @@ Em todos os modos, cálculos e mudanças de estado são validados em código.
 
 ## Apify
 
-`APIFY_TOKEN` e todos os Actors requeridos devem estar configurados com referência `owner/name@build-number`. `latest` é rejeitado. `APIFY_REQUIRED_SOURCES` define as fontes obrigatórias e `APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS` limita o custo. O preflight bloqueia antes da coleta se faltar token, Actor ou LLM real.
+`APIFY_TOKEN` e todos os Actors requeridos devem estar configurados com referência `owner/name@build-number`. `latest` é rejeitado. `APIFY_REQUIRED_SOURCES` define as fontes obrigatórias. Novos planos usam `collection-v2`, `spending_mode=monitor_only`, sem teto monetário local nem reserva por chamada; `maxTotalChargeUsd` é omitido. O parâmetro legado `APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS` não autoriza novos planos e aparece separado nas configurações. O preflight bloqueia antes da coleta se faltar token, Actor ou LLM real.
 
-O catálogo do planejador inclui somente Actors configurados. Quando Trends estiver configurado, o plano inicial inclui sua série mesmo se não for um canal obrigatório. Não há aumento automático do teto: uma rodada complementar, no máximo, usa o orçamento original restante. A análise pode continuar com lacunas explícitas se fontes opcionais falharem; fontes obrigatórias vazias ou indisponíveis mantêm a política de bloqueio.
+O catálogo do planejador inclui somente Actors configurados. Quando Trends estiver configurado, o plano inicial inclui sua série mesmo se não for um canal obrigatório. Escopo finito, limites de páginas/itens/tempo e três retentativas controlam a execução. Pesquisa competitiva começa por cada instituição, podendo ampliar até três variantes semânticas; outras lacunas têm uma rodada complementar. Custos provisórios não constituem garantia de gasto máximo. Restrições da conta e defaults remotos permanecem possíveis. Falha terminal ou fonte vazia permite continuar com lacunas explícitas; execução indeterminada impede nova compra da mesma tarefa e exige reconciliação.
+
+`APIFY_DISCOVERY_MCP_ENABLED=true` habilita o apoio opcional por MCP remoto. Requer o extra `apify-mcp` instalado (incluído na imagem Docker); a API de diagnóstico administrativa aceita somente descoberta de Actors e consulta de documentação/schema. Não inicia Actors nem promove automaticamente alternativas ao catálogo. MCP indisponível não impede as coletas pela API.
 
 Na atualização de 2026-10-28, executar `alembic upgrade head` antes de iniciar o código novo; a migração `0009_dossier_presentation` acrescenta uma coluna JSON com valor padrão vazio e preserva os dossiês existentes. Reconstruir as imagens de API e worker inclui a migração nos dois serviços. O piloto local foi atualizado e os resultados antigos não foram recalculados.

@@ -80,10 +80,23 @@ def test_jev_latest_prohibited_in_production() -> None:
     settings = AppSettings(
         APP_ENV="production",
         JEV_MODEL="jev-latest",
+        AI_MODE="hybrid",
+        TYPESAFE_API_KEY="isolated-test-key",
         DATABASE_URL="postgresql+asyncpg://user:pass@localhost:5432/prometeus",
     )
     with pytest.raises(ConfigurationError, match="expressamente proibido em ambiente de produção"):
         validate_environment_and_models(settings)
+
+
+def test_traditional_production_does_not_require_an_unused_jev_model():
+    settings = AppSettings(
+        _env_file=None,
+        APP_ENV="production",
+        AI_MODE="traditional",
+        TYPESAFE_API_KEY="",
+        JEV_MODEL="jev-latest",
+    )
+    validate_environment_and_models(settings)
 
 
 def test_jev_latest_allowed_in_development() -> None:

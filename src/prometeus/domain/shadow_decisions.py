@@ -15,10 +15,14 @@ class DivergenceCategory(StrEnum):
     """Categoria de divergência entre a decisão primária (produção) e a decisão shadow (JEV)."""
 
     CONCORDANT = "CONCORDANT"  # Mesma escolha / score compatível
-    CONFIDENCE_DIVERGENCE = "CONFIDENCE_DIVERGENCE"  # Mesma escolha, mas confiança difere acima da tolerância
+    CONFIDENCE_DIVERGENCE = (
+        "CONFIDENCE_DIVERGENCE"  # Mesma escolha, mas confiança difere acima da tolerância
+    )
     CHOICE_DIVERGENCE = "CHOICE_DIVERGENCE"  # Escolhas diferentes
     SCORE_DIVERGENCE = "SCORE_DIVERGENCE"  # Scores numéricos diferem acima da tolerância
-    ABSTENTION_DIVERGENCE = "ABSTENTION_DIVERGENCE"  # Um dos modelos absteve (NOUL/revisão) enquanto o outro decidiu
+    ABSTENTION_DIVERGENCE = (
+        "ABSTENTION_DIVERGENCE"  # Um dos modelos absteve (NOUL/revisão) enquanto o outro decidiu
+    )
     SHADOW_ERROR = "SHADOW_ERROR"  # Erro de transporte, timeout ou falha na execução shadow
 
 
@@ -79,4 +83,3 @@ class NonInferiorityEvaluation(BaseModel):
 
     def to_dict(self) -> dict[str, Any]:
         return self.model_dump(mode="json")
-

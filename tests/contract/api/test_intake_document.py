@@ -37,7 +37,9 @@ def pdf_bytes(text: str | None = None) -> bytes:
 )
 async def test_pdf_upload_extracts_real_text_or_returns_explicit_error(raw, expected):
     async with httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=app), base_url="http://test"
+        transport=httpx.ASGITransport(app=app),
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
     ) as client:
         response = await client.post(
             "/v1/intake/extract-document",

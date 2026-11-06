@@ -27,6 +27,7 @@ secrets/
 /var/
 /output/playwright/
 /.playwright-cli/
+/.security/scan.db
 *.sqlite3
 
 # IDE and OS

@@ -40,7 +40,12 @@ class ObservationField(BaseModel, Generic[T]):
 
     @classmethod
     def observed(
-        cls, value: T, *, pointer: str | None = None, unit: str | None = None, observed_at: str | None = None
+        cls,
+        value: T,
+        *,
+        pointer: str | None = None,
+        unit: str | None = None,
+        observed_at: str | None = None,
     ) -> ObservationField[T]:
         return cls(
             value=value,
@@ -217,5 +222,3 @@ class MultiPurposeAssessment(BaseModel):
     @property
     def usable_purposes(self) -> list[str]:
         return [p for p, a in self.assessments.items() if a.usable]
-
-

@@ -30,7 +30,11 @@ async def client(test_session: AsyncSession) -> httpx.AsyncClient:
 
     app.dependency_overrides[get_db_session] = override_session
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+    async with httpx.AsyncClient(
+        transport=transport,
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
+    ) as c:
         yield c
     app.dependency_overrides.clear()
 
@@ -53,6 +57,28 @@ async def test_list_institutional_courses_returns_enriched_test_courses(
     assert "ENS-EXT-SIN-03" in ext_ids
     assert "ENS-CAP-VEND-04" in ext_ids
     assert "ENS-APERF-DIR-05" in ext_ids
+
+
+async def test_unseeded_synthetic_history_has_consistent_summaries(client, test_session):
+    from sqlalchemy import delete
+
+    from prometeus.infrastructure.db.models import HistoricalCourseModel, HistoricalFunnelModel
+
+    await test_session.execute(delete(HistoricalFunnelModel))
+    await test_session.execute(delete(HistoricalCourseModel))
+    await test_session.commit()
+    response = await client.get("/v1/institutional/courses?tenant_id=ens")
+    assert response.status_code == 200
+    course = next(
+        item for item in response.json()["courses"] if item["external_id"] == "ENS-MBA-SEG-01"
+    )
+    assert course["is_synthetic"] is True
+    assert course["metrics_summary"]["total_enrolled"] == sum(
+        item["enrolled"] for item in course["funnel_history"]
+    )
+    assert course["metrics_summary"]["total_revenue_brl"] == sum(
+        item["total_revenue_brl"] for item in course["funnel_history"]
+    )
 
 
 @pytest.mark.asyncio

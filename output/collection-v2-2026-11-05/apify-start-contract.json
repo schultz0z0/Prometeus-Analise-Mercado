@@ -1,0 +1,20 @@
+{
+  "before": {
+    "maxItems_query": 10,
+    "maxTotalChargeUsd_query": null,
+    "http_status": 400,
+    "provider_error_type": "max-total-charge-usd-below-minimum",
+    "provider_error_message": "Maximum cost per run is less than the allowed minimum of $0.50"
+  },
+  "after": {
+    "maxItems_query": null,
+    "maxTotalChargeUsd_query": null,
+    "scope_control": "Actor input maxPagesPerQuery=1",
+    "completed_call_ids": ["start-contract-probe"],
+    "optional_failures": [],
+    "cost_usd_observed_initially": 0.00005,
+    "cost_status": "observed_provisional"
+  },
+  "execution": "Persisted collector in restored PostgreSQL clone; actual Apify Actor",
+  "checked_at": "2026-11-05T19:11:30.425778+00:00"
+}

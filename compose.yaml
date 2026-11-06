@@ -39,8 +39,8 @@ services:
     container_name: prometeus-api
     restart: unless-stopped
     ports:
-      - "${API_PORT:-8000}:8000"
-      - "1455:8000"
+      - "${API_BIND_HOST:-127.0.0.1}:${API_PORT:-8000}:8000"
+      - "127.0.0.1:1455:8000"
     env_file:
       - .env
     volumes:
@@ -113,6 +113,36 @@ services:
       start_period: 40s
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+    restart: unless-stopped
+    command: ["celery", "-A", "prometeus.workers.tasks.celery_app", "beat", "--loglevel=info", "--schedule=/app/var/celerybeat-schedule"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "from pathlib import Path; assert b'beat' in Path('/proc/1/cmdline').read_bytes()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://prometeus:prometeus@postgres:5432/prometeus
+      REDIS_URL: redis://redis:6379/0
+      AUTO_MIGRATE: "false"
+    volumes:
+      - ./src:/app/src
+      - ./config:/app/config
+      - ./skills:/app/skills
+      - ./var:/app/var
+    networks:
+      - prometeus_internal
+    depends_on:
+      api:
         condition: service_healthy
       redis:
         condition: service_healthy

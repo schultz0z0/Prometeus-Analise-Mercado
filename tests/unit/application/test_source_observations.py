@@ -153,4 +153,3 @@ def test_key_reordering_preserves_observation_identity_and_critical_fields() -> 
     assert obs_a.title.value == obs_b.title.value
     assert obs_a.description_text.value == obs_b.description_text.value
     assert obs_a.canonical_hash() == obs_b.canonical_hash()
-

@@ -1,0 +1,10 @@
+{
+  "analysis_id": "9cb4f98e-60b5-46d9-998e-5ad81ebe7d86",
+  "resumed_at": "2026-11-06T20:34:31.535240+00:00",
+  "llm_live_probe": "passed",
+  "provider": "chatgpt_oauth",
+  "model": "gpt-6.1-terra",
+  "published": true,
+  "evidence_rows_preserved": 522,
+  "attempts_preserved": 93
+}

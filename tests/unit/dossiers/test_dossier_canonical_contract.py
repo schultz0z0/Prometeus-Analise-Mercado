@@ -2,6 +2,47 @@ from prometeus.application.dossier_verifier import DossierVerifier
 from prometeus.domain.dossiers import DossierClaim, DossierFacts
 
 
+def test_index_scale_denominator_is_metadata_without_authorizing_invented_percentages():
+    facts = DossierFacts(
+        analysis_id="scale",
+        course_name="Curso",
+        target_audience="Público",
+        recommendation="INSUFFICIENT_EVIDENCE",
+        viability_score=30,
+        coverage_score=0.15,
+        confidence_score=0.51,
+    )
+    verifier = DossierVerifier()
+    for statement in [
+        "O índice experimental é 30,0 em 100.",
+        "O índice é 30/100.",
+        "A pontuação é 30 de 100.",
+        "O índice de viabilidade experimental é 30 em 100, a cobertura de evidências é 15% e a confiança analítica é 51%.",
+    ]:
+        claim = DossierClaim(statement=statement, evidence_ids=["scoring_result"])
+        assert verifier.verify_claim(claim, facts).verification_status == "verified", statement
+    assert facts.get_fact_item("scoring_result").key_metrics["index_scale"] == {
+        "minimum": 0,
+        "maximum": 100,
+    }
+    for statement in [
+        "A confiança analítica é 100%.",
+        "O índice é 31 em 100.",
+        "O índice é 30 em 100 e 100% dos leads se matricularam.",
+        "Há 30 em 100 matrículas.",
+        "O índice é 30 e há 30 em 100 empresas interessadas.",
+        "O índice é 30 em 100 milhões de matrículas.",
+        "O índice é 30 em 100, e 100% dos leads se matricularam.",
+        "O índice é 31 em 100, a cobertura de evidências é 15%.",
+        "O índice é 30 em 100,0 milhões de matrículas.",
+        "O índice é 30 em 100,000 matrículas.",
+    ]:
+        claim = DossierClaim(statement=statement, evidence_ids=["scoring_result"])
+        assert verifier.verify_claim(claim, facts).verification_status == "flagged_hallucination", (
+            statement
+        )
+
+
 def test_scoring_reference_contains_interpretation_and_values_in_one_citable_source():
     facts = DossierFacts(
         analysis_id="a",
@@ -68,4 +109,7 @@ def test_provider_schema_constrains_every_claim_reference_including_pros_and_con
     highlights = props["highlights"]["properties"]
     assert highlights["pros"]["items"]["enum"] == expected
     assert highlights["cons"]["items"]["enum"] == expected
-    assert highlights["curriculum_alignment"]["items"]["properties"]["need_claim_ids"]["items"]["enum"] == expected
+    assert (
+        highlights["curriculum_alignment"]["items"]["properties"]["need_claim_ids"]["items"]["enum"]
+        == expected
+    )

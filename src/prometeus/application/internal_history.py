@@ -310,7 +310,9 @@ class InternalHistoryService:
         grades = sum(item[3] is not None for item in selected) / len(selected)
         mean_fit = statistics.mean(item[0] for item in selected)
         fit_scale = min(1.0, mean_fit / 0.35)
-        confidence = round(0.9 * min(1.0, len(reference) / 10) * (0.6 + 0.4 * grades) * fit_scale, 4)
+        confidence = round(
+            0.9 * min(1.0, len(reference) / 10) * (0.6 + 0.4 * grades) * fit_scale, 4
+        )
         evidence_ids = [eid for item in audit["comparables"] for eid in item["evidence_ids"]]
         value = round(statistics.mean(item["ipd_score"] for item in audit["comparables"]), 2)
         return EvidenceFeatureSet(

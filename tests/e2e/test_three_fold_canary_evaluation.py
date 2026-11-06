@@ -188,8 +188,12 @@ class TestThreeFoldCanaryEvaluation:
                     source_url="https://escola-ia.com/curso-16h",
                 )
             ],
-            limitations=["Ofertas concorrentes identificadas são cursos livres de curta duração, não MBAs."],
-            counterevidence=["Formato de 16h não compete em titulação com cursos de pós-graduação."],
+            limitations=[
+                "Ofertas concorrentes identificadas são cursos livres de curta duração, não MBAs."
+            ],
+            counterevidence=[
+                "Formato de 16h não compete em titulação com cursos de pós-graduação."
+            ],
             analysis_audit={
                 "integrity_report": IntegrityReport(
                     source_count=1,

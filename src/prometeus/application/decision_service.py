@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -49,6 +49,7 @@ class DecisionService:
         self._packs_cache: dict[str, DecisionPack] = {}
         self.envelopes: list[ExecutionEnvelope] = []
         self._attempts_by_key: dict[str, int] = {}
+        self.before_judgment: Callable[[], Awaitable[None]] | None = None
 
     def get_pack(self, pack_id: str) -> DecisionPack:
         """Carrega e valida o decision pack a partir do arquivo YAML."""
@@ -157,6 +158,8 @@ class DecisionService:
         stage: str | None = None,
     ) -> DecisionResult:
         """Executa um julgamento atômico (Choice/Score) registrando envelope auditável."""
+        if self.before_judgment is not None:
+            await self.before_judgment()
         pack = self.get_pack(pack_id)
         effective_stage = stage or pack_id
         identity = self.decision_model.model_identity()
@@ -211,9 +214,7 @@ class DecisionService:
         finished_at = datetime.now(UTC)
         effective_call = provider_calls[-1] if provider_calls else None
         effective_model = (
-            effective_call.model
-            if effective_call and effective_call.model
-            else identity.model
+            effective_call.model if effective_call and effective_call.model else identity.model
         )
         provider_name = (
             effective_call.provider
@@ -221,7 +222,11 @@ class DecisionService:
             else identity.provider
         )
         usage = effective_call.usage if effective_call else None
-        cost = effective_call.cost if effective_call else MeasuredCost.unavailable("no_provider_telemetry")
+        cost = (
+            effective_call.cost
+            if effective_call
+            else MeasuredCost.unavailable("no_provider_telemetry")
+        )
         provider_attempts = effective_call.attempts if effective_call else None
 
         envelope = ExecutionEnvelope.create(

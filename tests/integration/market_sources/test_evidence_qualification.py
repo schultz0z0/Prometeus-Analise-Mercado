@@ -67,7 +67,7 @@ async def test_irrelevant_ad_and_out_of_scope_job_are_not_counted_and_retry_reus
         await db.commit()
         await service.qualify(analysis, understanding, "policy-refresh")
         assert row.sanitized_data["_qualification"]["accepted"] is False
-        assert row.sanitized_data["_qualification"]["qualification_version"] == 3
+        assert row.sanitized_data["_qualification"]["qualification_version"] == 4
         assert row.sanitized_data["_qualification"]["pack_hash"]
         prior_decision = row.sanitized_data["_qualification"]["decision_id"]
         pack = service.decisions.get_pack("market-relevance-v1")

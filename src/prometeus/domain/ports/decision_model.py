@@ -59,7 +59,9 @@ def validate_finite_number(
 def validate_choice_selection(choice: Any, allowed_options: list[str], pack_id: str) -> str:
     """Valida que choice é string não vazia e pertence às opções permitidas do pack."""
     if not choice or not isinstance(choice, str):
-        raise ValueError(f"A resposta de decisão não contém 'selected_choice' válido para o pack '{pack_id}'.")
+        raise ValueError(
+            f"A resposta de decisão não contém 'selected_choice' válido para o pack '{pack_id}'."
+        )
     choice_str = choice.strip()
     if choice_str not in allowed_options:
         raise ValueError(
@@ -68,9 +70,7 @@ def validate_choice_selection(choice: Any, allowed_options: list[str], pack_id: 
     return choice_str
 
 
-def validate_distribution(
-    distribution: Any, allowed_options: list[str]
-) -> dict[str, float]:
+def validate_distribution(distribution: Any, allowed_options: list[str]) -> dict[str, float]:
     """Valida distribuição: dicionário com chaves permitidas, probabilidades válidas e soma coerente."""
     if not isinstance(distribution, dict):
         raise ValueError("A resposta estruturada não contém 'distribution' válido.")

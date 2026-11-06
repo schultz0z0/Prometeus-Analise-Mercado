@@ -3,6 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import math
+from collections.abc import Awaitable, Callable
+from contextlib import suppress
+from contextvars import ContextVar
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import quote_plus
 
@@ -27,6 +32,24 @@ from prometeus.infrastructure.apify.schemas import (
 
 class ApifyError(RuntimeError):
     """Erro base sanitizado da integração Apify."""
+
+
+class ApifyRequestRejectedError(httpx.HTTPStatusError):
+    """Motivo de rejeição anterior à execução, com token removido."""
+
+    def __init__(self, error: httpx.HTTPStatusError, *, token: str) -> None:
+        try:
+            payload = error.response.json()
+            detail = payload.get("error") if isinstance(payload, dict) else None
+            detail = detail if isinstance(detail, dict) else {}
+        except ValueError:
+            detail = {}
+        self.provider_error_code = str(detail.get("type") or "request_rejected")[:128]
+        message = str(detail.get("message") or "O provedor rejeitou a solicitação.")
+        if token:
+            message = message.replace(token, "[redacted]")
+        self.provider_error_message = message.replace("\r", " ").replace("\n", " ")[:500]
+        super().__init__(f"Apify HTTP {error.response.status_code} [{self.provider_error_code}]: {self.provider_error_message}", request=error.request, response=error.response)
 
 
 class ApifyBudgetExceededError(ApifyError):
@@ -56,21 +79,27 @@ class ApifySchemaDriftError(ApifyError):
         super().__init__(message)
 
 
+class ApifyReconciliationRequiredError(ApifySchemaDriftError):
+    """Execução remota ou cobrança indeterminada; não autoriza nova compra."""
+
+
 class ApifyActorFailedError(ApifyError):
     """A run terminou em um estado de falha explícito."""
 
-    def __init__(self, *, run_id: str, status: str, message: str = "") -> None:
+    def __init__(
+        self, *, run_id: str, status: str, message: str = "", run_data: dict[str, Any] | None = None
+    ) -> None:
         self.run_id = run_id
         self.status = status
+        self.run_data = run_data
         safe_message = message.strip().replace("\r", " ").replace("\n", " ")[:500]
         detail = f": {safe_message}" if safe_message else ""
         super().__init__(f"Run Apify {run_id} terminou com status {status}{detail}")
 
 
-TERMINAL_STATUSES = frozenset(
-    {"SUCCEEDED", "FAILED", "TIMING-OUT", "TIMED-OUT", "ABORTING", "ABORTED"}
-)
+TERMINAL_STATUSES = frozenset({"SUCCEEDED", "FAILED", "TIMED-OUT", "ABORTED"})
 FAILED_STATUSES = TERMINAL_STATUSES - {"SUCCEEDED"}
+_READ_RETRIES: ContextVar[int] = ContextVar("apify_read_retries", default=3)
 
 
 class ApifyClient:
@@ -87,6 +116,7 @@ class ApifyClient:
         max_poll_attempts: int = 300,
         wait_for_finish_seconds: int = 10,
         http_client: httpx.AsyncClient | None = None,
+        cancellation_check: Callable[[], Awaitable[bool]] | None = None,
     ) -> None:
         if not api_token.strip():
             raise ApifyError("Token Apify não configurado.")
@@ -98,6 +128,7 @@ class ApifyClient:
         self.wait_for_finish_seconds = max(0, min(wait_for_finish_seconds, 60))
         self._owns_client = http_client is None
         self._client = http_client or httpx.AsyncClient(timeout=timeout_seconds)
+        self.cancellation_check = cancellation_check
 
     @property
     def _headers(self) -> dict[str, str]:
@@ -106,6 +137,34 @@ class ApifyClient:
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self._api_token}",
         }
+
+    async def _get(self, url: str, *, retry_limit: int | None = None, **kwargs: Any) -> httpx.Response:
+        """Recupera leituras sem iniciar novamente um Actor pago."""
+        retries = _READ_RETRIES.get() if retry_limit is None else retry_limit
+        for attempt in range(retries + 1):
+            if self.cancellation_check is not None and not await self.cancellation_check():
+                raise asyncio.CancelledError()
+            try:
+                response = await self._client.get(url, **kwargs)
+                response.raise_for_status()
+                return response
+            except httpx.HTTPError as exc:
+                transient = not isinstance(exc, httpx.HTTPStatusError) or (
+                    exc.response.status_code == 429 or exc.response.status_code >= 500
+                )
+                if not transient or attempt == retries:
+                    raise
+                delay = min(30.0, self.polling_interval_seconds * (2**attempt))
+                if isinstance(exc, httpx.HTTPStatusError):
+                    try:
+                        requested_delay = float(exc.response.headers.get("Retry-After", "0"))
+                    except ValueError:
+                        requested_delay = 0
+                    if requested_delay > 30:
+                        raise
+                    delay = max(delay, requested_delay)
+                await asyncio.sleep(delay)
+        raise AssertionError("unreachable")
 
     @staticmethod
     def _run_data(response: httpx.Response) -> dict[str, Any]:
@@ -126,6 +185,7 @@ class ApifyClient:
                 run_id=str(run_data.get("id", "unknown")),
                 status=status,
                 message=str(run_data.get("statusMessage", "")),
+                run_data=run_data,
             )
 
     async def _wait_for_terminal(self, run_data: dict[str, Any]) -> dict[str, Any]:
@@ -139,8 +199,17 @@ class ApifyClient:
 
         poll_url = f"{self.base_url}/actor-runs/{run_id}"
         for _ in range(self.max_poll_attempts):
+            if self.cancellation_check is not None and not await self.cancellation_check():
+                aborted = await self._client.post(f"{poll_url}/abort", headers=self._headers)
+                aborted.raise_for_status()
+                abort_data = self._run_data(aborted)
+                raise ApifyTimeoutError(
+                    "Análise cancelada; aborto do Actor solicitado.",
+                    run_id=run_id,
+                    run_data=abort_data,
+                )
             await asyncio.sleep(self.polling_interval_seconds)
-            response = await self._client.get(poll_url, headers=self._headers)
+            response = await self._get(poll_url, headers=self._headers)
             response.raise_for_status()
             run_data = self._run_data(response)
             self._ensure_success_or_raise(run_data)
@@ -148,15 +217,14 @@ class ApifyClient:
                 return run_data
         # A local timeout must not leave a paid Actor running indefinitely.
         cancellation = "Cancelamento remoto não confirmado; requer reconciliação."
-        terminal_data = None
+        terminal_data = run_data
         try:
             aborted = await self._client.post(f"{poll_url}/abort", headers=self._headers)
             aborted.raise_for_status()
             abort_data = self._run_data(aborted)
-            if abort_data.get("status") in {"ABORTED", "ABORTING"}:
-                cancellation = "Cancelamento remoto confirmado."
+            terminal_data = abort_data
             if abort_data.get("status") == "ABORTED":
-                terminal_data = abort_data
+                cancellation = "Cancelamento remoto confirmado."
         except (httpx.HTTPError, ApifySchemaDriftError):
             pass
         raise ApifyTimeoutError(
@@ -175,7 +243,7 @@ class ApifyClient:
                 "A run não contém identificador para conferir o build.", run_data=run_data
             )
         try:
-            response = await self._client.get(
+            response = await self._get(
                 f"{self.base_url}/actor-runs/{run_id}", headers=self._headers
             )
             response.raise_for_status()
@@ -196,7 +264,7 @@ class ApifyClient:
                     raise ApifySchemaDriftError(
                         "A run não contém buildNumber nem buildId verificável."
                     )
-                response = await self._client.get(
+                response = await self._get(
                     f"{self.base_url}/actor-builds/{build_id}", headers=self._headers
                 )
                 response.raise_for_status()
@@ -214,43 +282,243 @@ class ApifyClient:
                 "Não foi possível verificar o build real da run.", run_data=run_data
             ) from exc
 
+    async def _reconcile_billing(self, run_data: dict[str, Any]) -> dict[str, Any]:
+        def valid_cost(data: dict[str, Any]) -> bool:
+            cost = data.get("usageTotalUsd")
+            return (
+                isinstance(cost, int | float)
+                and not isinstance(cost, bool)
+                and math.isfinite(cost)
+                and cost >= 0
+            )
+
+        pricing = run_data.get("pricingInfo") or {}
+        if not isinstance(pricing, dict):
+            raise ApifyReconciliationRequiredError(
+                "Metadados de cobrança inválidos; requer reconciliação.", run_data=run_data
+            )
+        per_event = pricing.get("pricingModel") == "PAY_PER_EVENT"
+        if not per_event and valid_cost(run_data):
+            return run_data
+        original = run_data
+        for attempt in range(5):
+            try:
+                response = await self._get(
+                    f"{self.base_url}/actor-runs/{original['id']}", headers=self._headers
+                )
+                response.raise_for_status()
+                current = self._run_data(response)
+                if (
+                    current.get("id") != original["id"]
+                    or current.get("defaultDatasetId") != original.get("defaultDatasetId")
+                    or current.get("status") not in TERMINAL_STATUSES
+                    or current.get("status") != original.get("status")
+                    or (
+                        current.get("buildNumber")
+                        and current["buildNumber"] != original.get("buildNumber")
+                    )
+                ):
+                    raise ApifyReconciliationRequiredError(
+                        "Identidade ou estado remoto mudou; requer reconciliação.",
+                        run_data=original,
+                    )
+                run_data = current
+                if not current.get("buildNumber") and original.get("buildNumber"):
+                    if (
+                        not original.get("buildId")
+                        or current.get("buildId") != original["buildId"]
+                        or current.get("actId") != original.get("actId")
+                    ):
+                        raise ApifyReconciliationRequiredError(
+                            "Build sem identidade verificável durante cobrança; requer reconciliação.",
+                            run_data=original,
+                        )
+                    current = {**current, "buildNumber": original["buildNumber"]}
+                    run_data = current
+                charged = current.get("chargedEventCounts")
+                accounted = current.get("accountedChargedEventCounts")
+                pricing = current.get("pricingInfo") or {}
+                if not isinstance(pricing, dict):
+                    continue
+                current_per_event = pricing.get("pricingModel") == "PAY_PER_EVENT"
+                if per_event and not current_per_event:
+                    continue
+                if (
+                    not current_per_event
+                    or (
+                        isinstance(charged, dict)
+                        and isinstance(accounted, dict)
+                        and all(
+                            isinstance(count, int)
+                            and not isinstance(count, bool)
+                            and count >= 0
+                            and isinstance(accounted.get(event), int)
+                            and not isinstance(accounted[event], bool)
+                            and accounted[event] >= count
+                            for event, count in charged.items()
+                        )
+                    )
+                ) and valid_cost(current):
+                    return current
+            except ApifyReconciliationRequiredError:
+                raise
+            except (httpx.HTTPError, ApifySchemaDriftError):
+                pass
+            if attempt < 4:
+                await asyncio.sleep(self.polling_interval_seconds)
+        raise ApifyReconciliationRequiredError(
+            "Cobrança Apify ainda não confirmada; requer reconciliação antes de nova coleta.",
+            run_data=run_data,
+        )
+
     async def execute(
         self,
         call: PlannedToolCall,
         *,
-        max_total_charge_usd: float,
+        max_total_charge_usd: float | None,
+        on_run_started: Callable[[dict[str, Any]], Awaitable[None]] | None = None,
     ) -> ApifyExecutionResult:
-        if max_total_charge_usd <= 0:
+        if max_total_charge_usd is not None and max_total_charge_usd <= 0:
             raise ApifyBudgetExceededError("A chamada Apify não possui orçamento positivo.")
 
         spec = self.registry.require(call.capability)
         actor_input = self.registry.build_input(call)
         start_url = f"{self.base_url}/actors/{spec.actor_path}/runs"
-        response = await self._client.post(
-            start_url,
-            params={
-                "build": spec.build,
-                "waitForFinish": self.wait_for_finish_seconds,
-                "maxItems": call.max_items,
-                "maxTotalChargeUsd": max_total_charge_usd,
-                "restartOnError": "false",
-            },
-            json=actor_input,
-            headers=self._headers,
+        try:
+            response = await self._client.post(
+                start_url,
+                params={
+                    "build": spec.build,
+                    "waitForFinish": self.wait_for_finish_seconds,
+                    **({"maxItems": call.max_items, "maxTotalChargeUsd": max_total_charge_usd} if max_total_charge_usd is not None else {}),
+                    "restartOnError": "false",
+                },
+                json=actor_input,
+                headers=self._headers,
+            )
+            response.raise_for_status()
+        except httpx.HTTPError as error:
+            if isinstance(error, (httpx.ConnectError, httpx.ConnectTimeout)):
+                raise
+            if isinstance(error, httpx.HTTPStatusError) and error.response.status_code < 500 and error.response.status_code != 408:
+                raise ApifyRequestRejectedError(error, token=self._api_token) from error
+            raise ApifyReconciliationRequiredError(
+                "Início remoto sem confirmação; custo e execução exigem reconciliação."
+            ) from error
+        try:
+            started_data = self._run_data(response)
+        except ApifySchemaDriftError as error:
+            raise ApifyReconciliationRequiredError(
+                "Resposta de início inválida; execução remota requer reconciliação."
+            ) from error
+        if on_run_started is not None:
+            await on_run_started(started_data)
+        token = _READ_RETRIES.set(0 if max_total_charge_usd is None else 3)
+        try:
+            return await self._finish_execution(call, started_data, monitoring=max_total_charge_usd is None)
+        finally:
+            _READ_RETRIES.reset(token)
+
+    async def resume(self, call: PlannedToolCall, *, run_id: str) -> ApifyExecutionResult:
+        try:
+            response = await self._get(f"{self.base_url}/actor-runs/{run_id}", retry_limit=0, headers=self._headers)
+        except asyncio.CancelledError:
+            with suppress(httpx.HTTPError):
+                await self._client.post(f"{self.base_url}/actor-runs/{run_id}/abort", headers=self._headers)
+            raise
+        data = self._run_data(response)
+        if data.get("id") != run_id:
+            raise ApifyReconciliationRequiredError("Identidade remota divergente na retomada.")
+        token = _READ_RETRIES.set(0)
+        try:
+            return await self._finish_execution(call, data, monitoring=True)
+        finally:
+            _READ_RETRIES.reset(token)
+
+    async def find_started_run(
+        self, call: PlannedToolCall, *, started_at: datetime, actor_input: dict[str, Any],
+    ) -> dict[str, Any] | None:
+        """Reconcilia início ambíguo; ausência ou ambiguidade não autoriza novo POST."""
+        spec = self.registry.require(call.capability)
+        response = await self._get(
+            f"{self.base_url}/actors/{spec.actor_path}/runs",
+            params={"desc": "true", "limit": 100}, retry_limit=0, headers=self._headers,
         )
-        response.raise_for_status()
+        data = self._run_data(response)
+        matches: list[dict[str, Any]] = []
+        for candidate in data.get("items", []):
+            if not isinstance(candidate, dict) or candidate.get("buildNumber") != spec.build:
+                continue
+            try:
+                timestamp = datetime.fromisoformat(str(candidate.get("startedAt", "")).replace("Z", "+00:00"))
+                age = (timestamp.astimezone(UTC) - started_at.astimezone(UTC)).total_seconds()
+            except (ValueError, TypeError):
+                continue
+            store_id = candidate.get("defaultKeyValueStoreId")
+            if not -5 <= age <= 120 or not store_id:
+                continue
+            original = await self._get(
+                f"{self.base_url}/key-value-stores/{store_id}/records/INPUT", retry_limit=0, headers=self._headers,
+            )
+            if original.json() == actor_input:
+                matches.append(candidate)
+        return matches[0] if len(matches) == 1 else None
+
+    async def _finish_execution(
+        self, call: PlannedToolCall, started_data: dict[str, Any], *, monitoring: bool,
+    ) -> ApifyExecutionResult:
+        spec = self.registry.require(call.capability)
         timeout_error = None
         try:
-            run_data = await self._wait_for_terminal(self._run_data(response))
+            run_data = await self._wait_for_terminal(started_data)
+        except ApifyActorFailedError as error:
+            if monitoring and error.status == "ABORTED" and error.run_data:
+                run_data = error.run_data
+                timeout_error = ApifyTimeoutError("Execução interrompida com aborto terminal confirmado; dados independentes recuperados do dataset.", run_id=error.run_id, run_data=run_data)
+            else:
+                if error.run_data and not monitoring:
+                    error.run_data = await self._reconcile_billing(error.run_data)
+                raise
+        except ApifySchemaDriftError as error:
+            raise ApifyReconciliationRequiredError(
+                "Metadados remotos incompletos; requer reconciliação da run existente.",
+                run_data=started_data,
+            ) from error
+        except httpx.HTTPError as error:
+            raise ApifyReconciliationRequiredError(
+                "Acompanhamento remoto interrompido; requer reconciliação da run existente.",
+                run_data=started_data,
+            ) from error
+        except asyncio.CancelledError:
+            if started_data.get("id") and started_data.get("status") != "SUCCEEDED":
+                with suppress(httpx.HTTPError):
+                    await self._client.post(
+                        f"{self.base_url}/actor-runs/{started_data['id']}/abort",
+                        headers=self._headers,
+                    )
+            raise
         except ApifyTimeoutError as exc:
             if not exc.run_data or exc.run_data.get("status") != "ABORTED":
-                raise
+                raise ApifyReconciliationRequiredError(
+                    f"{exc} Aborto não confirmado; requer reconciliação antes de nova coleta.",
+                    run_data=exc.run_data or started_data,
+                ) from exc
             # The stopped actor may have persisted independently completed items.
             # They still pass the same pinned-build, schema and evidence gates.
             timeout_error = exc
             run_data = exc.run_data
 
-        run_data = await self._resolve_missing_build(run_data)
+        try:
+            run_data = await self._resolve_missing_build(run_data)
+        except (httpx.HTTPError, ApifySchemaDriftError) as error:
+            raise ApifyReconciliationRequiredError(
+                "Identidade do build remoto sem confirmação; requer reconciliação.",
+                run_data=run_data,
+            ) from error
+        if not monitoring:
+            run_data = await self._reconcile_billing(run_data)
+        if timeout_error is not None:
+            timeout_error.run_data = run_data
 
         run_id = str(run_data.get("id", ""))
         dataset_id = str(run_data.get("defaultDatasetId", ""))
@@ -267,7 +535,9 @@ class ApifyClient:
             )
 
         fetch_limit = call.max_items
-        limit_unit = getattr(spec, "limit_unit", None) or CAPABILITY_LIMIT_UNITS.get(call.capability)
+        limit_unit = getattr(spec, "limit_unit", None) or CAPABILITY_LIMIT_UNITS.get(
+            call.capability
+        )
         if limit_unit == "per_video" or call.capability == "youtube_comments":
             urls = call.parameters.get("urls", call.parameters.get("start_urls", []))
             num_urls = len(urls) if isinstance(urls, list) and urls else 1
@@ -281,7 +551,7 @@ class ApifyClient:
         while len(items) < fetch_limit:
             current_limit = min(page_size, fetch_limit - len(items))
             try:
-                items_response = await self._client.get(
+                items_response = await self._get(
                     f"{self.base_url}/datasets/{dataset_id}/items",
                     params={
                         "format": "json",
@@ -314,17 +584,21 @@ class ApifyClient:
                 if timeout_error is not None:
                     raise timeout_error from exc
                 if isinstance(exc, httpx.HTTPError):
-                    raise
+                    raise ApifyReconciliationRequiredError(
+                        "Leitura do dataset pago interrompida; requer reconciliação da run existente.",
+                        run_data=run_data,
+                    ) from exc
                 raise ApifySchemaDriftError(str(exc), run_data=run_data) from exc
 
         if not total_items:
             total_items = len(items)
 
         if timeout_error is not None and not items:
+            timeout_error.run_data = run_data
             raise timeout_error
 
-        raw_cost = run_data.get("usageTotalUsd", 0.0)
-        cost_usd = float(raw_cost) if isinstance(raw_cost, int | float) else 0.0
+        raw_cost = run_data.get("usageTotalUsd")
+        cost_usd = float(raw_cost) if isinstance(raw_cost, int | float) and not isinstance(raw_cost, bool) and math.isfinite(raw_cost) and raw_cost >= 0 else 0.0
 
         return ApifyExecutionResult(
             run=ApifyRunMetadata(
@@ -334,6 +608,7 @@ class ApifyClient:
                 actor_id=spec.actor_id,
                 build_number=build_number,
                 cost_usd=round(cost_usd, 6),
+                cost_status="observed_provisional" if isinstance(raw_cost, int | float) and not isinstance(raw_cost, bool) and math.isfinite(raw_cost) and raw_cost >= 0 else "pending",
                 incomplete_reason=str(timeout_error) if timeout_error else None,
             ),
             items=items,
@@ -382,7 +657,7 @@ class ApifyCollector(MarketSourcePort):
                 if plan is not None
                 else self._settings.APIFY_MAX_TOTAL_CHARGE_USD_PER_ANALYSIS
             )
-            if remaining_budget <= 0:
+            if remaining_budget is not None and remaining_budget <= 0:
                 raise ApifyBudgetExceededError("Orçamento da análise esgotado.")
             call = PlannedToolCall(
                 id=f"legacy-google-search-{index}",

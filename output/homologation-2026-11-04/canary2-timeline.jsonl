@@ -1,0 +1,32 @@
+{"time": "2026-11-04T19:30:57.132877+00:00", "status": "RUNNING", "latest_step": "readiness_assessment", "run_statuses": {}, "reported_cost_usd": 0}
+{"time": "2026-11-04T19:31:27.168298+00:00", "status": "RUNNING", "latest_step": "keyword_entity_mapping", "run_statuses": {}, "reported_cost_usd": 0}
+{"time": "2026-11-04T19:31:57.235212+00:00", "status": "RUNNING", "latest_step": "keyword_entity_mapping", "run_statuses": {}, "reported_cost_usd": 0}
+{"time": "2026-11-04T19:32:27.273964+00:00", "status": "RUNNING", "latest_step": "research_planning", "run_statuses": {}, "reported_cost_usd": 0}
+{"time": "2026-11-04T19:32:57.331340+00:00", "status": "RUNNING", "latest_step": "research_planning", "run_statuses": {}, "reported_cost_usd": 0}
+{"time": "2026-11-04T19:33:27.385853+00:00", "status": "RUNNING", "latest_step": "research_planning", "run_statuses": {}, "reported_cost_usd": 0}
+{"time": "2026-11-04T19:33:57.428652+00:00", "status": "RUNNING", "latest_step": "external_tool_execution", "run_statuses": {"SUCCEEDED": 1, "RUNNING": 1}, "reported_cost_usd": 5e-05}
+{"time": "2026-11-04T19:34:27.496388+00:00", "status": "RUNNING", "latest_step": "external_tool_execution", "run_statuses": {"SUCCEEDED": 3, "RUNNING": 1}, "reported_cost_usd": 0.00015}
+{"time": "2026-11-04T19:34:57.544481+00:00", "status": "RUNNING", "latest_step": "external_tool_execution", "run_statuses": {"SUCCEEDED": 3, "RUNNING": 1}, "reported_cost_usd": 0.00015}
+{"time": "2026-11-04T19:35:27.590767+00:00", "status": "RUNNING", "latest_step": "external_tool_execution", "run_statuses": {"SUCCEEDED": 3, "RUNNING": 1}, "reported_cost_usd": 0.00015}
+{"time": "2026-11-04T19:35:57.626034+00:00", "status": "RUNNING", "latest_step": "external_tool_execution", "run_statuses": {"SUCCEEDED": 3, "RUNNING": 1}, "reported_cost_usd": 0.00015}
+{"time": "2026-11-04T19:36:27.676110+00:00", "status": "RUNNING", "latest_step": "external_tool_execution", "run_statuses": {"SUCCEEDED": 3, "RUNNING": 1}, "reported_cost_usd": 0.00015}
+{"time": "2026-11-04T19:36:57.719259+00:00", "status": "RUNNING", "latest_step": "external_tool_execution", "run_statuses": {"SUCCEEDED": 6, "RUNNING": 1}, "reported_cost_usd": 0.067406}
+{"time": "2026-11-04T19:37:27.758084+00:00", "status": "RUNNING", "latest_step": "external_tool_execution", "run_statuses": {"SUCCEEDED": 7, "EMPTY": 1, "RUNNING": 1}, "reported_cost_usd": 0.084456}
+{"time": "2026-11-04T19:37:57.810685+00:00", "status": "RUNNING", "latest_step": "evidence_sanitization", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 12}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:38:28.052611+00:00", "status": "RUNNING", "latest_step": "evidence_sanitization", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 12}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:38:58.121494+00:00", "status": "RUNNING", "latest_step": "evidence_sanitization", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 12}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:39:28.185005+00:00", "status": "RUNNING", "latest_step": "evidence_sanitization", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 12}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:39:58.237382+00:00", "status": "RUNNING", "latest_step": "evidence_sanitization", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 12}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:40:28.278275+00:00", "status": "RUNNING", "latest_step": "evidence_sanitization", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 12}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:40:58.310550+00:00", "status": "RUNNING", "latest_step": "evidence_sanitization", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 12}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:41:28.355455+00:00", "status": "RUNNING", "latest_step": "evidence_sanitization", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 12}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:41:58.397651+00:00", "status": "RUNNING", "latest_step": "evidence_sanitization", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 12}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:42:28.457854+00:00", "status": "RUNNING", "latest_step": "evidence_sanitization", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 12}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:42:58.489207+00:00", "status": "RUNNING", "latest_step": "evidence_sanitization", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 12}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:43:28.539746+00:00", "status": "RUNNING", "latest_step": "dossier_synthesis", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 18}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:43:58.576868+00:00", "status": "RUNNING", "latest_step": "dossier_synthesis", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 18}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:44:28.645033+00:00", "status": "RUNNING", "latest_step": "dossier_synthesis", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 18}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:44:58.715303+00:00", "status": "RUNNING", "latest_step": "dossier_synthesis", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 18}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:45:28.762641+00:00", "status": "RUNNING", "latest_step": "dossier_synthesis", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 18}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:45:58.816936+00:00", "status": "RUNNING", "latest_step": "dossier_synthesis", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 18}, "reported_cost_usd": 0.085456}
+{"time": "2026-11-04T19:46:28.889971+00:00", "status": "COMPLETED", "latest_step": "publish_completion", "run_statuses": {"SUCCEEDED": 8, "EMPTY": 2, "FAILED": 18}, "reported_cost_usd": 0.085456}

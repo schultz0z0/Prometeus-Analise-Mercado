@@ -1,5 +1,11 @@
 # Backup e Recuperação
 
+## Revalidação — 04/11/2026
+
+O utilitário JSON agora usa formato 2 e todas as tabelas de `Base.metadata.sorted_tables`, incluindo scores, decisões, evidências, planos, runs, envelopes, radar e jobs de outbox. Manifesto exige o conjunto completo de tabelas e contagens; formato 1 ou exportação parcial é recusado antes de limpeza. Testes de regressão e roundtrip isolado em PostgreSQL 16 conferem cobertura, FKs e recuperação de score. Isso não comprova RPO/RTO de produção, que exige ensaio na infraestrutura real.
+
+SHA-256 é checksum de integridade, não assinatura autenticada; um atacante capaz de reescrever payload e hash não é impedido pelo checksum. Armazenamento, permissões e retenção devem proteger o backup. No PostgreSQL, a exportação usa sessão nova com `REPEATABLE READ, READ ONLY`; restauração usa outra transação/sessão. O `pg_dump` do Compose permanece independente e completo. O formato JSON pode conter dados institucionais: manter privado.
+
 Este documento estabelece a política operacional, metas de recuperação (RPO/RTO) e procedimentos auditáveis para a infraestrutura do **Prometeus**.
 
 ---

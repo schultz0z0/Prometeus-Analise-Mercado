@@ -189,10 +189,7 @@ async def test_cache_key_depends_on_effective_identity_and_versions() -> None:
     assert base == service.cache_key_for("readiness-v1", {"x": 1}, component_versions={"p": "1"})
     assert base != service.cache_key_for("readiness-v1", {"x": 1}, component_versions={"p": "2"})
     client.model = "jev-fake-v2"
-    assert base != service.cache_key_for(
-        "readiness-v1", {"x": 1}, component_versions={"p": "1"}
-    )
+    assert base != service.cache_key_for("readiness-v1", {"x": 1}, component_versions={"p": "1"})
     assert client.model_identity() == ModelIdentity(
         provider="FakeDecisionClient", model="jev-fake-v2", mode="fake"
     )
-

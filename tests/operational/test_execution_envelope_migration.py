@@ -35,11 +35,12 @@ def test_execution_envelope_migration_follows_real_head_and_is_reversible():
             "cost_status",
         } <= columns
         cost = next(
-            c for c in sa.inspect(conn).get_columns("execution_envelopes") if c["name"] == "cost_usd"
+            c
+            for c in sa.inspect(conn).get_columns("execution_envelopes")
+            if c["name"] == "cost_usd"
         )
         assert cost["nullable"] is True
         module.downgrade()
         assert "execution_envelopes" not in sa.inspect(conn).get_table_names()
         assert conn.execute(sa.text("SELECT id FROM analyses")).scalar_one() == "prior"
     engine.dispose()
-

@@ -1,0 +1,64 @@
+{
+  "course_name": "Governança de Inteligência Artificial e Proteção de Dados no Mercado Segurador",
+  "tenant_id": "ens",
+  "proposal_data": {
+    "validation_run": "homologacao-real-2026-11-04",
+    "course_type": "Extensão",
+    "level": "Extensão",
+    "modality": "Online ao vivo",
+    "workload_hours": 24,
+    "duration_months": 2,
+    "geography": "Brasil",
+    "language": "pt-BR",
+    "target_audience": "Profissionais de seguradoras, corretoras e insurtechs nas áreas de riscos, compliance, proteção de dados e inovação que avaliam o uso de IA generativa.",
+    "learning_outcomes": [
+      "Mapear riscos do uso de IA generativa em processos do setor de seguros.",
+      "Elaborar critérios de governança, proteção de dados e supervisão humana.",
+      "Construir um plano de avaliação e monitoramento de um caso de uso de IA."
+    ],
+    "modules": [
+      {
+        "name": "IA generativa e aplicações no mercado segurador",
+        "workload_hours": 4
+      },
+      {
+        "name": "Riscos, vieses, limitações e avaliação de sistemas de IA",
+        "workload_hours": 4
+      },
+      {
+        "name": "Proteção de dados pessoais e segurança da informação",
+        "workload_hours": 4
+      },
+      {
+        "name": "Governança, compliance e supervisão humana",
+        "workload_hours": 4
+      },
+      {
+        "name": "Desenho e validação de casos de uso em seguros",
+        "workload_hours": 4
+      },
+      {
+        "name": "Oficina de plano de governança e monitoramento",
+        "workload_hours": 4
+      }
+    ],
+    "economics": {
+      "total_price_brl": 1800,
+      "installments": 3,
+      "discount_rate_pct": 10,
+      "default_and_refund_rate_pct": 3,
+      "tax_rate_pct": 10,
+      "instruction_and_coordination_cost_brl": 10000,
+      "variable_cost_per_student_brl": 100,
+      "marketing_campaign_cost_brl": 3000,
+      "cac_per_enrolled_brl": 0,
+      "min_capacity": 15,
+      "max_capacity": 30,
+      "academic_duration_months": 2,
+      "financial_duration_months": 3
+    },
+    "proposed_price_brl": 1800,
+    "proposed_price_period": "total",
+    "notes": "Caso controlado de homologação técnica. Premissas financeiras fornecidas exclusivamente para testar simulação; não constituem orçamento ENS aprovado. Histórico institucional permanece sintético. Não registrar aprovação humana nem lançamento comercial."
+  }
+}

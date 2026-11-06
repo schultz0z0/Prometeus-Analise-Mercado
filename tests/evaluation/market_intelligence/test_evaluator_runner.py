@@ -17,9 +17,7 @@ class TestEvaluatorRunner:
     """Suíte de testes para o script de avaliação offline e release de qualidade."""
 
     def test_evaluator_runs_offline_cleanly(self, tmp_path: Path) -> None:
-        manifest_path = (
-            Path(__file__).resolve().parent / "manifest.json"
-        )
+        manifest_path = Path(__file__).resolve().parent / "manifest.json"
         assert manifest_path.exists(), "Manifesto de referência deve existir para teste."
 
         output_dir = tmp_path / "evaluation_test_output"
@@ -60,4 +58,3 @@ class TestEvaluatorRunner:
         )
         with pytest.raises(FileNotFoundError):
             evaluator.load_manifest()
-

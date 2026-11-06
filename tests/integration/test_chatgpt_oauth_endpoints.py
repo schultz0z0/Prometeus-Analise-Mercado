@@ -13,7 +13,11 @@ from prometeus.infrastructure.llm.codex_oauth import DIRECT_USAGE_SCOPE, OAuthTo
 @pytest.mark.asyncio
 async def test_simulated_chatgpt_authorization_is_permanently_disabled() -> None:
     transport = httpx.ASGITransport(app=app_module.app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+    async with httpx.AsyncClient(
+        transport=transport,
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
+    ) as client:
         response = await client.post("/v1/auth/chatgpt/authorize")
 
     assert response.status_code == 410
@@ -57,7 +61,11 @@ async def test_official_callback_validates_model_and_real_inference_before_persi
     monkeypatch.setattr(app_module, "_persist_env_updates", persisted_env.update)
 
     transport = httpx.ASGITransport(app=app_module.app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+    async with httpx.AsyncClient(
+        transport=transport,
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
+    ) as client:
         auth_response = await client.get("/v1/auth/chatgpt/url")
         auth_url = auth_response.json()["auth_url"]
         state = parse_qs(urlparse(auth_url).query)["state"][0]
@@ -152,7 +160,11 @@ async def test_official_callback_succeeds_even_when_env_file_cannot_be_persisted
     monkeypatch.setattr(app_module, "_persist_env_updates", failing_persist)
 
     transport = httpx.ASGITransport(app=app_module.app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+    async with httpx.AsyncClient(
+        transport=transport,
+        headers={"Authorization": "Bearer test-admin-key-12345678901234567890"},
+        base_url="http://test",
+    ) as client:
         auth_response = await client.get("/v1/auth/chatgpt/url")
         auth_url = auth_response.json()["auth_url"]
         state = parse_qs(urlparse(auth_url).query)["state"][0]

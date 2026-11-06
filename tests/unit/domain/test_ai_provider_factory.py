@@ -27,6 +27,15 @@ def test_auto_mode_uses_traditional_llm_while_jev_is_disabled() -> None:
     assert isinstance(model, LLMDecisionAdapter)
 
 
+def test_shadow_without_jev_keeps_real_traditional_primary_and_disables_comparison():
+    from prometeus.infrastructure.factory import get_shadow_decision_service
+
+    service = get_shadow_decision_service(settings(TYPESAFE_API_KEY=""))
+    assert isinstance(service.primary_service.decision_model, LLMDecisionAdapter)
+    assert service.enabled is False
+    assert isinstance(service.shadow_model, LLMDecisionAdapter)
+
+
 def test_hybrid_mode_uses_jev_only_when_both_models_are_configured() -> None:
     model = get_decision_model(settings(AI_MODE="hybrid", TYPESAFE_API_KEY="typesafe-real-test"))
     assert isinstance(model, TypeSafeJEVClient)

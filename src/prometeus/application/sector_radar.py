@@ -23,11 +23,31 @@ from prometeus.infrastructure.apify.client import ApifyError
 from prometeus.infrastructure.db.models import SectorRadarSnapshotModel
 
 _THEME_KEYWORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("IA, Automação & Subscrição", ("ia", "inteligencia artificial", "automacao", "subscricao", "telemetria", "analytics")),
-    ("Sinistros & Operações Digitais", ("sinistro", "sinistros", "vistoria", "regulacao", "atendimento digital")),
-    ("Canal Corretor & Distribuição", ("corretor", "corretores", "assessoria", "parceiros", "distribuicao", "capacitacao")),
+    (
+        "IA, Automação & Subscrição",
+        ("ia", "inteligencia artificial", "automacao", "subscricao", "telemetria", "analytics"),
+    ),
+    (
+        "Sinistros & Operações Digitais",
+        ("sinistro", "sinistros", "vistoria", "regulacao", "atendimento digital"),
+    ),
+    (
+        "Canal Corretor & Distribuição",
+        ("corretor", "corretores", "assessoria", "parceiros", "distribuicao", "capacitacao"),
+    ),
     ("Saúde, Vida & Previdência", ("saude", "vida", "previdencia", "beneficios", "odontologico")),
-    ("Grandes Riscos, Rural & ESG", ("grandes riscos", "rural", "agronegocio", "climatic", "ciberseguranca", "cibernetico", "esg")),
+    (
+        "Grandes Riscos, Rural & ESG",
+        (
+            "grandes riscos",
+            "rural",
+            "agronegocio",
+            "climatic",
+            "ciberseguranca",
+            "cibernetico",
+            "esg",
+        ),
+    ),
 )
 
 
@@ -64,7 +84,8 @@ def _detect_theme(text: str, focus_hints: list[str]) -> str:
 
 def _channel_and_scope(source_url: str, actor: dict[str, Any]) -> tuple[str, str]:
     host = (urlsplit(source_url).hostname or "").lower().removeprefix("www.")
-    social = actor.get("social") if isinstance(actor.get("social"), dict) else {}
+    raw_social = actor.get("social")
+    social = raw_social if isinstance(raw_social, dict) else {}
     li_scope = str(social.get("linkedin_scope") or "national")
 
     if "instagram.com" in host:
@@ -112,7 +133,9 @@ class SectorRadarService:
         self.executor = executor
         self.sanitizer = sanitizer or EvidenceSanitizer()
         self.allowed_capabilities = (
-            set(allowed_capabilities) if allowed_capabilities is not None else {"google_search", "instagram"}
+            set(allowed_capabilities)
+            if allowed_capabilities is not None
+            else {"google_search", "instagram"}
         )
 
     @staticmethod
@@ -161,14 +184,20 @@ class SectorRadarService:
                         required=False,
                         rationale="Coleta periódica do Radar Setorial (web institucional e comunicados)",
                         max_items=10,
-                        parameters={"country": "BR", "language": "pt-BR", "ecosystem_role": "sector_radar"},
+                        parameters={
+                            "country": "BR",
+                            "language": "pt-BR",
+                            "ecosystem_role": "sector_radar",
+                        },
                     )
                 )
 
         if "instagram" in self.allowed_capabilities and max_budget_usd >= 0.40:
             # Somente handles de Instagram confirmados (ignora None / Não confirmado)
             confirmed_ig = [
-                a for a in ordered if a.social.instagram_handle and a.social.instagram_handle.strip()
+                a
+                for a in ordered
+                if a.social.instagram_handle and a.social.instagram_handle.strip()
             ]
             max_ig_profiles = 4 if max_budget_usd >= 1.0 else 2
             for actor in confirmed_ig[:max_ig_profiles]:
@@ -207,14 +236,16 @@ class SectorRadarService:
                 return cached
 
         if self.executor is None:
-            raise ValueError("Executor de ferramentas Apify não configurado para refresh do Radar Setorial.")
+            raise ValueError(
+                "Executor de ferramentas Apify não configurado para refresh do Radar Setorial."
+            )
 
         now = datetime.now(UTC)
         ttl_hours = tenant_config.ecosystem.radar_ttl_hours
         expires_at = now + timedelta(hours=ttl_hours)
         actor_dicts = [a.model_dump(mode="json") for a in actors]
         actor_by_id = {a["id"]: a for a in actor_dicts}
-        ctx = {
+        ctx: dict[str, object] = {
             "id": tenant_config.institution.id,
             "name": tenant_config.institution.display_name,
             "domains": list(tenant_config.institution.domains),
@@ -235,7 +266,9 @@ class SectorRadarService:
             try:
                 result = await self.executor.execute(call, max_total_charge_usd=remaining)
                 call_cost = float(
-                    getattr(getattr(result, "run", None), "cost_usd", getattr(result, "cost_usd", 0.0))
+                    getattr(
+                        getattr(result, "run", None), "cost_usd", getattr(result, "cost_usd", 0.0)
+                    )
                     or 0.0
                 )
                 spent_usd = round(spent_usd + call_cost, 4)
@@ -271,10 +304,7 @@ class SectorRadarService:
 
                     raw_title = str(entry.get("title") or "").strip()
                     raw_body = str(
-                        entry.get("description")
-                        or entry.get("caption")
-                        or entry.get("text")
-                        or ""
+                        entry.get("description") or entry.get("caption") or entry.get("text") or ""
                     ).strip()
                     clean_title, _ = self.sanitizer.sanitize_text(raw_title)
                     clean_body, _ = self.sanitizer.sanitize_text(raw_body)
@@ -283,9 +313,7 @@ class SectorRadarService:
                         continue
 
                     channel_label, scope_badge = _channel_and_scope(url, matched)
-                    theme = _detect_theme(
-                        combined, list(matched.get("monitoring_focus") or [])
-                    )
+                    theme = _detect_theme(combined, list(matched.get("monitoring_focus") or []))
                     signals.append(
                         SectorRadarSignal(
                             signal_id=f"sig-{uuid.uuid4().hex[:10]}",

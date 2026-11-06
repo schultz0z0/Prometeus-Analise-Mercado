@@ -5,8 +5,8 @@ from prometeus.domain.configuration import AppSettings
 from prometeus.domain.research import PlannedToolCall
 from prometeus.infrastructure.apify.client import (
     ApifyClient,
+    ApifyReconciliationRequiredError,
     ApifySchemaDriftError,
-    ApifyTimeoutError,
 )
 from prometeus.infrastructure.apify.registry import ApifyActorRegistry
 from prometeus.infrastructure.apify.schemas import validate_dataset_items
@@ -69,8 +69,9 @@ async def test_timeout_reads_partial_dataset_only_after_confirmed_terminal_abort
             assert result.run.cost_usd == 0.13
             assert len(result.items) == 1
         else:
-            with pytest.raises(ApifyTimeoutError):
+            with pytest.raises(ApifyReconciliationRequiredError) as error:
                 await client.execute(call, max_total_charge_usd=1)
+            assert error.value.run_data["id"] == "run-partial"
             assert not any("/datasets/" in r.url.path for r in requests)
     finally:
         await client.aclose()

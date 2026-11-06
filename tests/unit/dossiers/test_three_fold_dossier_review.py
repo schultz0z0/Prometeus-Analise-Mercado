@@ -68,7 +68,9 @@ def make_valid_facts(
         scoring_experimental=False,
         items=items,
         limitations=["Amostra focada em SP; demanda em outras regiões não confirmada."],
-        counterevidence=["Mensalidade de concorrente 20% abaixo do preço planejado"] if with_counterevidence else [],
+        counterevidence=["Mensalidade de concorrente 20% abaixo do preço planejado"]
+        if with_counterevidence
+        else [],
         analysis_audit={
             "integrity_report": IntegrityReport(
                 source_count=2,
@@ -156,6 +158,8 @@ class TestThreeFoldDossierReview:
         assert verified.status == DossierStatus.VERIFIED
         assert verified.three_fold_review is not None
         review: ThreeFoldDossierReview = verified.three_fold_review
+        assert "automáticas" in review.summary
+        assert "homologado" not in review.summary.lower()
 
         # 1. Data Integrity Review
         assert review.data_integrity.status == ReviewStatus.PASS
@@ -194,13 +198,16 @@ class TestThreeFoldDossierReview:
 
         assert integrity_review.status in (ReviewStatus.WARN, ReviewStatus.FAIL)
         assert integrity_review.missing_descriptions_count == 3
-        assert any("descrições de vagas" in issue["message"].lower() for issue in integrity_review.issues)
+        assert any(
+            "descrições de vagas" in issue["message"].lower() for issue in integrity_review.issues
+        )
 
     def test_senior_analytical_review_rejects_own_institution_as_competitor(self) -> None:
         facts = make_valid_facts()
         dossier = make_valid_dossier(facts)
         # Violação: Redator lista a própria ENS como concorrente externo ameaçador
         from prometeus.domain.dossiers import DossierComparison
+
         dossier.highlights.competitors.append(
             DossierComparison(label="ENS - Escola Nacional de Seguros", claim_ids=["CLM-01"])
         )
@@ -210,8 +217,12 @@ class TestThreeFoldDossierReview:
 
         assert analytical_review.status == ReviewStatus.FAIL
         assert analytical_review.independence_verified is False
-        assert any("própria instituição" in issue["message"].lower() for issue in analytical_review.issues)
-        assert any("competidores" in rec.lower() for rec in analytical_review.actionable_recommendations)
+        assert any(
+            "própria instituição" in issue["message"].lower() for issue in analytical_review.issues
+        )
+        assert any(
+            "competidores" in rec.lower() for rec in analytical_review.actionable_recommendations
+        )
 
     def test_senior_analytical_review_flags_job_posting_as_enrollment_demand(self) -> None:
         facts = make_valid_facts()
@@ -233,7 +244,10 @@ class TestThreeFoldDossierReview:
 
         assert analytical_review.status == ReviewStatus.FAIL
         assert analytical_review.proxies_properly_qualified is False
-        assert any("vaga" in issue["message"].lower() and "matrícula" in issue["message"].lower() for issue in analytical_review.issues)
+        assert any(
+            "vaga" in issue["message"].lower() and "matrícula" in issue["message"].lower()
+            for issue in analytical_review.issues
+        )
 
     def test_senior_analytical_review_flags_missing_counterevidence_acknowledgment(self) -> None:
         # Quando há contraprovas explícitas nos fatos mas o dossiê não menciona riscos ou limitações
@@ -245,7 +259,10 @@ class TestThreeFoldDossierReview:
         analytical_review = verifier.verify_senior_analytical_quality(dossier, facts)
 
         # Deve sinalizar alerta sobre contraprovas não avaliadas
-        assert any("contraprova" in issue["message"].lower() or "limitações" in issue["message"].lower() for issue in analytical_review.issues)
+        assert any(
+            "contraprova" in issue["message"].lower() or "limitações" in issue["message"].lower()
+            for issue in analytical_review.issues
+        )
 
     def test_factual_drafting_review_detects_hallucinated_number(self) -> None:
         facts = make_valid_facts()

@@ -19,6 +19,7 @@ from prometeus.application.collect_market_evidence import (
     ResearchToolExecutor,
 )
 from prometeus.application.collection_diagnostics import summarize_collection
+from prometeus.application.competitor_coverage import build_competitor_coverage
 from prometeus.application.course_understanding import CourseUnderstandingService
 from prometeus.application.decision_service import DecisionService
 from prometeus.application.dossier_verifier import DossierVerifier
@@ -29,12 +30,15 @@ from prometeus.application.evidence_features import (
 )
 from prometeus.application.internal_history import InternalHistoryService
 from prometeus.application.keywords import KeywordPipeline
+from prometeus.application.offer_comparability import qualified_competitor_offer
 from prometeus.application.plan_course_research import (
     CourseResearchPlanner,
     ResearchPlanValidationError,
+    build_competitor_followup_calls,
 )
 from prometeus.application.pricing_reference import build_price_reference
 from prometeus.application.qualify_market_evidence import EvidenceQualificationService
+from prometeus.application.recover_market_collection import CollectionRetryScheduled
 from prometeus.application.research_scope import (
     extract_global_social_actor_terms,
     extract_sector_radar_actor_terms,
@@ -48,7 +52,13 @@ from prometeus.application.synthesize_dossier import (
     DossierSynthesisService,
     DossierVerificationError,
 )
-from prometeus.domain.analyses import Analysis, AnalysisStatus, AnalysisStep
+from prometeus.domain.analyses import (
+    Analysis,
+    AnalysisStatus,
+    AnalysisStep,
+    ConcurrentAnalysisUpdateError,
+    WorkflowStoppedError,
+)
 from prometeus.domain.configuration import (
     AppSettings,
     ConfigurationError,
@@ -67,6 +77,7 @@ from prometeus.infrastructure.apify.client import ApifyError
 from prometeus.infrastructure.apify.registry import ApifyActorRegistry
 from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
 from prometeus.infrastructure.db.models import (
+    AnalysisModel,
     ConfigSnapshotModel,
     DossierModel,
     HistoricalCourseModel,
@@ -129,6 +140,7 @@ class RunCourseAnalysis:
         skills: SkillRegistry | None = None,
     ) -> None:
         self.session = session
+        self.execution_guard: Callable[[], Awaitable[None]] | None = None
         self.settings = settings
         self.llm = llm
         self.registry = registry
@@ -183,11 +195,8 @@ class RunCourseAnalysis:
         analysis: Analysis,
         snapshot: ConfigSnapshotModel | None,
     ) -> tuple[TenantEcosystemConfig, dict[str, Any]]:
-        raw_ctx = (
-            dict(analysis.proposal_data.get("_institution_context"))
-            if isinstance((analysis.proposal_data or {}).get("_institution_context"), dict)
-            else {}
-        )
+        raw_value = (analysis.proposal_data or {}).get("_institution_context")
+        raw_ctx = dict(raw_value) if isinstance(raw_value, dict) else {}
         if snapshot is not None and isinstance(snapshot.tenant_config_snapshot, dict):
             try:
                 tenant_cfg = TenantConfig.model_validate(snapshot.tenant_config_snapshot)
@@ -245,12 +254,25 @@ class RunCourseAnalysis:
 
         return TenantEcosystemConfig(), raw_ctx
 
+    async def _ensure_active(self, analysis: Analysis) -> None:
+        guard = getattr(self, "execution_guard", None)
+        if guard is not None:
+            await guard()
+        status = await self.session.scalar(
+            select(AnalysisModel.status).where(AnalysisModel.id == analysis.id)
+        )
+        if status in {"CANCELLED", "FAILED", "COMPLETED"}:
+            # Resultados e custos concluídos são preservados; o estado terminal não é sobrescrito.
+            await self.session.commit()
+            raise WorkflowStoppedError(f"Execução interrompida: {status}")
+
     async def _checkpoint(
         self,
         analysis: Analysis,
         step_number: int,
         operation: Callable[[], Awaitable[dict[str, Any]]],
     ) -> dict[str, Any]:
+        await self._ensure_active(analysis)
         _, name = WORKFLOW_STEPS[step_number - 1]
         existing = next(
             (step for step in analysis.steps if step.step_number == step_number),
@@ -280,6 +302,21 @@ class RunCourseAnalysis:
 
         try:
             output = await operation()
+            await self._ensure_active(analysis)
+        except (WorkflowStoppedError, ConcurrentAnalysisUpdateError):
+            raise
+        except CollectionRetryScheduled as exc:
+            await self._ensure_active(analysis)
+            existing.status = "PENDING"
+            existing.finished_at = None
+            existing.error_message = None
+            existing.output_summary = {
+                **existing.output_summary,
+                "retry": {"status": "RETRY_SCHEDULED", "next_attempt_at": exc.next_attempt_at.isoformat()},
+            }
+            await self.repository.save(analysis)
+            await self.session.commit()
+            raise
         except Exception as exc:
             # A failed flush poisons the session until rollback. Persist the
             # checkpoint failure in a fresh transaction, preserving prior commits.
@@ -441,11 +478,67 @@ class RunCourseAnalysis:
                 features.features[name] = VerifiedFeature(name, 0, [run.id], "observed_empty_query")
         return features
 
+    async def _repair_competitor_queries(
+        self, analysis: Analysis, understanding: CourseUnderstanding,
+        ecosystem: TenantEcosystemConfig, institution_ctx: dict[str, Any],
+        qualifier: EvidenceQualificationService, correlation_id: str, root: CourseResearchPlan,
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Até três variantes por instituição; planos estáveis sobrevivem à retomada."""
+        qualification: dict[str, Any] = {}
+
+        async def snapshot() -> tuple[list[ResearchPlanModel], list[Any], dict[str, Any]]:
+            plans = list((await self.session.execute(select(ResearchPlanModel).where(
+                ResearchPlanModel.analysis_id == analysis.id,
+            ).order_by(ResearchPlanModel.created_at, ResearchPlanModel.id))).scalars())
+            calls = [call for record in plans for call in CourseResearchPlan.model_validate(record.plan_snapshot).tool_calls]
+            runs = list((await self.session.execute(select(ToolRunModel).where(ToolRunModel.analysis_id == analysis.id))).scalars())
+            rows = list((await self.session.execute(select(MarketEvidenceModel).where(MarketEvidenceModel.analysis_id == analysis.id))).scalars())
+            offers = []
+            for row in rows:
+                q = (row.sanitized_data or {}).get("_qualification") or {}
+                # Match the dossier's factual admission gate: contextual news
+                # must not suppress followups merely through an adjacent-use flag.
+                if not qualified_competitor_offer(q, row.evidence_type):
+                    continue
+                relation = (q.get("offer_comparability") or {}).get("relation")
+                if relation and q.get("matched_actor_id") and q.get("actor_role") != "sector_radar":
+                    offers.append({"competitor_id": q["matched_actor_id"], "evidence_id": row.id, "source_url": row.source_url, "title": row.title, "relation": relation})
+            coverage = build_competitor_coverage(
+                competitors=[c.model_dump(mode="json") for c in ecosystem.competitors],
+                calls=[c.model_dump(mode="json") for c in calls],
+                runs=[{key: getattr(run, key) for key in ("id", "planned_call_id", "capability", "status", "provider_run_id", "valid_items_count", "parameters", "error_code", "error_message")} for run in runs],
+                offers=offers,
+            )
+            return plans, calls, coverage
+
+        _, _, coverage = await snapshot()
+        if root.execution_policy is None or not ecosystem.competitors:
+            return qualification, coverage
+        for variant in (2, 3):
+            plans, calls, coverage = await snapshot()
+            identifier = f"{root.id}-competitor-v{variant}"
+            stored = next((p for p in plans if p.id == identifier), None)
+            if stored is not None:
+                repair = CourseResearchPlan.model_validate(stored.plan_snapshot)
+            else:
+                followups = build_competitor_followup_calls(understanding, ecosystem, calls, coverage)
+                if not followups:
+                    break
+                repair = root.model_copy(update={"id": identifier, "tool_calls": followups})
+            await self.collector.collect(tenant_id=analysis.tenant_id, plan=repair,
+                understanding_snapshot=understanding.model_dump(mode="json"),
+                check_active=lambda: self._ensure_active(analysis))
+            qualification = await qualifier.qualify(analysis, understanding, correlation_id,
+                institution_context=institution_ctx or None)
+        _, _, coverage = await snapshot()
+        return qualification, coverage
+
     async def execute(self, analysis_id: str, correlation_id: str) -> Analysis:
         analysis = await self.repository.get_by_id(analysis_id)
         if analysis is None:
             raise ValueError(f"Análise não encontrada: {analysis_id}")
-        if analysis.status == AnalysisStatus.COMPLETED:
+        self.decisions.before_judgment = lambda: self._ensure_active(analysis)
+        if analysis.is_terminal:
             return analysis
         snapshot = (
             await self.session.execute(
@@ -541,6 +634,7 @@ class RunCourseAnalysis:
                     description=understanding.summary,
                     target_audience=", ".join(understanding.target_audiences),
                     correlation_id=correlation_id,
+                    analysis=analysis,
                 )
                 if not keyword_set.all_search_terms:
                     raise ValueError("A LLM não produziu keywords relevantes para a pesquisa.")
@@ -576,6 +670,7 @@ class RunCourseAnalysis:
                     tenant_id=analysis.tenant_id,
                     plan=plan,
                     understanding_snapshot=understanding.model_dump(mode="json"),
+                    check_active=lambda: self._ensure_active(analysis),
                 )
                 return {
                     "research_plan_id": outcome.research_plan_id,
@@ -634,6 +729,11 @@ class RunCourseAnalysis:
                         for row in diagnostic_evidence
                     ],
                 )
+                competitor_qualification, competitor_coverage = await self._repair_competitor_queries(
+                    analysis, understanding, ecosystem, institution_ctx, qualifier, correlation_id, plan,
+                )
+                if competitor_qualification:
+                    qualification = competitor_qualification
                 market = await self._market_features(analysis.id, understanding)
                 gaps = research_gaps(market)
                 repair_status = "sufficient_signals" if not gaps else "no_remaining_budget"
@@ -649,11 +749,11 @@ class RunCourseAnalysis:
                     .all()
                 )
                 spent = sum(item.spent_usd for item in plans)
-                remaining = max(0.0, plan.budget_limit_usd - spent)
+                remaining = max(0.0, plan.budget_limit_usd - spent) if plan.budget_limit_usd is not None else None
                 # Uma rodada complementar no máximo; ID estável permite retomar sem refazer planejamento/coleta.
                 repair_id = f"{plan.id}-followup"
                 stored_repair = next((item for item in plans if item.id == repair_id), None)
-                if gaps and (remaining > 0 or stored_repair is not None):
+                if gaps and (remaining is None or remaining > 0 or stored_repair is not None):
                     if stored_repair is not None:
                         repair = CourseResearchPlan.model_validate(stored_repair.plan_snapshot)
                     else:
@@ -675,6 +775,7 @@ class RunCourseAnalysis:
                             tenant_id=analysis.tenant_id,
                             plan=repair,
                             understanding_snapshot=understanding.model_dump(mode="json"),
+                            check_active=lambda: self._ensure_active(analysis),
                         )
                         qualification = await qualifier.qualify(
                             analysis,
@@ -778,7 +879,9 @@ class RunCourseAnalysis:
                             s_name
                             for s in ecosystem.sector_radar
                             if s.social.linkedin_scope == "global"
-                            for s_name in extract_global_social_actor_terms([s.model_dump(mode="json")])
+                            for s_name in extract_global_social_actor_terms(
+                                [s.model_dump(mode="json")]
+                            )
                         ],
                     },
                 }
@@ -970,7 +1073,7 @@ class RunCourseAnalysis:
                     "score": score_payload["viability_score"],
                     "dossier_id": dossier_payload["dossier_id"],
                     "checkpoint_persisted": True,
-                    "webhook": "not_configured",
+                    "webhook": "event_outbox_on_completion",
                 }
 
             completion = await self._checkpoint(analysis, 15, publish_completion)
@@ -984,6 +1087,14 @@ class RunCourseAnalysis:
             await self.repository.save(analysis)
             await self.session.commit()
             return analysis
+        except (WorkflowStoppedError, ConcurrentAnalysisUpdateError):
+            await self.session.rollback()
+            latest = await self.repository.get_by_id(analysis_id)
+            if latest is None:
+                raise ValueError("Análise removida durante a execução.") from None
+            return latest
+        except CollectionRetryScheduled:
+            raise
         except BlockedWorkflowError as exc:
             if analysis.status == AnalysisStatus.RUNNING:
                 analysis.block(correlation_id=correlation_id, reason=str(exc)[:500])
@@ -995,7 +1106,8 @@ class RunCourseAnalysis:
             if analysis.status == AnalysisStatus.RUNNING:
                 reason = (
                     f"database_persistence_error: {type(exc).__name__}"
-                    if isinstance(exc, SQLAlchemyError) else str(exc)[:500]
+                    if isinstance(exc, SQLAlchemyError)
+                    else str(exc)[:500]
                 )
                 analysis.fail(correlation_id=correlation_id, reason=reason)
             await self.repository.save(analysis)

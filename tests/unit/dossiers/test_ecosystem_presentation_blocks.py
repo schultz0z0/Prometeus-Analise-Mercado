@@ -16,7 +16,9 @@ from prometeus.domain.dossiers import (
 from prometeus.infrastructure.llm.fake import FakeGenerativeModel
 
 
-def test_build_visual_presentation_blocks_generates_competitive_benchmark_and_sector_radar() -> None:
+def test_build_visual_presentation_blocks_generates_competitive_benchmark_and_sector_radar() -> (
+    None
+):
     institution_ctx = {
         "id": "ens",
         "name": "Escola de Negócios e Seguros",
@@ -109,6 +111,7 @@ def test_build_visual_presentation_blocks_generates_competitive_benchmark_and_se
                     "actor_role": "configured_competitor",
                     "matched_actor_id": "ibmec",
                     "matched_actor_name": "Ibmec",
+                    "competition_relation": "direct",
                     "price_brl": 16800.0,
                     "workload_hours": 360,
                 },
@@ -123,6 +126,7 @@ def test_build_visual_presentation_blocks_generates_competitive_benchmark_and_se
                     "actor_role": "configured_competitor",
                     "matched_actor_id": "conhecer-seguros",
                     "matched_actor_name": "Conhecer Seguros",
+                    "competition_relation": "adjacent",
                     "price_brl": 890.0,
                     "workload_hours": 24,
                 },
@@ -163,9 +167,20 @@ def test_build_visual_presentation_blocks_generates_competitive_benchmark_and_se
                 {
                     "id": "eco-competitors-gsearch-1",
                     "capability": "google_search",
-                    "query": "(site:ibmec.br OR site:conhecerseguros.com.br OR site:fgv.br) curso ia seguros",
+                    "query": "site:fgv.br curso ia seguros",
+                    "parameters": {"competitor_id": "fgv", "collection_phase": "discovery"},
                 }
-            ]
+            ],
+            "tool_runs": [
+                {
+                    "id": "fgv-empty",
+                    "planned_call_id": "eco-competitors-gsearch-1",
+                    "capability": "google_search",
+                    "status": "EMPTY",
+                    "run_id": "remote-fgv",
+                    "parameters": {"observation_status": "observed_empty"},
+                }
+            ],
         },
         analysis_audit={
             "pricing": {"mean_total_brl": 16800.0},
@@ -206,7 +221,7 @@ def test_build_visual_presentation_blocks_generates_competitive_benchmark_and_se
     assert by_comp_id["conhecer-seguros"]["status"] == "adjacent_offer"
     assert by_comp_id["conhecer-seguros"]["evidence_ids"] == ["ev-conhecer-curto"]
 
-    # FGV foi consultada na query site:fgv.br, mas sem oferta observada -> nunca inventa preço
+    # FGV tem consulta executada e vazia, não apenas query planejada.
     assert by_comp_id["fgv"]["status"] == "no_offer_observed"
     assert by_comp_id["fgv"]["price_display"] == "—"
 
@@ -224,8 +239,9 @@ def test_build_visual_presentation_blocks_generates_competitive_benchmark_and_se
     assert by_actor["mapfre"]["evidence_ids"] == ["ev-mapfre-linkedin"]
 
 
-
-def test_competitive_benchmark_excludes_non_offers_and_context_only_and_uses_pricing_audit_comparables() -> None:
+def test_competitive_benchmark_excludes_non_offers_and_context_only_and_uses_pricing_audit_comparables() -> (
+    None
+):
     institution_ctx = {
         "id": "ens",
         "name": "Escola de Negócios e Seguros",
@@ -279,6 +295,7 @@ def test_competitive_benchmark_excludes_non_offers_and_context_only_and_uses_pri
                     "matched_actor_id": "fgv",
                     "matched_actor_name": "FGV Educação Executiva",
                     "workload_hours": 432,
+                    "competition_relation": "direct",
                 },
                 summary="MBA Executivo ao vivo.",
             ),
@@ -314,9 +331,20 @@ def test_competitive_benchmark_excludes_non_offers_and_context_only_and_uses_pri
                 {
                     "id": "eco-competitors-gsearch-1",
                     "capability": "google_search",
-                    "query": "(site:fgv.br OR site:ibmec.br) curso ia seguros",
+                    "query": "site:ibmec.br curso ia seguros",
+                    "parameters": {"competitor_id": "ibmec", "collection_phase": "discovery"},
                 }
-            ]
+            ],
+            "tool_runs": [
+                {
+                    "id": "ibmec-empty",
+                    "planned_call_id": "eco-competitors-gsearch-1",
+                    "capability": "google_search",
+                    "status": "EMPTY",
+                    "run_id": "remote-ibmec",
+                    "parameters": {"observation_status": "observed_empty"},
+                }
+            ],
         },
         analysis_audit={
             "pricing": {
