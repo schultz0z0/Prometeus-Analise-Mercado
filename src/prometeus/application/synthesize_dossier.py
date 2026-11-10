@@ -21,6 +21,7 @@ from prometeus.application.business_labels import (
     public_missing_reason,
 )
 from prometeus.application.decision_service import DecisionService
+from prometeus.application.dossier_cms_builder import build_cms_dossier_pages
 from prometeus.application.dossier_verifier import DossierVerifier
 from prometeus.application.economics_service import CourseEconomicsService
 from prometeus.application.ecosystem_presentation import build_ecosystem_presentation_blocks
@@ -946,6 +947,15 @@ class DossierSynthesisService:
             if isinstance(workload, int) and not isinstance(workload, bool) and workload > 0
             else 0
         )
+        economics = DossierSynthesisService._build_economics_presentation(proposal)
+        ecosystem = build_ecosystem_presentation_blocks(proposal, facts, safe_workload)
+        cms_pages = build_cms_dossier_pages(
+            proposal=proposal,
+            facts=facts,
+            dossier=verified_dossier,
+            economics=economics,
+            ecosystem=ecosystem,
+        )
         return {
             "contract_version": 2,
             "content_basis": "verified_facts_and_explicit_simulation",
@@ -959,7 +969,7 @@ class DossierSynthesisService:
             },
             "kpis": [],
             "personas": [],
-            "economics": DossierSynthesisService._build_economics_presentation(proposal),
+            "economics": economics,
             "curriculum_modules": [],
             "swot": {
                 "strengths": [],
@@ -969,7 +979,8 @@ class DossierSynthesisService:
                 "tows_strategies": [],
             },
             "tactical_roadmap": [],
-            **build_ecosystem_presentation_blocks(proposal, facts, safe_workload),
+            **ecosystem,
+            "cms_pages": cms_pages,
         }
 
     async def synthesize_and_verify(

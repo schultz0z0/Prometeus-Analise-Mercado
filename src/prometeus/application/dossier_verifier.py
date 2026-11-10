@@ -50,6 +50,7 @@ class DossierVerifier:
         The proposal is the persisted institution snapshot, never model output.
         A text-only verification cannot authorize new fields added afterwards.
         """
+        from prometeus.application.dossier_cms_builder import build_cms_dossier_pages
         from prometeus.application.ecosystem_presentation import build_ecosystem_presentation_blocks
         from prometeus.application.synthesize_dossier import DossierSynthesisService
 
@@ -97,10 +98,11 @@ class DossierVerifier:
                 "tows_strategies": [],
             },
         )
+        expected_economics = DossierSynthesisService._build_economics_presentation(proposal)
         check(
             "economics",
             presentation.get("economics"),
-            DossierSynthesisService._build_economics_presentation(proposal),
+            expected_economics,
         )
         raw_hours = proposal.get("workload_hours")
         hours = (
@@ -111,6 +113,15 @@ class DossierVerifier:
         ecosystem = build_ecosystem_presentation_blocks(proposal, facts, hours)
         for name in ("competitive_benchmark", "sector_radar"):
             check(name, presentation.get(name), ecosystem.get(name))
+        expected_cms_pages = build_cms_dossier_pages(
+            proposal=proposal,
+            facts=facts,
+            dossier=dossier,
+            economics=expected_economics,
+            ecosystem=ecosystem,
+        )
+        if "cms_pages" in presentation:
+            check("cms_pages", presentation.get("cms_pages"), expected_cms_pages)
         # These fields are present on the persisted envelope, but not on a bare visual projection.
         metadata = {
             "schema_version": dossier.schema_version,
@@ -139,6 +150,7 @@ class DossierVerifier:
             "tactical_roadmap",
             "competitive_benchmark",
             "sector_radar",
+            "cms_pages",
             "verification",
             *metadata,
         }
