@@ -8,6 +8,7 @@ Esta pasta é a fonte canônica do produto. O PRD original na raiz é mantido co
 - [Nome e identidade](product/brand-and-naming.md)
 - [Manual e diretrizes de marca](product/brand-guidelines.md)
 - [Design System Prometeus UI](product/design-system.md)
+- [Arquitetura Dossiê CMS de 9 Subpáginas (Dark Theme)](plans/2026-11-10-cms-dossier-subpages.md)
 - [Visão e escopo](product/vision-and-scope.md)
 - [Personas e Jobs to Be Done](product/personas-and-jtbd.md)
 - [Casos de uso](product/use-cases.md)
