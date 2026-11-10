@@ -121,6 +121,12 @@ class AnalysisModel(Base):
         cascade="all, delete-orphan",
         order_by="HumanDecisionModel.created_at",
     )
+    area_reviews: Mapped[list[DossierAreaReviewModel]] = relationship(
+        "DossierAreaReviewModel",
+        back_populates="analysis",
+        cascade="all, delete-orphan",
+        order_by="DossierAreaReviewModel.created_at",
+    )
     outcomes: Mapped[list[CourseOutcomeModel]] = relationship(
         "CourseOutcomeModel",
         back_populates="analysis",
@@ -619,6 +625,37 @@ class HumanDecisionModel(Base):
 
     analysis: Mapped[AnalysisModel] = relationship(
         "AnalysisModel", back_populates="human_decisions"
+    )
+
+
+class DossierAreaReviewModel(Base):
+    """Tabela de revisões e aprovações por área na aba Revisões do Dossiê CMS."""
+
+    __tablename__ = "dossier_area_reviews"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    analysis_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("analyses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    tenant_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    area: Mapped[str] = mapped_column(String(32), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="PENDING")
+    reviewer_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    comment: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    version_label: Mapped[str] = mapped_column(String(32), nullable=False, default="v1.1")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+
+    analysis: Mapped[AnalysisModel] = relationship(
+        "AnalysisModel", back_populates="area_reviews"
+    )
+
+    __table_args__ = (
+        Index("ix_dossier_area_reviews_analysis_area", "analysis_id", "area"),
     )
 
 

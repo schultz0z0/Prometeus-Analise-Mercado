@@ -59,6 +59,7 @@ from prometeus.infrastructure.db.analysis_repository import AnalysisRepository
 from prometeus.infrastructure.db.models import (
     AnalysisModel,
     CourseOutcomeModel,
+    DossierAreaReviewModel,
     DossierModel,
     HistoricalCourseModel,
     HistoricalFunnelModel,
@@ -431,6 +432,266 @@ async def extract_intake_document(payload: ExtractDocumentRequest) -> dict[str, 
     return {"filename": payload.filename, "text": extracted}
 
 
+AREA_REVIEW_STATUS_META: dict[str, dict[str, str]] = {
+    "APPROVED": {"label": "Aprovado", "tone": "approved"},
+    "IN_REVIEW": {"label": "Em revisão", "tone": "adjustments"},
+    "CHANGES_REQUESTED": {"label": "Ajustes solicitados", "tone": "risk"},
+    "PENDING": {"label": "Pendente", "tone": "insufficient"},
+}
+
+AREA_LABELS_BY_KEY: dict[str, str] = {
+    "marketing": "Marketing",
+    "produto": "Produto",
+    "comercial": "Comercial",
+    "financeiro": "Financeiro",
+}
+
+
+async def _load_area_reviews(
+    session: AsyncSession,
+    analysis_id: str,
+) -> list[DossierAreaReviewModel]:
+    conn = await session.connection()
+    await conn.run_sync(
+        lambda sync_conn: DossierAreaReviewModel.__table__.create(sync_conn, checkfirst=True)
+    )
+    stmt = (
+        select(DossierAreaReviewModel)
+        .where(DossierAreaReviewModel.analysis_id == analysis_id)
+        .order_by(DossierAreaReviewModel.created_at, DossierAreaReviewModel.id)
+    )
+    return list((await session.execute(stmt)).scalars().all())
+
+
+def _apply_area_reviews_to_revisions_page(
+    revisions_page: dict[str, Any],
+    area_reviews: list[DossierAreaReviewModel],
+) -> dict[str, Any]:
+    updated_page = json.loads(json.dumps(revisions_page))
+    area_cards = list(updated_page.get("area_reviews") or [])
+
+    latest_by_area: dict[str, DossierAreaReviewModel] = {}
+    for rev in area_reviews:
+        latest_by_area[rev.area.lower()] = rev
+
+    approved_count = 0
+    for card in area_cards:
+        area_key = str(card.get("area") or "").lower()
+        rev = latest_by_area.get(area_key)
+        if rev:
+            meta = AREA_REVIEW_STATUS_META.get(
+                rev.status.upper(), {"label": rev.status, "tone": "insufficient"}
+            )
+            card["status"] = rev.status.upper()
+            card["status_label"] = meta["label"]
+            card["tone"] = meta["tone"]
+            card["reviewer_name"] = rev.reviewer_name
+            card["updated_at_label"] = rev.created_at.strftime("%d/%m/%Y, %H:%M")
+            card["comment"] = rev.comment
+        if str(card.get("status") or "").upper() == "APPROVED":
+            approved_count += 1
+
+    total_areas = max(1, len(area_cards) or 4)
+    pct = round((approved_count / total_areas) * 100)
+    if approved_count == total_areas:
+        overall_label = "Homologado pelas áreas"
+        overall_tone = "approved"
+    elif approved_count > 0 or area_reviews:
+        overall_label = "Em revisão"
+        overall_tone = "adjustments"
+    else:
+        overall_label = "Aguardando aprovação das áreas"
+        overall_tone = "insufficient"
+
+    updated_page["area_reviews"] = area_cards
+    updated_page["overall_progress"] = {
+        "approved_count": approved_count,
+        "total_areas": total_areas,
+        "percent": pct,
+        "status_label": overall_label,
+        "tone": overall_tone,
+    }
+
+    base_version = {
+        "version": "v1.0",
+        "is_current": len(area_reviews) == 0,
+        "badge_label": "Base",
+        "tone": "insufficient" if area_reviews else "approved",
+        "timestamp_label": "Publicação inicial verificada",
+        "description": "Primeira versão do dossiê consolidada e auditada pelo verificador determinístico.",
+    }
+    versions: list[dict[str, Any]] = []
+    for idx, rev in enumerate(area_reviews, start=1):
+        is_latest = idx == len(area_reviews)
+        area_lbl = AREA_LABELS_BY_KEY.get(rev.area.lower(), rev.area)
+        meta = AREA_REVIEW_STATUS_META.get(
+            rev.status.upper(), {"label": rev.status, "tone": "adjustments"}
+        )
+        versions.append(
+            {
+                "version": rev.version_label or f"v1.{idx}",
+                "is_current": is_latest,
+                "badge_label": "Atual" if is_latest else "Revisada",
+                "tone": meta["tone"],
+                "timestamp_label": rev.created_at.strftime("%d/%m/%Y, %H:%M"),
+                "description": f"{area_lbl} ({rev.reviewer_name}): {rev.comment or meta['label']}",
+            }
+        )
+    versions.reverse()
+    versions.append(base_version)
+    updated_page["version_history"] = versions
+
+    comments_feed: list[dict[str, Any]] = []
+    for rev in reversed(area_reviews):
+        area_lbl = AREA_LABELS_BY_KEY.get(rev.area.lower(), rev.area)
+        meta = AREA_REVIEW_STATUS_META.get(
+            rev.status.upper(), {"label": rev.status, "tone": "adjustments"}
+        )
+        initials = "".join(part[0].upper() for part in rev.reviewer_name.split()[:2] if part) or "EN"
+        comments_feed.append(
+            {
+                "id": rev.id,
+                "reviewer_name": rev.reviewer_name,
+                "initials": initials,
+                "area": rev.area.lower(),
+                "area_label": area_lbl,
+                "status": rev.status.upper(),
+                "status_label": meta["label"],
+                "tone": meta["tone"],
+                "timestamp_label": rev.created_at.strftime("%d/%m/%Y, %H:%M"),
+                "comment": rev.comment or f"Parecer registrado: {meta['label']}.",
+            }
+        )
+    updated_page["comments_feed"] = comments_feed
+    return updated_page
+
+
+def _hydrate_dossier_presentation(
+    *,
+    analysis_id: str,
+    course_name: str,
+    proposal: dict[str, Any],
+    dossier: DossierModel,
+    scoring: ScoringResultModel | None,
+    evidences: list[MarketEvidenceModel],
+    area_reviews: list[DossierAreaReviewModel],
+) -> dict[str, Any]:
+    from prometeus.application.dossier_cms_builder import build_cms_dossier_pages
+    from prometeus.application.ecosystem_presentation import build_ecosystem_presentation_blocks
+    from prometeus.application.synthesize_dossier import DossierSynthesisService
+    from prometeus.domain.dossiers import (
+        DossierClaim,
+        DossierFactItem,
+        DossierFacts,
+        DossierHighlights,
+        DossierOutput,
+        DossierSection,
+    )
+
+    presentation = dict(dossier.presentation or {})
+    if "cms_pages" not in presentation:
+        pillar_summaries: dict[str, float] = {}
+        pillar_details: dict[str, Any] = {}
+        if scoring and isinstance(scoring.pillar_scores, dict):
+            for k, val in scoring.pillar_scores.items():
+                if isinstance(val, dict):
+                    pillar_details[k] = val
+                    if isinstance(val.get("raw_score"), (int, float)):
+                        pillar_summaries[k] = float(val["raw_score"])
+                elif isinstance(val, (int, float)):
+                    pillar_summaries[k] = float(val)
+
+        fact_items = [
+            DossierFactItem(
+                evidence_id=ev.id,
+                source_type=ev.evidence_type,
+                title=ev.title,
+                key_metrics=dict(ev.sanitized_data or {}),
+                summary=ev.title,
+                source_url=ev.source_url,
+            )
+            for ev in evidences
+        ]
+        facts = DossierFacts(
+            analysis_id=analysis_id,
+            course_name=course_name,
+            target_audience=str(proposal.get("audience") or "Profissionais do setor"),
+            recommendation=(scoring.recommendation if scoring else "REQUIRES_HUMAN_REVIEW"),
+            viability_score=float(scoring.viability_score if scoring else 0.0),
+            coverage_score=float(scoring.coverage_score if scoring else 0.0),
+            confidence_score=float(scoring.confidence_score if scoring else 0.0),
+            pillar_summaries=pillar_summaries,
+            pillar_details=pillar_details,
+            items=fact_items,
+            limitations=list(presentation.get("limitations") or []),
+            counterevidence=list(presentation.get("counterevidence") or []),
+            analysis_audit=dict(presentation.get("analysis_audit") or {}),
+        )
+        raw_highlights = presentation.get("highlights")
+        try:
+            highlights_obj = (
+                DossierHighlights.model_validate(raw_highlights)
+                if isinstance(raw_highlights, dict)
+                else DossierHighlights()
+            )
+        except Exception:
+            highlights_obj = DossierHighlights()
+
+        claims_objs: list[DossierClaim] = []
+        for raw_claim in dossier.claims or []:
+            if isinstance(raw_claim, dict):
+                try:
+                    claims_objs.append(DossierClaim.model_validate(raw_claim))
+                except Exception:
+                    continue
+
+        sections_objs: list[DossierSection] = []
+        for raw_sec in dossier.sections or []:
+            if isinstance(raw_sec, dict):
+                try:
+                    sections_objs.append(DossierSection.model_validate(raw_sec))
+                except Exception:
+                    continue
+
+        dossier_obj = DossierOutput(
+            id=dossier.id,
+            analysis_id=analysis_id,
+            prompt_version=dossier.prompt_version,
+            model_name=dossier.model_name,
+            executive_summary=dossier.executive_summary,
+            executive_summary_claim_ids=list(presentation.get("executive_summary_claim_ids") or []),
+            highlights=highlights_obj,
+            sections=sections_objs,
+            claims=claims_objs,
+            facts_hash=dossier.facts_hash,
+        )
+        economics = presentation.get("economics") or DossierSynthesisService._build_economics_presentation(proposal)
+        workload = proposal.get("workload_hours")
+        safe_workload = workload if isinstance(workload, int) and not isinstance(workload, bool) and workload > 0 else 0
+        ecosystem = {
+            "competitive_benchmark": presentation.get("competitive_benchmark"),
+            "sector_radar": presentation.get("sector_radar"),
+        }
+        if not ecosystem["competitive_benchmark"] and not ecosystem["sector_radar"]:
+            ecosystem = build_ecosystem_presentation_blocks(proposal, facts, safe_workload)
+        presentation["cms_pages"] = build_cms_dossier_pages(
+            proposal=proposal,
+            facts=facts,
+            dossier=dossier_obj,
+            economics=economics,
+            ecosystem=ecosystem,
+        )
+
+    cms_pages = dict(presentation.get("cms_pages") or {})
+    pages = dict(cms_pages.get("pages") or {})
+    if "revisions" in pages:
+        pages["revisions"] = _apply_area_reviews_to_revisions_page(pages["revisions"], area_reviews)
+        cms_pages["pages"] = pages
+        presentation["cms_pages"] = cms_pages
+
+    return presentation
+
+
 @app.get(
     "/v1/analyses",
     summary="Listar análises e dossiês verificados do tenant",
@@ -458,7 +719,17 @@ async def list_analyses(
         dossier_payload: dict[str, Any] | None = None
         if dossier and scoring and dossier.status == "VERIFIED":
             ev_stmt = select(MarketEvidenceModel).where(MarketEvidenceModel.analysis_id == row.id)
-            evidences = (await session.execute(ev_stmt)).scalars().all()
+            evidences = list((await session.execute(ev_stmt)).scalars().all())
+            area_reviews = await _load_area_reviews(session, row.id)
+            hydrated_presentation = _hydrate_dossier_presentation(
+                analysis_id=row.id,
+                course_name=row.course_name,
+                proposal=proposal,
+                dossier=dossier,
+                scoring=scoring,
+                evidences=evidences,
+                area_reviews=area_reviews,
+            )
             dossier_payload = {
                 "id": dossier.id,
                 "analysis_id": dossier.analysis_id,
@@ -467,15 +738,15 @@ async def list_analyses(
                 "facts_hash": dossier.facts_hash,
                 "status": dossier.status,
                 "executive_summary": dossier.executive_summary,
-                "schema_version": (dossier.presentation or {}).get("schema_version", 1),
-                "executive_summary_claim_ids": (dossier.presentation or {}).get(
+                "schema_version": hydrated_presentation.get("schema_version", 1),
+                "executive_summary_claim_ids": hydrated_presentation.get(
                     "executive_summary_claim_ids", []
                 ),
-                "highlights": (dossier.presentation or {}).get("highlights", {}),
-                "limitations": (dossier.presentation or {}).get("limitations", []),
-                "analysis_audit": (dossier.presentation or {}).get("analysis_audit", {}),
-                "three_fold_review": (dossier.presentation or {}).get("three_fold_review"),
-                "presentation": dossier.presentation or {},
+                "highlights": hydrated_presentation.get("highlights", {}),
+                "limitations": hydrated_presentation.get("limitations", []),
+                "analysis_audit": hydrated_presentation.get("analysis_audit", {}),
+                "three_fold_review": hydrated_presentation.get("three_fold_review"),
+                "presentation": hydrated_presentation,
                 "sections": dossier.sections,
                 "claims": dossier.claims,
                 "cost_usd": dossier.cost_usd,
@@ -801,7 +1072,24 @@ async def get_dossier(
     scoring = (await session.execute(stmt_scr)).scalar_one_or_none()
 
     stmt_ev = select(MarketEvidenceModel).where(MarketEvidenceModel.analysis_id == analysis_id)
-    evidences = (await session.execute(stmt_ev)).scalars().all()
+    evidences = list((await session.execute(stmt_ev)).scalars().all())
+
+    stmt_an = select(AnalysisModel).where(AnalysisModel.id == analysis_id)
+    analysis_row = (await session.execute(stmt_an)).scalar_one_or_none()
+    proposal = dict(analysis_row.proposal_data or {}) if analysis_row else {}
+    course_name = analysis_row.course_name if analysis_row else "Curso Analisado"
+
+    area_reviews = await _load_area_reviews(session, analysis_id)
+
+    hydrated_presentation = _hydrate_dossier_presentation(
+        analysis_id=analysis_id,
+        course_name=course_name,
+        proposal=proposal,
+        dossier=dossier,
+        scoring=scoring,
+        evidences=evidences,
+        area_reviews=area_reviews,
+    )
 
     return {
         "id": dossier.id,
@@ -811,15 +1099,15 @@ async def get_dossier(
         "facts_hash": dossier.facts_hash,
         "status": dossier.status,
         "executive_summary": dossier.executive_summary,
-        "schema_version": (dossier.presentation or {}).get("schema_version", 1),
-        "executive_summary_claim_ids": (dossier.presentation or {}).get(
+        "schema_version": hydrated_presentation.get("schema_version", 1),
+        "executive_summary_claim_ids": hydrated_presentation.get(
             "executive_summary_claim_ids", []
         ),
-        "highlights": (dossier.presentation or {}).get("highlights", {}),
-        "limitations": (dossier.presentation or {}).get("limitations", []),
-        "analysis_audit": (dossier.presentation or {}).get("analysis_audit", {}),
-        "three_fold_review": (dossier.presentation or {}).get("three_fold_review"),
-        "presentation": dossier.presentation or {},
+        "highlights": hydrated_presentation.get("highlights", {}),
+        "limitations": hydrated_presentation.get("limitations", []),
+        "analysis_audit": hydrated_presentation.get("analysis_audit", {}),
+        "three_fold_review": hydrated_presentation.get("three_fold_review"),
+        "presentation": hydrated_presentation,
         "sections": dossier.sections,
         "claims": dossier.claims,
         "cost_usd": dossier.cost_usd,
@@ -905,6 +1193,73 @@ async def submit_human_decision(
         "decision": model.decision,
         "status": "RECORDED",
         "created_at": model.created_at.isoformat(),
+    }
+
+
+class SubmitAreaReviewRequest(BaseModel):
+    """Corpo da requisição para revisão departamental na aba Revisões do Dossiê CMS."""
+
+    area: Literal["marketing", "produto", "comercial", "financeiro"] = Field(
+        ..., description="Área responsável pela revisão"
+    )
+    status: Literal["APPROVED", "IN_REVIEW", "PENDING", "CHANGES_REQUESTED"] = Field(
+        ..., description="Status do parecer da área"
+    )
+    reviewer_name: str = Field(..., min_length=2, max_length=128, description="Nome do revisor")
+    comment: str = Field(default="", max_length=2000, description="Comentário ou observação da revisão")
+
+
+@app.post(
+    "/v1/analyses/{analysis_id}/area-reviews",
+    status_code=status.HTTP_200_OK,
+    summary="Registrar revisão por área no Dossiê CMS (Marketing, Produto, Comercial, Financeiro)",
+)
+async def submit_area_review(
+    analysis_id: str,
+    payload: SubmitAreaReviewRequest,
+    request: Request,
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> dict[str, Any]:
+    repo = AnalysisRepository(session)
+    analysis = await repo.get_by_id(analysis_id)
+    if not analysis or analysis.tenant_id != request.state.principal.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Análise não encontrada: {analysis_id}",
+        )
+
+    existing_reviews = await _load_area_reviews(session, analysis_id)
+    next_version = f"v1.{len(existing_reviews) + 1}"
+
+    review_model = DossierAreaReviewModel(
+        id=f"arev_{uuid.uuid4().hex[:12]}",
+        analysis_id=analysis_id,
+        tenant_id=analysis.tenant_id,
+        area=payload.area.lower(),
+        status=payload.status.upper(),
+        reviewer_name=payload.reviewer_name.strip(),
+        comment=payload.comment.strip(),
+        version_label=next_version,
+        created_at=datetime.now(UTC),
+    )
+    session.add(review_model)
+    await session.commit()
+
+    all_reviews = [*existing_reviews, review_model]
+    default_revisions_page = {
+        "area_reviews": [
+            {"area": "marketing", "label": "Marketing", "icon": "megaphone", "status": "PENDING", "status_label": "Pendente", "tone": "insufficient", "reviewer_name": "Aguardando revisão", "updated_at_label": "Disponível para parecer", "comment": ""},
+            {"area": "produto", "label": "Produto", "icon": "box", "status": "PENDING", "status_label": "Pendente", "tone": "insufficient", "reviewer_name": "Aguardando revisão", "updated_at_label": "Disponível para parecer", "comment": ""},
+            {"area": "comercial", "label": "Comercial", "icon": "briefcase", "status": "PENDING", "status_label": "Pendente", "tone": "insufficient", "reviewer_name": "Aguardando revisão", "updated_at_label": "Disponível para parecer", "comment": ""},
+            {"area": "financeiro", "label": "Financeiro", "icon": "dollar-sign", "status": "PENDING", "status_label": "Pendente", "tone": "insufficient", "reviewer_name": "Aguardando revisão", "updated_at_label": "Disponível para parecer", "comment": ""},
+        ]
+    }
+    updated_revisions = _apply_area_reviews_to_revisions_page(default_revisions_page, all_reviews)
+    return {
+        "review_id": review_model.id,
+        "analysis_id": analysis_id,
+        "version_label": next_version,
+        **updated_revisions,
     }
 
 
