@@ -3,11 +3,11 @@
  * Orquestrador principal da aplicação SPA, roteamento e renderização reativa.
  */
 
-import { store } from './store.js?v=20261106_storage';
+import { store } from './store.js?v=20261110_cms';
 import { renderPortfolioView, bindPortfolioEvents } from './views/portfolio-view.js?v=20261104_audit';
 import { renderIntakeView, bindIntakeEvents } from './views/intake-view.js?v=20261103_eco';
 import { renderLiveView, bindLiveEvents } from './views/live-view.js?v=20261106_collection3';
-import { renderDossierView, bindDossierEvents } from './views/dossier-view.js?v=20261106_collection3';
+import { renderDossierView, bindDossierEvents } from './views/dossier-view.js?v=20261110_cms';
 import { renderSettingsView, bindSettingsEvents } from './views/settings-view.js?v=20261105_collection';
 import { renderEvidenceDrawer, bindEvidenceDrawerEvents } from './components/evidence-drawer.js?v=20261028e';
 

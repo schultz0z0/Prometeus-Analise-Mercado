@@ -45,6 +45,7 @@ class PrometeusStore {
       portfolioTab: 'historical',
       activeCourseId: null,
       currentDossier: null,
+      activeDossierTab: 'overview',
       currentView: 'portfolio',
       liveJob: null
     };
@@ -85,7 +86,16 @@ class PrometeusStore {
       this.state.activeCourseId = params.courseId;
       const course = this.state.courses.find(item => item.id === params.courseId);
       this.state.currentDossier = course?.dossier || null;
+      this.state.activeDossierTab = params.tab || 'overview';
+    } else if (params.tab) {
+      this.state.activeDossierTab = params.tab;
     }
+    this.notify();
+  }
+
+  setActiveDossierTab(tabId) {
+    if (!tabId) return;
+    this.state.activeDossierTab = tabId;
     this.notify();
   }
 
@@ -407,6 +417,28 @@ class PrometeusStore {
     });
     if (!response.ok) throw new Error(`Decisão não registrada (HTTP ${response.status}).`);
     return response.json();
+  }
+
+  async submitDossierAreaReview(analysisId, reviewPayload) {
+    const response = await fetch(`/v1/analyses/${encodeURIComponent(analysisId)}/area-reviews`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reviewPayload)
+    });
+    if (!response.ok) throw new Error(`Não foi possível registrar a revisão da área (HTTP ${response.status}).`);
+    const updatedRevisions = await response.json();
+    const targetDossier = this.state.currentDossier;
+    if (targetDossier?.presentation?.cms_pages?.pages) {
+      targetDossier.presentation.cms_pages.pages.revisions = {
+        ...targetDossier.presentation.cms_pages.pages.revisions,
+        area_reviews: updatedRevisions.area_reviews,
+        overall_progress: updatedRevisions.overall_progress,
+        version_history: updatedRevisions.version_history,
+        comments_feed: updatedRevisions.comments_feed
+      };
+    }
+    this.notify();
+    return updatedRevisions;
   }
 }
 

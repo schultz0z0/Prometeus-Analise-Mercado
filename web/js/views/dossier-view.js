@@ -13,6 +13,10 @@ import {
   channelLabel,
   recommendationLabel
 } from '../dossier-format.js';
+import {
+  renderCmsShellAndSubpages,
+  bindCmsDossierEvents
+} from './dossier-cms-tabs.js';
 
 function paragraphs(text) {
   return String(text || '')
@@ -92,7 +96,7 @@ function scoreAudit(audit, scoring) {
       dated_offer_requires_current_confirmation: 'Preço histórico precisa de confirmação atual'
     })[code] || 'Condição comercial sem suporte suficiente';
 
-  return `${
+  return `${renderReadingAudit(audit.reading)}${
     Object.keys(blocks).length
       ? `<section class="dossier-section" id="sec-score-composition">
       <h2>Composição da avaliação</h2>
@@ -185,6 +189,33 @@ function scoreAudit(audit, scoring) {
     </section>`
       : ''
   }`;
+}
+
+function renderReadingAudit(reading) {
+  if (!reading || reading.schema_version !== 1) return '';
+  const count = value => Number.isInteger(value) && value >= 0 ? escapeHtml(value) : 'Não informado';
+  const complete = reading.complete === true && reading.status === 'COMPLETE';
+  const labels = {
+    items_produced: 'Produzidos', items_retrieved: 'Recuperados',
+    items_preserved: 'Preservados', items_read: 'Lidos pela IA'
+  };
+  const issueLabels = {
+    retrieval_not_reconciled: 'Contagens da coleta ainda não conciliadas',
+    sanitized_item_missing: 'Registro higienizado indisponível',
+    item_reading_pending: 'Há registros com leitura pendente'
+  };
+  const archives = Array.isArray(reading.archives) ? reading.archives : [];
+  return `<section class="dossier-section" id="sec-reading-audit">
+    <h2>Cobertura da coleta e leitura</h2>
+    <p class="dossier-notice">${complete ? 'Leitura integral registrada' : 'Leitura integral não confirmada'}</p>
+    <p class="dossier-muted">Cobertura completa registra a entrega dos dados e respostas validadas para cada fragmento; não garante correção da análise, suficiência das evidências ou viabilidade do curso.</p>
+    <div class="dossier-pillars">${Object.entries(labels).map(([field, label]) => `<article class="dossier-pillar"><h3>${label}</h3><p class="dossier-pillar-score">${count(reading[field])}</p></article>`).join('')}</div>
+    ${reading.items_produced_unknown_archives ? '<p class="dossier-muted">Produção total não confirmada em parte dos arquivos.</p>' : ''}
+    ${reading.legacy_runs_without_archive ? `<p class="dossier-muted">${count(reading.legacy_runs_without_archive)} consultas sem arquivo verificável; a cobertura histórica permanece não confirmada.</p>` : ''}
+    <p>${count(reading.fragments_covered)} de ${count(reading.fragments_total)} fragmentos · ${count(reading.parts_completed)} de ${count(reading.parts_total)} partes com resposta validada.</p>
+    <p>${count(reading.normalized_evidences_complete)} de ${count(reading.normalized_evidences_total)} evidências normalizadas com leitura completa.</p>
+    ${archives.length ? `<details><summary>Conferir arquivos e pendências (${count(archives.length)})</summary><div class="prometeus-table-container"><table class="prometeus-table"><thead><tr><th scope="col">Arquivo</th><th scope="col">Produzidos</th><th scope="col">Recuperados</th><th scope="col">Preservados</th><th scope="col">Lidos</th><th scope="col">Cobertura</th></tr></thead><tbody>${archives.map((archive, index) => `<tr><th scope="row">${escapeHtml(archive.dataset_id || `Arquivo ${index + 1}`)}</th><td>${count(archive.items_produced)}</td><td>${count(archive.items_retrieved)}</td><td>${count(archive.items_preserved)}</td><td>${count(archive.items_read)}</td><td>${archive.complete === true ? 'Completa' : 'Pendente'}${(Array.isArray(archive.issues) ? archive.issues : []).map(issue => `<p class="dossier-muted">${escapeHtml(issueLabels[issue] || 'Verificação pendente')}</p>`).join('')}</td></tr>`).join('')}</tbody></table></div></details>` : ''}
+  </section>`;
 }
 
 function renderThreeFoldReview(review) {
@@ -715,33 +746,18 @@ export function renderDossierView(store) {
   };
 
   return `<div class="dossier-page">
-    <!-- Barra de Ferramentas Superior -->
-    <div class="dossier-toolbar">
-      <button class="prometeus-btn-secondary" id="btn-back-portfolio">← Voltar ao Portfólio</button>
-      <div style="display:flex;gap:12px;">
-        <button class="prometeus-btn-secondary" id="btn-open-evidence-drawer">Inspecionar evidências (${evidences.length})</button>
-        <button class="prometeus-btn-primary" id="btn-export-dossier-pdf">Imprimir / salvar PDF</button>
-      </div>
-    </div>
+    <!-- Painel Principal CMS de 9 Subpáginas (Dark Theme) -->
+    ${renderCmsShellAndSubpages(store, course, dossier, { inspectionButton })}
 
-    <!-- Sub-Navbar de Navegação Rápida -->
-    <nav class="dossier-subnav" aria-label="Navegação do Dossiê">
-      <a href="#sec-overview" class="active">Visão Geral</a>
-      <a href="#sec-kpis">Métricas-Chave</a>
-      ${personas.length ? '<a href="#sec-personas">Personas B2B/B2C</a>' : ''}
-      ${competitiveBenchmark ? '<a href="#sec-competitive-benchmark">Concorrência Fixa</a>' : ''}
-      ${sectorRadar ? '<a href="#sec-sector-radar">Radar Setorial</a>' : ''}
-      ${economics ? '<a href="#sec-economics">Economia & Cenários</a>' : ''}
-      ${modules.length ? '<a href="#sec-curriculum">Grade Modular</a>' : ''}
-      ${swot ? '<a href="#sec-swot">SWOT & TOWS</a>' : ''}
-      ${roadmap.length ? '<a href="#sec-roadmap">Cronograma Tático</a>' : ''}
-      <a href="#sec-pillars">Pilares de Viabilidade</a>
-      <a href="#sec-homologation">Revisões</a>
-      <a href="#sec-evidences">Fontes & Evidências</a>
-    </nav>
-
-    <!-- Hero Executivo & Banner de Veredito -->
-    <header class="dossier-verdict-banner dossier-heading dossier-hero-card" id="sec-overview">
+    <!-- Acordeão de Auditoria Metodológica, Coleta & Diagnóstico Integral -->
+    <details class="cms-audit-accordion" id="cms-full-audit-details">
+      <summary class="cms-audit-accordion__summary">
+        <span>🔍 Auditoria Metodológica, Coleta &amp; Diagnóstico Integral (${evidences.length} evidências · ${claims.length} afirmações)</span>
+        <span class="cms-pill" data-tone="running">Inspeção Técnica</span>
+      </summary>
+      <div class="cms-audit-accordion__body">
+        <!-- Hero Executivo & Banner de Veredito -->
+        <header class="dossier-verdict-banner dossier-heading dossier-hero-card" id="sec-overview">
       <div class="verdict-info">
         <span class="prometeus-pill-badge" data-status="${escapeHtml(verdict.status || scoring.recommendation)}">
           ${escapeHtml(verdict.badge_label || recommendationLabel(scoring.recommendation))}
@@ -1006,11 +1022,17 @@ export function renderDossierView(store) {
         </article>`
         )
         .join('')}
+        </details>
+      </div>
     </details>
   </div>`;
 }
 
 export function bindDossierEvents(store, container) {
+  const state = store.getState();
+  const course = state.courses.find(item => item.id === state.activeCourseId);
+  bindCmsDossierEvents(store, container, course);
+
   container.querySelector('#btn-back-portfolio')?.addEventListener('click', () => {
     store.setView('portfolio');
   });
