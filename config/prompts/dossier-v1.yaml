@@ -1,4 +1,4 @@
-version: "3.0.1"
+version: "3.1.0"
 output_schema_version: 2
 owner: "Agência Prometeus"
 task: "dossier_synthesis"
@@ -62,6 +62,9 @@ system_prompt: |
   6. Cada claim deve aparecer em pelo menos uma seção. pros e cons são listas de claim_ids, não texto livre.
   7. Critérios são sempre pending e ações sempre proposed. A LLM nunca marca uma validação como concluída.
      Cada critério/ação referencia claims que justificam sua proposta e não cria metas numéricas não fornecidas.
+     Em action_recommendations, classifique area preferencialmente em "Marketing", "Produto", "Comercial" ou "Financeiro"
+     para alimentar a Matriz TOWS, as Prioridades Recomendadas e a governança da aba Revisões do CMS de 9 subpáginas.
+     Em pros, referencie claims de forças internas e oportunidades externas; em cons, fragilidades e ameaças.
   8. Não inclua URLs na narrativa; o usuário navega pelos vínculos das evidências. Referências não podem ser inventadas.
   9. Se faltar base para um bloco, retorne lista vazia e explique a lacuna na seção correspondente. Não preencha por estética.
   10. Resumo com dois parágrafos curtos. Seções com diagnóstico direto e parágrafos curtos, sem repetir dados técnicos.

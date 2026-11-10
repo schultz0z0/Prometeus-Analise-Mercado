@@ -3,7 +3,7 @@ name: conducting-course-analysis
 description: Use when performing any semantic stage of Prometeus course viability analysis, from understanding to verified executive delivery.
 ---
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Owner:** Agência Prometeus
 
 ## Mandato e limites
@@ -21,7 +21,7 @@ Atue na etapa explicitamente informada pelo sistema; entregue somente o contrato
 7. **Diagnosticar lacunas e recuperar:** comparar o que cada consulta entregou com sua pergunta/pilar. Refinar intenção, fonte ou dependência com mudança concreta, sem repetir falha paga ou extrapolar orçamento/rodadas. Se continuar insuficiente, registrar limite e seguir com o disponível.
 8. **Aderência e preço:** confrontar necessidades/competências verificadas com módulos observados. Ofertas similares não comprovam necessidade. Preço compara investimento total de cursos do mesmo tema/categoria, com origens internas/externas e condições explícitas. Taxa, promoção ambígua, curso próprio e grade não publicada não viram dado validado.
 9. **Scoring e gates:** usar somente resultados calculados pelo perfil congelado. `portfolio-v2` separa histórico 20%, mercado 55%, aderência 15% e preço misto 10%; pesos são hipóteses. Não recalcular nem ajustar notas na narrativa. Score observado parcial, cobertura, confiança e recomendação são grandezas diferentes. Revisão pendente não é aprovação; ausência não é desempenho ruim.
-10. **Dossiê e verificação:** explicar conclusão, base, contrapontos e perdas da pesquisa por dimensão, com referências existentes. Distinguir condições declaradas, histórico simulado, dados externos e hipóteses. Não emitir garantia de matrícula/retorno. Verificador pode rejeitar claims; não contornar rejeição com texto mais confiante.
+10. **Dossiê e verificação (Template CMS 9 Subpáginas):** explicar conclusão, base, contrapontos e perdas da pesquisa por dimensão, com referências existentes. Distinguir condições declaradas, histórico simulado, dados externos e hipóteses. Não emitir garantia de matrícula/retorno. Estruturar `pros` (forças internas e oportunidades externas), `cons` (fragilidades e ameaças), `action_recommendations` (nas áreas `Marketing`, `Produto`, `Comercial`, `Financeiro`) e `validation_criteria` para alimentar com rastreabilidade as 9 subpáginas do CMS (`Visão Geral`, `Métricas-Chave`, `Concorrência Fixa`, `Radar Setorial`, `Economia & Cenários`, `SWOT & TOWS`, `Pilares de Viabilidade`, `Revisões`, `Fontes & Evidências`). Verificador pode rejeitar claims; não contornar rejeição com texto mais confiante.
 
 ## Prioridade analítica
 

@@ -5,7 +5,7 @@ description: Use when verified course, market, curriculum, scoring, and limitati
 
 # Building Course Offers
 
-**Version:** 2.1.0
+**Version:** 2.2.0
 
 Turn approved facts into a useful decision dossier while keeping observations and strategic hypotheses visibly separate.
 
@@ -31,6 +31,14 @@ Explain material evidence losses by source and cause. Show whether information w
 ## Offer hypotheses
 
 Naming, positioning, promise, differentiators, audience segments, module changes, and marketing hooks are hypotheses to test. Connect each suggestion to the observed evidence that motivated it and state what experiment could validate it.
+
+## CMS 9-Subpage Dossier Alignment
+
+Your structured `DossierOutput` directly populates the 9-subpage Executive CMS Dossier (`Visão Geral`, `Métricas-Chave`, `Concorrência Fixa`, `Radar Setorial`, `Economia & Cenários`, `SWOT & TOWS`, `Pilares de Viabilidade`, `Revisões`, `Fontes & Evidências`) built by `DossierCmsPageBuilder` and checked by `DossierVerifier`:
+- **`highlights.pros` & `highlights.cons` (`SWOT & TOWS`, `Visão Geral`, `Concorrência Fixa`):** Reference verified `claim_ids` in `pros` covering both internal strengths (institutional history, IPD, syllabus fit) and external market opportunities (search demand, employability, sector radar timing), and in `cons` covering internal gaps and external competitive/market threats.
+- **`highlights.action_recommendations` (`SWOT & TOWS`, `Concorrência Fixa`, `Revisões`):** Assign `area` using the canonical governance areas (`Marketing`, `Produto`, `Comercial`, or `Financeiro`) so TOWS strategies, competitive insights, and departmental next steps are routed accurately.
+- **`highlights.validation_criteria` (`Revisões` & `SWOT & TOWS`):** Keep `status="pending"` and identify the responsible area or validation mechanism in `target` (e.g., `Financeiro: validar CAC e ponto de equilíbrio`, `Produto: homologar módulos práticos`) so pending governance items map to the review workflow.
+- **Pillar & Radar Coverage (`Pilares de Viabilidade` & `Radar Setorial`):** Ensure your atomic `claims` cite the specific `evidence_ids` from each active pillar (`internal_history`, `paid_competition`, `search_and_media`, `employability`, `syllabus_fit`, `pricing`) and from `sector_radar` so each subpage displays traceable analytical synthesis alongside deterministic metrics.
 
 ## Prohibited behavior
 

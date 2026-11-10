@@ -74,7 +74,7 @@ A fase responsável por implementar cada etapa está em [Planos de implementaç�
 
 ## Progresso
 
-O gate final verifica também os blocos visuais exatos antes de persistir. Contagens de instituições pesquisadas, ofertas e lacunas vêm da mesma projeção determinística; `VERIFIED` não significa benchmark completo nem aprovação comercial.
+O gate final verifica também os blocos visuais exatos antes de persistir, incluindo o envelope CMS de 9 subpáginas (`presentation.cms_pages`: `overview`, `key_metrics`, `fixed_competition`, `sector_radar`, `economics`, `swot_tows`, `viability_pillars`, `revisions`, `sources_evidences`) construído deterministicamente por `DossierCmsPageBuilder` e validado em `DossierVerifier.verify_presentation`. Contagens de instituições pesquisadas, ofertas e lacunas vêm da mesma projeção determinística; `VERIFIED` não significa benchmark completo nem aprovação comercial. Revisões humanas por área (`Marketing`, `Produto`, `Comercial`, `Financeiro`) são registradas após a publicação na tabela `dossier_area_reviews` e hidratadas na aba `Revisões`.
 
 O percentual é aproximado e baseado em etapas concluídas, não em tempo estimado. O chatbot recebe status legível, última atualização e eventuais ações exigidas.
 

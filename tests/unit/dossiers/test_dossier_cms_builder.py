@@ -299,3 +299,79 @@ def test_dossier_verifier_validates_cms_pages_and_blocks_tampering() -> None:
         proposal=analysis.proposal_data,
     )
     assert any(issue["path"] == "presentation.cms_pages" for issue in tampered_issues)
+
+
+def test_agent_skills_prompt_and_internal_history_harness_integration() -> None:
+    from pathlib import Path
+
+    import yaml
+
+    from prometeus.application.skill_registry import SkillRegistry
+
+    # 1. Verify synthesis skill & prompt YAML train the agent on the 9-subpage CMS contract
+    synthesis_instructions = SkillRegistry().instructions_for("dossier_synthesis")
+    assert "CMS 9-Subpage Dossier Alignment" in synthesis_instructions
+    assert "SWOT & TOWS" in synthesis_instructions
+    assert "Pilares de Viabilidade" in synthesis_instructions
+
+    prompt_cfg = yaml.safe_load(Path("config/prompts/dossier-v1.yaml").read_text(encoding="utf-8"))
+    sys_prompt = str(prompt_cfg.get("system_prompt", ""))
+    assert "CMS de 9 subpáginas" in sys_prompt
+    assert "Marketing" in sys_prompt and "Financeiro" in sys_prompt
+
+    # 2. Verify real workflow `analysis_audit["internal"]` (from InternalHistoryService) is mapped
+    analysis, scoring, facts, dossier = _sample_fixtures()
+    facts.analysis_audit = {
+        "pricing": facts.analysis_audit["pricing"],
+        "internal": {
+            "method": "ipd-family-percentile-v1",
+            "family": "pos_mba",
+            "reference_n": 10,
+            "comparables": [
+                {
+                    "course_id": "hist-1",
+                    "name": "MBA em Gestão de Seguros",
+                    "leads": 600,
+                    "applicants": 180,
+                    "enrolled": 42,
+                    "ipd_score": 88.0,
+                },
+                {
+                    "course_id": "hist-2",
+                    "name": "MBA em Subscrição e Riscos",
+                    "leads": 500,
+                    "applicants": 150,
+                    "enrolled": 54,
+                    "ipd_score": 84.0,
+                },
+            ],
+        },
+    }
+    facts.pillar_details["employability"] = {
+        "is_present": True,
+        "evidence_count": 3,
+        "features": {"evidence_ids": ["ev-jobs-01"]},
+    }
+    dossier.facts_hash = facts.compute_facts_hash()
+
+    presentation = DossierSynthesisService._build_visual_presentation_blocks(
+        analysis, scoring, facts, dossier
+    )
+    cms_pages = presentation["cms_pages"]["pages"]
+
+    # Overview reflects historical enrollment range (42 a 54)
+    enroll_kpi = next(k for k in cms_pages["overview"]["kpis"] if k["id"] == "enrollment")
+    assert enroll_kpi["value"] == "42 a 54"
+
+    # Key metrics funnel reflects historical leads -> applicants -> enrolled
+    funnel = cms_pages["key_metrics"]["funnel_stages"]
+    assert funnel[0]["value_label"] == "550 leads"
+    assert funnel[1]["value_label"] == "165 inscritos"
+    assert funnel[2]["value_label"] == "48 matrículas"
+
+    # Viability pillars links the verified employability claim to the pillar justification
+    emp_just = next(
+        j for j in cms_pages["viability_pillars"]["pillar_justifications"]
+        if j["label"] == "Empregabilidade"
+    )
+    assert "28 vagas abertas" in emp_just["text"]

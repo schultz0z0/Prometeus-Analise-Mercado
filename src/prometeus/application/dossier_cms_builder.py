@@ -245,6 +245,53 @@ def _resolve_claim_items(
     return resolved
 
 
+def _extract_internal_audit(facts: DossierFacts) -> dict[str, Any]:
+    """Normaliza o bloco de histórico interno tanto de `internal` (workflow real) quanto de `internal_audit`."""
+    if not isinstance(facts.analysis_audit, dict):
+        return {}
+    raw = facts.analysis_audit.get("internal") or facts.analysis_audit.get("internal_audit")
+    if not isinstance(raw, dict):
+        return {}
+    normalized = dict(raw)
+    comparables = normalized.get("comparables")
+    comp_list = [c for c in comparables if isinstance(c, dict)] if isinstance(comparables, list) else []
+    normalized["comparables"] = comp_list
+    if not normalized.get("comparables_count") and comp_list:
+        normalized["comparables_count"] = len(comp_list)
+
+    if normalized.get("mean_students") is None and comp_list:
+        enrolled_vals = [
+            float(c.get("students_count") if c.get("students_count") is not None else c.get("enrolled"))
+            for c in comp_list
+            if isinstance(c.get("students_count") if c.get("students_count") is not None else c.get("enrolled"), (int, float))
+        ]
+        if enrolled_vals:
+            normalized["mean_students"] = round(sum(enrolled_vals) / len(enrolled_vals), 1)
+            normalized["min_students"] = int(min(enrolled_vals))
+            normalized["max_students"] = int(max(enrolled_vals))
+
+    if normalized.get("mean_leads") is None and comp_list:
+        lead_vals = [float(c["leads"]) for c in comp_list if isinstance(c.get("leads"), (int, float)) and c["leads"] > 0]
+        if lead_vals:
+            normalized["mean_leads"] = round(sum(lead_vals) / len(lead_vals), 1)
+
+    if normalized.get("mean_applicants") is None and comp_list:
+        app_vals = [float(c["applicants"]) for c in comp_list if isinstance(c.get("applicants"), (int, float)) and c["applicants"] > 0]
+        if app_vals:
+            normalized["mean_applicants"] = round(sum(app_vals) / len(app_vals), 1)
+
+    if (
+        normalized.get("conversion_pct") is None
+        and isinstance(normalized.get("mean_students"), (int, float))
+        and isinstance(normalized.get("mean_leads"), (int, float))
+        and float(normalized["mean_leads"]) > 0
+    ):
+        normalized["conversion_pct"] = round(
+            (float(normalized["mean_students"]) / float(normalized["mean_leads"])) * 100.0, 1
+        )
+    return normalized
+
+
 def build_cms_dossier_pages(
     proposal: dict[str, Any],
     facts: DossierFacts,
@@ -422,9 +469,14 @@ def _build_overview_page(
         margin_value = str(base_scen.get("margin") or "—")
         margin_sub = "Cenário base simulado"
     else:
-        internal_audit = facts.analysis_audit.get("internal_audit") if isinstance(facts.analysis_audit, dict) else {}
-        mean_students = internal_audit.get("mean_students") if isinstance(internal_audit, dict) else None
-        if isinstance(mean_students, (int, float)) and mean_students > 0:
+        internal_audit = _extract_internal_audit(facts)
+        mean_students = internal_audit.get("mean_students")
+        min_hist = internal_audit.get("min_students")
+        max_hist = internal_audit.get("max_students")
+        if isinstance(min_hist, int) and isinstance(max_hist, int) and min_hist > 0 and max_hist > min_hist:
+            enroll_value = f"{min_hist} a {max_hist}"
+            enroll_sub = f"Faixa histórica ENS (média ~{round(float(mean_students or 0))} alunos)"
+        elif isinstance(mean_students, (int, float)) and mean_students > 0:
             enroll_value = f"~{round(float(mean_students))} alunos"
             enroll_sub = "Média histórica ENS (turmas comparáveis)"
         else:
@@ -544,12 +596,14 @@ def _build_key_metrics_page(
     pillar_rows: list[dict[str, Any]],
     claims_by_id: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
-    internal_audit = facts.analysis_audit.get("internal_audit") if isinstance(facts.analysis_audit, dict) else {}
-    internal_audit = internal_audit if isinstance(internal_audit, dict) else {}
+    internal_audit = _extract_internal_audit(facts)
     pricing_audit = facts.analysis_audit.get("pricing") if isinstance(facts.analysis_audit, dict) else {}
     pricing_audit = pricing_audit if isinstance(pricing_audit, dict) else {}
 
     mean_students = internal_audit.get("mean_students")
+    mean_leads = internal_audit.get("mean_leads")
+    mean_applicants = internal_audit.get("mean_applicants")
+    conversion_pct = internal_audit.get("conversion_pct")
     mean_evasion = internal_audit.get("mean_evasion_rate")
     retention_pct = round((1.0 - float(mean_evasion)) * 100, 1) if isinstance(mean_evasion, (int, float)) else None
     internal_score = next((p["score"] for p in pillar_rows if p["key"] == "internal_history"), 0)
@@ -567,15 +621,19 @@ def _build_key_metrics_page(
     for idx, comp in enumerate(comparables[:6]):
         if not isinstance(comp, dict):
             continue
-        st_count = int(comp.get("students_count") or 0)
+        st_count = int(comp.get("students_count") if comp.get("students_count") is not None else (comp.get("enrolled") or 0))
         ev_rate = float(comp.get("evasion_rate") or 0.0)
-        retained = max(0, round(st_count * (1.0 - ev_rate)))
+        retained = max(0, round(st_count * (1.0 - ev_rate))) if comp.get("evasion_rate") is not None else st_count
         historical_series.append(
             {
-                "label": str(comp.get("course_name") or f"Turma {idx + 1}")[:28],
+                "label": str(comp.get("course_name") or comp.get("name") or f"Turma {idx + 1}")[:28],
                 "students": st_count,
                 "retained": retained,
-                "retention_pct": round((1.0 - ev_rate) * 100, 1),
+                "retention_pct": round((1.0 - ev_rate) * 100, 1) if comp.get("evasion_rate") is not None else (
+                    round((st_count / float(comp["leads"])) * 100, 1)
+                    if isinstance(comp.get("leads"), (int, float)) and comp["leads"] > 0
+                    else 100.0
+                ),
             }
         )
 
@@ -583,32 +641,63 @@ def _build_key_metrics_page(
     be_students = int(economics.get("break_even_students") or 0) if econ_calculated else 0
     hist_avg_int = round(float(mean_students)) if isinstance(mean_students, (int, float)) and mean_students > 0 else 0
 
-    funnel_stages = [
-        {
-            "stage": "Capacidade / Referência",
-            "value_label": f"{max_cap} vagas" if max_cap > 0 else (f"{hist_avg_int} alunos (hist.)" if hist_avg_int > 0 else "Requer premissa"),
-            "pct_label": "100%",
-            "width_pct": 100,
-        },
-        {
-            "stage": "Média Histórica ENS",
-            "value_label": f"{hist_avg_int} matriculados" if hist_avg_int > 0 else "Sem comparáveis",
-            "pct_label": f"{internal_score}% aderência" if internal_score else "—",
-            "width_pct": 80,
-        },
-        {
-            "stage": "Retenção Estimada (Hist.)",
-            "value_label": f"{round(hist_avg_int * (retention_pct / 100.0))} concluintes" if hist_avg_int and retention_pct else "Não observado",
-            "pct_label": f"{retention_pct}%" if retention_pct is not None else "—",
-            "width_pct": 62,
-        },
-        {
-            "stage": "Ponto de Equilíbrio",
-            "value_label": f"{be_students} matrículas" if be_students > 0 else "Requer custos",
-            "pct_label": "Breakeven" if be_students > 0 else "Pendente",
-            "width_pct": 46,
-        },
-    ]
+    if isinstance(mean_leads, (int, float)) and mean_leads > 0 and isinstance(mean_applicants, (int, float)) and mean_applicants > 0:
+        leads_int = round(float(mean_leads))
+        apps_int = round(float(mean_applicants))
+        apps_pct = round((apps_int / max(1, leads_int)) * 100, 1)
+        funnel_stages = [
+            {
+                "stage": "Leads Históricos (Média ENS)",
+                "value_label": f"{leads_int} leads",
+                "pct_label": "100%",
+                "width_pct": 100,
+            },
+            {
+                "stage": "Inscritos / Candidatos (Hist.)",
+                "value_label": f"{apps_int} inscritos",
+                "pct_label": f"{apps_pct}%",
+                "width_pct": 80,
+            },
+            {
+                "stage": "Matriculados (Média ENS)",
+                "value_label": f"{hist_avg_int} matrículas",
+                "pct_label": f"{conversion_pct or 0}%",
+                "width_pct": 62,
+            },
+            {
+                "stage": "Ponto de Equilíbrio",
+                "value_label": f"{be_students} matrículas" if be_students > 0 else "Requer custos",
+                "pct_label": "Breakeven" if be_students > 0 else "Pendente",
+                "width_pct": 46,
+            },
+        ]
+    else:
+        funnel_stages = [
+            {
+                "stage": "Capacidade / Referência",
+                "value_label": f"{max_cap} vagas" if max_cap > 0 else (f"{hist_avg_int} alunos (hist.)" if hist_avg_int > 0 else "Requer premissa"),
+                "pct_label": "100%",
+                "width_pct": 100,
+            },
+            {
+                "stage": "Média Histórica ENS",
+                "value_label": f"{hist_avg_int} matriculados" if hist_avg_int > 0 else "Sem comparáveis",
+                "pct_label": f"{internal_score}% aderência" if internal_score else "—",
+                "width_pct": 80,
+            },
+            {
+                "stage": "Retenção Estimada (Hist.)",
+                "value_label": f"{round(hist_avg_int * (retention_pct / 100.0))} concluintes" if hist_avg_int and retention_pct else "Não observado",
+                "pct_label": f"{retention_pct}%" if retention_pct is not None else "—",
+                "width_pct": 62,
+            },
+            {
+                "stage": "Ponto de Equilíbrio",
+                "value_label": f"{be_students} matrículas" if be_students > 0 else "Requer custos",
+                "pct_label": "Breakeven" if be_students > 0 else "Pendente",
+                "width_pct": 46,
+            },
+        ]
 
     comp_bench = ecosystem.get("competitive_benchmark") if isinstance(ecosystem.get("competitive_benchmark"), dict) else {}
     offers_found = comp_bench.get("offers_found_count", 0)
@@ -1325,8 +1414,7 @@ def _build_viability_pillars_page(
     comp_bench = ecosystem.get("competitive_benchmark") if isinstance(ecosystem.get("competitive_benchmark"), dict) else {}
     pricing_audit = facts.analysis_audit.get("pricing") if isinstance(facts.analysis_audit, dict) else {}
     pricing_audit = pricing_audit if isinstance(pricing_audit, dict) else {}
-    internal_audit = facts.analysis_audit.get("internal_audit") if isinstance(facts.analysis_audit, dict) else {}
-    internal_audit = internal_audit if isinstance(internal_audit, dict) else {}
+    internal_audit = _extract_internal_audit(facts)
 
     submetrics_by_key: dict[str, list[dict[str, str]]] = {
         "internal_history": [
@@ -1355,7 +1443,7 @@ def _build_viability_pillars_page(
             {"label": "Público-alvo", "value": (facts.target_audience or "Definido")[:18]},
         ],
         "pricing": [
-            {"label": "Preços comparáveis", "value": str(pricing_audit.get("comparables_count") or 0)},
+            {"label": "Preços comparáveis", "value": str(pricing_audit.get("comparables_count") or len(pricing_audit.get("comparables") or []))},
             {"label": "Média de mercado", "value": _format_brl(pricing_audit.get("mean_total_brl")) if isinstance(pricing_audit.get("mean_total_brl"), (int, float)) else "—"},
             {"label": "Modelagem de turma", "value": "Calculada" if economics.get("status") == "calculated" else "Requer custos"},
         ],
@@ -1369,13 +1457,31 @@ def _build_viability_pillars_page(
             "submetrics": submetrics_by_key.get(row["key"], []),
         }
         pillar_cards.append(card)
+        detail = facts.pillar_details.get(row["key"]) if isinstance(facts.pillar_details, dict) else {}
+        pillar_eids = set(
+            (detail.get("features") or {}).get("evidence_ids") or []
+            if isinstance(detail, dict)
+            else []
+        )
+        if row["key"] == "internal_history":
+            pillar_eids.add("institutional_history")
+        elif row["key"] == "pricing":
+            pillar_eids.add("pricing_reference")
+        elif row["key"] == "paid_competition":
+            pillar_eids.add("competitive_coverage")
+
+        matched_claim = next(
+            (c.statement for c in dossier.claims if pillar_eids and set(c.evidence_ids or []) & pillar_eids),
+            None,
+        )
+        base_text = (
+            f"Nota {row['score']}/100 (peso {row['weight_pct']}% → contribuição de {row['contribution_pts']} pts no IVO). "
+            f"Classificação: {row['status_label']}."
+        )
         justifications.append(
             {
                 "label": row["label"],
-                "text": (
-                    f"Nota {row['score']}/100 (peso {row['weight_pct']}% → contribuição de {row['contribution_pts']} pts no IVO). "
-                    f"Classificação: {row['status_label']}."
-                ),
+                "text": f"{base_text} {matched_claim}" if matched_claim else base_text,
             }
         )
 
@@ -1555,8 +1661,7 @@ def _build_sources_evidences_page(
 
     comp_bench = ecosystem.get("competitive_benchmark") if isinstance(ecosystem.get("competitive_benchmark"), dict) else {}
     radar_block = ecosystem.get("sector_radar") if isinstance(ecosystem.get("sector_radar"), dict) else {}
-    internal_audit = facts.analysis_audit.get("internal_audit") if isinstance(facts.analysis_audit, dict) else {}
-    internal_audit = internal_audit if isinstance(internal_audit, dict) else {}
+    internal_audit = _extract_internal_audit(facts)
 
     source_catalog = [
         {
