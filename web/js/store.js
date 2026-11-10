@@ -147,10 +147,11 @@ class PrometeusStore {
       );
       if (verified.length > 0) {
         this.state.courses = verified;
-        if (!this.state.activeCourseId) {
+        if (!this.state.activeCourseId || !verified.some(item => item.id === this.state.activeCourseId)) {
           this.state.activeCourseId = verified[0].id;
           this.state.currentDossier = verified[0].dossier;
         }
+        this.state.portfolioTab = 'diagnostics';
         this.notify();
       }
     } catch (error) {

@@ -15,6 +15,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from prometeus.application.declared_curriculum import curriculum_text
 from prometeus.application.evidence_features import EvidenceFeatureSet, VerifiedFeature
 from prometeus.application.skill_registry import SkillRegistry
 from prometeus.domain.analyses import Analysis
@@ -195,9 +196,7 @@ class InternalHistoryService:
             )
         )
         proposal = analysis.proposal_data or {}
-        curriculum = _tokens(
-            str(proposal.get("curriculum_text") or proposal.get("curriculum") or "")
-        )
+        curriculum = _tokens(curriculum_text(proposal))
         ranked: list[tuple[float, HistoricalCourseModel, float, float | None]] = []
         for course in reference:
             theme = _tokens(" ".join([course.name, *(course.tags or [])]))

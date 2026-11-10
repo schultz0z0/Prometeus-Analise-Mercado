@@ -272,7 +272,8 @@ def build_ecosystem_presentation_blocks(
             )
             clean_summary = re.sub(r"\s+—\s+—\s+", " — ", clean_summary).strip(" —")
             pain_excerpt = (clean_summary or item.title)[:260]
-            theme = _detect_theme(
+            explicit_theme = str(item.key_metrics.get("theme_detected") or "").strip()
+            theme = explicit_theme or _detect_theme(
                 f"{item.title} {pain_excerpt}",
                 list(matched_actor.get("monitoring_focus") or []),
             )

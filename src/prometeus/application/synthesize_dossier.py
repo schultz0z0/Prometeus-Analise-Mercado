@@ -27,6 +27,8 @@ from prometeus.application.economics_service import CourseEconomicsService
 from prometeus.application.ecosystem_presentation import build_ecosystem_presentation_blocks
 from prometeus.application.evidence_audit import summarize_evidence
 from prometeus.application.evidence_features import EvidenceFeatureExtractor
+from prometeus.application.evidence_reading_audit import summarize_reading_audit
+from prometeus.application.evidence_reading_context import archive_analysis_context, reading_context
 from prometeus.application.offer_comparability import qualified_competitor_offer
 from prometeus.application.research_scope import (
     extract_global_social_actor_terms,
@@ -304,6 +306,8 @@ class DossierSynthesisService:
                     title=ev.title,
                     key_metrics=metrics,
                     summary=" — ".join(summary_parts)[:3400],
+                    source_reading=reading_context(sanitized["_reading"])
+                    if isinstance(sanitized.get("_reading"), dict) else {},
                     source_url=ev.source_url,
                 )
             )
@@ -484,6 +488,11 @@ class DossierSynthesisService:
         )
         integrity_report.brief_facts_count = len(fact_items)
         analysis_audit = {
+            "reading": summarize_reading_audit(
+                [{"id": run.id, "provider_run_id": run.provider_run_id,
+                  "dataset_id": run.dataset_id, "parameters": run.parameters} for run in runs],
+                [{"id": ev.id, "sanitized_data": ev.sanitized_data} for ev in evidences],
+            ),
             "internal": internal_audit,
             "pricing": pricing_audit,
             "evidence": evidence_audit,

@@ -94,6 +94,63 @@ async def due(db):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("eventual_read", [True, False])
+async def test_failed_actor_recovers_existing_dataset_before_any_new_paid_run(db,eventual_read):
+    from prometeus.application.collect_market_evidence import RequiredSourceBlockedError
+    from prometeus.application.recover_market_collection import CollectionRetryScheduled
+    from prometeus.infrastructure.apify.client import ApifyClient
+
+    counts = {"POST":0,"dataset":0}
+    first = {"id":"failed-paid-run","status":"FAILED","defaultDatasetId":"first-dataset",
+             "buildNumber":"0.0.473","usageTotalUsd":0.02,"statusMessage":"temporary browser failure"}
+    second = {**first,"id":"next-paid-run","status":"SUCCEEDED","defaultDatasetId":"next-dataset"}
+    def handler(request):
+        if request.method == "POST":
+            counts["POST"] += 1
+            return httpx.Response(201,json={"data":first if counts["POST"]==1 else second})
+        if "/datasets/" in request.url.path:
+            counts["dataset"] += 1
+            if not eventual_read or counts["dataset"]==1:
+                return httpx.Response(503)
+            return httpx.Response(200,headers={"X-Apify-Pagination-Total":"1"},json=[{"title":"Retained output","url":"https://school.test/curso"}])
+        return httpx.Response(200,json={"data":first})
+    registry = service(db,Executor()).registry
+    client = ApifyClient(api_token="test",registry=registry,http_client=httpx.AsyncClient(transport=httpx.MockTransport(handler)),polling_interval_seconds=0)
+    try:
+        with pytest.raises(CollectionRetryScheduled):
+            await CollectMarketEvidenceService(db,client,registry).collect(tenant_id="ens",plan=plan())
+        run = (await db.execute(select(ToolRunModel))).scalar_one()
+        assert run.parameters["dataset_read_pending"] is True
+        assert run.parameters["dataset_archive"]["retrieval_complete"] is False
+        assert run.parameters["recovery_action"] == "reconcile_existing_run"
+        assert run.error_code == "provider_error"
+        await due(db)
+        if eventual_read:
+            with pytest.raises(CollectionRetryScheduled):
+                await CollectMarketEvidenceService(db,client,registry).collect(tenant_id="ens",plan=plan())
+            assert counts == {"POST":1,"dataset":2}
+            assert run.parameters["dataset_read_pending"] is False
+            assert run.parameters["dataset_archive"]["retrieval_complete"] is True
+            await due(db)
+            outcome = await CollectMarketEvidenceService(db,client,registry).collect(tenant_id="ens",plan=plan())
+            assert counts == {"POST":2,"dataset":3}
+            assert outcome.spent_usd == pytest.approx(0.04)
+            assert run.parameters["prior_dataset_archives"][0]["provider_run_id"] == "failed-paid-run"
+            assert run.parameters["prior_dataset_archives"][0]["items"][0]["sanitized_data"]["title"] == "Retained output"
+        else:
+            for _ in range(2):
+                with pytest.raises(CollectionRetryScheduled):
+                    await CollectMarketEvidenceService(db,client,registry).collect(tenant_id="ens",plan=plan())
+                await due(db)
+            with pytest.raises(RequiredSourceBlockedError):
+                await CollectMarketEvidenceService(db,client,registry).collect(tenant_id="ens",plan=plan())
+            assert counts == {"POST":1,"dataset":4}
+            assert run.cost_usd == pytest.approx(0.02)
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.asyncio
 async def test_trends_retry_limits_native_browser_concurrency_and_persists_adjustment(db):
     from prometeus.application.recover_market_collection import CollectionRetryScheduled
     from prometeus.infrastructure.apify.client import ApifyActorFailedError

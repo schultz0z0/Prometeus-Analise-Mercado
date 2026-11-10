@@ -248,11 +248,26 @@ $env:PATH = "$PWD\.venv\Scripts;$env:PATH"; rtk pytest
 ```
 Expected: `0` erros no `ruff` e `100%` dos testes passando.
 
-- [ ] **Step 3: Commit final da documentação**
+- [x] **Step 3: Commit final da documentação**
 
-Run:
-```powershell
-rtk git add docs/README.md docs/plans/2026-11-10-cms-dossier-subpages.md
-rtk git commit -m "docs(dossier): document 9-subpage dark-theme CMS dossier architecture"
-```
+---
+
+### Task 5: Refinamento Visual Executivo ("Anti-AI-Slop") & Dossiê Showcase (`anl-stj-001`)
+
+**Status:** VALIDADO (10/11/2026)
+
+1. **KPI Cards em Layout Horizontal Split (`web/js/views/dossier-cms-tabs.js` & `web/styles/app.css`)**:
+   - Topo com chip de ícone vetorial contextual (`getKpiIconSvg`) + rótulo executivo em sentence-case;
+   - Rodapé dividido horizontalmente: métrica tabular gigante à esquerda (`font-variant-numeric: tabular-nums`) com sufixo de unidade leve (`<small class="cms-kpi-card__unit">` para `/100`, `players`, `matrículas`, `sinais`, `oportunidades`) e coluna de contexto à direita (pílula semântica de delta + sublabel comparativo);
+   - Conformidade total com o detector `impeccable detect` (zero `border-left: 3px`, zero `text-transform: uppercase` com tracking exagerado).
+2. **Gráficos Vetoriais Nativos (SVG) de Alta Precisão**:
+   - **Aba 1 (`Visão Geral`)**: Barras horizontais com escala `0 | 20 | 40 | 60 | 80 | 100` e linhas de grade verticais + card do cenário `Base` destacado;
+   - **Aba 2 (`Métricas-Chave`)**: Gráfico vetorial de Área + Linha (`renderHistoricalTrendSvg`), Funil Trapezoidal centralizado (`.cms-funnel-stage`) e Trajetória Dual-Line IE vs. IVO (`renderIeIvoTrajectorySvg` com linha tracejada `Limiar 75`);
+   - **Aba 3 (`Concorrência Fixa`)**: Badges monogramáticos institucionais (`FGV`, `INS`, `PUC`, `IBM`, `ESA`) + Mapa de Posicionamento 2×2 (`renderPositioning2x2Svg`) com elipse tracejada esmeralda `Espaço de oportunidade (ENS)` quando há ofertas comparáveis medidas;
+   - **Aba 4 (`Radar Setorial`)**: Radar Hexagonal de 6 eixos (`renderRadarSvg` com anéis `20..100` e polígono de referência) + Mapa Setorial 2D de Clusters (`renderSectorBubbleMapSvg`);
+   - **Aba 5 (`Economia & Cenários`)**: Gráfico **Waterfall / Floating Bridge** vetorial (`renderWaterfallSvg` — `Receita Bruta` ancorada em 0, barras flutuantes de deduções/custos em coral `#f87171` com conectores tracejados e `Resultado Líquido` ancorado em esmeralda `#34d399`) + Matriz `Preço × Volume` com linha/coluna/célula `Base` destacadas.
+3. **Dossiê Showcase Completo no SQLite (`scripts/seed_stj_showcase_dossier.py` -> `anl-stj-001`)**:
+   - Baseado no curso real *DIREITO DOS SEGUROS NOS TRIBUNAIS SUPERIORES: Recursos Excepcionais, Relevância da Questão Federal e Formação de Precedentes* (Extensão, 24h, Online ao vivo, 6 módulos de 4h, 8 docentes doutores);
+   - Gerado pelos construtores determinísticos (`DossierSynthesisService._build_visual_presentation_blocks`) e validado sem divergências por `DossierVerifier().verify_presentation(...)`.
+
 

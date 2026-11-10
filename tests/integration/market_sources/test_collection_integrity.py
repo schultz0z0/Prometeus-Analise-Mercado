@@ -71,7 +71,8 @@ class Executor:
                 cost_usd=0.01,
             ),
             items=items,
-            total_items=0,
+            total_items=len(items),
+            total_items_source="provider_pagination",
         )
 
 
@@ -386,7 +387,7 @@ async def test_serp_results_are_individual_evidences_with_discovery_provenance(s
     run = (await session.execute(select(ToolRunModel))).scalar_one()
     assert run.raw_items_count == 1
     assert run.valid_items_count == 2
-    assert run.parameters["dataset_total_items"] == 0
+    assert run.parameters["dataset_total_items"] == 1
 
 
 async def test_supplied_urls_must_be_discovered_and_invalid_values_are_filtered(session):

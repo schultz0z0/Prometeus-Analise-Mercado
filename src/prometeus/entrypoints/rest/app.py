@@ -451,10 +451,6 @@ async def _load_area_reviews(
     session: AsyncSession,
     analysis_id: str,
 ) -> list[DossierAreaReviewModel]:
-    conn = await session.connection()
-    await conn.run_sync(
-        lambda sync_conn: DossierAreaReviewModel.__table__.create(sync_conn, checkfirst=True)
-    )
     stmt = (
         select(DossierAreaReviewModel)
         .where(DossierAreaReviewModel.analysis_id == analysis_id)
@@ -467,12 +463,12 @@ def _apply_area_reviews_to_revisions_page(
     revisions_page: dict[str, Any],
     area_reviews: list[DossierAreaReviewModel],
 ) -> dict[str, Any]:
-    updated_page = json.loads(json.dumps(revisions_page))
+    updated_page: dict[str, Any] = json.loads(json.dumps(revisions_page))
     area_cards = list(updated_page.get("area_reviews") or [])
 
     latest_by_area: dict[str, DossierAreaReviewModel] = {}
-    for rev in area_reviews:
-        latest_by_area[rev.area.lower()] = rev
+    for review in area_reviews:
+        latest_by_area[review.area.lower()] = review
 
     approved_count = 0
     for card in area_cards:
@@ -566,6 +562,18 @@ def _apply_area_reviews_to_revisions_page(
     return updated_page
 
 
+def _public_evidence_payload(data: dict[str, Any] | None) -> dict[str, Any]:
+    # Checkpoints contain the entire delivered corpus and stay server-side.
+    return {key: value for key, value in (data or {}).items() if key != "_reading"}
+
+
+def _cms_evidence_admitted(data: dict[str, Any] | None) -> bool:
+    qualification = (data or {}).get("_qualification")
+    return not isinstance(qualification, dict) or not qualification or (
+        qualification.get("accepted") is True or qualification.get("context_only") is True
+    )
+
+
 def _hydrate_dossier_presentation(
     *,
     analysis_id: str,
@@ -589,98 +597,107 @@ def _hydrate_dossier_presentation(
     )
 
     presentation = dict(dossier.presentation or {})
-    if "cms_pages" not in presentation:
-        pillar_summaries: dict[str, float] = {}
-        pillar_details: dict[str, Any] = {}
-        if scoring and isinstance(scoring.pillar_scores, dict):
-            for k, val in scoring.pillar_scores.items():
-                if isinstance(val, dict):
-                    pillar_details[k] = val
-                    if isinstance(val.get("raw_score"), (int, float)):
-                        pillar_summaries[k] = float(val["raw_score"])
-                elif isinstance(val, (int, float)):
-                    pillar_summaries[k] = float(val)
+    stored_revisions = ((presentation.get("cms_pages") or {}).get("pages") or {}).get("revisions")
 
-        fact_items = [
-            DossierFactItem(
-                evidence_id=ev.id,
-                source_type=ev.evidence_type,
-                title=ev.title,
-                key_metrics=dict(ev.sanitized_data or {}),
-                summary=ev.title,
-                source_url=ev.source_url,
-            )
-            for ev in evidences
-        ]
-        facts = DossierFacts(
-            analysis_id=analysis_id,
-            course_name=course_name,
-            target_audience=str(proposal.get("audience") or "Profissionais do setor"),
-            recommendation=(scoring.recommendation if scoring else "REQUIRES_HUMAN_REVIEW"),
-            viability_score=float(scoring.viability_score if scoring else 0.0),
-            coverage_score=float(scoring.coverage_score if scoring else 0.0),
-            confidence_score=float(scoring.confidence_score if scoring else 0.0),
-            pillar_summaries=pillar_summaries,
-            pillar_details=pillar_details,
-            items=fact_items,
-            limitations=list(presentation.get("limitations") or []),
-            counterevidence=list(presentation.get("counterevidence") or []),
-            analysis_audit=dict(presentation.get("analysis_audit") or {}),
+    pillar_summaries: dict[str, float] = {}
+    pillar_details: dict[str, Any] = {}
+    if scoring and isinstance(scoring.pillar_scores, dict):
+        for k, val in scoring.pillar_scores.items():
+            if isinstance(val, dict):
+                pillar_details[k] = val
+                if isinstance(val.get("raw_score"), (int, float)):
+                    pillar_summaries[k] = float(val["raw_score"])
+            elif isinstance(val, (int, float)):
+                pillar_summaries[k] = float(val)
+
+    fact_items = [
+        DossierFactItem(
+            evidence_id=ev.id,
+            source_type=ev.evidence_type,
+            title=ev.title,
+            key_metrics={
+                **_public_evidence_payload(ev.sanitized_data),
+                **({"evidence_role": "context_only"}
+                   if (ev.sanitized_data or {}).get("_qualification", {}).get("context_only") is True else {}),
+            },
+            summary=ev.title,
+            source_url=ev.source_url,
         )
-        raw_highlights = presentation.get("highlights")
-        try:
-            highlights_obj = (
-                DossierHighlights.model_validate(raw_highlights)
-                if isinstance(raw_highlights, dict)
-                else DossierHighlights()
-            )
-        except Exception:
-            highlights_obj = DossierHighlights()
-
-        claims_objs: list[DossierClaim] = []
-        for raw_claim in dossier.claims or []:
-            if isinstance(raw_claim, dict):
-                try:
-                    claims_objs.append(DossierClaim.model_validate(raw_claim))
-                except Exception:
-                    continue
-
-        sections_objs: list[DossierSection] = []
-        for raw_sec in dossier.sections or []:
-            if isinstance(raw_sec, dict):
-                try:
-                    sections_objs.append(DossierSection.model_validate(raw_sec))
-                except Exception:
-                    continue
-
-        dossier_obj = DossierOutput(
-            id=dossier.id,
-            analysis_id=analysis_id,
-            prompt_version=dossier.prompt_version,
-            model_name=dossier.model_name,
-            executive_summary=dossier.executive_summary,
-            executive_summary_claim_ids=list(presentation.get("executive_summary_claim_ids") or []),
-            highlights=highlights_obj,
-            sections=sections_objs,
-            claims=claims_objs,
-            facts_hash=dossier.facts_hash,
+        for ev in evidences
+        if _cms_evidence_admitted(ev.sanitized_data)
+    ]
+    facts = DossierFacts(
+        analysis_id=analysis_id,
+        course_name=course_name,
+        target_audience=str(proposal.get("audience") or "Profissionais do setor"),
+        recommendation=(scoring.recommendation if scoring else "REQUIRES_HUMAN_REVIEW"),
+        viability_score=float(scoring.viability_score if scoring else 0.0),
+        coverage_score=float(scoring.coverage_score if scoring else 0.0),
+        confidence_score=float(scoring.confidence_score if scoring else 0.0),
+        pillar_summaries=pillar_summaries,
+        pillar_details=pillar_details,
+        items=fact_items,
+        limitations=list(presentation.get("limitations") or []),
+        counterevidence=list(presentation.get("counterevidence") or []),
+        analysis_audit=dict(presentation.get("analysis_audit") or {}),
+    )
+    raw_highlights = presentation.get("highlights")
+    try:
+        highlights_obj = (
+            DossierHighlights.model_validate(raw_highlights)
+            if isinstance(raw_highlights, dict)
+            else DossierHighlights()
         )
-        economics = presentation.get("economics") or DossierSynthesisService._build_economics_presentation(proposal)
-        workload = proposal.get("workload_hours")
-        safe_workload = workload if isinstance(workload, int) and not isinstance(workload, bool) and workload > 0 else 0
-        ecosystem = {
-            "competitive_benchmark": presentation.get("competitive_benchmark"),
-            "sector_radar": presentation.get("sector_radar"),
-        }
-        if not ecosystem["competitive_benchmark"] and not ecosystem["sector_radar"]:
-            ecosystem = build_ecosystem_presentation_blocks(proposal, facts, safe_workload)
-        presentation["cms_pages"] = build_cms_dossier_pages(
-            proposal=proposal,
-            facts=facts,
-            dossier=dossier_obj,
-            economics=economics,
-            ecosystem=ecosystem,
-        )
+    except Exception:
+        highlights_obj = DossierHighlights()
+
+    claims_objs: list[DossierClaim] = []
+    for raw_claim in dossier.claims or []:
+        if isinstance(raw_claim, dict):
+            try:
+                claims_objs.append(DossierClaim.model_validate(raw_claim))
+            except Exception:
+                continue
+
+    sections_objs: list[DossierSection] = []
+    for raw_sec in dossier.sections or []:
+        if isinstance(raw_sec, dict):
+            try:
+                sections_objs.append(DossierSection.model_validate(raw_sec))
+            except Exception:
+                continue
+
+    dossier_obj = DossierOutput(
+        id=dossier.id,
+        analysis_id=analysis_id,
+        prompt_version=dossier.prompt_version,
+        model_name=dossier.model_name,
+        executive_summary=dossier.executive_summary,
+        executive_summary_claim_ids=list(presentation.get("executive_summary_claim_ids") or []),
+        highlights=highlights_obj,
+        sections=sections_objs,
+        claims=claims_objs,
+        facts_hash=dossier.facts_hash,
+    )
+    economics = presentation.get("economics") or DossierSynthesisService._build_economics_presentation(proposal)
+    workload = proposal.get("workload_hours")
+    safe_workload = workload if isinstance(workload, int) and not isinstance(workload, bool) and workload > 0 else 0
+    ecosystem = {
+        "competitive_benchmark": presentation.get("competitive_benchmark"),
+        "sector_radar": presentation.get("sector_radar"),
+    }
+    if not ecosystem["competitive_benchmark"] and not ecosystem["sector_radar"]:
+        ecosystem = build_ecosystem_presentation_blocks(proposal, facts, safe_workload)
+    rebuilt_cms = build_cms_dossier_pages(
+        proposal=proposal,
+        facts=facts,
+        dossier=dossier_obj,
+        economics=economics,
+        ecosystem=ecosystem,
+    )
+    if isinstance(stored_revisions, dict) and not area_reviews and len(stored_revisions.get("version_history") or []) > 1:
+        rebuilt_cms["pages"]["revisions"] = dict(stored_revisions)
+    presentation["cms_pages"] = rebuilt_cms
 
     cms_pages = dict(presentation.get("cms_pages") or {})
     pages = dict(cms_pages.get("pages") or {})
@@ -770,7 +787,7 @@ async def list_analyses(
                         "source_url": ev.source_url,
                         "collector": ev.collector,
                         "title": ev.title,
-                        "sanitized_data": ev.sanitized_data,
+                        "sanitized_data": _public_evidence_payload(ev.sanitized_data),
                         "quality_score": ev.quality_score,
                         "cost_usd": ev.cost_usd,
                         "collected_at": ev.collected_at.isoformat(),
@@ -827,6 +844,16 @@ async def get_analysis(
         .scalars()
         .all()
     )
+    from prometeus.application.evidence_reading_audit import summarize_reading_audit
+
+    reading_evidences = list((await session.scalars(
+        select(MarketEvidenceModel).where(MarketEvidenceModel.analysis_id == analysis_id)
+    )).all())
+    reading_audit = summarize_reading_audit(
+        [{"id": run.id, "provider_run_id": run.provider_run_id,
+          "dataset_id": run.dataset_id, "parameters": run.parameters} for run in tool_runs],
+        [{"id": row.id, "sanitized_data": row.sanitized_data} for row in reading_evidences],
+    )
     attempts = list((await session.execute(
         select(ToolRunAttemptModel)
         .where(ToolRunAttemptModel.analysis_id == analysis_id,
@@ -863,6 +890,7 @@ async def get_analysis(
         "analysis_id": analysis.id,
         "tenant_id": analysis.tenant_id,
         "course_name": analysis.course_name,
+        "reading_audit": reading_audit,
         "status": analysis.status.value,
         "recommendation": analysis.recommendation.value if analysis.recommendation else None,
         "created_at": analysis.created_at.isoformat(),
@@ -1133,7 +1161,7 @@ async def get_dossier(
                 "source_url": ev.source_url,
                 "collector": ev.collector,
                 "title": ev.title,
-                "sanitized_data": ev.sanitized_data,
+                "sanitized_data": _public_evidence_payload(ev.sanitized_data),
                 "quality_score": ev.quality_score,
                 "cost_usd": ev.cost_usd,
                 "collected_at": ev.collected_at.isoformat(),

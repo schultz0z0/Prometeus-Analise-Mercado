@@ -8,6 +8,7 @@ Monta o contrato estruturado `cms_pages` combinando:
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from prometeus.domain.dossiers import DossierFacts, DossierOutput
@@ -23,6 +24,39 @@ CMS_TAB_ORDER: tuple[str, ...] = (
     "revisions",
     "sources_evidences",
 )
+
+
+def _dict(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _list(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
+
+
+def _present_score(rows: list[dict[str, Any]], key: str) -> float | None:
+    return next((p["score"] for p in rows if p["key"] == key and p["is_present"]), None)
+
+
+def _composite_score(rows: list[dict[str, Any]], weights: dict[str, float]) -> int | None:
+    scores = {key: _present_score(rows, key) for key in weights}
+    if any(score is None for score in scores.values()):
+        return None
+    return round(sum(float(scores[key]) * weight for key, weight in weights.items()))
+
+
+def _score_label(score: float | None, suffix: str = "/100") -> str:
+    return f"{score:g}{suffix}" if score is not None else "Não observado"
+
+
+def _score_tone(score: float | None) -> str:
+    return "insufficient" if score is None else _score_band(score)["tone"]
+
+
+def _economic_tone(scenario: dict[str, Any] | None) -> str:
+    if not scenario or scenario.get("net_profit") is None:
+        return "insufficient"
+    return "approved" if float(scenario["net_profit"]) > 0 else "risk"
 
 CMS_TABS_METADATA: list[dict[str, str]] = [
     {
@@ -184,7 +218,7 @@ def _format_brl(value: float | int | None) -> str:
     if value is None or isinstance(value, bool):
         return "—"
     num = float(value)
-    if num <= 0:
+    if not math.isfinite(num):
         return "—"
     return f"R$ {num:,.0f}".replace(",", ".")
 
@@ -207,8 +241,10 @@ def _pillar_score_and_presence(facts: DossierFacts, key: str) -> tuple[float, bo
     if isinstance(detail, dict):
         if "is_present" in detail:
             is_present = bool(detail.get("is_present"))
-        if isinstance(detail.get("evidence_count"), int):
+        if isinstance(detail.get("evidence_count"), int) and not isinstance(detail["evidence_count"], bool):
             evidence_count = int(detail["evidence_count"])
+        elif "evidence_count" not in detail:
+            evidence_count = len({eid for eid in _list(_dict(detail.get("features")).get("evidence_ids")) if isinstance(eid, str) and eid})
         if raw_summary is None and isinstance(detail.get("raw_score"), (int, float)):
             raw_summary = float(detail["raw_score"])
     if raw_summary is None:
@@ -261,7 +297,7 @@ def _extract_internal_audit(facts: DossierFacts) -> dict[str, Any]:
 
     if normalized.get("mean_students") is None and comp_list:
         enrolled_vals = [
-            float(c.get("students_count") if c.get("students_count") is not None else c.get("enrolled"))
+            float(c["students_count"] if c.get("students_count") is not None else c["enrolled"])
             for c in comp_list
             if isinstance(c.get("students_count") if c.get("students_count") is not None else c.get("enrolled"), (int, float))
         ]
@@ -321,7 +357,10 @@ def build_cms_dossier_pages(
     for spec in OFFICIAL_PILLARS_SPEC:
         score_val, is_present, ev_count = _pillar_score_and_presence(facts, spec["key"])
         band = _score_band(score_val, is_present)
-        contribution = round((score_val * spec["weight_pct"]) / 100.0, 1) if is_present else 0.0
+        detail = _dict(facts.pillar_details.get(spec["key"]))
+        weight = detail.get("weight")
+        weight_pct = round(float(weight) * 100, 4) if isinstance(weight, (int, float)) and not isinstance(weight, bool) and math.isfinite(weight) and 0 <= weight <= 1 else spec["weight_pct"]
+        contribution = round((score_val * weight_pct) / 100.0, 1) if is_present else None
         pillar_rows.append(
             {
                 "key": spec["key"],
@@ -329,9 +368,9 @@ def build_cms_dossier_pages(
                 "short_label": spec["short_label"],
                 "decision_label": spec["decision_label"],
                 "icon": spec["icon"],
-                "weight_pct": spec["weight_pct"],
-                "score": round(score_val),
-                "raw_score": score_val,
+                "weight_pct": weight_pct,
+                "score": round(score_val) if is_present else None,
+                "raw_score": score_val if is_present else None,
                 "is_present": is_present,
                 "evidence_count": ev_count,
                 "contribution_pts": contribution,
@@ -456,8 +495,10 @@ def _build_overview_page(
     pillar_rows: list[dict[str, Any]],
     claims_by_id: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
-    econ_calculated = economics.get("status") == "calculated"
-    scenarios = economics.get("scenarios") if isinstance(economics.get("scenarios"), list) else []
+    scenarios = _list(economics.get("scenarios"))
+    econ_calculated = economics.get("status") in {"calculable", "calculated"} or (
+        economics.get("status") is None and bool(scenarios)
+    )
 
     if econ_calculated and scenarios:
         students_vals = [int(s.get("students", 0)) for s in scenarios if isinstance(s, dict) and s.get("students")]
@@ -486,7 +527,7 @@ def _build_overview_page(
         margin_sub = "Informe custos fixos e variáveis para simular"
 
     ivo_delta = ivo_score - 75
-    ivo_delta_label = f"{'+' if ivo_delta >= 0 else ''}{ivo_delta} pts vs. limiar favorável (75)"
+    ivo_delta_label = f"{'+' if ivo_delta >= 0 else ''}{ivo_delta} pts vs. limiar (75)"
 
     scenario_cards: list[dict[str, Any]] = []
     if econ_calculated and scenarios:
@@ -495,14 +536,16 @@ def _build_overview_page(
             if not isinstance(scen, dict):
                 continue
             label = labels[idx] if idx < len(labels) else str(scen.get("name") or f"Cenário {idx + 1}")
+            rev_val = scen.get("net_revenue") if scen.get("net_revenue") is not None else scen.get("gross_revenue")
+            res_val = scen.get("net_profit") if scen.get("net_profit") is not None else scen.get("net_result")
             scenario_cards.append(
                 {
                     "name": label,
                     "is_reference": idx == 1,
                     "students_label": str(scen.get("students", "—")),
-                    "revenue_label": _format_brl(float(scen["net_revenue"])) if scen.get("net_revenue") is not None else "—",
+                    "revenue_label": _format_brl(float(rev_val)) if rev_val is not None else "—",
                     "margin_label": str(scen.get("margin") or "—"),
-                    "result_label": _format_brl(float(scen["net_result"])) if scen.get("net_result") is not None else "—",
+                    "result_label": _format_brl(float(res_val)) if res_val is not None else "—",
                 }
             )
     else:
@@ -544,7 +587,7 @@ def _build_overview_page(
                 "id": "ie",
                 "title": "IE — Índice de Evidência",
                 "value": f"{ie_score}/100",
-                "badge": f"Cobertura {coverage_pct}% · Confiança {confidence_pct}%",
+                "badge": f"Cob. {coverage_pct}% · Conf. {confidence_pct}%",
                 "tone": "approved" if ie_score >= 75 else "adjustments",
                 "sublabel": "Suporte empírico e rastreabilidade",
             },
@@ -552,7 +595,7 @@ def _build_overview_page(
                 "id": "recommendation",
                 "title": "Recomendação",
                 "value": rec_meta["short_label"],
-                "badge": rec_meta["label"],
+                "badge": "Parecer favorável" if facts.recommendation == "APPROVED" else rec_meta["approval_label"],
                 "tone": rec_meta["tone"],
                 "sublabel": "Parecer determinístico da matriz",
             },
@@ -569,7 +612,7 @@ def _build_overview_page(
                 "title": "Margem Prevista",
                 "value": margin_value,
                 "badge": "Cenário Base" if econ_calculated else "Pendente",
-                "tone": "approved" if econ_calculated else "insufficient",
+                "tone": _economic_tone(base_scen) if econ_calculated else "insufficient",
                 "sublabel": margin_sub,
             },
         ],
@@ -606,34 +649,30 @@ def _build_key_metrics_page(
     conversion_pct = internal_audit.get("conversion_pct")
     mean_evasion = internal_audit.get("mean_evasion_rate")
     retention_pct = round((1.0 - float(mean_evasion)) * 100, 1) if isinstance(mean_evasion, (int, float)) else None
-    internal_score = next((p["score"] for p in pillar_rows if p["key"] == "internal_history"), 0)
-    search_score = next((p["score"] for p in pillar_rows if p["key"] == "search_and_media"), 0)
+    internal_score = _present_score(pillar_rows, "internal_history")
+    search_score = _present_score(pillar_rows, "search_and_media")
 
     proposed_ticket = proposal.get("ticket")
     market_mean_ticket = pricing_audit.get("mean_total_brl")
-    econ_calculated = economics.get("status") == "calculated"
+    econ_calculated = economics.get("status") == "calculable"
     var_cost = economics.get("variable_cost_per_student") if econ_calculated else None
-    scenarios = economics.get("scenarios") if isinstance(economics.get("scenarios"), list) else []
+    scenarios = _list(economics.get("scenarios"))
     base_margin = scenarios[1].get("margin") if econ_calculated and len(scenarios) > 1 and isinstance(scenarios[1], dict) else None
 
-    comparables = internal_audit.get("comparables") if isinstance(internal_audit.get("comparables"), list) else []
+    comparables = _list(internal_audit.get("comparables"))
     historical_series: list[dict[str, Any]] = []
     for idx, comp in enumerate(comparables[:6]):
         if not isinstance(comp, dict):
             continue
-        st_count = int(comp.get("students_count") if comp.get("students_count") is not None else (comp.get("enrolled") or 0))
+        st_count = int(comp["students_count"] if comp.get("students_count") is not None else (comp.get("enrolled") or 0))
         ev_rate = float(comp.get("evasion_rate") or 0.0)
-        retained = max(0, round(st_count * (1.0 - ev_rate))) if comp.get("evasion_rate") is not None else st_count
+        retained = max(0, round(st_count * (1.0 - ev_rate))) if comp.get("evasion_rate") is not None else None
         historical_series.append(
             {
                 "label": str(comp.get("course_name") or comp.get("name") or f"Turma {idx + 1}")[:28],
                 "students": st_count,
                 "retained": retained,
-                "retention_pct": round((1.0 - ev_rate) * 100, 1) if comp.get("evasion_rate") is not None else (
-                    round((st_count / float(comp["leads"])) * 100, 1)
-                    if isinstance(comp.get("leads"), (int, float)) and comp["leads"] > 0
-                    else 100.0
-                ),
+                "retention_pct": round((1.0 - ev_rate) * 100, 1) if comp.get("evasion_rate") is not None else None,
             }
         )
 
@@ -699,7 +738,7 @@ def _build_key_metrics_page(
             },
         ]
 
-    comp_bench = ecosystem.get("competitive_benchmark") if isinstance(ecosystem.get("competitive_benchmark"), dict) else {}
+    comp_bench = _dict(ecosystem.get("competitive_benchmark"))
     offers_found = comp_bench.get("offers_found_count", 0)
     monitored_total = comp_bench.get("monitored_total", 0)
 
@@ -707,10 +746,10 @@ def _build_key_metrics_page(
         {
             "dimension": "Demanda & Mídia",
             "indicator": "Score de Busca e Mídia",
-            "observed": f"{search_score}/100",
+            "observed": _score_label(search_score),
             "reference": "≥ 70/100",
-            "delta": f"{search_score - 70:+d} pts",
-            "status": "Forte" if search_score >= 75 else ("Adequada" if search_score >= 55 else "Atenção"),
+            "delta": f"{search_score - 70:+g} pts" if search_score is not None else "—",
+            "status": _score_band(search_score or 0, search_score is not None)["label"],
         },
         {
             "dimension": "Oferta Competitiva",
@@ -723,18 +762,18 @@ def _build_key_metrics_page(
         {
             "dimension": "Aderência ENS",
             "indicator": "Compatibilidade histórica",
-            "observed": f"{internal_score}%",
+            "observed": _score_label(internal_score, "%"),
             "reference": "≥ 75%",
-            "delta": f"{internal_score - 75:+d} p.p.",
-            "status": "Forte" if internal_score >= 75 else "Adequada",
+            "delta": f"{internal_score - 75:+g} p.p." if internal_score is not None else "—",
+            "status": _score_band(internal_score or 0, internal_score is not None)["label"],
         },
         {
             "dimension": "Retenção Histórica",
             "indicator": "Taxa média de retenção ENS",
             "observed": f"{retention_pct}%" if retention_pct is not None else "Não observado",
-            "reference": "≥ 85%",
-            "delta": f"{round(retention_pct - 85, 1):+.1f} p.p." if retention_pct is not None else "—",
-            "status": "Forte" if (retention_pct or 0) >= 85 else "Adequada",
+            "reference": "Meta não declarada",
+            "delta": "—",
+            "status": "Observado" if retention_pct is not None else "Não observado",
         },
         {
             "dimension": "Viabilidade Global",
@@ -756,7 +795,7 @@ def _build_key_metrics_page(
         {
             "indicator": "Taxa de retenção (1 - evasão)",
             "ens_reference": f"{retention_pct}%" if retention_pct is not None else "Não informado",
-            "proposed_course": "Meta ≥ 90%",
+            "proposed_course": "Meta não declarada",
             "delta": f"Evasão hist. {round(float(mean_evasion) * 100, 1)}%" if isinstance(mean_evasion, (int, float)) else "—",
         },
         {
@@ -794,23 +833,23 @@ def _build_key_metrics_page(
                 "title": "Retenção Histórica ENS",
                 "value": f"{retention_pct}%" if retention_pct is not None else "Não observado",
                 "badge": f"Evasão média {round(float(mean_evasion) * 100, 1)}%" if isinstance(mean_evasion, (int, float)) else "Requer histórico",
-                "tone": "approved" if (retention_pct or 0) >= 85 else "adjustments",
+                "tone": "running" if retention_pct is not None else "insufficient",
                 "sublabel": "Taxa de conclusão observada na ENS",
             },
             {
                 "id": "ens_fit",
                 "title": "Aderência da Base ENS",
-                "value": f"{internal_score}%",
+                "value": _score_label(internal_score, "%"),
                 "badge": "Pilar Histórico",
-                "tone": "approved" if internal_score >= 75 else "adjustments",
+                "tone": _score_tone(internal_score),
                 "sublabel": "Alinhamento ao histórico institucional",
             },
             {
                 "id": "external_demand",
                 "title": "Procura Externa (Busca & Mídia)",
-                "value": f"{search_score}/100",
+                "value": _score_label(search_score),
                 "badge": "Sinais externos",
-                "tone": "approved" if search_score >= 75 else "adjustments",
+                "tone": _score_tone(search_score),
                 "sublabel": "Score consolidado de busca e mídia",
             },
             {
@@ -834,7 +873,7 @@ def _build_key_metrics_page(
                 "title": "Margem Prevista",
                 "value": str(base_margin) if base_margin else "Requer premissa",
                 "badge": "Cenário Base" if base_margin else "Pendente",
-                "tone": "approved" if base_margin else "insufficient",
+                "tone": _economic_tone(scenarios[1]) if econ_calculated and len(scenarios) > 1 else "insufficient",
                 "sublabel": "Resultado líquido sobre receita líquida",
             },
             {
@@ -868,16 +907,16 @@ def _build_fixed_competition_page(
     pillar_rows: list[dict[str, Any]],
     claims_by_id: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
-    comp_bench = ecosystem.get("competitive_benchmark") if isinstance(ecosystem.get("competitive_benchmark"), dict) else {}
-    rows = comp_bench.get("rows") if isinstance(comp_bench.get("rows"), list) else []
+    comp_bench = _dict(ecosystem.get("competitive_benchmark"))
+    rows = _list(comp_bench.get("rows"))
     monitored_total = int(comp_bench.get("monitored_total") or len(rows) or 0)
     offers_found = int(comp_bench.get("offers_found_count") or 0)
-    whitespace_count = int(comp_bench.get("whitespace_count") or max(0, monitored_total - offers_found))
+    whitespace_count = sum(bool(r.get("complete")) and not r.get("offers") for r in rows if isinstance(r, dict))
 
     pricing_audit = facts.analysis_audit.get("pricing") if isinstance(facts.analysis_audit, dict) else {}
     pricing_audit = pricing_audit if isinstance(pricing_audit, dict) else {}
     mean_price = pricing_audit.get("mean_total_brl")
-    comparables = pricing_audit.get("comparables") if isinstance(pricing_audit.get("comparables"), list) else []
+    comparables = _list(pricing_audit.get("comparables"))
     prices_list = [
         float(c["total_brl"])
         for c in comparables
@@ -902,31 +941,30 @@ def _build_fixed_competition_page(
         intensity_label = "Baixa / Moderada"
         intensity_tone = "approved"
 
-    # 2x2 Positioning Map points (Price vs Workload/Depth)
-    map_points: list[dict[str, Any]] = []
-    max_p = max(prices_list) if prices_list else 20000.0
-    min_p = min(prices_list) if len(prices_list) > 1 else 0.0
-    span_p = max(1.0, max_p - min_p)
-
-    for idx, r in enumerate(rows):
-        if not isinstance(r, dict):
-            continue
-        has_offer = r.get("status") in {"direct_offer", "adjacent_offer"} or bool(r.get("has_direct_offer"))
-        if not has_offer:
-            continue
-        p_val = r.get("observed_price_brl")
-        x_pct = round(((float(p_val) - min_p) / span_p) * 70 + 15) if isinstance(p_val, (int, float)) and p_val > 0 else (25 + (idx * 17) % 55)
-        y_pct = 72 if "Executiva" in str(r.get("category_label", "")) or "Acadêmica" in str(r.get("category_label", "")) else 48
-        map_points.append(
-            {
-                "id": r.get("competitor_id") or f"comp-{idx}",
-                "name": r.get("competitor_name") or "Concorrente",
-                "x_pct": max(12, min(88, x_pct)),
-                "y_pct": max(18, min(85, y_pct)),
-                "price_label": r.get("price_display") or r.get("observed_price_display") or "—",
-                "modality": r.get("modality") or "—",
-            }
-        )
+    # Both axes require measurements, never coordinates based on row index or
+    # institution category. Only comparable total prices enter the map.
+    price_by_id = {str(eid): float(c["total_brl"]) for c in comparables
+                   if isinstance(c, dict) and isinstance(c.get("total_brl"), (int, float))
+                   and not isinstance(c["total_brl"], bool) and c["total_brl"] > 0
+                   for eid in c.get("evidence_ids", [])}
+    measured = []
+    for item in facts.items:
+        hours = item.key_metrics.get("workload_hours")
+        if (item.source_type == "OFFER" and item.evidence_id in price_by_id
+                and isinstance(hours, (int, float)) and not isinstance(hours, bool)
+                and math.isfinite(hours) and hours > 0):
+            measured.append((item, price_by_id[item.evidence_id], float(hours)))
+    def coordinate(value: float, values: list[float]) -> int:
+        low, high = min(values), max(values)
+        return 50 if high == low else round(15 + 70 * (value - low) / (high - low))
+    map_points = [{
+        "id": item.evidence_id,
+        "name": item.key_metrics.get("matched_actor_name") or item.title,
+        "x_pct": coordinate(price, [p for _, p, _ in measured]),
+        "y_pct": coordinate(hours, [h for _, _, h in measured]),
+        "price_label": _format_brl(price), "workload_hours": hours,
+        "evidence_ids": [item.evidence_id], "modality": item.key_metrics.get("modality") or "—",
+    } for item, price, hours in measured]
 
     observed_signals: list[str] = []
     for r in rows:
@@ -971,7 +1009,7 @@ def _build_fixed_competition_page(
             {
                 "id": "competitive_intensity",
                 "title": "Intensidade Competitiva",
-                "value": intensity_label,
+                "value": intensity_label if comp_bench.get("coverage_complete") else "Pesquisa incompleta",
                 "badge": f"{offers_found} ofertas ativas",
                 "tone": intensity_tone,
                 "sublabel": "Grau de disputa direta observada",
@@ -991,26 +1029,50 @@ def _build_fixed_competition_page(
             {
                 "id": "positioning_gaps",
                 "title": "Lacunas de Posicionamento",
-                "value": f"{whitespace_count} players sem oferta",
-                "badge": "Espaço competitivo",
-                "tone": "approved" if whitespace_count > 0 else "adjustments",
-                "sublabel": "Concorrentes monitorados sem oferta direta",
+                "value": f"{whitespace_count} sem oferta observada" if comp_bench.get("coverage_complete") else "Não apuradas",
+                "badge": "Recorte pesquisado",
+                "tone": "running" if comp_bench.get("coverage_complete") else "insufficient",
+                "sublabel": "Ausência no recorte não comprova oportunidade de mercado",
             },
         ],
         "competitor_rows": rows,
         "positioning_map": {
             "x_axis_label": "Preço Observado",
-            "y_axis_label": "Profundidade / Escopo Executivo",
+            "y_axis_label": "Carga Horária Observada",
             "points": map_points,
             "opportunity_zone": {
-                "label": "Espaço de oportunidade (ENS)",
+                "label": "Espaço de oportunidade (ENS)" if map_points else "Proposta da instituição para comparação",
+                "sublabel": f"Ticket {_format_brl(proposal.get('ticket'))} · {proposal.get('workload_hours') or '—'}h",
                 "description": f"Ticket proposto {_format_brl(proposal.get('ticket'))} · Carga {proposal.get('workload_hours') or '—'}h",
+                "show_ellipse": bool(map_points),
             },
         },
         "observed_signals": observed_signals[:5],
         "ens_differentiation": ens_diff[:4],
         "actionable_insights": actionable,
     }
+
+
+def _observed_search_trend(facts: DossierFacts) -> dict[str, Any]:
+    """A level score cannot establish temporal growth or absolute demand."""
+    observed = [
+        (item.evidence_id, item.key_metrics["growth_trend_pct"])
+        for item in facts.items
+        if item.source_type == "TRENDS"
+        and isinstance(item.key_metrics.get("growth_trend_pct"), (int, float))
+        and not isinstance(item.key_metrics["growth_trend_pct"], bool)
+        and math.isfinite(item.key_metrics["growth_trend_pct"])
+    ]
+    if not observed:
+        return {"label": "Não apurada", "status": "insufficient_evidence", "evidence_ids": []}
+    directions = {1 if value > 0 else -1 if value < 0 else 0 for _, value in observed}
+    label = (
+        "Sinais divergentes" if 1 in directions and -1 in directions
+        else "Em alta nos termos observados" if 1 in directions
+        else "Em queda nos termos observados" if -1 in directions
+        else "Sem variação no período comparado"
+    )
+    return {"label": label, "status": "observed_relative_interest", "evidence_ids": [eid for eid, _ in observed]}
 
 
 def _build_sector_radar_page(
@@ -1021,8 +1083,8 @@ def _build_sector_radar_page(
     pillar_rows: list[dict[str, Any]],
     claims_by_id: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
-    radar_block = ecosystem.get("sector_radar") if isinstance(ecosystem.get("sector_radar"), dict) else {}
-    signals = radar_block.get("signals") if isinstance(radar_block.get("signals"), list) else []
+    radar_block = _dict(ecosystem.get("sector_radar"))
+    signals = _list(radar_block.get("signals"))
     monitored_total = int(
         radar_block.get("monitored_insurers_total") or radar_block.get("monitored_total") or 0
     )
@@ -1031,18 +1093,13 @@ def _build_sector_radar_page(
         or len({str(s.get("insurer_name") or s.get("actor_id")) for s in signals if isinstance(s, dict)})
     )
 
-    pillar_by_key = {p["key"]: p["score"] for p in pillar_rows}
-    attractiveness_score = round(
+    pillar_by_key = {p["key"]: _present_score(pillar_rows, p["key"]) for p in pillar_rows}
+    attractiveness_score = _composite_score(pillar_rows, {
+        "search_and_media": 0.30, "employability": 0.30,
+        "syllabus_fit": 0.20, "internal_history": 0.20,
+    })
 
-            pillar_by_key.get("search_and_media", 0) * 0.30
-            + pillar_by_key.get("employability", 0) * 0.30
-            + pillar_by_key.get("syllabus_fit", 0) * 0.20
-            + pillar_by_key.get("internal_history", 0) * 0.20
-
-    )
-
-    search_score = pillar_by_key.get("search_and_media", 0)
-    demand_trend_label = "Crescente" if search_score >= 70 else ("Estável" if search_score >= 50 else "Moderada")
+    search_trend = _observed_search_trend(facts)
 
     # Group signals by theme_detected
     theme_counts: dict[str, int] = {}
@@ -1063,12 +1120,9 @@ def _build_sector_radar_page(
     ]
 
     radar_axes = [
-        {"axis": "Demanda & Busca", "score": pillar_by_key.get("search_and_media", 0), "benchmark": 70},
-        {"axis": "Empregabilidade", "score": pillar_by_key.get("employability", 0), "benchmark": 70},
-        {"axis": "Espaço Competitivo", "score": pillar_by_key.get("paid_competition", 0), "benchmark": 65},
-        {"axis": "Aderência Curricular", "score": pillar_by_key.get("syllabus_fit", 0), "benchmark": 75},
-        {"axis": "Histórico ENS", "score": pillar_by_key.get("internal_history", 0), "benchmark": 75},
-        {"axis": "Atratividade Preço", "score": pillar_by_key.get("pricing", 0), "benchmark": 65},
+        {"axis": p["short_label"], "score": p["score"] if p["is_present"] else None,
+         "is_present": p["is_present"], "benchmark": None}
+        for p in pillar_rows
     ]
 
     strong_signals = [
@@ -1094,41 +1148,42 @@ def _build_sector_radar_page(
             {
                 "id": "sector_attractiveness",
                 "title": "Índice de Atratividade Setorial",
-                "value": f"{attractiveness_score}/100",
-                "badge": f"{insurers_with_signals}/{monitored_total} seguradoras com sinal" if monitored_total else "Score composto",
-                "tone": "approved" if attractiveness_score >= 75 else "adjustments",
+                "value": _score_label(attractiveness_score),
+                "badge": f"{insurers_with_signals}/{monitored_total} com sinal" if monitored_total else "Score composto",
+                "tone": _score_tone(attractiveness_score),
                 "sublabel": "Demanda, empregabilidade e aderência",
             },
             {
                 "id": "demand_trend",
-                "title": "Tendência de Demanda",
-                "value": demand_trend_label,
-                "badge": f"Busca & Mídia {search_score}/100",
-                "tone": "approved" if search_score >= 70 else "adjustments",
-                "sublabel": "Comportamento de interesse externo",
+                "title": "Variação do Interesse de Busca",
+                "value": search_trend["label"],
+                "badge": "Série observada" if search_trend["evidence_ids"] else "Sem comparação temporal",
+                "tone": "running" if search_trend["evidence_ids"] else "insufficient",
+                "sublabel": "Interesse relativo; não mede matrículas nem volume absoluto",
+                "evidence_ids": search_trend["evidence_ids"],
             },
             {
                 "id": "radar_coverage",
                 "title": "Cobertura do Radar Setorial",
                 "value": f"{insurers_with_signals} de {monitored_total}" if monitored_total else f"{len(signals)} sinais",
-                "badge": "Seguradoras monitoradas",
+                "badge": "Seguradoras",
                 "tone": "running",
                 "sublabel": "Atores do mercado segurador com evidência",
             },
             {
                 "id": "employability_pressure",
                 "title": "Relevância Profissional",
-                "value": f"{pillar_by_key.get('employability', 0)}/100",
+                "value": _score_label(pillar_by_key.get("employability")),
                 "badge": "Mercado de trabalho",
-                "tone": "approved" if pillar_by_key.get("employability", 0) >= 70 else "adjustments",
+                "tone": _score_tone(pillar_by_key.get("employability")),
                 "sublabel": "Sinais de vagas e competências demandadas",
             },
             {
                 "id": "curriculum_fit",
                 "title": "Potencial de Aplicação ENS",
-                "value": "Alto" if pillar_by_key.get("syllabus_fit", 0) >= 75 else "Moderado",
-                "badge": f"Ementa {pillar_by_key.get('syllabus_fit', 0)}/100",
-                "tone": "approved" if pillar_by_key.get("syllabus_fit", 0) >= 75 else "adjustments",
+                "value": "Não observado" if pillar_by_key.get("syllabus_fit") is None else ("Alto" if pillar_by_key["syllabus_fit"] >= 75 else "Moderado"),
+                "badge": "Ementa " + _score_label(pillar_by_key.get("syllabus_fit")),
+                "tone": _score_tone(pillar_by_key.get("syllabus_fit")),
                 "sublabel": "Conexão dos sinais com o currículo",
             },
         ],
@@ -1149,8 +1204,10 @@ def _build_economics_page(
     economics: dict[str, Any],
     claims_by_id: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
-    econ_calculated = economics.get("status") == "calculated"
-    scenarios = economics.get("scenarios") if isinstance(economics.get("scenarios"), list) else []
+    scenarios = _list(economics.get("scenarios"))
+    econ_calculated = economics.get("status") in {"calculable", "calculated"} or (
+        economics.get("status") is None and bool(scenarios)
+    )
     base_scen = scenarios[1] if econ_calculated and len(scenarios) > 1 and isinstance(scenarios[1], dict) else (scenarios[0] if econ_calculated and scenarios and isinstance(scenarios[0], dict) else None)
 
     ticket_val = float(economics["ticket"]) if econ_calculated and economics.get("ticket") is not None else (float(proposal["ticket"]) if isinstance(proposal.get("ticket"), (int, float)) else None)
@@ -1160,9 +1217,11 @@ def _build_economics_page(
 
     if econ_calculated and base_scen:
         base_students = int(base_scen.get("students") or 0)
-        net_rev = float(base_scen.get("net_revenue") or 0.0)
+        rev_raw = base_scen.get("net_revenue") if base_scen.get("net_revenue") is not None else base_scen.get("gross_revenue")
+        res_raw = base_scen.get("net_profit") if base_scen.get("net_profit") is not None else base_scen.get("net_result")
+        net_rev = float(rev_raw or 0.0)
         total_costs = float(base_scen.get("total_costs") or 0.0)
-        net_res = float(base_scen.get("net_result") or 0.0)
+        net_res = float(res_raw or 0.0)
         gross_rev = round(ticket_val * base_students, 2) if ticket_val else net_rev
         deductions = max(0.0, round(gross_rev - net_rev, 2))
         fixed_c = fixed_costs_val or 0.0
@@ -1226,7 +1285,7 @@ def _build_economics_page(
             {
                 "id": "expected_revenue",
                 "title": "Receita Líquida (Cenário Base)",
-                "value": _format_brl(float(base_scen["net_revenue"])) if econ_calculated and base_scen and base_scen.get("net_revenue") is not None else "Requer premissas",
+                "value": _format_brl(float(base_scen.get("net_revenue") if base_scen.get("net_revenue") is not None else base_scen.get("gross_revenue"))) if econ_calculated and base_scen and (base_scen.get("net_revenue") is not None or base_scen.get("gross_revenue") is not None) else "Requer premissas",
                 "badge": "Simulado em código" if econ_calculated else "Pendente",
                 "tone": "approved" if econ_calculated else "insufficient",
                 "sublabel": "Receita líquida estimada da turma base",
@@ -1242,9 +1301,9 @@ def _build_economics_page(
             {
                 "id": "net_margin",
                 "title": "Margem Líquida (Base)",
-                "value": str(base_scen.get("margin")) if econ_calculated and base_scen and base_scen.get("margin") else "Requer premissas",
+                "value": str(base_scen.get("margin")) if econ_calculated and base_scen and base_scen.get("margin") is not None else "Requer premissas",
                 "badge": "Resultado / Receita" if econ_calculated else "Sem custos",
-                "tone": "approved" if econ_calculated else "insufficient",
+                "tone": _economic_tone(base_scen) if econ_calculated else "insufficient",
                 "sublabel": "Margem operacional da turma simulada",
             },
             {
@@ -1266,9 +1325,9 @@ def _build_economics_page(
             {
                 "id": "net_result",
                 "title": "Resultado Líquido (Base)",
-                "value": _format_brl(float(base_scen["net_result"])) if econ_calculated and base_scen and base_scen.get("net_result") is not None else "Requer premissas",
+                "value": _format_brl(float(base_scen.get("net_profit") if base_scen.get("net_profit") is not None else base_scen.get("net_result"))) if econ_calculated and base_scen and (base_scen.get("net_profit") is not None or base_scen.get("net_result") is not None) else "Requer premissas",
                 "badge": "Turma Base" if econ_calculated else "Premissa ausente",
-                "tone": "approved" if econ_calculated else "insufficient",
+                "tone": _economic_tone(base_scen) if econ_calculated else "insufficient",
                 "sublabel": "Contribuição líquida após custos",
             },
         ],
@@ -1328,12 +1387,7 @@ def _build_swot_tows_page(
     wo_list = [v.criterion for v in validations[:2]] or [a.action for a in actions[:2]]
     wt_list = list(facts.limitations[:2]) or ["Garantir validação prévia das premissas operacionais antes da abertura de turma."]
 
-    strategic_score = round(
-
-            next((p["score"] for p in pillar_rows if p["key"] == "syllabus_fit"), 0) * 0.5
-            + next((p["score"] for p in pillar_rows if p["key"] == "internal_history"), 0) * 0.5
-
-    )
+    strategic_score = _composite_score(pillar_rows, {"syllabus_fit": 0.5, "internal_history": 0.5})
 
     priorities = [
         {
@@ -1352,9 +1406,9 @@ def _build_swot_tows_page(
             {
                 "id": "strategic_criticality",
                 "title": "Aderência Estratégica ENS",
-                "value": f"{strategic_score}/100",
+                "value": _score_label(strategic_score),
                 "badge": "Histórico + Ementa",
-                "tone": "approved" if strategic_score >= 75 else "adjustments",
+                "tone": _score_tone(strategic_score),
                 "sublabel": "Alinhamento institucional e curricular",
             },
             {
@@ -1377,7 +1431,7 @@ def _build_swot_tows_page(
                 "id": "strategic_positioning",
                 "title": "Posicionamento Estratégico",
                 "value": rec_meta["short_label"],
-                "badge": rec_meta["label"],
+                "badge": "Parecer favorável" if facts.recommendation == "APPROVED" else rec_meta["approval_label"],
                 "tone": rec_meta["tone"],
                 "sublabel": "Síntese de prontidão para lançamento",
             },
@@ -1411,16 +1465,23 @@ def _build_viability_pillars_page(
     rec_meta: dict[str, str],
     pillar_rows: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    comp_bench = ecosystem.get("competitive_benchmark") if isinstance(ecosystem.get("competitive_benchmark"), dict) else {}
+    comp_bench = _dict(ecosystem.get("competitive_benchmark"))
     pricing_audit = facts.analysis_audit.get("pricing") if isinstance(facts.analysis_audit, dict) else {}
     pricing_audit = pricing_audit if isinstance(pricing_audit, dict) else {}
     internal_audit = _extract_internal_audit(facts)
+    raw_trend = _observed_search_trend(facts)["label"]
+    short_trend = {
+        "Em alta nos termos observados": "Crescente",
+        "Em queda nos termos observados": "Em queda",
+        "Sinais divergentes": "Divergente",
+        "Sem variação no período comparado": "Estável",
+    }.get(raw_trend, raw_trend)
 
     submetrics_by_key: dict[str, list[dict[str, str]]] = {
         "internal_history": [
             {"label": "Turmas comparáveis", "value": str(internal_audit.get("comparables_count") or 0)},
             {"label": "Média de alunos", "value": f"{round(float(internal_audit['mean_students']))}" if isinstance(internal_audit.get("mean_students"), (int, float)) else "—"},
-            {"label": "Status na base", "value": "Aderente" if next((p["score"] for p in pillar_rows if p["key"] == "internal_history"), 0) >= 70 else "Parcial"},
+            {"label": "Status na base", "value": _score_band(_present_score(pillar_rows, "internal_history") or 0, _present_score(pillar_rows, "internal_history") is not None)["label"]},
         ],
         "paid_competition": [
             {"label": "IES monitoradas", "value": str(comp_bench.get("monitored_total") or 0)},
@@ -1429,23 +1490,23 @@ def _build_viability_pillars_page(
         ],
         "search_and_media": [
             {"label": "Evidências no pilar", "value": str(next((p["evidence_count"] for p in pillar_rows if p["key"] == "search_and_media"), 0))},
-            {"label": "Sinal de interesse", "value": "Crescente" if next((p["score"] for p in pillar_rows if p["key"] == "search_and_media"), 0) >= 70 else "Moderado"},
+            {"label": "Variação temporal", "value": short_trend},
             {"label": "Cobertura de busca", "value": "Ativa" if next((p["is_present"] for p in pillar_rows if p["key"] == "search_and_media"), False) else "Ausente"},
         ],
         "employability": [
             {"label": "Evidências de vagas", "value": str(next((p["evidence_count"] for p in pillar_rows if p["key"] == "employability"), 0))},
-            {"label": "Demanda profissional", "value": "Alta" if next((p["score"] for p in pillar_rows if p["key"] == "employability"), 0) >= 75 else "Moderada"},
+            {"label": "Demanda profissional", "value": _score_band(_present_score(pillar_rows, "employability") or 0, _present_score(pillar_rows, "employability") is not None)["label"]},
             {"label": "Sinais setoriais", "value": str(len((ecosystem.get("sector_radar") or {}).get("signals") or []))},
         ],
         "syllabus_fit": [
-            {"label": "Alinhamento ao portfólio", "value": "Alto" if next((p["score"] for p in pillar_rows if p["key"] == "syllabus_fit"), 0) >= 75 else "Adequado"},
+            {"label": "Alinhamento ao portfólio", "value": _score_band(_present_score(pillar_rows, "syllabus_fit") or 0, _present_score(pillar_rows, "syllabus_fit") is not None)["label"]},
             {"label": "Ações curriculares", "value": str(len(dossier.highlights.action_recommendations))},
             {"label": "Público-alvo", "value": (facts.target_audience or "Definido")[:18]},
         ],
         "pricing": [
             {"label": "Preços comparáveis", "value": str(pricing_audit.get("comparables_count") or len(pricing_audit.get("comparables") or []))},
             {"label": "Média de mercado", "value": _format_brl(pricing_audit.get("mean_total_brl")) if isinstance(pricing_audit.get("mean_total_brl"), (int, float)) else "—"},
-            {"label": "Modelagem de turma", "value": "Calculada" if economics.get("status") == "calculated" else "Requer custos"},
+            {"label": "Modelagem de turma", "value": "Calculada" if economics.get("status") == "calculable" else "Requer custos"},
         ],
     }
 
@@ -1477,7 +1538,7 @@ def _build_viability_pillars_page(
         base_text = (
             f"Nota {row['score']}/100 (peso {row['weight_pct']}% → contribuição de {row['contribution_pts']} pts no IVO). "
             f"Classificação: {row['status_label']}."
-        )
+        ) if row["is_present"] else f"Base insuficiente para pontuar este pilar (peso {row['weight_pct']}%). Ausência de dados não indica desempenho negativo."
         justifications.append(
             {
                 "label": row["label"],
@@ -1657,19 +1718,20 @@ def _build_sources_evidences_page(
     # Group fact items by source_type
     by_type: dict[str, list[Any]] = {}
     for item in facts.items:
-        by_type.setdefault(str(item.source_type), []).append(item)
+        source_type = {"TREND": "TRENDS", "SOCIAL_MEDIA": "SOCIAL_VOICE", "VIDEO_CONTENT": "SOCIAL_VOICE"}.get(str(item.source_type), str(item.source_type))
+        by_type.setdefault(source_type, []).append(item)
 
-    comp_bench = ecosystem.get("competitive_benchmark") if isinstance(ecosystem.get("competitive_benchmark"), dict) else {}
-    radar_block = ecosystem.get("sector_radar") if isinstance(ecosystem.get("sector_radar"), dict) else {}
+    comp_bench = _dict(ecosystem.get("competitive_benchmark"))
+    radar_block = _dict(ecosystem.get("sector_radar"))
     internal_audit = _extract_internal_audit(facts)
 
     source_catalog = [
         {
             "source_name": "Google Trends & Volume de Busca",
             "source_type": "Tendência & Demanda",
-            "status_label": "Coletado" if by_type.get("SEARCH_VOLUME") or by_type.get("TREND") else "Parcial",
-            "status_tone": "approved" if by_type.get("SEARCH_VOLUME") or by_type.get("TREND") else "adjustments",
-            "records_count": len(by_type.get("SEARCH_VOLUME", [])) + len(by_type.get("TREND", [])),
+            "status_label": "Coletado" if by_type.get("SEARCH_VOLUME") or by_type.get("TRENDS") else "Parcial",
+            "status_tone": "approved" if by_type.get("SEARCH_VOLUME") or by_type.get("TRENDS") else "adjustments",
+            "records_count": len(by_type.get("SEARCH_VOLUME", [])) + len(by_type.get("TRENDS", [])),
             "observation": "Séries e indicadores de interesse de busca para os termos-chave do curso.",
         },
         {
@@ -1699,9 +1761,9 @@ def _build_sources_evidences_page(
         {
             "source_name": "Redes Sociais & Mídia (Instagram / YouTube / Ads)",
             "source_type": "Mídia Social & Publicidade",
-            "status_label": "Coletado" if by_type.get("SOCIAL_MEDIA") or by_type.get("VIDEO_CONTENT") else "Parcial",
-            "status_tone": "approved" if by_type.get("SOCIAL_MEDIA") or by_type.get("VIDEO_CONTENT") else "adjustments",
-            "records_count": len(by_type.get("SOCIAL_MEDIA", [])) + len(by_type.get("VIDEO_CONTENT", [])),
+            "status_label": "Coletado" if by_type.get("SOCIAL_VOICE") or by_type.get("PAID_COMPETITION") else "Parcial",
+            "status_tone": "approved" if by_type.get("SOCIAL_VOICE") or by_type.get("PAID_COMPETITION") else "adjustments",
+            "records_count": len(by_type.get("SOCIAL_VOICE", [])) + len(by_type.get("PAID_COMPETITION", [])),
             "observation": "Publicações, engajamento temático e anúncios patrocinados.",
         },
         {
@@ -1715,28 +1777,9 @@ def _build_sources_evidences_page(
     ]
 
     coverage_bars = [
-        {
-            "label": "Demanda & Interesse (Buscas e Mídia)",
-            "pct": next((p["score"] for p in pillar_rows if p["key"] == "search_and_media"), 0),
-        },
-        {
-            "label": "Concorrência & Oferta Educacional",
-            "pct": next((p["score"] for p in pillar_rows if p["key"] == "paid_competition"), 0),
-        },
-        {
-            "label": "Empregabilidade & Mercado",
-            "pct": next((p["score"] for p in pillar_rows if p["key"] == "employability"), 0),
-        },
-        {
-            "label": "Histórico ENS & Aderência Curricular",
-            "pct": round(
-                (
-                    next((p["score"] for p in pillar_rows if p["key"] == "internal_history"), 0)
-                    + next((p["score"] for p in pillar_rows if p["key"] == "syllabus_fit"), 0)
-                )
-                / 2.0
-            ),
-        },
+        {"label": p["label"], "pct": 100 if p["is_present"] else 0,
+         "basis": "pillar_availability_not_market_coverage"}
+        for p in pillar_rows
     ]
 
     evidence_categories = [

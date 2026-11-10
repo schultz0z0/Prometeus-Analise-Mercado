@@ -65,6 +65,7 @@ class DossierFactItem:
     key_metrics: dict[str, Any] = field(default_factory=dict)
     summary: str = ""
     source_url: str | None = None
+    source_reading: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -74,6 +75,7 @@ class DossierFactItem:
             "key_metrics": self.key_metrics,
             "summary": self.summary,
             "source_url": self.source_url,
+            **({"source_reading": self.source_reading} if self.source_reading else {}),
         }
 
 
@@ -186,6 +188,7 @@ class DossierFacts:
     research_plan: dict[str, Any] = field(default_factory=dict)
     counterevidence: list[str] = field(default_factory=list)
     analysis_audit: dict[str, Any] = field(default_factory=dict)
+    collection_reading_context: dict[str, Any] = field(default_factory=dict)
 
     def compute_facts_hash(self) -> str:
         """Gera hash SHA-256 canônico e imutável para proveniência do dossiê."""
@@ -209,6 +212,8 @@ class DossierFacts:
             "research_plan": self.research_plan,
             "counterevidence": sorted(self.counterevidence),
             "analysis_audit": self.analysis_audit,
+            **({"collection_reading_context": self.collection_reading_context}
+               if self.collection_reading_context else {}),
         }
         serialized = json.dumps(payload, sort_keys=True, ensure_ascii=False)
         return hashlib.sha256(serialized.encode("utf-8")).hexdigest()

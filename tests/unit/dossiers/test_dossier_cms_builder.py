@@ -375,3 +375,121 @@ def test_agent_skills_prompt_and_internal_history_harness_integration() -> None:
         if j["label"] == "Empregabilidade"
     )
     assert "28 vagas abertas" in emp_just["text"]
+
+
+def test_cms_does_not_infer_temporal_growth_or_market_benchmark_from_pillar_scores():
+    analysis, scoring, facts, dossier = _sample_fixtures()
+    pages = DossierSynthesisService._build_visual_presentation_blocks(
+        analysis, scoring, facts, dossier
+    )["cms_pages"]["pages"]
+    trend = next(k for k in pages["sector_radar"]["kpis"] if k["id"] == "demand_trend")
+    assert trend["value"] == "Não apurada"
+    assert all(axis.get("benchmark") is None for axis in pages["sector_radar"]["radar_axes"])
+    search = next(p for p in pages["viability_pillars"]["pillar_cards"] if p["key"] == "search_and_media")
+    assert all(m["value"] != "Crescente" for m in search["submetrics"])
+
+
+def test_cms_keeps_negative_economic_results_and_zero_costs_visible():
+    from prometeus.application.dossier_cms_builder import _format_brl
+
+    assert _format_brl(-1500) == "R$ -1.500"
+    assert _format_brl(0) == "R$ 0"
+
+
+def test_cms_sources_count_canonical_trends_and_coverage_uses_availability_not_score():
+    analysis, scoring, facts, dossier = _sample_fixtures()
+    facts.items.append(DossierFactItem(
+        evidence_id="trends", source_type="TRENDS", title="Série observada",
+        key_metrics={"growth_trend_pct": -20},
+    ))
+    pages = DossierSynthesisService._build_visual_presentation_blocks(
+        analysis, scoring, facts, dossier
+    )["cms_pages"]["pages"]
+    sources = pages["sources_evidences"]
+    search = next(s for s in sources["collected_sources"] if "Google Trends" in s["source_name"])
+    assert search["records_count"] == 1 and search["status_label"] == "Coletado"
+    assert all(bar["pct"] == 100 for bar in sources["coverage_bars"])
+    trend = next(k for k in pages["sector_radar"]["kpis"] if k["id"] == "demand_trend")
+    assert trend["value"] == "Em queda nos termos observados"
+
+
+def test_positioning_requires_observed_price_and_hours_and_gaps_require_completed_searches():
+    from prometeus.application.dossier_cms_builder import build_cms_dossier_pages
+
+    analysis, scoring, facts, dossier = _sample_fixtures()
+    facts.analysis_audit["pricing"] = {}
+    facts.items = []
+    ecosystem = {"competitive_benchmark": {
+        "monitored_total": 10, "offers_found_count": 1, "coverage_complete": False,
+        "rows": [{"competitor_id": "one", "status": "direct_offer", "has_direct_offer": True,
+                  "offers": [], "complete": False}],
+    }}
+    pages = build_cms_dossier_pages(analysis.proposal_data, facts, dossier, {}, ecosystem)["pages"]
+    assert pages["fixed_competition"]["positioning_map"]["points"] == []
+    gaps = next(k for k in pages["fixed_competition"]["kpis"] if k["id"] == "positioning_gaps")
+    assert gaps["value"] == "Não apuradas"
+
+
+def _real_economic_pages(*, fixed_costs):
+    from prometeus.domain.economics import CourseEconomicsInput
+
+    analysis, scoring, facts, dossier = _sample_fixtures()
+    analysis.proposal_data["economics"] = CourseEconomicsInput(
+        total_price_brl=1000,
+        instruction_and_coordination_cost_brl=fixed_costs,
+        variable_cost_per_student_brl=0,
+        marketing_campaign_cost_brl=0,
+        cac_per_enrolled_brl=0,
+    ).model_dump(mode="json")
+    result = DossierSynthesisService._build_visual_presentation_blocks(analysis, scoring, facts, dossier)
+    return result["economics"], result["cms_pages"]["pages"]
+
+
+def test_cms_consumes_real_canonical_financial_contract_without_erasing_profit():
+    economics, pages = _real_economic_pages(fixed_costs=10000)
+    assert economics["status"] == "calculable"
+    page = pages["economics"]
+    assert page["status"] == "calculated" and page["sensitivity_matrix"]
+    assert page["waterfall_steps"][-1]["value"] == float(economics["scenarios"][1]["net_profit"])
+    assert page["waterfall_steps"][-1]["value"] != 0
+    assert pages["overview"]["scenario_summary"]["cards"][1]["result_label"] != "—"
+
+
+def test_cms_negative_results_and_margins_are_never_approved_green():
+    economics, pages = _real_economic_pages(fixed_costs=100000)
+    assert float(economics["scenarios"][1]["net_profit"]) < 0
+    for page, ids in [("economics", {"net_result", "net_margin"}), ("overview", {"margin"}),
+                      ("key_metrics", {"margin_expected"})]:
+        assert all(k["tone"] == "risk" for k in pages[page]["kpis"] if k["id"] in ids)
+    assert pages["economics"]["waterfall_steps"][-1]["value"] < 0
+
+
+def test_cms_missing_pillars_and_retention_do_not_become_zero_moderate_or_fabricated_targets():
+    analysis, scoring, facts, dossier = _sample_fixtures()
+    facts.pillar_summaries = {}
+    facts.pillar_details = {}
+    facts.analysis_audit = {"internal": {"comparables": [{"enrolled": 10, "leads": 20}]}}
+    pages = DossierSynthesisService._build_visual_presentation_blocks(analysis, scoring, facts, dossier)["cms_pages"]["pages"]
+    assert all(p["score"] is None for p in pages["overview"]["decision_matrix"])
+    assert all(p["contribution_pts"] is None for p in pages["overview"]["decision_matrix"])
+    for key in ("ens_fit", "external_demand"):
+        assert next(k for k in pages["key_metrics"]["kpis"] if k["id"] == key)["value"] == "Não observado"
+    assert pages["sector_radar"]["attractiveness_score"] is None
+    assert next(k for k in pages["sector_radar"]["kpis"] if k["id"] == "curriculum_fit")["value"] == "Não observado"
+    assert pages["key_metrics"]["historical_trend"][0]["retention_pct"] is None
+    assert pages["key_metrics"]["historical_trend"][0]["retained"] is None
+    assert all("90%" not in str(row) and "85%" not in str(row) for row in pages["key_metrics"]["internal_benchmark"])
+    assert all("85%" not in str(row) for row in pages["key_metrics"]["dimension_indicators"])
+
+
+def test_cms_uses_persisted_weights_and_unique_evidence_ids_without_overriding_explicit_count():
+    analysis, scoring, facts, dossier = _sample_fixtures()
+    facts.pillar_details["employability"] = {"is_present": True, "weight": 0.25,
+                                           "features": {"evidence_ids": ["one", "one", "two"]}}
+    facts.pillar_details["pricing"] = {"is_present": True, "weight": 0.0, "evidence_count": 0,
+                                     "features": {"evidence_ids": ["one"]}}
+    pages = DossierSynthesisService._build_visual_presentation_blocks(analysis, scoring, facts, dossier)["cms_pages"]["pages"]
+    rows = {row["key"]: row for row in pages["overview"]["decision_matrix"]}
+    assert rows["employability"]["weight_pct"] == 25
+    assert rows["employability"]["evidence_count"] == 2
+    assert rows["pricing"]["weight_pct"] == 0 and rows["pricing"]["evidence_count"] == 0

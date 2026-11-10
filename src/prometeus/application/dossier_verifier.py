@@ -245,6 +245,13 @@ class DossierVerifier:
                 # Extrai do resumo textual
                 if item.summary:
                     known_numbers.extend(self._extract_numbers(item.summary))
+                # Interpretations and operational coverage counts are never
+                # numeric facts. Only quotes matched against the original source
+                # by the integral reader can support source-level numbers here.
+                for observation in item.source_reading.get("observations", []):
+                    for quote in observation.get("quotes", []):
+                        if isinstance(quote, str):
+                            known_numbers.extend(self._extract_numbers(quote))
 
         return known_numbers
 

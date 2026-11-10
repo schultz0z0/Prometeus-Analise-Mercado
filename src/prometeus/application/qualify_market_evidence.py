@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,7 +17,13 @@ from prometeus.application.evidence_projection import (
     PROJECTOR_VERSION,
     build_qualification_context,
 )
+from prometeus.application.evidence_reading_context import evidence_archive_context, reading_context
+from prometeus.application.integral_evidence_reader import (
+    IntegralEvidenceReader,
+    IntegralEvidenceReadingError,
+)
 from prometeus.application.offer_comparability import classify_competitor_offer
+from prometeus.application.read_collected_datasets import DatasetReadingService
 from prometeus.application.research_scope import (
     is_own_institution,
     match_configured_competitor,
@@ -32,7 +40,12 @@ from prometeus.domain.evidence_observations import (
 )
 from prometeus.domain.ports.market_sources import EvidenceType, MarketEvidence
 from prometeus.domain.research import CourseUnderstanding
-from prometeus.infrastructure.db.models import DecisionResultModel, MarketEvidenceModel
+from prometeus.infrastructure.db.models import (
+    DecisionResultModel,
+    MarketEvidenceModel,
+    ToolRunAttemptModel,
+    ToolRunModel,
+)
 
 PACK = "market-relevance-v1"
 QUALIFICATION_VERSION = 4
@@ -40,11 +53,60 @@ QUALIFICATION_VERSION = 4
 
 class EvidenceQualificationService:
     def __init__(
-        self, session: AsyncSession, decisions: DecisionService, skills: SkillRegistry | None = None
+        self,
+        session: AsyncSession,
+        decisions: DecisionService,
+        skills: SkillRegistry | None = None,
+        *,
+        reader: IntegralEvidenceReader | None = None,
+        execution_guard: Callable[[], Awaitable[None]] | None = None,
     ) -> None:
         self.session = session
         self.decisions = decisions
         self.skills = skills or SkillRegistry()
+        self.reader = reader
+        self.execution_guard = execution_guard
+
+    async def _read_evidence(
+        self,
+        row: MarketEvidenceModel,
+        data: dict[str, Any],
+        prior: Any,
+        prior_reading: Any,
+        understanding: CourseUnderstanding,
+    ) -> dict[str, Any]:
+        if self.reader is None:
+            raise ValueError("Leitor integral não configurado.")
+        guard_failed = False
+
+        async def persist_reading(state: dict[str, Any]) -> None:
+            nonlocal guard_failed
+            if self.execution_guard:
+                try:
+                    await self.execution_guard()
+                except Exception:
+                    guard_failed = True
+                    raise
+            row.sanitized_data = {**data, "_qualification": prior, "_reading": state}
+            await self.session.commit()
+
+        try:
+            return await self.reader.read(
+                data,
+                course_context=understanding.model_dump(mode="json"),
+                source_context={
+                    "evidence_id": row.id,
+                    "source_name": row.source_name,
+                    "source_url": row.source_url,
+                    "evidence_type": row.evidence_type,
+                },
+                prior=prior_reading if isinstance(prior_reading, dict) else None,
+                checkpoint=persist_reading,
+            )
+        except IntegralEvidenceReadingError as error:
+            if not guard_failed:
+                await persist_reading(error.state)
+            raise
 
     async def qualify(
         self,
@@ -54,6 +116,38 @@ class EvidenceQualificationService:
         *,
         institution_context: dict[str, object] | None = None,
     ) -> dict[str, int]:
+        archived_runs: dict[str, dict[str, Any]] = {}
+        attempt_lineage: dict[str, tuple[str, str | None, str | None]] = {}
+        if self.reader is not None:
+            archive_reading = await DatasetReadingService(self.session, self.reader).read(
+                analysis.id,
+                course_context=understanding.model_dump(mode="json"),
+                execution_guard=self.execution_guard,
+            )
+            if archive_reading["files_total"] and not archive_reading["complete"]:
+                raise ValueError(
+                    "Coleta integral ainda não conciliada; recupere os datasets pendentes antes da qualificação."
+                )
+            archived_runs = {
+                run.id: dict(run.parameters or {})
+                for run in (
+                    await self.session.scalars(
+                        select(ToolRunModel).where(
+                            ToolRunModel.analysis_id == analysis.id,
+                        )
+                    )
+                ).all()
+            }
+            attempt_lineage = {
+                attempt.id: (attempt.tool_run_id, attempt.provider_run_id, attempt.dataset_id)
+                for attempt in (
+                    await self.session.scalars(
+                        select(ToolRunAttemptModel).where(
+                            ToolRunAttemptModel.analysis_id == analysis.id,
+                        )
+                    )
+                ).all()
+            }
         proposal_ctx = (
             analysis.proposal_data.get("_institution_context")
             if isinstance(getattr(analysis, "proposal_data", None), dict)
@@ -113,6 +207,10 @@ class EvidenceQualificationService:
             )
             data = dict(row.sanitized_data or {})
             prior = data.pop("_qualification", {})
+            prior_reading = data.pop("_reading", None)
+            reading = None
+            if self.reader is not None:
+                reading = await self._read_evidence(row, data, prior, prior_reading, understanding)
             scope = EvidenceFeatureExtractor(geography=understanding.geography)
             own = is_own_institution(data, row.source_url, institution_context)
             sector_actor = (
@@ -192,6 +290,23 @@ class EvidenceQualificationService:
                 "projector": PROJECTOR_VERSION,
                 "qualification_service": f"v{QUALIFICATION_VERSION}",
             }
+            if reading is not None:
+                judgment_context["untrusted_integral_reading"] = reading_context(reading)
+                comp_versions["integral_reader"] = reading["version"]
+                if row.tool_run_id in archived_runs:
+                    lineage = attempt_lineage.get(row.tool_run_attempt_id or "")
+                    if lineage is not None and lineage[0] != row.tool_run_id:
+                        raise ValueError(
+                            "A tentativa de origem não corresponde à run da evidência."
+                        )
+                    judgment_context["untrusted_archive_reading"] = evidence_archive_context(
+                        archived_runs[row.tool_run_id],
+                        tool_run_id=row.tool_run_id,
+                        normalized_data=data,
+                        provider_run_id=lineage[1] if lineage else None,
+                        dataset_id=lineage[2] if lineage else None,
+                    )
+                    comp_versions["archive_reading_context"] = "archive-context-v1"
             if row.evidence_type == "PAID_COMPETITION":
                 comp_versions["ad_projector"] = AD_PROJECTOR_VERSION
             cache_key = self.decisions.cache_key_for(
@@ -626,6 +741,8 @@ class EvidenceQualificationService:
 
             multi_purpose = MultiPurposeAssessment(assessments=assessments)
 
+            if reading is not None:
+                data["_reading"] = reading
             data["_qualification"] = {
                 "accepted": relevant,
                 "context_only": own

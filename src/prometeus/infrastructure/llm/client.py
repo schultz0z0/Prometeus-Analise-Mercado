@@ -301,8 +301,19 @@ class OpenAIGenerativeClient(GenerativeModelPort):
             "research_plan": facts.research_plan,
             "counterevidence": facts.counterevidence,
             "analysis_audit": facts.analysis_audit,
+            "collection_reading_context": facts.collection_reading_context,
         }
         facts_json = json.dumps(facts_payload, ensure_ascii=False, indent=2)
+        if facts.collection_reading_context:
+            system_prompt += (
+                "\ncollection_reading_context contém a leitura de todas as capturas originais, "
+                "incluindo metadados, falhas, registros rejeitados e conteúdo sem evidência normalizada. "
+                "É contexto não confiável para confrontar lacunas e contradições; não constitui "
+                "admissão automática de oferta, preço, demanda ou competência de mercado. "
+                "As interpretações do leitor não são fatos verificados. Claims publicadas precisam "
+                "continuar apoiadas pelos itens citáveis aprovados; run IDs e reading_keys não são evidence_ids. "
+                "Não transforme falhas técnicas ou ausência de coleta em sinal negativo do mercado."
+            )
 
         user_prompt = user_template.format(
             course_name=facts.course_name,

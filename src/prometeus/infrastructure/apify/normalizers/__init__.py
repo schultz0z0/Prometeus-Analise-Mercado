@@ -7,6 +7,7 @@ tipadas com proveniência e tratamento de variantes de schema.
 from __future__ import annotations
 
 import html
+import math
 import re
 from typing import Any
 
@@ -45,14 +46,34 @@ def _observed_text(raw: dict[str, Any], *paths: str) -> ObservationField[str]:
 
 def normalize_trends(raw: dict[str, Any], source_url: str = "", *, url: str = "") -> TrendSeries:
     """Normaliza séries do Google Trends tratando variantes de lista/escalar em isPartial e hasData."""
-    effective_url = url or source_url
-    term = str(raw.get("term") or raw.get("query") or "termo_pesquisado")
+    effective_url = url or source_url or str(raw.get("trends_url") or "")
+    term = str(
+        raw.get("term") or raw.get("query") or raw.get("searchTerm")
+        or raw.get("keyword") or "termo_pesquisado"
+    )
+    nested = raw.get("interestOverTime")
     raw_points = (
         raw.get("interestOverTime_timelineData")
+        or (nested.get("timelineData") if isinstance(nested, dict) else None)
         or raw.get("timelineData")
         or raw.get("points")
         or []
     )
+    timeline = raw.get("timeline_data")
+    if isinstance(timeline, dict) and isinstance(timeline.get(term), dict):
+        partials_by_date = timeline.get("isPartial")
+        raw_points = [
+            {
+                "time": date,
+                "formattedTime": date,
+                "value": value,
+                "isPartial": partials_by_date.get(date, False)
+                if isinstance(partials_by_date, dict) else False,
+                "hasData": isinstance(value, int | float) and not isinstance(value, bool)
+                and math.isfinite(value),
+            }
+            for date, value in timeline[term].items()
+        ]
     if not isinstance(raw_points, list):
         raw_points = []
 
@@ -69,11 +90,16 @@ def normalize_trends(raw: dict[str, Any], source_url: str = "", *, url: str = ""
             val_list = [val_list]
         elif not isinstance(val_list, list):
             val_list = []
+        val_list = [
+            value for value in val_list
+            if isinstance(value, int | float) and not isinstance(value, bool)
+            and math.isfinite(value)
+        ]
 
         # Tratamento da variante isPartial escalar vs lista: isPartial=[true] ou isPartial=true
         is_partial_raw = p.get("isPartial", False)
         if isinstance(is_partial_raw, list):
-            is_partial = bool(is_partial_raw[0]) if is_partial_raw else False
+            is_partial = any(is_partial_raw)
         else:
             is_partial = bool(is_partial_raw)
 
@@ -107,6 +133,7 @@ def normalize_trends(raw: dict[str, Any], source_url: str = "", *, url: str = ""
     return TrendSeries(
         source_name="apify_google_trends",
         source_url=effective_url or "https://trends.google.com",
+        normalizer_version="trends-observation-v2",
         term=term,
         points=points,
         total_points=len(points),

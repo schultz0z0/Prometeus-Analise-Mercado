@@ -16,7 +16,7 @@ import {
 import {
   renderCmsShellAndSubpages,
   bindCmsDossierEvents
-} from './dossier-cms-tabs.js';
+} from './dossier-cms-tabs.js?v=20261110_layout2';
 
 function paragraphs(text) {
   return String(text || '')

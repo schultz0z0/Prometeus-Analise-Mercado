@@ -230,3 +230,53 @@ async def test_legacy_dossier_hydrates_cms_pages_and_supports_area_reviews_persi
         },
     )
     assert forbidden_rev.status_code in {403, 404}
+
+
+@pytest.mark.asyncio
+async def test_reading_audit_api_exposes_counts_without_private_archives_or_reader_parts(client, test_session):
+    from prometeus.infrastructure.db.models import ResearchPlanModel, ToolRunModel
+
+    analysis_id = "api-reading-audit"
+    await _seed_legacy_completed_analysis(test_session, analysis_id)
+    evidence = await test_session.get(MarketEvidenceModel, "ev-api-read")
+    evidence.sanitized_data = {**evidence.sanitized_data, "_reading": {"parts": ["PRIVATE_READER_PART"]}}
+    test_session.add(ResearchPlanModel(id="audit-plan", analysis_id=analysis_id, tenant_id="ens", cache_key="audit"))
+    test_session.add(ToolRunModel(
+        id="audit-tool", analysis_id=analysis_id, research_plan_id="audit-plan",
+        planned_call_id="one", capability="google_trends", query="seguros",
+        actor_id="approved-actor", actor_build="1.0", provider_run_id="run-one",
+        dataset_id="dataset-one", parameters={
+            "dataset_archive": {"raw_payload": "PRIVATE_ARCHIVE", "items": []},
+            "dataset_readings": {"one": {"parts": ["PRIVATE_ARCHIVE_READING"]}},
+        },
+    ))
+    await test_session.commit()
+    response = await client.get(f"/v1/analyses/{analysis_id}")
+    assert response.status_code == 200
+    assert response.json()["reading_audit"]["complete"] is False
+    assert "PRIVATE_" not in response.text
+    dossier = await client.get(f"/v1/analyses/{analysis_id}/dossier")
+    assert dossier.status_code == 200
+    assert "PRIVATE_" not in dossier.text
+    listing = await client.get("/v1/analyses?tenant_id=ens")
+    assert listing.status_code == 200
+    assert "PRIVATE_" not in listing.text
+
+
+@pytest.mark.asyncio
+async def test_legacy_cms_does_not_count_rejected_records_as_search_evidence(client, test_session):
+    identifier = "legacy-rejection"
+    await _seed_legacy_completed_analysis(test_session, identifier)
+    test_session.add(MarketEvidenceModel(
+        id="rejected-trends", analysis_id=identifier, evidence_type="TRENDS",
+        source_name="apify_google_trends", source_url="https://example.com", collector="test",
+        title="Metadados sem série válida", content_hash="rejected", raw_payload={},
+        sanitized_data={"average_interest":90,"_qualification":{"accepted":False,"context_only":False}},
+        quality_score=1,cost_usd=0,
+    ))
+    await test_session.commit()
+    response = await client.get(f"/v1/analyses/{identifier}/dossier")
+    assert response.status_code == 200
+    sources = response.json()["presentation"]["cms_pages"]["pages"]["sources_evidences"]["collected_sources"]
+    search = next(row for row in sources if "Google Trends" in row["source_name"])
+    assert search["records_count"] == 0

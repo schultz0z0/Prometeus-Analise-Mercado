@@ -8,7 +8,7 @@ import pytest
 
 from prometeus.domain.configuration import AppSettings
 from prometeus.domain.research import PlannedToolCall
-from prometeus.infrastructure.apify.registry import ApifyActorRegistry
+from prometeus.infrastructure.apify.registry import DATA_XPLORER_TRENDS_ACTOR, ApifyActorRegistry
 
 pytestmark = pytest.mark.skipif(
     os.getenv("PROMETEUS_RUN_LIVE_APIFY_TESTS") != "1",
@@ -110,7 +110,13 @@ async def test_configured_actor_builds_and_input_schemas_are_still_current() -> 
 
             assert payload["status"] == "SUCCEEDED"
             assert payload["buildNumber"] == spec.build
-            assert EXPECTED_INPUT_FIELDS[capability] <= fields
+            expected_fields = EXPECTED_INPUT_FIELDS[capability]
+            if capability == "google_trends" and spec.actor_id == DATA_XPLORER_TRENDS_ACTOR:
+                expected_fields = {
+                    "mode", "keyword", "predefinedTimeframe", "geo", "fetchRegionalData",
+                    "proxyConfiguration",
+                }
+            assert expected_fields <= fields
             call = PlannedToolCall(
                 id=f"contract-{capability}",
                 capability=capability,

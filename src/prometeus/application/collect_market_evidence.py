@@ -10,7 +10,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 from urllib.parse import parse_qs, parse_qsl, urlencode, urlsplit, urlunsplit
 
 import httpx
@@ -609,6 +609,24 @@ class CollectMarketEvidenceService:
             run.dataset_id = exc.run_data.get("defaultDatasetId")
             cost = exc.run_data.get("usageTotalUsd", 0)
             run.cost_usd = float(cost) if isinstance(cost, int | float) else 0.0
+        if isinstance(exc, (ApifySchemaDriftError, ApifyActorFailedError, ApifyTimeoutError)) and exc.dataset_result is not None:
+            run.raw_items_count = len(exc.dataset_result.items)
+            run.parameters = {
+                **self._retain_dataset_archive(run.parameters or {}, exc.dataset_result),
+                "observation_status": (
+                    "schema_drift_requires_review" if isinstance(exc, ApifySchemaDriftError)
+                    else "failed_actor_dataset_retained"
+                ),
+            }
+        if isinstance(exc, (ApifyActorFailedError, ApifyTimeoutError)):
+            run.parameters = {**(run.parameters or {}), "dataset_read_pending": exc.dataset_read_pending}
+        if isinstance(exc, (ApifyActorFailedError, ApifyTimeoutError)) and exc.dataset_read_pending:
+            run.parameters = {
+                **(run.parameters or {}),
+                "dataset_read_pending": True,
+                "dataset_read_recovery": "resume_existing_provider_run",
+                "observation_status": "failed_actor_dataset_pending",
+            }
         run.status = "FAILED"
         if isinstance(exc, ApifyReconciliationRequiredError):
             run.status = "IN_DOUBT"
@@ -773,7 +791,7 @@ class CollectMarketEvidenceService:
     ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
         valid_children: list[dict[str, object]] = []
         rejected: list[dict[str, object]] = []
-        for item in result.items:
+        for record_index, item in enumerate(result.items):
             organic = item.get("organicResults")
             if call.capability == "google_search" and isinstance(organic, list):
                 children = [
@@ -784,6 +802,10 @@ class CollectMarketEvidenceService:
                             "rank": entry.get("position", index + 1),
                             "serp_url": item.get("url"),
                             "planned_call_id": call.id,
+                        },
+                        "_source_record": {
+                            "index": record_index,
+                            "pointer": f"/organicResults/{index}",
                         },
                     }
                     for index, entry in enumerate(organic)
@@ -824,37 +846,9 @@ class CollectMarketEvidenceService:
                 else:
                     valid_children.append(child)
 
-        # Amostragem estratificada para YouTube com múltiplas URLs
-        if call.capability == "youtube_comments":
-            urls = call.parameters.get("urls")
-            if isinstance(urls, list) and len(urls) > 1:
-                video_groups: dict[str, list[dict[str, object]]] = {str(u): [] for u in urls}
-                for child in valid_children:
-                    v_url = str(child.get("videoUrl") or "")
-                    if v_url in video_groups:
-                        video_groups[v_url].append(child)
-                    else:
-                        video_groups.setdefault(v_url, []).append(child)
-
-                per_video_quota = max(1, call.max_items // len(urls))
-                items: list[dict[str, object]] = []
-                leftovers: dict[str, list[dict[str, object]]] = {}
-                for v_url, v_items in video_groups.items():
-                    items.extend(v_items[:per_video_quota])
-                    if len(v_items) > per_video_quota:
-                        leftovers[v_url] = v_items[per_video_quota:]
-
-                if len(items) < call.max_items:
-                    while len(items) < call.max_items and any(leftovers.values()):
-                        for v_url in list(leftovers.keys()):
-                            if leftovers.get(v_url) and len(items) < call.max_items:
-                                items.append(leftovers[v_url].pop(0))
-                            if not leftovers.get(v_url):
-                                leftovers.pop(v_url, None)
-
-                return items[: call.max_items], rejected
-
-        return valid_children[: call.max_items], rejected
+        # Scope is applied before execution. Every returned child is retained;
+        # the complete parent rows (including other SERP sections) are archived.
+        return valid_children, rejected
 
     @classmethod
     def _build_sampling_audit(
@@ -872,21 +866,19 @@ class CollectMarketEvidenceService:
         urls = call.parameters.get("urls")
         num_urls = len(urls) if isinstance(urls, list) else 1
 
-        strategy = "top_n_budget_capped"
-        quota_per_video = None
+        strategy = "complete_dataset"
         distribution_per_video: dict[str, int] = {}
 
         if call.capability == "youtube_comments" and num_urls > 1:
-            strategy = "stratified_per_video"
-            quota_per_video = max(1, call.max_items // num_urls)
+            strategy = "complete_dataset_per_video"
             for item in retained_items:
                 v_url = str(item.get("videoUrl") or "")
                 distribution_per_video[v_url] = distribution_per_video.get(v_url, 0) + 1
 
         truncation_detected = dataset_total > items_read
         truncation_reason = (
-            f"O dataset da Apify continha {dataset_total} itens, mais itens que o limite lido de "
-            f"{items_read} itens (critério: teto max_items={call.max_items}, unidade={limit_unit})."
+            f"O dataset da Apify continha {dataset_total} itens, mais itens que o limite "
+            f"efetivamente recuperado de {items_read} itens; leitura integral pendente."
             if truncation_detected
             else None
         )
@@ -901,10 +893,54 @@ class CollectMarketEvidenceService:
             "truncation_detected": truncation_detected,
             "truncation_reason": truncation_reason,
         }
-        if quota_per_video is not None:
-            audit_data["quota_per_video"] = quota_per_video
+        if distribution_per_video:
             audit_data["distribution_per_video"] = distribution_per_video
         return audit_data
+
+    def _dataset_archive(self, result: ApifyExecutionResult) -> dict[str, Any]:
+        """Private original snapshots plus complete sanitized records for the reader.
+
+        REST responses must expose only the manifest, never ``raw_payload``.
+        An unverified custom executor cannot claim complete dataset retrieval.
+        """
+        records = []
+        for index, raw in enumerate(result.items):
+            sanitized, _ = self.sanitizer.sanitize_payload(raw)
+            raw_json = json.dumps(raw, ensure_ascii=False, sort_keys=True)
+            records.append({
+                "index": index,
+                "source_sha256": hashlib.sha256(raw_json.encode("utf-8")).hexdigest(),
+                "raw_payload": raw,
+                "sanitized_data": sanitized,
+                "sanitization_changed": sanitized != raw,
+            })
+        source_json = json.dumps(result.items, ensure_ascii=False, sort_keys=True)
+        return {
+            "schema_version": 1,
+            "provider_run_id": result.run.run_id,
+            "provider_status": result.run.status,
+            "dataset_id": result.run.dataset_id,
+            "retrieval_complete": result.total_items_source != "unverified"
+            and len(result.items) == result.total_items,
+            "dataset_total_items": result.total_items,
+            "total_items_source": result.total_items_source,
+            "items_read": len(result.items),
+            "source_sha256": hashlib.sha256(source_json.encode("utf-8")).hexdigest(),
+            "items": records,
+        }
+
+    def _retain_dataset_archive(
+        self, parameters: dict[str, Any], result: ApifyExecutionResult,
+    ) -> dict[str, Any]:
+        audit = dict(parameters)
+        archives = list(audit.get("prior_dataset_archives") or [])
+        previous_archive = audit.get("dataset_archive")
+        if isinstance(previous_archive, dict) and previous_archive.get("provider_run_id") != result.run.run_id:
+            archives.append(previous_archive)
+        if archives:
+            audit["prior_dataset_archives"] = archives
+        audit["dataset_archive"] = self._dataset_archive(result)
+        return audit
 
     async def _persist_result(
         self,
@@ -978,17 +1014,24 @@ class CollectMarketEvidenceService:
         run.raw_items_count = len(result.items)
         run.valid_items_count = len(unique)
         run.cost_usd = result.run.cost_usd
-        incomplete = result.run.incomplete_reason is not None
+        dataset_partial = len(result.items) != result.total_items
+        incomplete = result.run.incomplete_reason is not None or dataset_partial
         run.status = "PARTIAL" if incomplete else "SUCCEEDED" if unique else "EMPTY"
         if incomplete:
-            run.error_code = "timeout"
-            run.error_message = result.run.incomplete_reason
+            run.error_code = "dataset_read_incomplete" if dataset_partial else "timeout"
+            run.error_message = (
+                "Dataset não foi recuperado integralmente; reconciliar a mesma run."
+                if dataset_partial else result.run.incomplete_reason
+            )
         audit = dict(run.parameters)
         audit["provider_status"] = result.run.status
         audit["cost_status"] = result.run.cost_status
         audit["cost_observed_at"] = datetime.now(UTC).isoformat()
         audit["cost_source"] = "apify.usageTotalUsd"
         audit["dataset_total_items"] = result.total_items
+        # Re-reading one run replaces its snapshot; a genuinely distinct remote
+        # run keeps its complete earlier capture and diagnostics for provenance.
+        audit = self._retain_dataset_archive(audit, result)
         audit["effective_actor_input"] = self.registry.build_input(call)
         audit["effective_scope"] = {
             "capability": call.capability,
@@ -1065,14 +1108,17 @@ class CollectMarketEvidenceService:
             "observed_empty" if not result.items else "observed" if unique else "rejected_items"
         )
         audit["rejected_items_count"] = len(rejected)
-        # Bounded raw snapshots retain provider errors/directories for audit without
-        # presenting them as market evidence. Full raw dataset remains at dataset_id.
+        # The public diagnostic copy is sanitized but never truncated. Original
+        # records, including duplicates, remain in the private dataset archive.
         audit["rejected_items"] = [
             {
                 "reason": item["reason"],
-                "raw_json": json.dumps(item["item"], ensure_ascii=False)[:4000],
+                "raw_json": json.dumps(
+                    self.sanitizer.sanitize_payload(cast(dict[str, Any], item["item"]))[0],
+                    ensure_ascii=False,
+                ),
             }
-            for item in rejected[:10]
+            for item in rejected
         ]
         run.parameters = audit
         run.finished_at = datetime.now(UTC)

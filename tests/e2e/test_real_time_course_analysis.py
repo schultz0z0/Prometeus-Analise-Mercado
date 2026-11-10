@@ -38,6 +38,21 @@ from prometeus.infrastructure.llm.fake import FakeGenerativeModel
 
 
 class WorkflowLLM(FakeGenerativeModel):
+    async def generate_structured(self, prompt, *, schema, system_prompt=None):
+        try:
+            payload = json.loads(prompt)
+        except ValueError:
+            return await self.generate_text(prompt, system_prompt=system_prompt)
+        if payload.get("reader_version") != "integral-reader-v1":
+            return await self.generate_text(prompt, system_prompt=system_prompt)
+        part = payload["untrusted_part"]
+        return json.dumps({"part_id":part["part_id"],"observations":[
+            {"fragment_id":f["fragment_id"],"disposition":"CONTEXT",
+             "analysis":"Conteúdo registrado para qualificação; interpretação experimental.",
+             "quotes":[f["text"]] if f["text"] else []}
+            for f in part["fragments"]
+        ]})
+
     async def generate_text(
         self,
         prompt: str,
@@ -218,6 +233,7 @@ class RecordedToolExecutor:
             ),
             items=items,
             total_items=len(items),
+            total_items_source="provider_pagination",
         )
 
 

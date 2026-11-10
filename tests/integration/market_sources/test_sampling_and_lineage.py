@@ -94,7 +94,7 @@ def test_entity_lineage_tracker_separates_captures_from_entities():
     assert entity_a.has_updates is True
 
 
-def test_youtube_stratified_sampling_across_three_eligible_videos():
+def test_youtube_retains_every_comment_across_three_eligible_videos():
     urls = [
         "https://www.youtube.com/watch?v=VIDEO_AAA",
         "https://www.youtube.com/watch?v=VIDEO_BBB",
@@ -138,15 +138,15 @@ def test_youtube_stratified_sampling_across_three_eligible_videos():
 
     retained, rejected = CollectMarketEvidenceService._normalized_items(call, result)
 
-    assert len(retained) == 15
-    # Verify each video got exactly 5 comments (stratified sampling)
+    assert len(retained) == 45
+    # The acquisition quota must not discard already produced comments.
     counts = {}
     for r in retained:
         counts[r["videoUrl"]] = counts.get(r["videoUrl"], 0) + 1
 
-    assert counts[urls[0]] == 5
-    assert counts[urls[1]] == 5
-    assert counts[urls[2]] == 5
+    assert counts[urls[0]] == 15
+    assert counts[urls[1]] == 15
+    assert counts[urls[2]] == 15
 
 
 def test_dataset_truncation_diagnostic_is_recorded_in_audit():
@@ -314,7 +314,7 @@ async def test_collect_service_persists_sampling_and_entities_audit(session):
     )
 
     outcome = await service.collect(tenant_id="ens", plan=plan)
-    assert "call-yt" in outcome.completed_call_ids
+    assert "call-yt" in outcome.optional_failures
 
     run_row = (
         await session.execute(
@@ -332,8 +332,10 @@ async def test_collect_service_persists_sampling_and_entities_audit(session):
     sampling = audit["sampling"]
     assert sampling["limit_unit"] == "per_video"
     assert sampling["dataset_total_items"] == 45
-    assert sampling["sampling_strategy"] == "stratified_per_video"
+    assert sampling["sampling_strategy"] == "complete_dataset_per_video"
     assert sampling["truncation_detected"] is True
+    assert run_row.status == "PARTIAL"
+    assert run_row.parameters["dataset_archive"]["retrieval_complete"] is False
 
     entities = audit["entities"]
     assert entities["unique_entities_count"] > 0

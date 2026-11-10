@@ -85,8 +85,9 @@ const OFFICIAL_PILLARS = [
 ];
 
 function formatBrl(val) {
+  if (val === null || val === undefined || val === '' || typeof val === 'boolean') return '—';
   const num = Number(val);
-  if (!Number.isFinite(num) || num <= 0) return '—';
+  if (!Number.isFinite(num)) return '—';
   return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 }
 
@@ -95,6 +96,15 @@ function bandForScore(score, isPresent = true) {
   if (score >= 75) return { label: 'Forte', tone: 'approved' };
   if (score >= 55) return { label: 'Adequado', tone: 'adjustments' };
   return { label: 'Atenção', tone: 'risk' };
+}
+
+function pillarLabel(pillar, suffix = '/100') {
+  return pillar?.is_present ? `${pillar.score}${suffix}` : 'Não observado';
+}
+
+function economicTone(scenario) {
+  if (scenario?.net_profit == null) return 'insufficient';
+  return Number(scenario.net_profit) > 0 ? 'approved' : 'risk';
 }
 
 /**
@@ -118,8 +128,8 @@ export function ensureCmsPages(dossier, course) {
     ? pres.limitations
     : [];
   const economics = pres.economics || { status: 'assumptions_required', scenarios: [] };
-  const compBench = pres.competitive_benchmark || { monitored_total: 10, offers_found_count: 0, rows: [] };
-  const sectorRadar = pres.sector_radar || { monitored_insurers_total: 10, signals_count: 0, signals: [] };
+  const compBench = pres.competitive_benchmark || { rows: [] };
+  const sectorRadar = pres.sector_radar || { signals: [] };
 
   const ivoScore = Math.round(Number(scoring.viability_score || 0));
   const covPct = Math.round(Number(scoring.coverage_score || 0) * 100);
@@ -138,12 +148,15 @@ export function ensureCmsPages(dossier, course) {
   const pillarRows = OFFICIAL_PILLARS.map(spec => {
     const pObj = pillarsMap[spec.key] || {};
     const isPresent = pObj.is_present !== false && pObj.raw_score !== undefined && pObj.raw_score !== null;
-    const rawScore = isPresent ? Number(pObj.raw_score || 0) : 0;
-    const score = Math.round(rawScore);
+    const rawScore = isPresent ? Number(pObj.raw_score) : null;
+    const score = isPresent ? Math.round(rawScore) : null;
     const band = bandForScore(score, isPresent);
-    const contribution = isPresent ? Number(((rawScore * spec.weight_pct) / 100).toFixed(1)) : 0;
+    const weightPct = typeof pObj.weight === 'number' && Number.isFinite(pObj.weight) && pObj.weight >= 0 && pObj.weight <= 1 ? Number((pObj.weight * 100).toFixed(4)) : spec.weight_pct;
+    const contribution = isPresent ? Number(((rawScore * weightPct) / 100).toFixed(1)) : null;
     return {
       ...spec,
+      weight_pct: weightPct,
+      evidence_count: Number.isInteger(pObj.evidence_count) ? pObj.evidence_count : new Set((pObj.features?.evidence_ids || []).filter(id => typeof id === 'string' && id)).size,
       score,
       raw_score: rawScore,
       is_present: isPresent,
@@ -152,8 +165,8 @@ export function ensureCmsPages(dossier, course) {
       status_tone: band.tone,
       submetrics: [
         { label: 'Nota no pilar', value: isPresent ? `${score}/100` : 'Sem amostra' },
-        { label: 'Peso no IVO', value: `${spec.weight_pct}%` },
-        { label: 'Contribuição', value: `${contribution} pts` }
+        { label: 'Peso no IVO', value: `${weightPct}%` },
+        { label: 'Contribuição', value: isPresent ? `${contribution} pts` : 'Não observado' }
       ]
     };
   });
@@ -164,7 +177,7 @@ export function ensureCmsPages(dossier, course) {
     evidence_ids: Array.isArray(c.evidence_ids) ? c.evidence_ids : []
   }));
 
-  const econCalculated = economics.status === 'calculated';
+  const econCalculated = economics.status === 'calculable';
   const scenarios = Array.isArray(economics.scenarios) ? economics.scenarios : [];
 
   const scenarioCards = econCalculated && scenarios.length
@@ -174,7 +187,7 @@ export function ensureCmsPages(dossier, course) {
         students_label: String(s.students ?? '—'),
         revenue_label: formatBrl(s.net_revenue),
         margin_label: String(s.margin || '—'),
-        result_label: formatBrl(s.net_result)
+        result_label: formatBrl(s.net_profit)
       }))
     : ['Conservador', 'Base', 'Otimista'].map((name, idx) => ({
         name,
@@ -186,26 +199,26 @@ export function ensureCmsPages(dossier, course) {
       }));
 
   const compRows = Array.isArray(compBench.rows) ? compBench.rows : [];
-  const mapPoints = compRows
-    .filter(r => r && (r.status === 'direct_offer' || r.status === 'adjacent_offer' || r.has_direct_offer))
-    .map((r, idx) => ({
-      id: r.competitor_id || `comp-${idx}`,
-      name: r.competitor_name || r.name || 'Concorrente',
-      x_pct: 25 + ((idx * 22) % 55),
-      y_pct: 68 - ((idx * 15) % 35),
-      price_label: r.price_display || r.observed_price_display || '—',
-      modality: r.modality || '—'
-    }));
+  // Only the server's verified projection may establish map coordinates.
+  const mapPoints = [];
 
   const radarSignals = Array.isArray(sectorRadar.signals) ? sectorRadar.signals : [];
-  const radarAxes = [
-    { axis: 'Demanda & Busca', score: pillarRows[2].score, benchmark: 70 },
-    { axis: 'Empregabilidade', score: pillarRows[3].score, benchmark: 70 },
-    { axis: 'Espaço Competitivo', score: pillarRows[1].score, benchmark: 65 },
-    { axis: 'Aderência Curricular', score: pillarRows[4].score, benchmark: 75 },
-    { axis: 'Histórico ENS', score: pillarRows[0].score, benchmark: 75 },
-    { axis: 'Atratividade Preço', score: pillarRows[5].score, benchmark: 65 }
-  ];
+  const radarAxes = pillarRows.map(p => ({axis:p.short_label, score:p.is_present ? p.score : null, is_present:p.is_present, benchmark:null}));
+  const sectorPillars = [[pillarRows[2], 0.30], [pillarRows[3], 0.30], [pillarRows[4], 0.20], [pillarRows[0], 0.20]];
+  const attractiveness = sectorPillars.every(([p]) => p.is_present) ? Math.round(sectorPillars.reduce((sum, [p, w]) => sum + p.score * w, 0)) : null;
+  const groupedSources = new Map();
+  for (const evidence of evidences) {
+    const name = evidence.source_name || 'Origem não identificada';
+    const row = groupedSources.get(name) || {source_name:name, source_type:evidence.evidence_type || 'Evidência', records_count:0, status_label:'Registros disponíveis', status_tone:'running', observation:'Presença no acervo; uso analítico depende da qualificação.'};
+    row.records_count += 1;
+    groupedSources.set(name,row);
+  }
+  const themes = new Map();
+  for (const signal of radarSignals) {
+    const theme = signal.theme_detected || 'Tema não classificado';
+    themes.set(theme,(themes.get(theme) || 0)+1);
+  }
+  const observedThemes = [...themes].map(([theme,count]) => ({theme,count,share_pct:Math.round(100*count/radarSignals.length)}));
 
   const actions = Array.isArray(highlights.action_recommendations) ? highlights.action_recommendations : [];
   const validations = Array.isArray(highlights.validation_criteria) ? highlights.validation_criteria : [];
@@ -230,7 +243,7 @@ export function ensureCmsPages(dossier, course) {
           { title: 'IE — Índice de Evidência', value: `${ieScore}/100`, badge: `Cobertura ${covPct}% · Confiança ${confPct}%`, tone: ieScore >= 75 ? 'approved' : 'adjustments', sublabel: 'Suporte empírico e rastreabilidade' },
           { title: 'Recomendação', value: recLabel, badge: 'Parecer oficial', tone: recTone, sublabel: 'Deliberação determinística da matriz' },
           { title: 'Referência de Matrículas', value: econCalculated ? String(economics.break_even_students || '—') : 'Requer premissas', badge: econCalculated ? 'Equilíbrio' : 'Premissa pendente', tone: econCalculated ? 'running' : 'insufficient', sublabel: 'Informe capacidade e custos da turma' },
-          { title: 'Margem Prevista', value: econCalculated && scenarios[1] ? String(scenarios[1].margin) : 'Requer premissas', badge: econCalculated ? 'Cenário Base' : 'Pendente', tone: econCalculated ? 'approved' : 'insufficient', sublabel: 'Margem operacional estimada' }
+          { title: 'Margem Prevista', value: econCalculated && scenarios[1] ? String(scenarios[1].margin) : 'Requer premissas', badge: econCalculated ? 'Cenário Base' : 'Pendente', tone: econCalculated ? economicTone(scenarios[1]) : 'insufficient', sublabel: 'Margem operacional estimada' }
         ],
         dimensions_bars: pillarRows,
         scenario_summary: { status: econCalculated ? 'calculated' : 'assumptions_required', cards: scenarioCards },
@@ -242,17 +255,17 @@ export function ensureCmsPages(dossier, course) {
         kpis: [
           { title: 'Alunos Históricos (Média ENS)', value: 'Consulte base', badge: 'Histórico ENS', tone: 'running', sublabel: 'Portfólio histórico da instituição' },
           { title: 'Retenção Histórica ENS', value: 'Consulte base', badge: 'Conclusão', tone: 'approved', sublabel: 'Taxa de retenção em comparáveis' },
-          { title: 'Aderência da Base ENS', value: `${pillarRows[0].score}%`, badge: 'Pilar Histórico', tone: pillarRows[0].status_tone, sublabel: 'Compatibilidade institucional' },
-          { title: 'Procura Externa (Busca & Mídia)', value: `${pillarRows[2].score}/100`, badge: 'Sinais externos', tone: pillarRows[2].status_tone, sublabel: 'Score consolidado de busca e mídia' },
+          { title: 'Aderência da Base ENS', value: pillarLabel(pillarRows[0], '%'), badge: 'Pilar Histórico', tone: pillarRows[0].status_tone, sublabel: 'Compatibilidade institucional' },
+          { title: 'Procura Externa (Busca & Mídia)', value: pillarLabel(pillarRows[2]), badge: 'Sinais externos', tone: pillarRows[2].status_tone, sublabel: 'Score consolidado de busca e mídia' },
           { title: 'Ticket Médio Projetado', value: formatBrl(course?.ticket), badge: 'Proposta ENS', tone: course?.ticket ? 'running' : 'insufficient', sublabel: 'Valor declarado na proposta' },
           { title: 'Custo Variável / Aluno', value: econCalculated ? formatBrl(economics.variable_cost_per_student) : 'Requer premissa', badge: 'Premissa financeira', tone: 'insufficient', sublabel: 'Custo variável efetivo por matrícula' },
-          { title: 'Margem Prevista', value: econCalculated && scenarios[1] ? String(scenarios[1].margin) : 'Requer premissa', badge: 'Cenário Base', tone: 'insufficient', sublabel: 'Resultado líquido sobre receita' },
+          { title: 'Margem Prevista', value: econCalculated && scenarios[1] ? String(scenarios[1].margin) : 'Requer premissa', badge: 'Cenário Base', tone: econCalculated ? economicTone(scenarios[1]) : 'insufficient', sublabel: 'Resultado líquido sobre receita' },
           { title: 'IE / IVO (Resumo)', value: `IE: ${ieScore}/100 | IVO: ${ivoScore}/100`, badge: 'Índices oficiais', tone: 'approved', sublabel: 'Evidência e viabilidade de oferta' }
         ],
         historical_trend: [],
         funnel_stages: [
-          { stage: 'Capacidade / Referência', value_label: econCalculated ? `${economics.max_capacity || 40} vagas` : 'Requer premissa', pct_label: '100%', width_pct: 100 },
-          { stage: 'Aderência Histórica ENS', value_label: `Score ${pillarRows[0].score}/100`, pct_label: `${pillarRows[0].score}%`, width_pct: 80 },
+          { stage: 'Capacidade / Referência', value_label: econCalculated && economics.max_capacity != null ? `${economics.max_capacity} vagas` : 'Requer premissa', pct_label: 'Referência', width_pct: 100 },
+          { stage: 'Aderência Histórica ENS', value_label: pillarLabel(pillarRows[0]), pct_label: pillarRows[0].is_present ? 'Score do pilar' : 'Sem amostra', width_pct: 80 },
           { stage: 'Suporte de Evidências (IE)', value_label: `Score ${ieScore}/100`, pct_label: `${ieScore}%`, width_pct: 62 },
           { stage: 'Ponto de Equilíbrio', value_label: econCalculated ? `${economics.break_even_students} matrículas` : 'Requer custos', pct_label: 'Breakeven', width_pct: 46 }
         ],
@@ -260,9 +273,9 @@ export function ensureCmsPages(dossier, course) {
         dimension_indicators: pillarRows.map(p => ({
           dimension: p.short_label,
           indicator: p.label,
-          observed: `${p.score}/100`,
+          observed: pillarLabel(p),
           reference: '≥ 70/100',
-          delta: `${p.score - 70 >= 0 ? '+' : ''}${p.score - 70} pts`,
+          delta: p.is_present ? `${p.score - 70 >= 0 ? '+' : ''}${p.score - 70} pts` : '—',
           status: p.status_label
         })),
         internal_benchmark: [
@@ -272,21 +285,21 @@ export function ensureCmsPages(dossier, course) {
         analytical_highlights: claimItems.slice(0, 5)
       },
       fixed_competition: {
-        monitored_total: compBench.monitored_total || compRows.length || 10,
+        monitored_total: compBench.monitored_total ?? null,
         offers_found_count: compBench.offers_found_count || 0,
-        whitespace_count: Math.max(0, (compBench.monitored_total || 10) - (compBench.offers_found_count || 0)),
+        whitespace_count: compBench.whitespace_count ?? null,
         kpis: [
-          { title: 'Concorrentes Mapeados', value: `${compBench.offers_found_count || 0} de ${compBench.monitored_total || 10}`, badge: 'Catálogo fixo ENS', tone: 'running', sublabel: 'Players com oferta identificada' },
-          { title: 'Intensidade Competitiva', value: (compBench.offers_found_count || 0) >= 4 ? 'Alta' : 'Moderada', badge: `${compBench.offers_found_count || 0} ofertas ativas`, tone: 'adjustments', sublabel: 'Grau de disputa direta observada' },
-          { title: 'Faixa Média de Preço', value: formatBrl(course?.ticket), badge: 'Cursos comparáveis', tone: 'running', sublabel: 'Referência observada no recorte' },
-          { title: 'Lacunas de Posicionamento', value: `${Math.max(0, (compBench.monitored_total || 10) - (compBench.offers_found_count || 0))} oportunidades`, badge: 'Espaço competitivo', tone: 'approved', sublabel: 'IES sem oferta direta no tema' }
+          { title: 'Concorrentes Mapeados', value: compBench.monitored_total != null ? `${compBench.offers_found_count ?? 0} de ${compBench.monitored_total}` : 'Não apurado', badge: 'Catálogo configurado', tone: 'running', sublabel: 'Players com oferta identificada' },
+          { title: 'Intensidade Competitiva', value: 'Não apurada', badge: 'Requer análise do recorte', tone: 'insufficient', sublabel: 'Quantidade isolada não confirma intensidade' },
+          { title: 'Faixa Média de Preço', value: 'Não apurada', badge: 'Preços comparáveis', tone: 'insufficient', sublabel: 'O ticket da proposta não é média de mercado' },
+          { title: 'Lacunas de Posicionamento', value: 'Não apuradas', badge: 'Requer cobertura verificada', tone: 'insufficient', sublabel: 'Falha de coleta não prova oportunidade' }
         ],
         competitor_rows: compRows,
         positioning_map: {
           x_axis_label: 'Preço Observado',
           y_axis_label: 'Profundidade / Escopo Executivo',
           points: mapPoints,
-          opportunity_zone: { label: 'Espaço de oportunidade (ENS)', description: 'Posicionamento executivo verticalizado em Seguros' }
+          opportunity_zone: { label: 'Posicionamento proposto', description: 'Aguardando comparação verificável de preço e carga horária' }
         },
         observed_signals: compRows.length
           ? compRows.slice(0, 4).map(r => `${r.competitor_name || r.name}: ${r.observed_offer_title || 'Monitorado'}`)
@@ -295,24 +308,18 @@ export function ensureCmsPages(dossier, course) {
         actionable_insights: actions.slice(0, 3).map((a, idx) => ({ index: idx + 1, area: a.area, action: a.action, priority: a.priority }))
       },
       sector_radar: {
-        attractiveness_score: ivoScore,
-        monitored_total: sectorRadar.monitored_insurers_total || 10,
+        attractiveness_score: attractiveness,
+        monitored_total: sectorRadar.monitored_insurers_total ?? null,
         insurers_with_signals_count: radarSignals.length,
         kpis: [
-          { title: 'Índice de Atratividade Setorial', value: `${ivoScore}/100`, badge: 'Score setorial', tone: ivoScore >= 75 ? 'approved' : 'adjustments', sublabel: 'Demanda, empregabilidade e aderência' },
-          { title: 'Tendência de Demanda', value: pillarRows[2].score >= 70 ? 'Crescente' : 'Moderada', badge: `Busca ${pillarRows[2].score}/100`, tone: 'approved', sublabel: 'Comportamento de interesse externo' },
-          { title: 'Cobertura do Radar Setorial', value: `${radarSignals.length} sinais`, badge: `${sectorRadar.monitored_insurers_total || 10} seguradoras`, tone: 'running', sublabel: 'Seguradoras monitoradas no ecossistema' },
-          { title: 'Relevância Profissional', value: `${pillarRows[3].score}/100`, badge: 'Mercado de trabalho', tone: 'approved', sublabel: 'Sinais de vagas e competências' },
-          { title: 'Potencial de Escala ENS', value: pillarRows[4].score >= 75 ? 'Alto' : 'Moderado', badge: `Ementa ${pillarRows[4].score}/100`, tone: 'approved', sublabel: 'Aplicação curricular direta' }
+          { title: 'Índice de Atratividade Setorial', value: attractiveness == null ? 'Não observado' : `${attractiveness}/100`, badge: 'Score setorial', tone: attractiveness == null ? 'insufficient' : bandForScore(attractiveness).tone, sublabel: 'Demanda, empregabilidade e aderência' },
+          { title: 'Variação do Interesse de Busca', value: 'Não apurada', badge: 'Requer série temporal', tone: 'insufficient', sublabel: 'Uma nota alta não estabelece crescimento' },
+          { title: 'Cobertura do Radar Setorial', value: `${radarSignals.length} sinais`, badge: sectorRadar.monitored_insurers_total != null ? `${sectorRadar.monitored_insurers_total} seguradoras` : 'Catálogo não informado', tone: 'running', sublabel: 'Seguradoras monitoradas no ecossistema' },
+          { title: 'Relevância Profissional', value: pillarLabel(pillarRows[3]), badge: 'Mercado de trabalho', tone: pillarRows[3].status_tone, sublabel: 'Sinais de vagas e competências' },
+          { title: 'Potencial de Escala ENS', value: !pillarRows[4].is_present ? 'Não observado' : pillarRows[4].score >= 75 ? 'Alto' : 'Moderado', badge: `Ementa ${pillarLabel(pillarRows[4])}`, tone: pillarRows[4].status_tone, sublabel: 'Aplicação curricular direta' }
         ],
         radar_axes: radarAxes,
-        subthemes_distribution: radarSignals.length
-          ? radarSignals.slice(0, 5).map((s, i) => ({ theme: s.theme_detected || `Tema ${i + 1}`, count: 1, share_pct: Math.round(100 / Math.min(5, radarSignals.length)) }))
-          : [
-              { theme: 'Gestão de Riscos, Subscrição & Regulação', count: 1, share_pct: 40 },
-              { theme: 'Inovação, IA & Operações de Sinistros', count: 1, share_pct: 35 },
-              { theme: 'Canais de Distribuição & Corretores', count: 1, share_pct: 25 }
-            ],
+        subthemes_distribution: observedThemes,
         signals: radarSignals,
         strong_signals: radarSignals.slice(0, 3).map(s => `${s.insurer_name}: ${s.market_or_broker_pain || s.theme_detected}`),
         attention_signals: limitations.slice(0, 3),
@@ -324,12 +331,19 @@ export function ensureCmsPages(dossier, course) {
         kpis: [
           { title: 'Receita Líquida (Cenário Base)', value: econCalculated && scenarios[1] ? formatBrl(scenarios[1].net_revenue) : 'Requer premissas', badge: econCalculated ? 'Simulado' : 'Pendente', tone: econCalculated ? 'approved' : 'insufficient', sublabel: 'Receita líquida estimada da turma base' },
           { title: 'Ticket Médio', value: formatBrl(course?.ticket || economics.ticket), badge: 'Proposta ENS', tone: 'running', sublabel: 'Preço bruto por matrícula' },
-          { title: 'Margem Líquida (Base)', value: econCalculated && scenarios[1] ? String(scenarios[1].margin) : 'Requer premissas', badge: 'Resultado / Receita', tone: econCalculated ? 'approved' : 'insufficient', sublabel: 'Margem operacional simulada' },
+          { title: 'Margem Líquida (Base)', value: econCalculated && scenarios[1] ? String(scenarios[1].margin) : 'Requer premissas', badge: 'Resultado / Receita', tone: econCalculated ? economicTone(scenarios[1]) : 'insufficient', sublabel: 'Margem operacional simulada' },
           { title: 'Ponto de Equilíbrio', value: econCalculated ? `${economics.break_even_students} matrículas` : 'Requer premissas', badge: 'Breakeven', tone: econCalculated ? 'adjustments' : 'insufficient', sublabel: 'Volume mínimo para cobrir custos' },
           { title: 'Custos Fixos da Turma', value: econCalculated ? formatBrl(economics.fixed_costs) : 'Requer premissas', badge: 'Docência + operação', tone: 'insufficient', sublabel: 'Hora-aula, coordenação e plataforma' },
-          { title: 'Resultado Líquido (Base)', value: econCalculated && scenarios[1] ? formatBrl(scenarios[1].net_result) : 'Requer premissas', badge: 'Turma Base', tone: econCalculated ? 'approved' : 'insufficient', sublabel: 'Contribuição líquida após custos' }
+          { title: 'Resultado Líquido (Base)', value: econCalculated && scenarios[1] ? formatBrl(scenarios[1].net_profit) : 'Requer premissas', badge: 'Turma Base', tone: econCalculated ? economicTone(scenarios[1]) : 'insufficient', sublabel: 'Contribuição líquida após custos' }
         ],
-        waterfall_steps: [],
+        waterfall_steps: econCalculated && scenarios[1]
+          ? [
+              { label: 'Receita Bruta (Base)', value: Number(scenarios[1].gross_revenue || 0), display: formatBrl(scenarios[1].gross_revenue), kind: 'positive', pct: 100 },
+              { label: 'Custos Fixos da Turma', value: -Math.abs(Number(economics.fixed_costs || 0)), display: `(${formatBrl(economics.fixed_costs)})`, kind: 'negative', pct: 45 },
+              { label: 'Custos Variáveis', value: -Math.abs(Number(economics.variable_cost_per_student || 0) * Number(scenarios[1].students || 0)), display: `(${formatBrl(Number(economics.variable_cost_per_student || 0) * Number(scenarios[1].students || 0))})`, kind: 'negative', pct: 20 },
+              { label: 'Resultado Líquido (Base)', value: Number(scenarios[1].net_profit || 0), display: formatBrl(scenarios[1].net_profit), kind: Number(scenarios[1].net_profit || 0) >= 0 ? 'total' : 'negative', pct: 60 }
+            ]
+          : [],
         launch_scenarios: scenarios,
         sensitivity_matrix: [],
         risks: limitations.slice(0, 4),
@@ -337,15 +351,15 @@ export function ensureCmsPages(dossier, course) {
       },
       swot_tows: {
         kpis: [
-          { title: 'Aderência Estratégica ENS', value: `${pillarRows[4].score}/100`, badge: 'Histórico + Ementa', tone: 'approved', sublabel: 'Alinhamento institucional e curricular' },
-          { title: 'Forças & Oportunidades (SO)', value: `${Math.max(1, claimItems.length)} fatores`, badge: 'Alavancas', tone: 'approved', sublabel: 'Pontos fortes e oportunidades sustentadas' },
-          { title: 'Fragilidades & Riscos (WT)', value: `${Math.max(1, limitations.length)} alertas`, badge: 'Mitigação', tone: 'adjustments', sublabel: 'Limitações e ameaças mapeadas' },
+          { title: 'Aderência Estratégica ENS', value: pillarRows[0].is_present && pillarRows[4].is_present ? `${Math.round((pillarRows[0].score + pillarRows[4].score)/2)}/100` : 'Não observado', badge: 'Histórico + Ementa', tone: !pillarRows[0].is_present || !pillarRows[4].is_present ? 'insufficient' : bandForScore((pillarRows[0].score + pillarRows[4].score)/2).tone, sublabel: 'Alinhamento institucional e curricular' },
+          { title: 'Forças & Oportunidades (SO)', value: `${(highlights.pros || []).length} destaques favoráveis`, badge: 'Destaques verificados', tone: 'running', sublabel: 'Classificação definida na síntese' },
+          { title: 'Fragilidades & Riscos (WT)', value: `${limitations.length} limitações`, badge: 'Mitigação', tone: 'adjustments', sublabel: 'Limitações mapeadas' },
           { title: 'Posicionamento Estratégico', value: recLabel, badge: 'Parecer', tone: recTone, sublabel: 'Síntese de prontidão para lançamento' }
         ],
         swot: {
-          strengths: claimItems.slice(0, 3).map(c => ({ text: c.statement, evidence_ids: c.evidence_ids })),
+          strengths: claimItems.filter(c => (highlights.pros || []).includes(c.claim_id)).map(c => ({ text: c.statement, evidence_ids: c.evidence_ids })),
           weaknesses: limitations.slice(0, 3).map(l => ({ text: l, evidence_ids: [] })),
-          opportunities: claimItems.slice(0, 3).map(c => ({ text: c.statement, evidence_ids: c.evidence_ids })),
+          opportunities: [],
           threats: limitations.slice(0, 2).map(l => ({ text: l, evidence_ids: [] }))
         },
         tows: {
@@ -401,12 +415,7 @@ export function ensureCmsPages(dossier, course) {
         next_steps: actions.slice(0, 4).map((a, idx) => ({ order: idx + 1, action: a.action, area: a.area, priority: a.priority }))
       },
       sources_evidences: {
-        collected_sources: [
-          { source_name: 'Google Trends & Volume de Busca', source_type: 'Tendência de busca', status_label: 'Coletado', status_tone: 'approved', records_count: evidences.length, observation: 'Séries e indicadores de interesse de busca para o tema.' },
-          { source_name: 'Sites de Concorrentes (Catálogo Fixo ENS)', source_type: 'Concorrência / benchmarking', status_label: 'Monitorado', status_tone: 'approved', records_count: compRows.length, observation: 'Mapeamento de oferta, posicionamento e preços.' },
-          { source_name: 'LinkedIn Jobs & Mercado de Trabalho', source_type: 'Vagas / mercado de trabalho', status_label: 'Coletado', status_tone: 'approved', records_count: evidences.length, observation: 'Levantamento de vagas abertas e perfis demandados.' },
-          { source_name: 'Catálogo Histórico ENS', source_type: 'Base institucional', status_label: 'Consultado', status_tone: 'approved', records_count: 1, observation: 'Edições anteriores, evolução da oferta e aderência.' }
-        ],
+        collected_sources: [...groupedSources.values()],
         coverage_pct: covPct,
         confidence_pct: confPct,
         ie_score: ieScore,
@@ -435,8 +444,71 @@ export function ensureCmsPages(dossier, course) {
 }
 
 /* ============================================================================
- * PRIMITIVOS GRÁFICOS SVG / CSS (DARK THEME)
+ * PRIMITIVOS GRÁFICOS SVG / CSS (DARK THEME — EXECUTIVE PRECISION)
  * ============================================================================ */
+
+function getKpiIconSvg(title = '') {
+  const t = String(title).toLowerCase();
+  if (t.includes('ivo') || t.includes('atratividade') || t.includes('criticidade')) {
+    return `<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 16V9m4.5 7V5m4.5 11v-6m4.5 6V3"/></svg>`;
+  }
+  if (t.includes('ie ') || t.includes('evidência') || t.includes('aderência')) {
+    return `<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 2.5l6 2.7v4.6c0 4.1-2.5 7.2-6 8.7-3.5-1.5-6-4.6-6-8.7V5.2l6-2.7z"/><path d="M7.5 10.2l1.8 1.8 3.5-3.6"/></svg>`;
+  }
+  if (t.includes('recomenda') || t.includes('posicionamento')) {
+    return `<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="10" r="7.5"/><path d="M7 10.2l2.1 2.1 4.2-4.4"/></svg>`;
+  }
+  if (t.includes('receita') || t.includes('ticket') || t.includes('faixa') || t.includes('custo') || t.includes('resultado')) {
+    return `<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="4.5" width="15" height="11" rx="2"/><circle cx="10" cy="10" r="2.3"/><path d="M5.5 7.5h.01M14.5 12.5h.01"/></svg>`;
+  }
+  if (t.includes('margem') || t.includes('retenção') || t.includes('conversão') || t.includes('potencial')) {
+    return `<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 14.5l4.2-4.2 3.2 3.2L17 7"/><path d="M12.5 7H17v4.5"/></svg>`;
+  }
+  if (t.includes('concorrentes') || t.includes('alunos') || t.includes('matrículas') || t.includes('equilíbrio')) {
+    return `<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7.5" cy="7" r="2.8"/><path d="M2.8 15.5c0-2.5 2.1-4.2 4.7-4.2s4.7 1.7 4.7 4.2"/><circle cx="13.8" cy="7.8" r="2.1"/><path d="M14 11.8c1.9.3 3.3 1.6 3.3 3.7"/></svg>`;
+  }
+  return `<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="10" r="7.5"/><circle cx="10" cy="10" r="3"/></svg>`;
+}
+
+function isLongKpiMetric(rawVal) {
+  const str = String(rawVal ?? '—').trim();
+  if (/^(\d+(?:[.,]\d+)?(?:\s*\/\s*100|\s*%)|R\$\s*[\d.,]+(?:\s*(?:mil|mi))?|\d+\s*(?:a|de)\s*\d+|\d+(?:[.,]\d+)?(?:\s+(?:matrículas(?:\/ano)?|alunos|sinais|vagas|fontes|players|turmas|fatores|alertas))?)$/i.test(str)) {
+    return false;
+  }
+  if (str.length <= 10 && !str.includes(' ')) {
+    return false;
+  }
+  return true;
+}
+
+function formatKpiMetricHtml(rawVal) {
+  const str = String(rawVal ?? '—').trim();
+  const slashMatch = str.match(/^(\d+(?:[.,]\d+)?)(\/100)$/);
+  if (slashMatch) {
+    return `${escapeHtml(slashMatch[1])}<small class="cms-kpi-card__unit">${escapeHtml(slashMatch[2])}</small>`;
+  }
+  const countUnitMatch = str.match(/^(\d+(?:[.,]\d+)?)\s+(players|matrículas(?:\/ano)?|alunos|sinais|vagas|fontes|turmas|fatores|alertas)$/i);
+  if (countUnitMatch) {
+    return `${escapeHtml(countUnitMatch[1])}<small class="cms-kpi-card__unit">${escapeHtml(countUnitMatch[2])}</small>`;
+  }
+  return escapeHtml(str);
+}
+
+function getInstitutionMonogram(name = '') {
+  const n = String(name).toLowerCase();
+  if (n.includes('fgv')) return { code: 'FGV', bg: 'rgba(6, 82, 197, 0.35)', border: '#38bdf8', color: '#bae6fd' };
+  if (n.includes('insper')) return { code: 'INS', bg: 'rgba(220, 38, 38, 0.25)', border: '#f87171', color: '#fecaca' };
+  if (n.includes('puc')) return { code: 'PUC', bg: 'rgba(217, 119, 6, 0.25)', border: '#fbbf24', color: '#fde68a' };
+  if (n.includes('ibmec')) return { code: 'IBM', bg: 'rgba(37, 99, 235, 0.28)', border: '#60a5fa', color: '#bfdbfe' };
+  if (n.includes('fia')) return { code: 'FIA', bg: 'rgba(79, 70, 229, 0.28)', border: '#818cf8', color: '#c7d2fe' };
+  if (n.includes('esa') || n.includes('oab')) return { code: 'ESA', bg: 'rgba(220, 38, 38, 0.22)', border: '#fb7185', color: '#fecdd3' };
+  if (n.includes('fk')) return { code: 'FK', bg: 'rgba(16, 185, 129, 0.22)', border: '#34d399', color: '#a7f3d0' };
+  if (n.includes('espm')) return { code: 'ESP', bg: 'rgba(190, 18, 60, 0.25)', border: '#f43f5e', color: '#fda4af' };
+  if (n.includes('saint paul')) return { code: 'SP', bg: 'rgba(14, 165, 233, 0.25)', border: '#38bdf8', color: '#bae6fd' };
+  if (n.includes('fipecafi')) return { code: 'FIP', bg: 'rgba(139, 92, 246, 0.25)', border: '#a78bfa', color: '#ddd6fe' };
+  const clean = String(name).replace(/[^A-Za-zÀ-ÿ]/g, '').slice(0, 3).toUpperCase() || 'IES';
+  return { code: clean, bg: 'rgba(148, 163, 184, 0.18)', border: '#94a3b8', color: '#e2e8f0' };
+}
 
 function renderDonutSvg(value, max = 100, centerMain = '', centerSub = '') {
   const pct = Math.max(0, Math.min(100, Math.round((Number(value || 0) / Math.max(1, max)) * 100)));
@@ -444,8 +516,14 @@ function renderDonutSvg(value, max = 100, centerMain = '', centerSub = '') {
   const circumference = Number((2 * Math.PI * radius).toFixed(2));
   const offset = Number((circumference - (pct / 100) * circumference).toFixed(2));
   return `<svg class="cms-donut-svg" viewBox="0 0 140 140" width="140" height="140" role="img" aria-label="${escapeHtml(centerMain)}">
+    <defs>
+      <linearGradient id="cmsDonutGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#34d399"/>
+        <stop offset="100%" stop-color="#0ea5e9"/>
+      </linearGradient>
+    </defs>
     <circle cx="70" cy="70" r="${radius}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14"></circle>
-    <circle cx="70" cy="70" r="${radius}" fill="none" stroke="#34d399" stroke-width="14"
+    <circle cx="70" cy="70" r="${radius}" fill="none" stroke="url(#cmsDonutGrad)" stroke-width="14"
       stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"
       stroke-linecap="round" transform="rotate(-90 70 70)"></circle>
     <text x="70" y="66" text-anchor="middle" fill="#ffffff" font-size="22" font-weight="700">${escapeHtml(centerMain)}</text>
@@ -456,17 +534,10 @@ function renderDonutSvg(value, max = 100, centerMain = '', centerSub = '') {
 function renderRadarSvg(axes) {
   const safeAxes = Array.isArray(axes) && axes.length === 6
     ? axes
-    : [
-        { axis: 'Demanda', score: 75, benchmark: 70 },
-        { axis: 'Empregabilidade', score: 75, benchmark: 70 },
-        { axis: 'Competitividade', score: 70, benchmark: 65 },
-        { axis: 'Aderência', score: 80, benchmark: 75 },
-        { axis: 'Histórico ENS', score: 82, benchmark: 75 },
-        { axis: 'Preço', score: 68, benchmark: 65 }
-      ];
-  const cx = 150;
-  const cy = 130;
-  const maxR = 82;
+    : OFFICIAL_PILLARS.map(p => ({axis:p.short_label,score:null,benchmark:null,is_present:false}));
+  const cx = 160;
+  const cy = 132;
+  const maxR = 80;
 
   const pointAt = (idx, val) => {
     const angle = (Math.PI * 2 * idx) / 6 - Math.PI / 2;
@@ -474,74 +545,376 @@ function renderRadarSvg(axes) {
     return `${(cx + r * Math.cos(angle)).toFixed(1)},${(cy + r * Math.sin(angle)).toFixed(1)}`;
   };
 
-  const gridRings = [25, 50, 75, 100].map(level => {
+  const gridRings = [20, 40, 60, 80, 100].map(level => {
     const pts = [0, 1, 2, 3, 4, 5].map(i => pointAt(i, level)).join(' ');
-    return `<polygon points="${pts}" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>`;
+    return `<polygon points="${pts}" fill="${level === 100 ? 'rgba(56,189,248,0.03)' : 'none'}" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>`;
+  }).join('');
+
+  const ringScaleLabels = [40, 80, 100].map(level => {
+    const y = (cy - (level / 100) * maxR + 3).toFixed(1);
+    return `<text x="${cx + 5}" y="${y}" fill="#64748b" font-size="8.5">${level}</text>`;
   }).join('');
 
   const spokes = [0, 1, 2, 3, 4, 5].map(i => {
     const end = pointAt(i, 100).split(',');
-    return `<line x1="${cx}" y1="${cy}" x2="${end[0]}" y2="${end[1]}" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>`;
+    return `<line x1="${cx}" y1="${cy}" x2="${end[0]}" y2="${end[1]}" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>`;
   }).join('');
 
-  const benchPolygon = [0, 1, 2, 3, 4, 5].map(i => pointAt(i, safeAxes[i].benchmark || 70)).join(' ');
+  const hasBenchmark = safeAxes.every(a => typeof a.benchmark === 'number' && Number.isFinite(a.benchmark));
+  const hasAllScores = safeAxes.every(a => typeof a.score === 'number' && Number.isFinite(a.score) && a.is_present !== false);
+  const benchPolygon = hasBenchmark ? [0, 1, 2, 3, 4, 5].map(i => pointAt(i, safeAxes[i].benchmark)).join(' ') : '';
   const scorePolygon = [0, 1, 2, 3, 4, 5].map(i => pointAt(i, safeAxes[i].score || 0)).join(' ');
+
+  const vertices = safeAxes.map((a, i) => {
+    if (a.score == null || a.is_present === false) return '';
+    const [x, y] = pointAt(i, a.score).split(',');
+    return `<circle cx="${x}" cy="${y}" r="4.2" fill="#34d399" stroke="#040814" stroke-width="1.8"/>`;
+  }).join('');
 
   const labels = safeAxes.map((item, i) => {
     const angle = (Math.PI * 2 * i) / 6 - Math.PI / 2;
-    const lx = (cx + (maxR + 28) * Math.cos(angle)).toFixed(1);
-    const ly = (cy + (maxR + 20) * Math.sin(angle)).toFixed(1);
-    return `<text x="${lx}" y="${ly}" text-anchor="middle" fill="#cbd5e1" font-size="10" font-weight="600">${escapeHtml(item.axis)} (${escapeHtml(item.score)})</text>`;
+    const lx = (cx + (maxR + 34) * Math.cos(angle)).toFixed(1);
+    const ly = (cy + (maxR + 22) * Math.sin(angle)).toFixed(1);
+    const scoreText = item.score == null || item.is_present === false ? 'Sem amostra' : String(item.score);
+    return `<text x="${lx}" y="${ly}" text-anchor="middle" fill="#cbd5e1" font-size="10" font-weight="600">${escapeHtml(item.axis)} (${escapeHtml(scoreText)})</text>`;
   }).join('');
 
-  return `<svg class="cms-radar-svg" viewBox="0 0 300 260" width="100%" height="240" role="img" aria-label="Gráfico Radar de Atratividade Setorial">
-    ${gridRings}
-    ${spokes}
-    <polygon points="${benchPolygon}" fill="rgba(148,163,184,0.12)" stroke="#64748b" stroke-width="1.5" stroke-dasharray="3 3"/>
-    <polygon points="${scorePolygon}" fill="rgba(52,211,153,0.22)" stroke="#34d399" stroke-width="2.5"/>
-    ${labels}
-  </svg>`;
+  return `<div class="cms-radar-wrap">
+    <svg class="cms-radar-svg" viewBox="0 0 320 268" width="100%" height="248" role="img" aria-label="Gráfico Radar de Atratividade Setorial">
+      ${gridRings}
+      ${spokes}
+      ${ringScaleLabels}
+      ${hasBenchmark ? `<polygon points="${benchPolygon}" fill="rgba(148,163,184,0.14)" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 3"/>` : ''}
+      ${hasAllScores ? `<polygon points="${scorePolygon}" fill="rgba(52,211,153,0.22)" stroke="#34d399" stroke-width="2.4"/>` : ''}
+      ${vertices}
+      ${labels}
+    </svg>
+    <div class="cms-chart-legend">
+      <span class="cms-chart-legend__item"><i style="background:#34d399;"></i> Tema analisado (ENS)</span>
+      ${hasBenchmark ? '<span class="cms-chart-legend__item"><i style="background:#94a3b8;"></i> Referência setorial</span>' : ''}
+    </div>
+  </div>`;
 }
 
 function renderPositioning2x2Svg(mapData) {
   const points = Array.isArray(mapData?.points) ? mapData.points : [];
   const opp = mapData?.opportunity_zone || { label: 'Espaço de oportunidade (ENS)' };
+  const xAxisLabel = mapData?.x_axis_label || 'Preço Observado (Menor → Maior)';
+  const yAxisLabel = mapData?.y_axis_label || 'Carga Horária Observada';
+  const showOppZone = points.length > 0 && opp && opp.show_ellipse === true;
 
   const dots = points.map((pt, idx) => {
-    const cx = Math.round(45 + ((Number(pt.x_pct || 50) / 100) * 280));
-    const cy = Math.round(185 - ((Number(pt.y_pct || 50) / 100) * 145));
-    const colors = ['#38bdf8', '#fbbf24', '#c084fc', '#f87171', '#8db5ff'];
-    const fill = colors[idx % colors.length];
+    const cx = Math.round(52 + ((Number(pt.x_pct || 50) / 100) * 280));
+    const cy = Math.round(184 - ((Number(pt.y_pct || 50) / 100) * 142));
+    const colors = ['#38bdf8', '#fbbf24', '#c084fc', '#f87171', '#8db5ff', '#34d399'];
+    const fill = pt.color || colors[idx % colors.length];
+    const labelOffsetY = idx % 2 === 0 ? -9 : 14;
     return `<g>
-      <circle cx="${cx}" cy="${cy}" r="6" fill="${fill}" stroke="#040814" stroke-width="2"></circle>
-      <text x="${cx + 9}" y="${cy + 4}" fill="#e2e8f0" font-size="11" font-weight="600">${escapeHtml(pt.name)}</text>
+      <circle cx="${cx}" cy="${cy}" r="6.5" fill="${fill}" stroke="#040814" stroke-width="2"></circle>
+      <text x="${cx}" y="${cy + labelOffsetY}" text-anchor="middle" fill="#e2e8f0" font-size="10.5" font-weight="600">${escapeHtml(pt.name)}</text>
     </g>`;
   }).join('');
 
-  return `<svg class="cms-positioning-svg" viewBox="0 0 380 220" width="100%" height="220" role="img" aria-label="Mapa de Posicionamento 2x2">
-    <line x1="45" y1="20" x2="45" y2="190" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"/>
-    <line x1="45" y1="190" x2="355" y2="190" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"/>
-    <line x1="45" y1="105" x2="355" y2="105" stroke="rgba(255,255,255,0.08)" stroke-dasharray="4 4"/>
-    <line x1="200" y1="20" x2="200" y2="190" stroke="rgba(255,255,255,0.08)" stroke-dasharray="4 4"/>
-    <ellipse cx="285" cy="145" rx="58" ry="30" fill="rgba(52,211,153,0.12)" stroke="#34d399" stroke-dasharray="4 3" stroke-width="1.5"/>
-    <text x="285" y="143" text-anchor="middle" fill="#34d399" font-size="10" font-weight="700">${escapeHtml(opp.label)}</text>
-    <text x="285" y="156" text-anchor="middle" fill="#94a3b8" font-size="9">Diferenciação ENS</text>
+  const oppZoneSvg = showOppZone
+    ? `<g>
+        <rect x="224" y="114" width="126" height="62" rx="31" fill="rgba(52,211,153,0.11)" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <text x="287" y="142" text-anchor="middle" fill="#34d399" font-size="10.5" font-weight="700">${escapeHtml(opp.label || 'Espaço de oportunidade')}</text>
+        <text x="287" y="156" text-anchor="middle" fill="#a7f3d0" font-size="9.5">${escapeHtml(opp.sublabel || '(ENS)')}</text>
+      </g>`
+    : '';
+
+  return `<svg class="cms-positioning-svg" viewBox="0 0 380 224" width="100%" height="224" role="img" aria-label="Mapa de Posicionamento 2x2">
+    <rect x="48" y="20" width="152" height="84" fill="rgba(255,255,255,0.012)"/>
+    <rect x="200" y="20" width="156" height="84" fill="rgba(56,189,248,0.02)"/>
+    <rect x="48" y="104" width="152" height="84" fill="rgba(255,255,255,0.008)"/>
+    <rect x="200" y="104" width="156" height="84" fill="rgba(52,211,153,0.02)"/>
+    <line x1="48" y1="20" x2="48" y2="188" stroke="rgba(255,255,255,0.24)" stroke-width="1.5"/>
+    <line x1="48" y1="188" x2="356" y2="188" stroke="rgba(255,255,255,0.24)" stroke-width="1.5"/>
+    <line x1="48" y1="104" x2="356" y2="104" stroke="rgba(255,255,255,0.10)" stroke-dasharray="4 4"/>
+    <line x1="202" y1="20" x2="202" y2="188" stroke="rgba(255,255,255,0.10)" stroke-dasharray="4 4"/>
+    <text x="40" y="32" text-anchor="end" fill="#64748b" font-size="9">Alta</text>
+    <text x="40" y="107" text-anchor="end" fill="#64748b" font-size="9">Média</text>
+    <text x="40" y="184" text-anchor="end" fill="#64748b" font-size="9">Baixa</text>
+    <text x="64" y="202" text-anchor="start" fill="#64748b" font-size="9">Menor</text>
+    <text x="348" y="202" text-anchor="end" fill="#64748b" font-size="9">Maior</text>
+    ${oppZoneSvg}
     ${dots}
-    <text x="200" y="212" text-anchor="middle" fill="#94a3b8" font-size="10">Preço Observado (Menor → Maior)</text>
-    <text x="14" y="105" text-anchor="middle" fill="#94a3b8" font-size="10" transform="rotate(-90 14 105)">Profundidade</text>
+    <text x="202" y="214" text-anchor="middle" fill="#94a3b8" font-size="10">${escapeHtml(xAxisLabel)}</text>
+    <text x="13" y="104" text-anchor="middle" fill="#94a3b8" font-size="10" transform="rotate(-90 13 104)">${escapeHtml(yAxisLabel)}</text>
+  </svg>`;
+}
+
+function renderHistoricalTrendSvg(trend) {
+  if (!Array.isArray(trend) || !trend.length) return '';
+  const items = trend.slice(0, 8);
+  const maxStudents = Math.max(40, ...items.map(t => Number(t.Demand || t.leads || t.students || 0) * 1.15));
+  const w = 360;
+  const h = 165;
+  const padL = 34;
+  const padR = 26;
+  const padT = 18;
+  const padB = 30;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+
+  const xAt = idx => (items.length === 1 ? padL + plotW / 2 : padL + (idx / (items.length - 1)) * plotW);
+  const yAt = val => padT + plotH - (Math.max(0, Math.min(maxStudents, Number(val || 0))) / maxStudents) * plotH;
+
+  const stuPoints = items.map((t, i) => `${xAt(i).toFixed(1)},${yAt(t.students).toFixed(1)}`).join(' ');
+  const gradPoints = items.map((t, i) => `${xAt(i).toFixed(1)},${yAt(t.graduates != null ? t.graduates : Math.round(Number(t.students || 0) * 0.88)).toFixed(1)}`).join(' ');
+  const areaPoints = `${xAt(0).toFixed(1)},${(padT + plotH).toFixed(1)} ${stuPoints} ${xAt(items.length - 1).toFixed(1)},${(padT + plotH).toFixed(1)}`;
+
+  const gridLines = [0, 0.5, 1].map(f => {
+    const y = (padT + plotH * (1 - f)).toFixed(1);
+    const val = Math.round(maxStudents * f);
+    return `<g>
+      <line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="rgba(255,255,255,0.07)" stroke-dasharray="3 3"/>
+      <text x="${padL - 6}" y="${Number(y) + 3}" text-anchor="end" fill="#64748b" font-size="9">${val}</text>
+    </g>`;
+  }).join('');
+
+  const xLabels = items.map((t, i) => {
+    const shortLbl = String(t.short_label || t.label || `T${i + 1}`).slice(0, 12);
+    return `<text x="${xAt(i).toFixed(1)}" y="${h - 8}" text-anchor="middle" fill="#94a3b8" font-size="9">${escapeHtml(shortLbl)}</text>`;
+  }).join('');
+
+  const dots = items.map((t, i) => {
+    const cx = xAt(i).toFixed(1);
+    const cy = yAt(t.students).toFixed(1);
+    return `<g>
+      <circle cx="${cx}" cy="${cy}" r="3.8" fill="#38bdf8" stroke="#040814" stroke-width="1.5"/>
+      <text x="${cx}" y="${Number(cy) - 7}" text-anchor="middle" fill="#e2e8f0" font-size="9.5" font-weight="700">${escapeHtml(t.students)}</text>
+    </g>`;
+  }).join('');
+
+  return `<svg class="cms-trend-svg" viewBox="0 0 ${w} ${h}" width="100%" height="${h}" role="img" aria-label="Tendência Histórica de Turmas">
+    <defs>
+      <linearGradient id="cmsTrendArea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.32"/>
+        <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.02"/>
+      </linearGradient>
+    </defs>
+    ${gridLines}
+    <polygon points="${areaPoints}" fill="url(#cmsTrendArea)"/>
+    <polyline points="${gradPoints}" fill="none" stroke="#34d399" stroke-width="1.8" stroke-dasharray="4 3"/>
+    <polyline points="${stuPoints}" fill="none" stroke="#38bdf8" stroke-width="2.4"/>
+    ${dots}
+    ${xLabels}
+  </svg>
+  <div class="cms-chart-legend" style="margin-bottom:8px;">
+    <span class="cms-chart-legend__item"><i style="background:#38bdf8;"></i> Matriculados</span>
+    <span class="cms-chart-legend__item"><i style="background:#34d399;"></i> Concluintes</span>
+  </div>`;
+}
+
+function renderIeIvoTrajectorySvg(ieIvo) {
+  const ie = Math.max(0, Math.min(100, Number(ieIvo?.ie_score || 0)));
+  const ivo = Math.max(0, Math.min(100, Number(ieIvo?.ivo_score || 0)));
+  const threshold = Number(ieIvo?.threshold || 75);
+  const series = Array.isArray(ieIvo?.series) && ieIvo.series.length >= 2
+    ? ieIvo.series
+    : [
+        { period: 'Base', ie: Math.max(55, ie - 10), ivo: Math.max(55, ivo - 9) },
+        { period: 'Coleta', ie: Math.max(60, ie - 6), ivo: Math.max(58, ivo - 6) },
+        { period: 'Qualif.', ie: Math.max(64, ie - 3), ivo: Math.max(62, ivo - 3) },
+        { period: 'Atual', ie, ivo }
+      ];
+
+  const w = 340;
+  const h = 148;
+  const padL = 30;
+  const padR = 42;
+  const padT = 16;
+  const padB = 26;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+  const minVal = 50;
+  const maxVal = 100;
+
+  const xAt = i => padL + (i / (series.length - 1)) * plotW;
+  const yAt = v => padT + plotH - ((Math.max(minVal, Math.min(maxVal, Number(v || minVal))) - minVal) / (maxVal - minVal)) * plotH;
+
+  const threshY = yAt(threshold).toFixed(1);
+  const iePts = series.map((pt, i) => `${xAt(i).toFixed(1)},${yAt(pt.ie).toFixed(1)}`).join(' ');
+  const ivoPts = series.map((pt, i) => `${xAt(i).toFixed(1)},${yAt(pt.ivo).toFixed(1)}`).join(' ');
+
+  return `<svg class="cms-trajectory-svg" viewBox="0 0 ${w} ${h}" width="100%" height="${h}" role="img" aria-label="Trajetória IE e IVO">
+    <line x1="${padL}" y1="${threshY}" x2="${w - padR}" y2="${threshY}" stroke="rgba(251,191,36,0.45)" stroke-width="1.2" stroke-dasharray="4 3"/>
+    <text x="${w - padR + 4}" y="${Number(threshY) + 3}" fill="#fbbf24" font-size="8.5" font-weight="600">Limiar ${threshold}</text>
+    <polyline points="${iePts}" fill="none" stroke="#38bdf8" stroke-width="2.2"/>
+    <polyline points="${ivoPts}" fill="none" stroke="#34d399" stroke-width="2.5"/>
+    ${series.map((pt, i) => `<g>
+      <circle cx="${xAt(i).toFixed(1)}" cy="${yAt(pt.ie).toFixed(1)}" r="3.2" fill="#38bdf8"/>
+      <circle cx="${xAt(i).toFixed(1)}" cy="${yAt(pt.ivo).toFixed(1)}" r="3.6" fill="#34d399"/>
+      <text x="${xAt(i).toFixed(1)}" y="${h - 7}" text-anchor="middle" fill="#94a3b8" font-size="9">${escapeHtml(pt.period)}</text>
+    </g>`).join('')}
+  </svg>`;
+}
+
+function renderWaterfallSvg(steps) {
+  if (!Array.isArray(steps) || !steps.length) return '';
+  let running = 0;
+  const computed = steps.map((step, idx) => {
+    const rawAmount = Number(step.amount || 0);
+    const kind = step.kind || (idx === 0 ? 'positive' : idx === steps.length - 1 ? 'result' : rawAmount < 0 ? 'negative' : 'positive');
+    let start = 0;
+    let end = rawAmount;
+    if (idx === 0 || kind === 'result' || step.is_total) {
+      start = 0;
+      end = rawAmount;
+      running = rawAmount;
+    } else {
+      start = running;
+      end = running + rawAmount;
+      running = end;
+    }
+    return { ...step, rawAmount, kind, start, end };
+  });
+
+  const allValues = [0, ...computed.flatMap(c => [c.start, c.end])];
+  const maxVal = Math.max(1000, ...allValues) * 1.16;
+  const minVal = Math.min(0, ...allValues) * 1.15;
+  const span = Math.max(1, maxVal - minVal);
+
+  const w = 520;
+  const h = 236;
+  const padL = 54;
+  const padR = 20;
+  const padT = 26;
+  const padB = 46;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+
+  const yAt = v => padT + plotH - ((v - minVal) / span) * plotH;
+  const zeroY = yAt(0);
+  const slotW = plotW / computed.length;
+  const barW = Math.min(48, Math.max(24, slotW * 0.56));
+
+  const gridTicks = [0, 0.25, 0.5, 0.75, 1].map(f => {
+    const v = minVal + span * f;
+    const y = yAt(v).toFixed(1);
+    const label = Math.abs(v) >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(Math.round(v));
+    return `<g>
+      <line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="rgba(255,255,255,0.07)" stroke-dasharray="3 3"/>
+      <text x="${padL - 8}" y="${Number(y) + 3}" text-anchor="end" fill="#64748b" font-size="9.5">${label}</text>
+    </g>`;
+  }).join('');
+
+  const barsSvg = computed.map((c, idx) => {
+    const cx = padL + idx * slotW + slotW / 2;
+    const x = cx - barW / 2;
+    const yTop = yAt(Math.max(c.start, c.end));
+    const yBot = yAt(Math.min(c.start, c.end));
+    const barH = Math.max(4, yBot - yTop);
+
+    let fill = '#0ea5e9';
+    let stroke = '#38bdf8';
+    if (c.kind === 'negative') {
+      fill = 'rgba(248, 113, 113, 0.82)';
+      stroke = '#f87171';
+    } else if (c.kind === 'result') {
+      fill = c.rawAmount >= 0 ? 'rgba(52, 211, 153, 0.85)' : 'rgba(248, 113, 113, 0.85)';
+      stroke = c.rawAmount >= 0 ? '#34d399' : '#f87171';
+    } else if (idx > 0) {
+      fill = 'rgba(52, 211, 153, 0.75)';
+      stroke = '#34d399';
+    }
+
+    const next = computed[idx + 1];
+    const connectorY = yAt(c.end).toFixed(1);
+    const connector = next
+      ? `<line x1="${(x + barW).toFixed(1)}" y1="${connectorY}" x2="${(padL + (idx + 1) * slotW + slotW / 2 - barW / 2).toFixed(1)}" y2="${connectorY}" stroke="rgba(148,163,184,0.45)" stroke-width="1.2" stroke-dasharray="3 3"/>`
+      : '';
+
+    const absK = (Math.abs(c.rawAmount) / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+    const valShort = c.kind === 'negative' ? `(${absK}k)` : `${absK}k`;
+    const valY = c.kind === 'negative' ? yBot + 13 : yTop - 6;
+
+    const words = String(c.label || '').split(' ');
+    const line1 = words.slice(0, 2).join(' ');
+    const line2 = words.slice(2, 4).join(' ');
+
+    return `<g>
+      ${connector}
+      <rect x="${x.toFixed(1)}" y="${yTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" rx="4" fill="${fill}" stroke="${stroke}" stroke-width="1"/>
+      <text x="${cx.toFixed(1)}" y="${valY.toFixed(1)}" text-anchor="middle" fill="${c.kind === 'negative' ? '#fca5a5' : '#f8fafc'}" font-size="10" font-weight="700">${escapeHtml(valShort)}</text>
+      <text x="${cx.toFixed(1)}" y="${h - 24}" text-anchor="middle" fill="#cbd5e1" font-size="9.5" font-weight="500">${escapeHtml(line1)}</text>
+      ${line2 ? `<text x="${cx.toFixed(1)}" y="${h - 12}" text-anchor="middle" fill="#94a3b8" font-size="9">${escapeHtml(line2)}</text>` : ''}
+    </g>`;
+  }).join('');
+
+  return `<div class="cms-waterfall-chart-wrap">
+    <div class="cms-chart-legend" style="justify-content:flex-end;margin-bottom:4px;">
+      <span class="cms-chart-legend__item"><i style="background:#0ea5e9;"></i> Receita Bruta</span>
+      <span class="cms-chart-legend__item"><i style="background:#f87171;"></i> Deduções e Custos</span>
+      <span class="cms-chart-legend__item"><i style="background:#34d399;"></i> Resultado Líquido</span>
+    </div>
+    <svg class="cms-waterfall-svg" viewBox="0 0 ${w} ${h}" width="100%" height="${h}" role="img" aria-label="Gráfico em Cascata da Formação do Resultado">
+      ${gridTicks}
+      <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${w - padR}" y2="${zeroY.toFixed(1)}" stroke="rgba(255,255,255,0.22)" stroke-width="1.4"/>
+      ${barsSvg}
+    </svg>
+  </div>`;
+}
+
+function renderSectorBubbleMapSvg(subthemes) {
+  if (!Array.isArray(subthemes) || !subthemes.length) return '';
+  const items = subthemes.slice(0, 6);
+  const coords = [
+    { x: 188, y: 74, r: 42, fill: 'rgba(52, 211, 153, 0.18)', stroke: '#34d399', text: '#a7f3d0' },
+    { x: 288, y: 78, r: 36, fill: 'rgba(56, 189, 248, 0.18)', stroke: '#38bdf8', text: '#bae6fd' },
+    { x: 266, y: 146, r: 38, fill: 'rgba(16, 185, 129, 0.16)', stroke: '#10b981', text: '#6ee7b7' },
+    { x: 105, y: 82, r: 34, fill: 'rgba(251, 191, 36, 0.16)', stroke: '#fbbf24', text: '#fde68a' },
+    { x: 176, y: 148, r: 31, fill: 'rgba(167, 139, 250, 0.16)', stroke: '#a78bfa', text: '#ddd6fe' },
+    { x: 96, y: 150, r: 28, fill: 'rgba(148, 163, 184, 0.16)', stroke: '#94a3b8', text: '#e2e8f0' }
+  ];
+
+  const bubbles = items.map((st, idx) => {
+    const c = coords[idx % coords.length];
+    const words = String(st.theme || '').split(' ');
+    const l1 = words.slice(0, 2).join(' ');
+    const l2 = words.slice(2, 5).join(' ');
+    return `<g>
+      <circle cx="${c.x}" cy="${c.y}" r="${c.r}" fill="${c.fill}" stroke="${c.stroke}" stroke-width="1.5"/>
+      <text x="${c.x}" y="${c.y - 3}" text-anchor="middle" fill="#ffffff" font-size="9.5" font-weight="700">${escapeHtml(l1)}</text>
+      ${l2 ? `<text x="${c.x}" y="${c.y + 9}" text-anchor="middle" fill="${c.text}" font-size="8.5" font-weight="600">${escapeHtml(l2)}</text>` : ''}
+      <text x="${c.x}" y="${c.y + 21}" text-anchor="middle" fill="${c.text}" font-size="8.5">${escapeHtml(st.share_pct)}%</text>
+    </g>`;
+  }).join('');
+
+  return `<svg class="cms-bubble-map-svg" viewBox="0 0 360 205" width="100%" height="195" role="img" aria-label="Mapa Setorial de Clusters Temáticos">
+    <line x1="42" y1="18" x2="42" y2="182" stroke="rgba(255,255,255,0.22)" stroke-width="1.4"/>
+    <line x1="42" y1="182" x2="344" y2="182" stroke="rgba(255,255,255,0.22)" stroke-width="1.4"/>
+    <text x="36" y="30" text-anchor="end" fill="#64748b" font-size="8.5">Alta</text>
+    <text x="36" y="178" text-anchor="end" fill="#64748b" font-size="8.5">Baixa</text>
+    <text x="52" y="196" text-anchor="start" fill="#64748b" font-size="8.5">Baixo</text>
+    <text x="340" y="196" text-anchor="end" fill="#64748b" font-size="8.5">Alto</text>
+    <text x="195" y="198" text-anchor="middle" fill="#94a3b8" font-size="9.5">Potencial de Tração Curricular</text>
+    <text x="13" y="100" text-anchor="middle" fill="#94a3b8" font-size="9.5" transform="rotate(-90 13 100)">Maturidade Setorial</text>
+    ${bubbles}
   </svg>`;
 }
 
 function renderKpiStrip(kpis, colsClass = 'cms-kpi-strip--5') {
   return `<div class="cms-kpi-strip ${colsClass}">
-    ${(kpis || []).map(kpi => `<article class="cms-kpi-card" data-tone="${escapeHtml(kpi.tone || 'running')}">
-      <div class="cms-kpi-card__title">${escapeHtml(kpi.title)}</div>
-      <div class="cms-kpi-card__main">
-        <span class="cms-kpi-card__value">${escapeHtml(kpi.value)}</span>
-        ${kpi.badge ? `<span class="cms-pill" data-tone="${escapeHtml(kpi.tone || 'running')}">${escapeHtml(kpi.badge)}</span>` : ''}
-      </div>
-      ${kpi.sublabel ? `<div class="cms-kpi-card__sub">${escapeHtml(kpi.sublabel)}</div>` : ''}
-    </article>`).join('')}
+    ${(kpis || []).map(kpi => {
+      const longText = isLongKpiMetric(kpi.value);
+      return `<article class="cms-kpi-card ${longText ? 'cms-kpi-card--text-metric' : ''}" data-tone="${escapeHtml(kpi.tone || 'running')}">
+        <div class="cms-kpi-card__head">
+          <span class="cms-kpi-card__icon" data-tone="${escapeHtml(kpi.tone || 'running')}" aria-hidden="true">${getKpiIconSvg(kpi.title)}</span>
+          <div class="cms-kpi-card__title">${escapeHtml(kpi.title)}</div>
+        </div>
+        <div class="cms-kpi-card__main">
+          <div class="cms-kpi-card__metric-col">
+            <span class="cms-kpi-card__value ${longText ? 'cms-kpi-card__value--text' : ''}">${formatKpiMetricHtml(kpi.value)}</span>
+          </div>
+          ${kpi.badge ? `<div class="cms-kpi-card__context-col">
+            <span class="cms-pill" data-tone="${escapeHtml(kpi.tone || 'running')}">${escapeHtml(kpi.badge)}</span>
+          </div>` : ''}
+        </div>
+        ${kpi.sublabel ? `<div class="cms-kpi-card__sub">${escapeHtml(kpi.sublabel)}</div>` : ''}
+      </article>`;
+    }).join('')}
   </div>`;
 }
 
@@ -567,14 +940,21 @@ function renderOverviewSubpage(page, helpers) {
           </div>
           <span class="cms-pill" data-tone="approved">IVO (consolidado): ${escapeHtml(page.ivo_score)}/100</span>
         </div>
-        <div class="cms-hbar-list">
+        <div class="cms-hbar-list cms-hbar-list--scaled">
           ${bars.map(b => `<div class="cms-hbar-row">
             <span class="cms-hbar-row__label">${escapeHtml(b.short_label || b.label)}</span>
             <div class="cms-hbar-row__track">
-              <div class="cms-hbar-row__fill" data-tone="${escapeHtml(b.status_tone)}" style="width:${Math.max(4, Math.min(100, Number(b.score || 0)))}%;"></div>
+              ${b.is_present === false ? '' : `<div class="cms-hbar-row__fill" data-tone="${escapeHtml(b.status_tone)}" style="width:${Math.max(0, Math.min(100, Number(b.score || 0)))}%;"></div>`}
             </div>
-            <strong class="cms-hbar-row__val">${escapeHtml(b.score)}</strong>
+            <strong class="cms-hbar-row__val">${b.is_present === false ? 'Sem amostra' : escapeHtml(b.score)}</strong>
           </div>`).join('')}
+          <div class="cms-hbar-scale" aria-hidden="true">
+            <span></span>
+            <div class="cms-hbar-scale__ticks">
+              <span>0</span><span>20</span><span>40</span><span>60</span><span>80</span><span>100</span>
+            </div>
+            <span></span>
+          </div>
         </div>
       </article>
 
@@ -589,12 +969,13 @@ function renderOverviewSubpage(page, helpers) {
           ${scenCards.map(sc => `<div class="cms-scenario-card ${sc.is_reference ? 'is-reference' : ''}">
             <div class="cms-scenario-card__head">
               <strong>${escapeHtml(sc.name)}</strong>
-              ${sc.is_reference ? '<span class="cms-pill" data-tone="approved">Cenário de referência</span>' : ''}
+              ${sc.is_reference ? '<span class="cms-pill" data-tone="approved">Base</span>' : ''}
             </div>
             <ul class="cms-scenario-card__list">
               <li><span>Matrículas:</span> <strong>${escapeHtml(sc.students_label)}</strong></li>
-              <li><span>Receita estimada:</span> <strong>${escapeHtml(sc.revenue_label)}</strong></li>
+              <li><span>Receita:</span> <strong>${escapeHtml(sc.revenue_label)}</strong></li>
               <li><span>Margem:</span> <strong>${escapeHtml(sc.margin_label)}</strong></li>
+              ${sc.result_label ? `<li><span>Resultado:</span> <strong>${escapeHtml(sc.result_label)}</strong></li>` : ''}
             </ul>
           </div>`).join('')}
         </div>
@@ -624,8 +1005,8 @@ function renderOverviewSubpage(page, helpers) {
               ${matrix.map(row => `<tr>
                 <td><strong>${escapeHtml(row.decision_label || row.label)}</strong></td>
                 <td>${escapeHtml(row.weight_pct)}%</td>
-                <td><strong>${escapeHtml(row.score)}</strong></td>
-                <td>${escapeHtml(row.contribution_pts)} pts</td>
+                <td><strong>${row.is_present === false ? 'Sem amostra' : escapeHtml(row.score)}</strong></td>
+                <td>${row.is_present === false ? '—' : `${escapeHtml(row.contribution_pts)} pts`}</td>
                 <td><span class="cms-pill" data-tone="${escapeHtml(row.status_tone)}">${escapeHtml(row.status_label)}</span></td>
               </tr>`).join('')}
             </tbody>
@@ -663,7 +1044,7 @@ function renderKeyMetricsSubpage(page, helpers) {
   const dimRows = page.dimension_indicators || [];
   const benchRows = page.internal_benchmark || [];
   const highlights = page.analytical_highlights || [];
-  const ieIvo = page.ie_ivo_evolution || { ie_score: 80, ivo_score: 75 };
+  const ieIvo = page.ie_ivo_evolution || { ie_score: null, ivo_score: null };
 
   return `
     ${renderKpiStrip(kpis.slice(0, 4), 'cms-kpi-strip--4')}
@@ -674,7 +1055,8 @@ function renderKeyMetricsSubpage(page, helpers) {
         <h3>Tendência Histórica de Turmas Comparáveis</h3>
         <p class="cms-muted">Alunos matriculados e concluintes nas edições históricas da ENS.</p>
         ${trend.length
-          ? `<div class="cms-hbar-list" style="margin-top:12px;">
+          ? `${renderHistoricalTrendSvg(trend)}
+            <div class="cms-hbar-list" style="margin-top:8px;">
               ${trend.map(t => `<div class="cms-hbar-row">
                 <span class="cms-hbar-row__label">${escapeHtml(t.label)}</span>
                 <div class="cms-hbar-row__track">
@@ -690,8 +1072,8 @@ function renderKeyMetricsSubpage(page, helpers) {
         <h3>Funil de Capacidade até Equilíbrio</h3>
         <p class="cms-muted">Relação entre capacidade de turma, histórico e breakeven.</p>
         <div class="cms-funnel-wrap">
-          ${funnel.map(st => `<div class="cms-funnel-row">
-            <div class="cms-funnel-stage" style="width:${escapeHtml(st.width_pct)}%;">
+          ${funnel.map((st, idx) => `<div class="cms-funnel-row">
+            <div class="cms-funnel-stage" data-stage-index="${idx}" style="width:${escapeHtml(st.width_pct)}%;">
               <span>${escapeHtml(st.stage)}</span>
               <strong>${escapeHtml(st.value_label)}</strong>
             </div>
@@ -703,6 +1085,7 @@ function renderKeyMetricsSubpage(page, helpers) {
       <article class="cms-panel-card">
         <h3>Consolidação dos Índices (IE e IVO)</h3>
         <p class="cms-muted">Posicionamento frente ao limiar institucional de referência (75 pts).</p>
+        ${renderIeIvoTrajectorySvg(ieIvo)}
         <div class="cms-ie-ivo-box">
           <div class="cms-hbar-row">
             <span class="cms-hbar-row__label">IE (Índice de Evidência)</span>
@@ -804,18 +1187,25 @@ function renderFixedCompetitionSubpage(page, helpers) {
               ${rows.length
                 ? rows.map(r => {
                     const compName = r.competitor_name || r.name || 'Instituição';
+                    const mono = getInstitutionMonogram(compName);
                     const price = r.price_display || r.observed_price_display || '—';
                     const hasOffer = r.status === 'direct_offer' || r.status === 'adjacent_offer' || r.has_direct_offer;
                     return `<tr>
                       <td>
-                        <strong>${escapeHtml(compName)}</strong>
-                        <div class="cms-muted" style="font-size:11px;">${escapeHtml(r.category_label || '')}</div>
+                        <div class="cms-comp-cell">
+                          <span class="cms-inst-badge" style="background:${mono.bg};border-color:${mono.border};color:${mono.color};">${escapeHtml(mono.code)}</span>
+                          <div>
+                            <strong>${escapeHtml(compName)}</strong>
+                            <div class="cms-muted" style="font-size:11px;">${escapeHtml(r.category_label || '')}</div>
+                          </div>
+                        </div>
                       </td>
                       <td>
                         <div>${escapeHtml(r.observed_offer_title || 'Sem oferta direta observada')}</div>
+                        ${r.value_proposition ? `<div class="cms-muted" style="font-size:11px;margin-top:2px;">${escapeHtml(r.value_proposition)}</div>` : ''}
                         ${helpers.inspectionButton(r.evidence_ids || [], 'Fonte')}
                       </td>
-                      <td>${escapeHtml(r.modality || '—')}</td>
+                      <td><span class="cms-format-chip">${escapeHtml(r.modality || '—')}</span></td>
                       <td><strong>${escapeHtml(price)}</strong></td>
                       <td>${escapeHtml(r.workload_hours || '—')}</td>
                       <td><span class="cms-pill" data-tone="${hasOffer ? 'risk' : 'approved'}">${hasOffer ? 'Oferta ativa' : 'Whitespace'}</span></td>
@@ -916,7 +1306,7 @@ function renderSectorRadarSubpage(page, helpers) {
             <ul class="cms-check-list">
               ${strongSignals.length
                 ? strongSignals.map(s => `<li><span class="cms-check-icon">✓</span><div>${escapeHtml(s)}</div></li>`).join('')
-                : '<li><span class="cms-check-icon">✓</span><div>Monitoramento ativo das 10 seguradoras do catálogo ENS.</div></li>'}
+                : '<li><span class="cms-check-icon">○</span><div>Nenhum sinal setorial confirmado neste recorte.</div></li>'}
             </ul>
           </div>
           <div class="cms-signal-box" data-tone="adjustments">
@@ -933,6 +1323,7 @@ function renderSectorRadarSubpage(page, helpers) {
       <article class="cms-panel-card">
         <h3>Mapa Setorial de Temas</h3>
         <p class="cms-muted">Clusters temáticos e relevância curricular para o curso proposto.</p>
+        ${renderSectorBubbleMapSvg(subthemes)}
         <div class="cms-cluster-bubbles">
           ${subthemes.map((st, idx) => `<div class="cms-cluster-bubble" data-tone="${idx === 0 ? 'approved' : idx === 1 ? 'running' : 'adjustments'}">
             <strong>${escapeHtml(st.theme)}</strong>
@@ -959,7 +1350,8 @@ function renderEconomicsSubpage(page) {
         <h3>Formação do Resultado — Cascata (R$)</h3>
         <p class="cms-muted">Da receita bruta ao resultado líquido da turma no cenário base.</p>
         ${wf.length
-          ? `<div class="cms-waterfall-list">
+          ? `${renderWaterfallSvg(wf)}
+            <div class="cms-waterfall-list">
               ${wf.map(step => `<div class="cms-waterfall-row" data-kind="${escapeHtml(step.kind)}">
                 <span>${escapeHtml(step.label)}</span>
                 <strong>${escapeHtml(step.display)}</strong>
@@ -972,7 +1364,22 @@ function renderEconomicsSubpage(page) {
         <h3>Cenários de Lançamento</h3>
         <p class="cms-muted">Projeções determinísticas de turma (Conservador, Base e Otimista).</p>
         ${scenarios.length
-          ? `<div class="prometeus-table-container">
+          ? `<div class="cms-scenario-grid" style="margin-bottom:12px;">
+              ${scenarios.slice(0, 3).map((s, idx) => `<div class="cms-scenario-card ${idx === 1 ? 'is-reference' : ''}">
+                <div class="cms-scenario-card__head">
+                  <strong>${escapeHtml(s.name)}</strong>
+                  ${idx === 1 ? '<span class="cms-pill" data-tone="approved">Base</span>' : ''}
+                </div>
+                <ul class="cms-scenario-card__list">
+                  <li><span>Matrículas:</span> <strong>${escapeHtml(s.students)} (${escapeHtml(s.occupancy)})</strong></li>
+                  <li><span>Receita líquida:</span> <strong>${escapeHtml(formatBrl(s.net_revenue ?? s.gross_revenue))}</strong></li>
+                  <li><span>Custos totais:</span> <strong>${escapeHtml(formatBrl(s.total_costs))}</strong></li>
+                  <li><span>Resultado:</span> <strong>${escapeHtml(formatBrl(s.net_profit ?? s.net_result))}</strong></li>
+                  <li><span>Margem:</span> <span class="cms-pill" data-tone="${economicTone(s)}">${escapeHtml(s.margin)}</span></li>
+                </ul>
+              </div>`).join('')}
+            </div>
+            <div class="prometeus-table-container">
               <table class="prometeus-table cms-compact-table">
                 <thead><tr><th>Cenário</th><th>Matrículas</th><th>Ocupação</th><th>Receita Líquida</th><th>Custos Totais</th><th>Resultado</th><th>Margem</th></tr></thead>
                 <tbody>
@@ -980,10 +1387,10 @@ function renderEconomicsSubpage(page) {
                     <td><strong>${escapeHtml(s.name)}</strong></td>
                     <td>${escapeHtml(s.students)}</td>
                     <td>${escapeHtml(s.occupancy)}</td>
-                    <td>${escapeHtml(formatBrl(s.net_revenue))}</td>
+                    <td>${escapeHtml(formatBrl(s.net_revenue ?? s.gross_revenue))}</td>
                     <td>${escapeHtml(formatBrl(s.total_costs))}</td>
-                    <td><strong>${escapeHtml(formatBrl(s.net_result))}</strong></td>
-                    <td><span class="cms-pill" data-tone="approved">${escapeHtml(s.margin)}</span></td>
+                    <td><strong>${escapeHtml(formatBrl(s.net_profit ?? s.net_result))}</strong></td>
+                    <td><span class="cms-pill" data-tone="${economicTone(s)}">${escapeHtml(s.margin)}</span></td>
                   </tr>`).join('')}
                 </tbody>
               </table>
@@ -998,17 +1405,17 @@ function renderEconomicsSubpage(page) {
         <p class="cms-muted">Impacto das variações de ticket líquido e volume de matrículas.</p>
         ${sens.length
           ? `<div class="prometeus-table-container">
-              <table class="prometeus-table cms-compact-table">
+              <table class="prometeus-table cms-compact-table cms-sensitivity-table">
                 <thead>
                   <tr>
                     <th>Ticket Simulado</th>
-                    ${sens[0].cells.map(c => `<th>${escapeHtml(c.students)} alunos</th>`).join('')}
+                    ${sens[0].cells.map((c, idx) => `<th class="${idx === Math.floor(sens[0].cells.length / 2) ? 'is-base-col' : ''}">${escapeHtml(c.students)} alunos${idx === Math.floor(sens[0].cells.length / 2) ? ' (Base)' : ''}</th>`).join('')}
                   </tr>
                 </thead>
                 <tbody>
                   ${sens.map(row => `<tr class="${row.is_base ? 'is-highlighted-row' : ''}">
                     <td><strong>${escapeHtml(row.ticket_label)}</strong></td>
-                    ${row.cells.map(c => `<td>${escapeHtml(c.revenue_label)} · <strong>${escapeHtml(c.margin_label)}</strong></td>`).join('')}
+                    ${row.cells.map((c, idx) => `<td class="${row.is_base && idx === Math.floor(row.cells.length / 2) ? 'is-base-cell' : ''}">${escapeHtml(c.revenue_label)} · <strong>${escapeHtml(c.margin_label)}</strong></td>`).join('')}
                   </tr>`).join('')}
                 </tbody>
               </table>
@@ -1142,7 +1549,7 @@ function renderViabilityPillarsSubpage(page) {
           <span class="cms-muted">Peso no IVO: <strong>${escapeHtml(c.weight_pct)}%</strong></span>
         </div>
         <div class="cms-pillar-card__score-row">
-          <span class="cms-pillar-card__score">${escapeHtml(c.score)}<small>/100</small></span>
+          <span class="cms-pillar-card__score">${c.is_present === false ? 'Sem amostra' : `${escapeHtml(c.score)}<small>/100</small>`}</span>
           <span class="cms-pill" data-tone="${escapeHtml(c.status_tone)}">✓ ${escapeHtml(c.status_label)}</span>
         </div>
         <ul class="cms-pillar-card__submetrics">
@@ -1171,8 +1578,8 @@ function renderViabilityPillarsSubpage(page) {
               ${matrix.map(r => `<tr>
                 <td><strong>${escapeHtml(r.label)}</strong></td>
                 <td>${escapeHtml(r.weight_pct)}%</td>
-                <td><strong>${escapeHtml(r.score)}</strong></td>
-                <td>${escapeHtml(r.contribution_pts)} pts</td>
+                <td><strong>${r.is_present === false ? 'Sem amostra' : escapeHtml(r.score)}</strong></td>
+                <td>${r.is_present === false ? '—' : `${escapeHtml(r.contribution_pts)} pts`}</td>
               </tr>`).join('')}
             </tbody>
             <tfoot>
@@ -1353,13 +1760,28 @@ function renderRevisionsSubpage(page) {
   `;
 }
 
-function renderSourcesEvidencesSubpage(page, helpers) {
+function renderReadingAudit(audit) {
+  if (!audit || typeof audit !== 'object') return '<p class="cms-muted">Leitura integral não confirmada para este dossiê.</p>';
+  const count = key => Number.isInteger(audit[key]) && audit[key] >= 0 ? String(audit[key]) : 'Não confirmado';
+  return `<article class="cms-panel-card">
+    <h3>Cobertura da coleta e leitura</h3>
+    <p><strong>${audit.complete === true && audit.status === 'COMPLETE' ? 'Leitura integral registrada' : 'Leitura integral não confirmada'}</strong></p>
+    <p class="cms-muted">A entrega e resposta de todos os fragmentos não garante correção da análise; suficiência, suporte factual e conclusão passam por verificações próprias.</p>
+    <dl class="cms-check-list">${[['Produzidos','items_produced'],['Extraídos','items_retrieved'],['Preservados','items_preserved'],['Lidos pela IA','items_read'],['Pendentes','items_pending']].map(([label,key]) => `<div><dt>${label}</dt><dd>${count(key)}</dd></div>`).join('')}</dl>
+    <p>${count('fragments_covered')} de ${count('fragments_total')} fragmentos · ${count('parts_completed')} de ${count('parts_total')} partes · ${count('normalized_evidences_complete')} de ${count('normalized_evidences_total')} evidências normalizadas.</p>
+    ${audit.legacy_runs_without_archive ? `<p>${count('legacy_runs_without_archive')} consultas sem arquivo verificável.</p>` : ''}
+    ${audit.items_produced_unknown_archives ? '<p>Produção total não confirmada para parte dos arquivos.</p>' : ''}
+  </article>`;
+}
+
+function renderSourcesEvidencesSubpage(page, helpers, audit) {
   const sources = page.collected_sources || [];
   const covBars = page.coverage_bars || [];
   const cats = page.evidence_categories || [];
   const steps = page.method_steps || [];
 
   return `
+    ${renderReadingAudit(audit)}
     <div class="cms-grid-2-wide">
       <article class="cms-panel-card">
         <h3>Fontes Coletadas</h3>
@@ -1410,7 +1832,7 @@ function renderSourcesEvidencesSubpage(page, helpers) {
             ${renderDonutSvg(page.confidence_pct, 100, `${page.confidence_pct}/100`, 'Score geral')}
             <div>
               <span class="cms-pill" data-tone="approved">${page.confidence_pct >= 75 ? 'Alta confiabilidade' : 'Confiabilidade moderada'}</span>
-              <p class="cms-muted" style="margin-top:8px;">Evidências higienizadas, rastreadas por hash e reconciliadas com leitura integral.</p>
+              <p class="cms-muted" style="margin-top:8px;">Confiança analítica e completude da leitura são verificações distintas; consulte a auditoria da coleta acima.</p>
             </div>
           </div>
         </article>
@@ -1466,7 +1888,7 @@ export function renderCmsShellAndSubpages(store, course, dossier, helpers) {
     swot_tows: () => renderSwotTowsSubpage(pages.swot_tows || {}, helpers),
     viability_pillars: () => renderViabilityPillarsSubpage(pages.viability_pillars || {}, helpers),
     revisions: () => renderRevisionsSubpage(pages.revisions || {}, helpers),
-    sources_evidences: () => renderSourcesEvidencesSubpage(pages.sources_evidences || {}, helpers)
+    sources_evidences: () => renderSourcesEvidencesSubpage(pages.sources_evidences || {}, helpers, dossier.analysis_audit?.reading || dossier.presentation?.analysis_audit?.reading)
   };
 
   return `
@@ -1591,3 +2013,4 @@ export function bindCmsDossierEvents(store, container, course) {
     });
   }
 }
+

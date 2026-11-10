@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from typing import Any
@@ -24,11 +25,58 @@ from prometeus.domain.research import (
     ResearchQuestion,
     ResearchTrack,
 )
-from prometeus.infrastructure.apify.registry import ApifyActorRegistry
+from prometeus.infrastructure.apify.registry import (
+    DATA_XPLORER_TRENDS_ACTOR,
+    ApifyActorRegistry,
+    google_trends_terms,
+)
 
 
 class ResearchPlanValidationError(ValueError):
     pass
+
+
+def expand_google_trends_calls(
+    calls: list[PlannedToolCall], registry: ApifyActorRegistry,
+) -> list[PlannedToolCall]:
+    """Expand the single-keyword Actor without dropping terms or dependency edges."""
+    if "google_trends" not in registry.capabilities:
+        return calls
+    if registry.require("google_trends").actor_id != DATA_XPLORER_TRENDS_ACTOR:
+        return calls
+    expanded: list[PlannedToolCall] = []
+    replacements: dict[str, list[str]] = {}
+    for call in calls:
+        terms = google_trends_terms(call) if call.capability == "google_trends" else []
+        if len(terms) <= 1:
+            expanded.append(call)
+            continue
+        children = []
+        for index, term in enumerate(terms):
+            digest = hashlib.sha256(term.encode("utf-8")).hexdigest()[:12]
+            child_id = f"{call.id}-term-{index + 1}-{digest}"
+            children.append(child_id)
+            expanded.append(call.model_copy(update={
+                "id": child_id,
+                "query": term,
+                "parameters": {**call.parameters, "search_terms": [term]},
+            }))
+        replacements[call.id] = children
+    result = []
+    for call in expanded:
+        dependencies = call.parameters.get("depends_on")
+        if isinstance(dependencies, str):
+            dependencies = [dependencies]
+        if isinstance(dependencies, list):
+            rewritten = [
+                child for dependency in dependencies
+                for child in replacements.get(str(dependency), [str(dependency)])
+            ]
+            call = call.model_copy(update={
+                "parameters": {**call.parameters, "depends_on": list(dict.fromkeys(rewritten))},
+            })
+        result.append(call)
+    return result
 
 
 # Samples are bounded for cost, not presented as the total market. Per-source
@@ -524,7 +572,8 @@ class CourseResearchPlanner:
         observations: list[dict[str, Any]] | None = None,
         ecosystem: TenantEcosystemConfig | None = None,
     ) -> CourseResearchPlan:
-        allowed = list(ApifyActorRegistry.from_settings(self.settings).capabilities)
+        registry = ApifyActorRegistry.from_settings(self.settings)
+        allowed = list(registry.capabilities)
         required = [] if gaps is not None else self.settings.required_market_sources
         # The deprecated monetary argument is not a scope filter for new policies.
         # Resuming a persisted legacy plan does not invoke this planner.
@@ -858,6 +907,8 @@ class CourseResearchPlanner:
                     },
                 )
             )
+
+        calls = expand_google_trends_calls(calls, registry)
 
         stopwords = {
             "em",

@@ -11,6 +11,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from prometeus.application.research_scope import matches_narrow_geography, normalize_geography
 from prometeus.domain.ports.market_sources import EvidenceType, MarketEvidence
+from prometeus.infrastructure.apify.normalizers import normalize_trends
 
 
 @dataclass(frozen=True)
@@ -208,32 +209,14 @@ class EvidenceFeatureExtractor:
 
     @staticmethod
     def _trends_metrics(payload: dict[str, Any]) -> dict[str, float]:
-        series = payload.get("interestOverTime_timelineData")
-        if series is None and isinstance(payload.get("interestOverTime"), dict):
-            series = payload["interestOverTime"].get("timelineData")
-        if not isinstance(series, list):
-            return {}
         points: list[tuple[str, float]] = []
-        for point in series:
-            if not isinstance(point, dict):
+        for point in normalize_trends(payload).points:
+            if point.is_partial or point.has_data is False:
                 continue
-            raw_partial = point.get("isPartial")
-            is_partial = (
-                raw_partial is True
-                or raw_partial == [True]
-                or (isinstance(raw_partial, list) and any(raw_partial))
-            )
-            if is_partial:
-                continue
-            has_data = point.get("hasData", True)
-            if has_data is False or has_data == [False]:
-                continue
-            value = point.get("value")
-            if isinstance(value, list):
-                value = value[0] if len(value) == 1 else None
+            value = point.value[0] if len(point.value) == 1 else None
             number = _positive_number(value)
             if number is not None and number <= 100:
-                points.append((str(point.get("time", "")), number))
+                points.append((point.time, number))
         if not points:
             return {}
         points.sort(

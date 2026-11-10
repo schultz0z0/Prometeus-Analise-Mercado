@@ -22,12 +22,15 @@ from prometeus.application.collection_diagnostics import summarize_collection
 from prometeus.application.competitor_coverage import build_competitor_coverage
 from prometeus.application.course_understanding import CourseUnderstandingService
 from prometeus.application.decision_service import DecisionService
+from prometeus.application.declared_curriculum import declared_curriculum
 from prometeus.application.dossier_verifier import DossierVerifier
 from prometeus.application.evidence_features import (
     EvidenceFeatureExtractor,
     EvidenceFeatureSet,
     VerifiedFeature,
 )
+from prometeus.application.evidence_reading_context import evidence_analysis_context
+from prometeus.application.integral_evidence_reader import IntegralEvidenceReader
 from prometeus.application.internal_history import InternalHistoryService
 from prometeus.application.keywords import KeywordPipeline
 from prometeus.application.offer_comparability import qualified_competitor_offer
@@ -683,7 +686,11 @@ class RunCourseAnalysis:
             await self._checkpoint(analysis, 8, execute_tools)
 
             async def sanitize_evidence() -> dict[str, Any]:
-                qualifier = EvidenceQualificationService(self.session, self.decisions)
+                qualifier = EvidenceQualificationService(
+                    self.session, self.decisions, self.skills,
+                    reader=IntegralEvidenceReader(self.llm),
+                    execution_guard=lambda: self._ensure_active(analysis),
+                )
                 qualification = await qualifier.qualify(
                     analysis,
                     understanding,
@@ -939,13 +946,13 @@ class RunCourseAnalysis:
                             for skill in self.skills.for_stage("curriculum_audit")
                         ),
                         "course_understanding": understanding.model_dump(mode="json"),
-                        "curriculum": proposal.get("curriculum_text") or proposal.get("curriculum"),
+                        "curriculum": declared_curriculum(proposal),
                         "market_evidence": [
                             {
                                 "id": row.id,
                                 "type": row.evidence_type,
                                 "title": row.title,
-                                "data": row.sanitized_data,
+                                "data": evidence_analysis_context(row.sanitized_data or {}),
                             }
                             for row in evidence_rows
                         ],

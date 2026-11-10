@@ -59,6 +59,8 @@ def diagnose(error: Exception, attempt_index: int) -> RecoveryDecision:
     delay = min(60.0, 2**attempt_index + random.uniform(0, 1))
     if isinstance(error, ApifyReconciliationRequiredError):
         return RecoveryDecision("remote_result_uncertain", "reconcile_existing_run", True, delay)
+    if isinstance(error, (ApifyActorFailedError, ApifyTimeoutError)) and error.dataset_read_pending:
+        return RecoveryDecision("remote_dataset_unread", "reconcile_existing_run", True, delay)
     if isinstance(error, httpx.HTTPStatusError):
         status = error.response.status_code
         try:

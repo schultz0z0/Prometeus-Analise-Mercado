@@ -270,6 +270,43 @@ def _google_analytics_input(call: PlannedToolCall) -> dict[str, Any]:
     }
 
 
+DATA_XPLORER_TRENDS_ACTOR = "data_xplorer/google-trends-fast-scraper"
+
+
+def google_trends_terms(call: PlannedToolCall) -> list[str]:
+    """Return every requested keyword; never apply the legacy five-term cap."""
+    terms = call.parameters.get("search_terms")
+    if not isinstance(terms, list):
+        terms = call.query.split(",")
+    return list(dict.fromkeys(
+        term.strip() for term in terms if isinstance(term, str) and term.strip()
+    ))
+
+
+def _data_xplorer_trends_input(call: PlannedToolCall) -> dict[str, Any]:
+    """Input schema validated against stable build 2.10.2 (not stale latest)."""
+    terms = google_trends_terms(call)
+    if len(terms) != 1:
+        raise ActorConfigurationError(
+            "Data Xplorer Google Trends exige um termo por chamada; expanda o plano antes da execução."
+        )
+    timeframe = str(call.parameters.get("time_range") or "today 12-m").strip()
+    timeframe = {"now 1-H": "now 1-h", "now 4-H": "now 4-h"}.get(timeframe, timeframe)
+    if timeframe not in {
+        "now 1-h", "now 4-h", "now 1-d", "now 7-d", "today 1-m", "today 3-m",
+        "today 12-m", "today 5-y", "all",
+    }:
+        raise ActorConfigurationError("Período não suportado pelo build Data Xplorer Google Trends.")
+    return {
+        "mode": "keyword",
+        "keyword": terms[0],
+        "predefinedTimeframe": timeframe,
+        "geo": _non_empty_string(call.parameters.get("geo"), "BR"),
+        "fetchRegionalData": False,
+        "proxyConfiguration": {"useApifyProxy": True, "apifyProxyGroups": ["RESIDENTIAL"]},
+    }
+
+
 @dataclass(frozen=True)
 class _CapabilityDefinition:
     setting_name: str
@@ -326,12 +363,16 @@ class ApifyActorRegistry:
                 raise ActorConfigurationError(
                     f"{definition.setting_name} deve usar owner/name@build-number pinado."
                 )
+            actor_id = f"{match.group('owner')}/{match.group('name')}"
+            builder = definition.input_builder
+            if capability == "google_trends" and actor_id == DATA_XPLORER_TRENDS_ACTOR:
+                builder = _data_xplorer_trends_input
             specs[capability] = ApifyActorSpec(
                 capability=capability,
-                actor_id=f"{match.group('owner')}/{match.group('name')}",
+                actor_id=actor_id,
                 build=match.group("build"),
                 evidence_type=definition.evidence_type,
-                input_builder=definition.input_builder,
+                input_builder=builder,
             )
         return cls(specs)
 

@@ -68,6 +68,42 @@ def test_dossier_uses_statements_and_business_labels_without_engineering_metadat
     assert "Índice experimental" in html
 
 
+def test_reading_audit_shows_reconciled_counts_and_distinguishes_coverage_from_correctness():
+    doc = document()
+    doc["analysis_audit"] = {"reading": {
+        "schema_version": 1, "complete": True, "status": "COMPLETE",
+        "archives_total": 2, "items_produced": 10, "items_retrieved": 10,
+        "items_preserved": 10, "items_read": 10, "items_pending": 0,
+        "parts_total": 12, "parts_completed": 12,
+        "fragments_total": 30, "fragments_covered": 30,
+        "normalized_evidences_total": 8, "normalized_evidences_complete": 8,
+        "archives": [{"dataset_id": "<script>alert(1)</script>", "status": "COMPLETE",
+                      "items_produced": 10, "items_retrieved": 10, "items_preserved": 10,
+                      "items_read": 10, "issues": [], "raw_payload": "RAW_PRIVATE"}],
+    }}
+    html = render(doc)
+    assert "Cobertura da coleta e leitura" in html
+    assert "Leitura integral registrada" in html
+    assert "Produzidos" in html and "Preservados" in html and "Lidos pela IA" in html
+    assert "30 de 30 fragmentos" in html and "12 de 12 partes" in html
+    assert "8 de 8 evidências normalizadas" in html
+    assert "não garante correção da análise" in html
+    assert "RAW_PRIVATE" not in html and "<script>alert(1)</script>" not in html
+
+
+def test_reading_audit_pending_and_legacy_never_render_complete_or_invent_zero_counts():
+    doc = document()
+    doc["analysis_audit"] = {"reading": {
+        "schema_version": 1, "complete": False, "status": "UNVERIFIED",
+        "legacy_runs_without_archive": 2, "items_produced_unknown_archives": 1,
+    }}
+    html = render(doc)
+    assert "Leitura integral não confirmada" in html
+    assert "2 consultas sem arquivo verificável" in html
+    assert "Produção total não confirmada" in html
+    assert "Leitura integral registrada" not in html
+
+
 def test_automatic_review_never_fabricates_counts_or_human_homologation():
     doc = document()
     doc["three_fold_review"] = {

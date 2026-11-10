@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -26,6 +26,7 @@ class ApifyExecutionResult(BaseModel):
     run: ApifyRunMetadata
     items: list[dict[str, Any]]
     total_items: int
+    total_items_source: Literal["provider_pagination", "terminal_exhaustion", "unverified"] = "unverified"
 
 
 RECOGNIZED_DATASET_FIELDS: dict[str, frozenset[str]] = {

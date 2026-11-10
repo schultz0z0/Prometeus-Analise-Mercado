@@ -13,7 +13,6 @@ from urllib.parse import quote_plus
 
 import httpx
 
-from prometeus.application.tool_capabilities import CAPABILITY_LIMIT_UNITS
 from prometeus.domain.configuration import AppSettings
 from prometeus.domain.ports.market_sources import (
     EvidenceType,
@@ -68,14 +67,20 @@ class ApifyTimeoutError(ApifyError):
     ) -> None:
         self.run_id = run_id
         self.run_data = run_data
+        self.dataset_result: ApifyExecutionResult | None = None
+        self.dataset_read_pending = False
         super().__init__(message)
 
 
 class ApifySchemaDriftError(ApifyError):
     """Resposta da Apify ou dataset divergiu do contrato esperado."""
 
-    def __init__(self, message: str, *, run_data: dict[str, Any] | None = None) -> None:
+    def __init__(
+        self, message: str, *, run_data: dict[str, Any] | None = None,
+        dataset_result: ApifyExecutionResult | None = None,
+    ) -> None:
         self.run_data = run_data
+        self.dataset_result = dataset_result
         super().__init__(message)
 
 
@@ -92,6 +97,8 @@ class ApifyActorFailedError(ApifyError):
         self.run_id = run_id
         self.status = status
         self.run_data = run_data
+        self.dataset_result: ApifyExecutionResult | None = None
+        self.dataset_read_pending = False
         safe_message = message.strip().replace("\r", " ").replace("\n", " ")[:500]
         detail = f": {safe_message}" if safe_message else ""
         super().__init__(f"Run Apify {run_id} terminou com status {status}{detail}")
@@ -248,10 +255,12 @@ class ApifyClient:
             )
             response.raise_for_status()
             refreshed = self._run_data(response)
-            if refreshed.get("id") != run_id or refreshed.get("status") not in {
-                "SUCCEEDED",
-                "ABORTED",
-            }:
+            if (
+                refreshed.get("id") != run_id
+                or refreshed.get("status") not in TERMINAL_STATUSES
+                or refreshed.get("status") != run_data.get("status")
+                or refreshed.get("defaultDatasetId") != run_data.get("defaultDatasetId")
+            ):
                 raise ApifySchemaDriftError(
                     "Não foi possível confirmar a identidade e o término da run."
                 )
@@ -469,6 +478,7 @@ class ApifyClient:
     ) -> ApifyExecutionResult:
         spec = self.registry.require(call.capability)
         timeout_error = None
+        failed_error = None
         try:
             run_data = await self._wait_for_terminal(started_data)
         except ApifyActorFailedError as error:
@@ -476,9 +486,14 @@ class ApifyClient:
                 run_data = error.run_data
                 timeout_error = ApifyTimeoutError("Execução interrompida com aborto terminal confirmado; dados independentes recuperados do dataset.", run_id=error.run_id, run_data=run_data)
             else:
-                if error.run_data and not monitoring:
-                    error.run_data = await self._reconcile_billing(error.run_data)
-                raise
+                if not error.run_data or not error.run_data.get("defaultDatasetId"):
+                    if error.run_data and not monitoring:
+                        error.run_data = await self._reconcile_billing(error.run_data)
+                    raise
+                # A failed Actor can still have produced paid output. Archive
+                # it while retaining the terminal failure as the result.
+                run_data = error.run_data
+                failed_error = error
         except ApifySchemaDriftError as error:
             raise ApifyReconciliationRequiredError(
                 "Metadados remotos incompletos; requer reconciliação da run existente.",
@@ -534,28 +549,39 @@ class ApifyClient:
                 run_data=run_data,
             )
 
-        fetch_limit = call.max_items
-        limit_unit = getattr(spec, "limit_unit", None) or CAPABILITY_LIMIT_UNITS.get(
-            call.capability
-        )
-        if limit_unit == "per_video" or call.capability == "youtube_comments":
-            urls = call.parameters.get("urls", call.parameters.get("start_urls", []))
-            num_urls = len(urls) if isinstance(urls, list) and urls else 1
-            fetch_limit = max(call.max_items, num_urls * call.max_items)
-
+        # The scope belongs to the Actor input. Once paid output exists, retrieve
+        # every row, including hidden fields and diagnostic records. A local
+        # analysis sample must never discard the remainder of a produced dataset.
         items: list[dict[str, Any]] = []
         offset = 0
-        total_items = 0
-        page_size = min(fetch_limit, 1000)
+        reported_total: int | None = None
+        page_size = 1000
 
-        while len(items) < fetch_limit:
-            current_limit = min(page_size, fetch_limit - len(items))
+        def pending_terminal_collection() -> ApifyActorFailedError | ApifyTimeoutError:
+            error = failed_error or timeout_error
+            assert error is not None
+            error.run_data = run_data
+            error.dataset_read_pending = True
+            error.dataset_result = ApifyExecutionResult(
+                run=ApifyRunMetadata(
+                    run_id=run_id, dataset_id=dataset_id, status=str(run_data["status"]),
+                    actor_id=spec.actor_id, build_number=build_number,
+                    incomplete_reason="dataset_read_pending",
+                ),
+                items=items,
+                total_items=reported_total if reported_total is not None else len(items),
+                total_items_source="unverified",
+            )
+            return error
+
+        while True:
+            current_limit = min(page_size, reported_total - offset) if reported_total is not None else page_size
             try:
                 items_response = await self._get(
                     f"{self.base_url}/datasets/{dataset_id}/items",
                     params={
                         "format": "json",
-                        "clean": "true",
+                        "clean": "false",
                         "limit": current_limit,
                         "offset": offset,
                     },
@@ -563,26 +589,41 @@ class ApifyClient:
                 )
                 items_response.raise_for_status()
                 page_data = items_response.json()
-                if not isinstance(page_data, list) or not page_data:
-                    break
-                page_items = validate_dataset_items(call.capability, page_data)
-                items.extend(page_items)
-                offset += len(page_data)
-
                 total_header = items_response.headers.get("X-Apify-Pagination-Total")
                 if total_header is not None:
                     try:
-                        total_items = int(total_header)
-                    except ValueError:
-                        total_items = max(total_items, len(items))
-                else:
-                    total_items = max(total_items, len(items))
-
-                if len(page_data) < current_limit or (total_items and offset >= total_items):
+                        page_total = int(total_header)
+                    except ValueError as error:
+                        raise ApifyReconciliationRequiredError(
+                            "Contagem de paginação inválida; reconciliar o dataset existente.", run_data=run_data,
+                        ) from error
+                    if page_total < 0 or (reported_total is not None and page_total != reported_total):
+                        raise ApifyReconciliationRequiredError(
+                            "Contagem do dataset mudou durante a leitura; reconciliar a mesma run.", run_data=run_data,
+                        )
+                    reported_total = page_total
+                if not isinstance(page_data, list):
+                    raise ValueError("Dataset não retornou uma lista JSON.")
+                if any(not isinstance(item, dict) for item in page_data):
+                    raise ValueError("Dataset contém item que não é um objeto JSON.")
+                items.extend(page_data)
+                offset += len(page_data)
+                if reported_total is not None:
+                    if offset > reported_total or (len(page_data) < current_limit and offset < reported_total):
+                        raise ApifyReconciliationRequiredError(
+                            "Dataset retornou página incompleta ou contagem divergente; reconciliar a mesma run.", run_data=run_data,
+                        )
+                    if offset == reported_total:
+                        break
+                elif len(page_data) < current_limit:
                     break
+            except ApifyReconciliationRequiredError as exc:
+                if failed_error is not None or timeout_error is not None:
+                    raise pending_terminal_collection() from exc
+                raise
             except (httpx.HTTPError, ValueError, TypeError) as exc:
-                if timeout_error is not None:
-                    raise timeout_error from exc
+                if failed_error is not None or timeout_error is not None:
+                    raise pending_terminal_collection() from exc
                 if isinstance(exc, httpx.HTTPError):
                     raise ApifyReconciliationRequiredError(
                         "Leitura do dataset pago interrompida; requer reconciliação da run existente.",
@@ -590,17 +631,12 @@ class ApifyClient:
                     ) from exc
                 raise ApifySchemaDriftError(str(exc), run_data=run_data) from exc
 
-        if not total_items:
-            total_items = len(items)
-
-        if timeout_error is not None and not items:
-            timeout_error.run_data = run_data
-            raise timeout_error
+        total_items = reported_total if reported_total is not None else len(items)
 
         raw_cost = run_data.get("usageTotalUsd")
         cost_usd = float(raw_cost) if isinstance(raw_cost, int | float) and not isinstance(raw_cost, bool) and math.isfinite(raw_cost) and raw_cost >= 0 else 0.0
 
-        return ApifyExecutionResult(
+        result = ApifyExecutionResult(
             run=ApifyRunMetadata(
                 run_id=run_id,
                 dataset_id=dataset_id,
@@ -613,7 +649,25 @@ class ApifyClient:
             ),
             items=items,
             total_items=total_items,
+            total_items_source="provider_pagination" if reported_total is not None else "terminal_exhaustion",
         )
+        if failed_error is not None:
+            failed_error.run_data = run_data
+            failed_error.dataset_result = result
+            raise failed_error
+        if timeout_error is not None and not items:
+            timeout_error.run_data = run_data
+            timeout_error.dataset_result = result
+            raise timeout_error
+        try:
+            validate_dataset_items(call.capability, items)
+        except ValueError as error:
+            # Preserve paid records for private audit without admitting an
+            # unknown schema as analytical evidence.
+            raise ApifySchemaDriftError(
+                str(error), run_data=run_data, dataset_result=result,
+            ) from error
+        return result
 
     async def aclose(self) -> None:
         if self._owns_client or not self._client.is_closed:
