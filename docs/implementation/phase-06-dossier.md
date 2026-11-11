@@ -2,6 +2,8 @@
 
 ## Atualização de 11/11/2026
 
+Foi registrada uma [avaliação de evolução com Codex CLI, Apify e Scrapling](../plans/2026-11-11-codex-cli-scrapling-assessment.md), incluindo geração e cadastro do dossiê no CMS. Trata-se de proposta: não altera providers, hidratação de páginas, scoring ou análises em andamento.
+
 O CMS de nove páginas mantém distinção entre ausência de dados, nota e confiança. A redação recebe leituras completas e contexto de arquivos originais sem promovê-los automaticamente a fatos de mercado. Leitura incompleta bloqueia a síntese. As páginas financeiras usam o contrato canônico e mantêm prejuízos visíveis; a API não entrega checkpoints volumosos ao frontend. Ver [validação e limites](reports/integral-evidence-cms-validation-2026-11-11.md).
 
 ## Objetivo

@@ -58,6 +58,8 @@ Esta pasta é a fonte canônica do produto. O PRD original na raiz é mantido co
 
 ## Entrega
 
+- [Avaliação proposta: Codex CLI, Apify e Scrapling no fluxo e CMS](plans/2026-11-11-codex-cli-scrapling-assessment.md)
+
 - [Leitura integral e validação do dossiê CMS — 11/11/2026](implementation/reports/integral-evidence-cms-validation-2026-11-11.md)
 
 - [Plano de correção: cobertura de concorrentes, custos e recuperação Apify](plans/2026-11-04-collection-coverage-and-apify-recovery.md)
