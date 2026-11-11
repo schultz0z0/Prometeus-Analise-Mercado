@@ -39,10 +39,13 @@ def _present_score(rows: list[dict[str, Any]], key: str) -> float | None:
 
 
 def _composite_score(rows: list[dict[str, Any]], weights: dict[str, float]) -> int | None:
-    scores = {key: _present_score(rows, key) for key in weights}
-    if any(score is None for score in scores.values()):
-        return None
-    return round(sum(float(scores[key]) * weight for key, weight in weights.items()))
+    total = 0.0
+    for key, weight in weights.items():
+        score = _present_score(rows, key)
+        if score is None:
+            return None
+        total += score * weight
+    return round(total)
 
 
 def _score_label(score: float | None, suffix: str = "/100") -> str:
@@ -1181,7 +1184,7 @@ def _build_sector_radar_page(
             {
                 "id": "curriculum_fit",
                 "title": "Potencial de Aplicação ENS",
-                "value": "Não observado" if pillar_by_key.get("syllabus_fit") is None else ("Alto" if pillar_by_key["syllabus_fit"] >= 75 else "Moderado"),
+                "value": "Não observado" if pillar_by_key.get("syllabus_fit") is None else ("Alto" if (pillar_by_key["syllabus_fit"] or 0) >= 75 else "Moderado"),
                 "badge": "Ementa " + _score_label(pillar_by_key.get("syllabus_fit")),
                 "tone": _score_tone(pillar_by_key.get("syllabus_fit")),
                 "sublabel": "Conexão dos sinais com o currículo",
@@ -1285,7 +1288,7 @@ def _build_economics_page(
             {
                 "id": "expected_revenue",
                 "title": "Receita Líquida (Cenário Base)",
-                "value": _format_brl(float(base_scen.get("net_revenue") if base_scen.get("net_revenue") is not None else base_scen.get("gross_revenue"))) if econ_calculated and base_scen and (base_scen.get("net_revenue") is not None or base_scen.get("gross_revenue") is not None) else "Requer premissas",
+                "value": _format_brl(float(base_scen["net_revenue"] if base_scen.get("net_revenue") is not None else base_scen["gross_revenue"])) if econ_calculated and base_scen and (base_scen.get("net_revenue") is not None or base_scen.get("gross_revenue") is not None) else "Requer premissas",
                 "badge": "Simulado em código" if econ_calculated else "Pendente",
                 "tone": "approved" if econ_calculated else "insufficient",
                 "sublabel": "Receita líquida estimada da turma base",
@@ -1325,7 +1328,7 @@ def _build_economics_page(
             {
                 "id": "net_result",
                 "title": "Resultado Líquido (Base)",
-                "value": _format_brl(float(base_scen.get("net_profit") if base_scen.get("net_profit") is not None else base_scen.get("net_result"))) if econ_calculated and base_scen and (base_scen.get("net_profit") is not None or base_scen.get("net_result") is not None) else "Requer premissas",
+                "value": _format_brl(float(base_scen["net_profit"] if base_scen.get("net_profit") is not None else base_scen["net_result"])) if econ_calculated and base_scen and (base_scen.get("net_profit") is not None or base_scen.get("net_result") is not None) else "Requer premissas",
                 "badge": "Turma Base" if econ_calculated else "Premissa ausente",
                 "tone": _economic_tone(base_scen) if econ_calculated else "insufficient",
                 "sublabel": "Contribuição líquida após custos",

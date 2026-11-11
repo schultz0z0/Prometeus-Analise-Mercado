@@ -88,6 +88,33 @@ def _category(value: str) -> str | None:
     return None
 
 
+def _offer_category(title: str, data: dict[str, Any]) -> dict[str, Any]:
+    """Only explicit fields belonging to this offer establish its category.
+
+    Full-page text, related-course sections and LLM qualification are not
+    category metadata. Preserve the field and literal value for audit.
+    """
+    candidates = []
+    for pointer, value in [("/title", title), *[
+        (f"/{key}", data.get(key))
+        for key in ("category", "course_type", "educationalLevel", "level")
+    ]]:
+        if isinstance(value, str) and (category := _category(value)):
+            candidates.append((category, pointer, value))
+    categories = {candidate[0] for candidate in candidates}
+    # MBA is explicitly a postgraduate subtype, not contradictory to it.
+    if categories == {"mba", "pos"}:
+        candidates = [candidate for candidate in candidates if candidate[0] == "mba"]
+        categories = {"mba"}
+    if len(categories) > 1:
+        return {"category": None, "conflict": True}
+    if not candidates:
+        return {"category": None, "conflict": False}
+    category, pointer, quote = candidates[0]
+    return {"category": category, "conflict": False,
+            "category_source": pointer, "category_quote": quote}
+
+
 def _same_theme(title: str, target: str) -> bool:
     stop = {
         "curso",
@@ -217,6 +244,7 @@ def build_price_reference(
         url = str(item.get("source_url") or "")
         host = (urlsplit(url).hostname or "").lower().removeprefix("www.")
         qualification = data.get("_qualification") or {}
+        observed_category = _offer_category(title, data)
         reason = None
         if qualification.get("own_institution") or any(
             host == domain or host.endswith("." + domain) for domain in own_domains
@@ -228,7 +256,9 @@ def build_price_reference(
             reason = "sector_ecosystem_not_course_offer"
         elif qualification.get("accepted") is not True:
             reason = "not_qualified"
-        elif not expected or _category(title) != expected:
+        elif observed_category["conflict"]:
+            reason = "category_conflict"
+        elif not expected or observed_category["category"] != expected:
             reason = "category_mismatch"
         elif not _same_theme(title, course_title):
             reason = "theme_mismatch"
@@ -310,6 +340,8 @@ def build_price_reference(
                 "course_id": key,
                 "name": title,
                 "category": expected,
+                "category_source": observed_category["category_source"],
+                "category_quote": observed_category["category_quote"],
                 "origin": "external",
                 "evidence_ids": [item["id"]],
                 "source_url": url,

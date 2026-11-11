@@ -7,6 +7,7 @@ import ipaddress
 import json
 import math
 from collections.abc import Awaitable, Callable
+from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -935,11 +936,47 @@ class CollectMarketEvidenceService:
         audit = dict(parameters)
         archives = list(audit.get("prior_dataset_archives") or [])
         previous_archive = audit.get("dataset_archive")
-        if isinstance(previous_archive, dict) and previous_archive.get("provider_run_id") != result.run.run_id:
-            archives.append(previous_archive)
+        incoming = self._dataset_archive(result)
+        chosen = incoming
+        if isinstance(previous_archive, dict):
+            same_run = previous_archive.get("provider_run_id") == result.run.run_id
+            same_dataset = previous_archive.get("dataset_id") == result.run.dataset_id
+            old_items, new_items = previous_archive.get("items", []), incoming["items"]
+            compatible = all(
+                old.get("raw_payload") == new.get("raw_payload")
+                for old, new in zip(old_items, new_items, strict=False)
+            )
+            conflict = same_run and (
+                not same_dataset or not compatible
+                or (incoming["retrieval_complete"] and len(new_items) < len(old_items))
+            )
+            if not same_run or conflict:
+                identity = (previous_archive.get("provider_run_id"),
+                            previous_archive.get("dataset_id"), previous_archive.get("source_sha256"))
+                if not any((a.get("provider_run_id"), a.get("dataset_id"), a.get("source_sha256")) == identity for a in archives):
+                    archives.append(previous_archive)
+            if conflict:
+                audit["dataset_integrity_review_required"] = True
+            elif same_run and same_dataset and len(new_items) < len(old_items):
+                # A failed GET is not evidence that previously downloaded items
+                # disappeared. Keep the larger compatible prefix until reconciled.
+                chosen = deepcopy(previous_archive)
+                chosen["retrieval_complete"] = False
+            if same_run and same_dataset:
+                snapshots = list(previous_archive.get("retrieval_snapshots") or [])
+                snapshots.append({key: incoming[key] for key in (
+                    "provider_status", "items_read", "dataset_total_items",
+                    "total_items_source", "source_sha256", "retrieval_complete",
+                )})
+                chosen["retrieval_snapshots"] = snapshots
+        if audit.get("dataset_integrity_review_required"):
+            chosen["retrieval_complete"] = False
+        if chosen["retrieval_complete"]:
+            audit["dataset_read_pending"] = False
+            audit.pop("dataset_read_recovery", None)
         if archives:
             audit["prior_dataset_archives"] = archives
-        audit["dataset_archive"] = self._dataset_archive(result)
+        audit["dataset_archive"] = chosen
         return audit
 
     async def _persist_result(

@@ -481,6 +481,22 @@ class RunCourseAnalysis:
                 features.features[name] = VerifiedFeature(name, 0, [run.id], "observed_empty_query")
         return features
 
+    async def _collection_observations(self, analysis_id: str) -> list[dict[str, Any]]:
+        runs = list((await self.session.execute(select(ToolRunModel).where(
+            ToolRunModel.analysis_id == analysis_id
+        ))).scalars())
+        evidences = list((await self.session.execute(select(MarketEvidenceModel).where(
+            MarketEvidenceModel.analysis_id == analysis_id
+        ))).scalars())
+        return summarize_collection(
+            [{key: getattr(run, key) for key in (
+                "id", "planned_call_id", "capability", "query", "status",
+                "raw_items_count", "valid_items_count", "error_code", "parameters",
+            )} for run in runs],
+            [{"tool_run_id": row.tool_run_id, "sanitized_data": row.sanitized_data}
+             for row in evidences],
+        )
+
     async def _repair_competitor_queries(
         self, analysis: Analysis, understanding: CourseUnderstanding,
         ecosystem: TenantEcosystemConfig, institution_ctx: dict[str, Any],
@@ -697,45 +713,8 @@ class RunCourseAnalysis:
                     correlation_id,
                     institution_context=institution_ctx or None,
                 )
-                diagnostic_runs = list(
-                    (
-                        await self.session.execute(
-                            select(ToolRunModel).where(ToolRunModel.analysis_id == analysis.id)
-                        )
-                    ).scalars()
-                )
-                diagnostic_evidence = list(
-                    (
-                        await self.session.execute(
-                            select(MarketEvidenceModel).where(
-                                MarketEvidenceModel.analysis_id == analysis.id
-                            )
-                        )
-                    ).scalars()
-                )
-                observations = summarize_collection(
-                    [
-                        {
-                            key: getattr(run, key)
-                            for key in (
-                                "id",
-                                "planned_call_id",
-                                "capability",
-                                "query",
-                                "status",
-                                "raw_items_count",
-                                "valid_items_count",
-                                "error_code",
-                                "parameters",
-                            )
-                        }
-                        for run in diagnostic_runs
-                    ],
-                    [
-                        {"tool_run_id": row.tool_run_id, "sanitized_data": row.sanitized_data}
-                        for row in diagnostic_evidence
-                    ],
-                )
+                observations = await self._collection_observations(analysis.id)
+                initial_observations = observations
                 competitor_qualification, competitor_coverage = await self._repair_competitor_queries(
                     analysis, understanding, ecosystem, institution_ctx, qualifier, correlation_id, plan,
                 )
@@ -757,10 +736,24 @@ class RunCourseAnalysis:
                 )
                 spent = sum(item.spent_usd for item in plans)
                 remaining = max(0.0, plan.budget_limit_usd - spent) if plan.budget_limit_usd is not None else None
-                # Uma rodada complementar no máximo; ID estável permite retomar sem refazer planejamento/coleta.
-                repair_id = f"{plan.id}-followup"
-                stored_repair = next((item for item in plans if item.id == repair_id), None)
-                if gaps and (remaining is None or remaining > 0 or stored_repair is not None):
+                # Stable plan IDs preserve collection/retry identities across resume.
+                # Continue searching while the planner can propose genuinely new work.
+                round_number = 0
+                repair_rounds: list[dict[str, Any]] = []
+                previous_queries = [
+                    (call["capability"], call["query"])
+                    for persisted in plans
+                    for call in persisted.plan_snapshot.get("tool_calls", [])
+                ]
+                while gaps:
+                    await self._ensure_active(analysis)
+                    round_number += 1
+                    suffix = "followup" if round_number == 1 else f"followup-{round_number}"
+                    repair_id = f"{plan.id}-{suffix}"
+                    stored_repair = next((item for item in plans if item.id == repair_id), None)
+                    if stored_repair is None and remaining is not None and remaining <= 0:
+                        repair_status = "no_remaining_budget"
+                        break
                     if stored_repair is not None:
                         repair = CourseResearchPlan.model_validate(stored_repair.plan_snapshot)
                     else:
@@ -769,9 +762,7 @@ class RunCourseAnalysis:
                         ).plan(
                             understanding,
                             gaps=gaps,
-                            previous_queries=[
-                                (call.capability, call.query) for call in plan.tool_calls
-                            ],
+                            previous_queries=previous_queries,
                             budget_limit_usd=remaining,
                             observations=observations,
                             ecosystem=ecosystem,
@@ -791,11 +782,20 @@ class RunCourseAnalysis:
                             institution_context=institution_ctx or None,
                         )
                         market = await self._market_features(analysis.id, understanding)
-                        repair_status = (
-                            "round_limit_reached" if research_gaps(market) else "sufficient_signals"
-                        )
+                        gaps = research_gaps(market)
+                        repair_status = "sufficient_signals" if not gaps else "researching"
+                        previous_queries.extend((call.capability, call.query) for call in repair.tool_calls)
+                        repair_rounds.append({"plan_id": repair_id, "remaining_gaps": gaps})
+                        # Refresh observed cost and diagnostics, including repair runs.
+                        plans = list((await self.session.execute(select(ResearchPlanModel).where(
+                            ResearchPlanModel.analysis_id == analysis.id
+                        ))).scalars())
+                        spent = sum(item.spent_usd for item in plans)
+                        remaining = max(0.0, plan.budget_limit_usd - spent) if plan.budget_limit_usd is not None else None
+                        observations = await self._collection_observations(analysis.id)
                     else:
                         repair_status = "no_new_queries"
+                        break
                 merged = EvidenceFeatureSet(
                     features={**market.features, **history_features.features}
                 )
@@ -873,8 +873,10 @@ class RunCourseAnalysis:
                     "qualification": qualification,
                     "remaining_gaps": research_gaps(market),
                     "repair_status": repair_status,
+                    "repair_rounds": repair_rounds,
                     "pricing_audit": pricing_audit,
-                    "initial_collection_diagnostics": observations,
+                    "initial_collection_diagnostics": initial_observations,
+                    "final_collection_diagnostics": observations,
                     "sector_radar_baseline": radar_baseline,
                     "ecosystem_summary": {
                         "monitored_competitors_count": len(ecosystem.competitors),

@@ -36,3 +36,5 @@ O produto investiga viabilidade favorável ou desfavorável com os mesmos crité
 ## Estado
 
 Em implementação. Plano registra o escopo autorizado nesta conversa; não representa homologação concluída.
+
+Em 11/11, a integração passou a incluir as correções encontradas na revisão do CMS e da retomada de datasets. O canário real de Trends concluiu quatro consultas e leitura validada de 452 fragmentos. Resultados, preservação e limites estão no [relatório de validação](../implementation/reports/integral-evidence-cms-validation-2026-11-11.md). Suficiência dos cinco pilares externos continua sendo um critério separado de aceitação.

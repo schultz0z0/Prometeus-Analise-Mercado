@@ -1,5 +1,11 @@
 # Fase 04 — Dados externos de mercado
 
+## Atualização de 11/11/2026
+
+Coleta integral paginada, preservação de originais e diagnósticos, reconciliação da mesma run e leitura semântica com checkpoints integram a qualificação. Uma releitura incompleta não apaga o prefixo já extraído. O Actor Data Xplorer `2.10.2` teve quatro consultas reais e leitura completa pela LLM validadas. Isso não confirma suficiência de mercado dos demais pilares. Ver [contrato de retenção](../data/complete-collection-retention.md) e [relatório de validação](reports/integral-evidence-cms-validation-2026-11-11.md).
+
+Pesquisa complementar agora repete planejamento e coleta enquanto houver lacunas e consultas inéditas, usando todos os planos anteriores e diagnósticos atualizados. O custo acumulado e as identidades persistidas continuam controlados em código. Precificação admite categoria explícita em metadados da oferta e rejeita conflitos, mantendo a proveniência da classificação.
+
 **Atualização de 2026-10-28:** falhas de ferramentas são lacunas individuais: a análise continua com evidências válidas, informa a fonte indisponível e reduz cobertura/recomendação conforme as regras determinísticas. `required` representa prioridade de pesquisa, sem bloquear por falha de execução. O intake extrai PDF/DOCX/TXT; preço parcelado é calculado em código, independentemente da duração acadêmica.
 
 ## Objetivo

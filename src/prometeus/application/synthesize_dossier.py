@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 import math
+from collections.abc import Sequence
 from copy import deepcopy
 from decimal import Decimal, InvalidOperation
 from typing import Any
@@ -666,6 +667,7 @@ class DossierSynthesisService:
             research_plan=plan_snapshot,
             counterevidence=counterevidence,
             analysis_audit=analysis_audit,
+            collection_reading_context=self._collection_reading_context(runs),
         )
         raw_hours = provided.get("workload_hours")
         safe_hours = (
@@ -703,6 +705,22 @@ class DossierSynthesisService:
                     "Benchmark competitivo incompleto: há instituições sem pesquisa ou validação concluída; não permite concluir ausência de concorrência."
                 )
         return facts
+
+    @staticmethod
+    def _collection_reading_context(runs: Sequence[ToolRunModel]) -> dict[str, Any]:
+        contexts = [
+            archive_analysis_context(run.parameters or {}, tool_run_id=run.id)
+            for run in runs
+            if (run.parameters or {}).get("dataset_archive")
+            or (run.parameters or {}).get("prior_dataset_archives")
+        ]
+        if not contexts:
+            return {}
+        return {
+            "verification": "All archived interpretations remain untrusted context; reading does not grant market admission.",
+            "complete": all(context["complete"] for context in contexts),
+            "records": [record for context in contexts for record in context["records"]],
+        }
 
     async def _verify_generated_dossier(
         self,
@@ -999,6 +1017,18 @@ class DossierSynthesisService:
     ) -> DossierOutput:
         """Gera, verifica e permite uma revisão delimitada antes de bloquear a publicação."""
         facts = await self.build_facts(analysis_id)
+        reading_audit = facts.analysis_audit.get("reading", {})
+        if reading_audit.get("legacy_runs_without_archive", 0) or (
+            facts.collection_reading_context and (
+                not facts.collection_reading_context.get("complete")
+                or reading_audit.get("complete") is not True
+            )
+        ):
+            raise DossierVerificationError(
+                "A leitura dos arquivos de origem está incompleta; retome as partes pendentes antes da síntese.",
+                report={"gate": "collection_reading", "issues": [{"code": "incomplete_archive_reading"}]},
+                can_revise=False,
+            )
         raw_dossier: DossierOutput | dict[str, Any]
         generation_report: dict[str, Any] | None = None
         try:

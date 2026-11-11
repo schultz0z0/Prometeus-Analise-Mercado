@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from prometeus.application.create_analysis import CreateAnalysisCommand, CreateAnalysisUseCase
 from prometeus.application.run_course_analysis import RunCourseAnalysis
+from prometeus.application.synthesize_dossier import DossierSynthesisService
 from prometeus.domain.analyses import AnalysisStatus
 from prometeus.domain.configuration import AppSettings
 from prometeus.domain.dossiers import (
@@ -224,8 +225,8 @@ class RecordedToolExecutor:
         }[call.capability]
         return ApifyExecutionResult(
             run=ApifyRunMetadata(
-                run_id=f"run-{call.id}",
-                dataset_id=f"dataset-{call.id}",
+                run_id=f"run-{len(self.calls)}-{call.id}",
+                dataset_id=f"dataset-{len(self.calls)}-{call.id}",
                 status="SUCCEEDED",
                 actor_id=spec.actor_id,
                 build_number=spec.build,
@@ -451,7 +452,7 @@ async def test_external_source_failure_completes_with_partial_evidence_and_discl
     )
 
 
-async def test_research_repair_has_one_round_and_cumulative_budget_on_resume(session):
+async def test_research_repair_does_not_repurchase_repeated_queries_on_resume(session):
     class RepairLLM(WorkflowLLM):
         async def generate_text(self, prompt, system_prompt=None, temperature=0.2):
             if (
@@ -501,6 +502,40 @@ async def test_research_repair_has_one_round_and_cumulative_budget_on_resume(ses
     assert await session.scalar(select(func.sum(ToolRunModel.cost_usd))) == pytest.approx(0.20)
 
 
+async def test_research_repair_continues_with_new_queries_after_first_incomplete_round(session):
+    class ExpandingLLM(WorkflowLLM):
+        async def generate_text(self, prompt, system_prompt=None, temperature=0.2):
+            if "Allowlist de capabilities" in prompt and "Consultas já realizadas, não repetir: []" not in prompt:
+                first = "seguros MBA investimento total"
+                second = "seguros especialização tabela preços formação"
+                previous = json.loads(prompt.split("Consultas já realizadas, não repetir: ", 1)[1].split("\n", 1)[0])
+                queries = {query for _, query in previous}
+                query = first if first not in queries else second
+                return json.dumps({"questions": [], "tool_calls": [{
+                    "id": "repair-search", "capability": "google_search", "query": query,
+                    "required": False, "rationale": "Investigar preços ainda ausentes", "max_items": 5,
+                }]})
+            return await super().generate_text(prompt, system_prompt, temperature)
+
+    analysis_id = await seed_analysis_and_history(session)
+    row = await session.get(AnalysisModel, analysis_id)
+    row.proposal_data = {**row.proposal_data, "price_period": "unknown"}
+    await session.commit()
+    settings = workflow_settings()
+    registry = ApifyActorRegistry.from_settings(settings)
+    llm = ExpandingLLM()
+    executor = RecordedToolExecutor(registry)
+    use_case = RunCourseAnalysis(session=session, settings=settings, llm=llm,
+        decision_model=LLMDecisionAdapter(llm), tool_executor=executor, registry=registry)
+    result = await use_case.execute(analysis_id, "multi-repair")
+    assert result.status == AnalysisStatus.COMPLETED
+    assert await session.scalar(select(func.count()).select_from(ResearchPlanModel)) == 3
+    assert len(executor.calls) == 21
+    assert await session.scalar(select(func.sum(ToolRunModel.cost_usd))) == pytest.approx(0.21)
+    await use_case.execute(analysis_id, "multi-repair-resume")
+    assert len(executor.calls) == 21
+
+
 async def test_portfolio_v2_persists_internal_pricing_and_evidence_audit_without_faking_history(
     session,
 ):
@@ -529,5 +564,10 @@ async def test_portfolio_v2_persists_internal_pricing_and_evidence_audit_without
     assert "internal" in audit and "pricing" in audit and "evidence" in audit
     assert audit["internal"]["limitations"]
     assert audit["evidence"]["collected_records"] == 17
+    facts = await DossierSynthesisService(session, llm).build_facts(analysis_id)
+    reading = facts.collection_reading_context
+    assert reading["complete"] is True
+    assert len(reading["records"]) == 19  # Includes records not admitted as normalized evidence.
+    assert all(record["reading"]["observations"] for record in reading["records"])
     assert len(executor.calls) == 19
     assert await session.scalar(select(func.sum(ToolRunModel.cost_usd))) == pytest.approx(0.19)

@@ -1,3 +1,5 @@
+import pytest
+
 from prometeus.application.pricing_reference import build_price_reference, extract_price_conditions
 
 
@@ -181,3 +183,41 @@ def test_current_dated_offer_remains_eligible():
         ],
     )
     assert audit["mean_total_brl"] == 20000
+
+
+@pytest.mark.parametrize("field", ["category", "course_type", "educationalLevel", "level"])
+def test_category_can_be_explicit_in_source_metadata_without_repeating_it_in_title(field):
+    item = offer("https://college.example/seguros", "Investimento total R$ 20.000,00",
+                 **{field: "MBA Executivo"})
+    item["title"] = "Gestão de Seguros"
+    audit = build_price_reference(
+        course_title="MBA Gestão de Seguros", level="MBA", institution_name="ENS",
+        internal_prices=[], offers=[item],
+    )
+    assert audit["external_count"] == 1
+    assert audit["mean_total_brl"] == 20000
+    assert audit["comparables"][0]["category_source"] == f"/{field}"
+    assert audit["comparables"][0]["category_quote"] == "MBA Executivo"
+
+
+def test_conflicting_course_category_cannot_be_selected_to_fit_target():
+    item = offer("https://college.example/seguros", "Investimento total R$ 20.000,00",
+                 category="Extensão")
+    audit = build_price_reference(
+        course_title="MBA Gestão de Seguros", level="MBA", institution_name="ENS",
+        internal_prices=[], offers=[item],
+    )
+    assert audit["external_count"] == 0
+    assert audit["excluded"][0]["reason_code"] == "category_conflict"
+
+
+def test_related_courses_and_unverified_qualification_cannot_supply_offer_category():
+    item = offer("https://college.example/seguros", "Investimento total R$ 20.000,00. Outros cursos: MBA em Seguros")
+    item["title"] = "Gestão de Seguros"
+    item["sanitized_data"]["_qualification"]["category"] = "MBA"
+    audit = build_price_reference(
+        course_title="MBA Gestão de Seguros", level="MBA", institution_name="ENS",
+        internal_prices=[], offers=[item],
+    )
+    assert audit["external_count"] == 0
+    assert audit["excluded"][0]["reason_code"] == "category_mismatch"

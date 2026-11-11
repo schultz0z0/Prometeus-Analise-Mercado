@@ -85,6 +85,8 @@ Menos de três cursos de referência, funil inconsistente ou ausência de oferta
 
 A referência de preço é a média aritmética de um preço total verificável por curso comparável, interno ou externo, de mesmo tema e categoria. O relatório separa médias e quantidades por origem. Não há ponderação automática de 50% por origem. Preços próprios não contam como concorrentes, taxas não são preço do curso e duração acadêmica não determina parcelas. Múltiplos totais sem atribuição inequívoca ficam ambíguos mesmo se um prazo coincide; a página permanece disponível para os outros usos.
 
+Desde 11/11/2026, a categoria pode estar explicitamente no título ou nos campos da oferta `category`, `course_type`, `educationalLevel` e `level`. A referência registra campo e valor literal. Categoria conflitante exclui a oferta; MBA e pós-graduação são tratados como subtipo e família compatíveis. Texto de cursos relacionados e inferência de qualificação não estabelecem a categoria da oferta principal.
+
 O score principal é o `partial_score` observado, normalizado pela cobertura, identificado como provisório quando os gates falham. A contribuição ponderada permanece na auditoria. Cobertura, confiança e recomendação continuam independentes: nota parcial alta não autoriza lançamento. Blocos exibidos: interno 20%, mercado externo 55%, aderência 15% e preço misto 10%. Um sinal não é somado novamente nos blocos finais.
 
 Confiança e pedido explícito de revisão da decisão curricular chegam ao scoring. Uma decisão que exige revisão não passa a ser um pilar coberto automaticamente.

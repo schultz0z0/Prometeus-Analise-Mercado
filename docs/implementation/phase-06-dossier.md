@@ -1,5 +1,9 @@
 # Fase 06 — Dossiê e síntese generativa
 
+## Atualização de 11/11/2026
+
+O CMS de nove páginas mantém distinção entre ausência de dados, nota e confiança. A redação recebe leituras completas e contexto de arquivos originais sem promovê-los automaticamente a fatos de mercado. Leitura incompleta bloqueia a síntese. As páginas financeiras usam o contrato canônico e mantêm prejuízos visíveis; a API não entrega checkpoints volumosos ao frontend. Ver [validação e limites](reports/integral-evidence-cms-validation-2026-11-11.md).
+
 ## Objetivo
 
 Homologação real de 29/10/2026 concluída com recuperação: quinze checkpoints e dossiê verificado na interface, usando OAuth e Actors reais. A auditoria corrigiu simetria factual, contratos de referência, expansão de títulos sanitizados e persistência de falhas. Evidências, limitações e retomadas estão no [relatório da auditoria e E2E](reports/dossier-deep-audit-e2e-2026-10-29.md).

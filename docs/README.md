@@ -42,6 +42,9 @@ Esta pasta é a fonte canônica do produto. O PRD original na raiz é mantido co
 
 ## Dados, integrações e segurança
 
+- [Retenção integral da coleta e arquivos privados](data/complete-collection-retention.md)
+- [Contrato homologado do Actor de Trends Data Xplorer](agent/google-trends-data-xplorer.md)
+
 - [Modelo canônico](data/canonical-model.md)
 - [Evidências e proveniência](data/evidence-and-provenance.md)
 - [Retenção e qualidade](data/retention-and-quality.md)
@@ -54,6 +57,8 @@ Esta pasta é a fonte canônica do produto. O PRD original na raiz é mantido co
 - [Modelo de ameaças](security/threat-model.md)
 
 ## Entrega
+
+- [Leitura integral e validação do dossiê CMS — 11/11/2026](implementation/reports/integral-evidence-cms-validation-2026-11-11.md)
 
 - [Plano de correção: cobertura de concorrentes, custos e recuperação Apify](plans/2026-11-04-collection-coverage-and-apify-recovery.md)
 - [Implementação e homologação de cobertura/recuperação — 05/11/2026](implementation/reports/collection-recovery-homologation-2026-11-05.md)
