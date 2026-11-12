@@ -58,6 +58,9 @@ Esta pasta é a fonte canônica do produto. O PRD original na raiz é mantido co
 
 ## Entrega
 
+- [Trilha CS-00–CS-06 — Desenvolvimento e substituição por Codex CLI + Scrapling](implementation/codex-scrapling/README.md)
+- [Plano de implementação em tarefas — 12/11/2026](plans/2026-11-12-codex-cli-scrapling-implementation.md)
+
 - [Avaliação proposta: Codex CLI, Apify e Scrapling no fluxo e CMS](plans/2026-11-11-codex-cli-scrapling-assessment.md)
 
 - [Leitura integral e validação do dossiê CMS — 11/11/2026](implementation/reports/integral-evidence-cms-validation-2026-11-11.md)

@@ -11,5 +11,6 @@
 - [ADR-0009 — Acesso institucional e recuperação transacional](0009-access-and-workflow-recovery.md)
 - [ADR-0010 — Compromissos de orçamento remoto](0010-remote-budget-commitments.md)
 - [ADR-0011 — Coleta por escopo, cobertura e recuperação](0011-collection-coverage-and-recovery.md)
+- [ADR-0012 — Codex CLI e coleta com múltiplos providers](0012-codex-cli-and-provider-neutral-collection.md) — direção para planejamento; implementação e ativação pendentes.
 
 Novas decisões irreversíveis ou de alto custo devem gerar um ADR antes da implementação.

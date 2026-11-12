@@ -1,5 +1,9 @@
 # Fase 04 — Dados externos de mercado
 
+## Planejamento de evolução — 12/11/2026
+
+A [trilha Codex CLI + Scrapling](codex-scrapling/README.md) detalha a separação de capability/provider, aquisição web, pesquisa assistida e recuperação compatível. Planejamento não altera os Actors ou o runtime vigente. A reconciliação Google Search é o primeiro gate independente; trocar o crawler não resolve essa falha por si só.
+
 ## Atualização de 11/11/2026
 
 Coleta integral paginada, preservação de originais e diagnósticos, reconciliação da mesma run e leitura semântica com checkpoints integram a qualificação. Uma releitura incompleta não apaga o prefixo já extraído. O Actor Data Xplorer `2.10.2` teve quatro consultas reais e leitura completa pela LLM validadas. Isso não confirma suficiência de mercado dos demais pilares. Ver [contrato de retenção](../data/complete-collection-retention.md) e [relatório de validação](reports/integral-evidence-cms-validation-2026-11-11.md).

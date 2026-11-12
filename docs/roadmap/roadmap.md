@@ -15,7 +15,23 @@ O roadmap preserva a visão expandida e reduz risco por ordem de validação.
 | 08 — Piloto | Produção ENS operável | Segurança, restore e runbooks |
 | 09 — White-label | Segunda instituição sem fork | Adapter/config onboarding comprovado |
 
-## Princípio de avanço
+## Evolução de execução — Codex CLI + Scrapling (12/11/2026)
+
+Trilha **planejada, ainda não implementada**, complementar às fases 00–09. O [índice CS](../implementation/codex-scrapling/README.md) e o [plano de tarefas](../plans/2026-11-12-codex-cli-scrapling-implementation.md) são as referências de desenvolvimento.
+
+| Marco | Entrega | Gate |
+|---|---|---|
+| CS-00 | Baseline e correção da reconciliação Google Search | Causa reproduzida e datasets existentes recuperados sem nova compra |
+| CS-01 | Contratos neutros e roteamento | Providers reais, recuperação e snapshots compatíveis |
+| CS-02 | Runner Codex CLI | Inferência real, schemas, sessões e cancelamento comprovados |
+| CS-03 | Scrapling HTTP/browser | Conteúdo adquirido preservado, higienizado e lido integralmente |
+| CS-04 | Pesquisa assistida com MCP/skills | Trajetória real auditável e sem duplicação de operações |
+| CS-05 | Síntese e cadastro no CMS | Nove páginas verificadas e preservadas após reload |
+| CS-06 | Homologação e substituição gradual | Comparação real, cinco módulos externos nos casos aptos e reversão testada |
+
+Dependências: CS-00 → CS-01 → (CS-02 e CS-03) → CS-04 → CS-05 → CS-06. Sem prazo prometido antes dos spikes. Codex assume trabalhos semânticos no fluxo existente, Scrapling assume páginas web, Apify continua com fontes especializadas; nenhuma alteração automática em análises em curso. Firecrawl não é dependência inicial.
+
+## Princípio de avanço das fases
 
 Uma fase pode desenvolver mocks da seguinte, mas não declarar capacidade concluída sem cumprir seu gate. Integrações externas e scores permanecem hipóteses até evidência.
 

@@ -2,6 +2,14 @@
 
 Os planos definem a evolução faseada do produto. Cada fase possui escopo delimitado, dependências, arquivos previstos, comandos de verificação e gate objetivo.
 
+## Trilha de evolução documentada em 12/11/2026
+
+A [trilha CS-00–CS-06 — Codex CLI + Scrapling](codex-scrapling/README.md) detalha contratos, runner, aquisição, pesquisa assistida, CMS e ativação/reversão. Suas fases estão **planejadas**, sem implementação/ativação nesta entrega. O [plano de tarefas](../plans/2026-11-12-codex-cli-scrapling-implementation.md) é a ordem de execução; os relatórios só serão criados depois das verificações.
+
+Os identificadores CS não renumeram as fases históricas abaixo nem substituem os gates de calibração e produção. Apify permanece nas fontes especializadas; o histórico ENS sintético e os dossiês anteriores devem ser preservados.
+
+## Fases históricas do produto
+
 - [Fase 00 — Validação de premissas e contratos](phase-00-validation.md)
 - [Fase 01 — Fundação do serviço](phase-01-foundation.md)
 - [Fase 02 — Adaptador institucional ENS](phase-02-ens-adapter.md)

@@ -1,5 +1,11 @@
 # Estratégia de skills
 
+## Evolução planejada para o runner Codex — 12/11/2026
+
+A [fase CS-04](../implementation/codex-scrapling/phase-cs-04-research-tools.md) prevê empacotar as skills atuais para o ambiente do Codex CLI com seleção por etapa, versão/hash e testes do conteúdo recebido. Essa configuração futura não é herdada das skills ou MCPs do desktop. O comportamento atual descrito abaixo permanece até a implementação: a nova sessão assistida terá ferramentas limitadas dentro dos checkpoints, com transições e permissões em código.
+
+MCP permite executar operações; skill orienta o uso; nenhum deles substitui rubricas, isolamento, retenção ou verificação factual. Skills de navegação, análise e CMS devem usar os contratos canônicos e não autorizar escrita de código de produção ou aprovação humana.
+
 Skills são pacotes versionados de procedimento e conhecimento usados pela LLM, não código executável e não fonte automática de verdade.
 
 ## Skills implementadas

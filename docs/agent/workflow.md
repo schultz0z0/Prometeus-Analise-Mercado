@@ -1,5 +1,9 @@
 # Workflow do agente
 
+## Evolução planejada — Codex CLI + Scrapling
+
+A [trilha CS-00–CS-06](../implementation/codex-scrapling/README.md), documentada em 12/11/2026, preserva os checkpoints canônicos e propõe Codex CLI nas etapas inteligentes, Apify nas fontes especializadas e Scrapling em aquisição web. A execução assistida por ferramentas permanece dentro da etapa e passa pelo gateway do Prometeus. A trilha está planejada; os providers e contratos atuais continuam vigentes até implementação, testes e ativação explícita para novas análises.
+
 ## Correções de confiabilidade — 04/11/2026
 
 A criação e a reanálise persistem snapshot e job de outbox antes do commit; a publicação Celery é posterior. O scheduler reconcilia falhas de broker e leases vencidos. Consumidores usam lease exclusivo, heartbeat e revisão otimista para preservar cancelamento/estados terminais. Checkpoints e julgamentos consultam cancelamento/posse antes de novas chamadas. Consultas remotas interrompidas sem resultado confirmado ficam `IN_DOUBT` e bloqueiam nova compra até reconciliação, sem supor custo zero.

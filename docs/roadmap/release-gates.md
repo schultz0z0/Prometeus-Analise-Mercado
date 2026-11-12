@@ -1,5 +1,11 @@
 # Gates de release
 
+## Gates da trilha Codex CLI + Scrapling — 12/11/2026
+
+Todos os gates CS estão **pendentes**. A [trilha CS-00–CS-06](../implementation/codex-scrapling/README.md) define entregas, evidências e dependências; sua documentação não aprova runtime ou produção. CS-06 requer análise real comparativa, leitura integral demonstrada, cinco módulos externos sustentados nos casos aptos, cadastro/hidratação das nove páginas e reversão testada. Histórico sintético ENS pode ficar sem base e deve continuar identificado.
+
+Falha persistente de aquisição, referência inventada, perda de dados, compra duplicada, acesso cruzado, processo que continua após cancelamento ou hidratação que apaga conteúdo bloqueiam ativação. Ausência de evidência pública não é corrigida reduzindo limiar para fabricar score. Casos insuficientes devem permanecer explícitos e não comprovam suficiência universal. A aceitação CS não substitui os gates A–F ou o backtest comercial.
+
 ## Cobertura e recuperação da coleta
 
 Na política `collection-v2`, aprovar a operação exige provar pesquisa por instituição, tentativas limitadas e retomada sem compras duplicadas. Consulta planejada ou bloqueada não conta como instituição pesquisada. A homologação técnica de 04/11/2026 concluiu o fluxo, mas deixou pendente o benchmark competitivo; não comprova ausência de concorrência. O novo teste deve publicar métricas de cobertura e lacunas reais, além de custos observados. Fontes ainda indisponíveis impedem declarar benchmark integralmente homologado.

@@ -1,5 +1,9 @@
 # Fase 06 — Dossiê e síntese generativa
 
+## Planejamento de substituição — 12/11/2026
+
+A [fase CS-05](codex-scrapling/phase-cs-05-dossier-cms.md) especifica síntese/revisão pelo CLI, conteúdo canônico, verificação e cadastro nas nove páginas sem perda na hidratação. A [trilha completa](codex-scrapling/README.md) inclui runtime, ferramentas, retenção e rollout. Trata-se de planejamento de desenvolvimento; nenhuma alteração no gerador, CMS ou dossiês existentes foi feita nesta entrega documental.
+
 ## Atualização de 11/11/2026
 
 Foi registrada uma [avaliação de evolução com Codex CLI, Apify e Scrapling](../plans/2026-11-11-codex-cli-scrapling-assessment.md), incluindo geração e cadastro do dossiê no CMS. Trata-se de proposta: não altera providers, hidratação de páginas, scoring ou análises em andamento.

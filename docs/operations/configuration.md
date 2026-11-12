@@ -1,5 +1,9 @@
 # Configuração
 
+## Evolução planejada — 12/11/2026
+
+O [runbook Codex CLI + Scrapling](codex-scrapling-rollout.md) especifica configurações **futuras**, provisionamento, credenciais, migração e reversão. `codex_cli`, seleção de provider de crawler e demais nomes ali propostos ainda não devem ser tratados como opções funcionais. Os providers/configurações existentes continuam vigentes até implementação e gates CS. O alias `codex` atual não deve ganhar significado novo silenciosamente.
+
 ## Controle de acesso e recuperação — 04/11/2026
 
 Consulte o [guia das correções](audit-remediation.md) para `SERVICE_API_KEYS`, bootstrap em `AUTH_ADMIN_KEY_PATH`, sessão do navegador, `WEBHOOK_SECRET`, `WEBHOOK_TARGET_URL`, `API_BIND_HOST` e scheduler. O acesso ao Prometeus é independente do ChatGPT OAuth de inferência. A migração atual é `0013_workflow_reliability`; não há reset da base sintética ENS. A exigência de modelo JEV pinado só se aplica quando o motor JEV estiver selecionado.

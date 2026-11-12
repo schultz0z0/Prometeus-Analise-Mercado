@@ -2,6 +2,8 @@
 
 **Data:** 11/11/2026. **Status:** proposta técnica após inspeção do código; sem instalação, substituição de providers ou alteração de análises em andamento.
 
+**Desdobramento em 12/11/2026:** avaliação preservada como diagnóstico inicial. O [plano de implementação](2026-11-12-codex-cli-scrapling-implementation.md), a [trilha CS-00–CS-06](../implementation/codex-scrapling/README.md) e a [ADR-0012](../architecture/adr/0012-codex-cli-and-provider-neutral-collection.md) detalham a direção autorizada para planejamento, sem indicar que a substituição já foi executada.
+
 ## Objetivo e fronteira
 
 Preservar os 15 checkpoints, os seis módulos de viabilidade, os contratos de evidências e o CMS de nove páginas. Usar Codex CLI como executor das etapas inteligentes; manter Actors Apify para descoberta e fontes especializadas; avaliar Scrapling como executor de `web_crawler` e navegação de páginas acadêmicas. Firecrawl fica como alternativa futura, fora da primeira implementação proposta.

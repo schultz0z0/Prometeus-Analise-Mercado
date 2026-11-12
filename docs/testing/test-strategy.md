@@ -1,5 +1,13 @@
 # Estratégia de testes
 
+## Trilha planejada Codex CLI + Scrapling — 12/11/2026
+
+O [plano de implementação](../plans/2026-11-12-codex-cli-scrapling-implementation.md) associa testes RED/GREEN a cada tarefa; os [gates CS](../implementation/codex-scrapling/README.md) exigem evidência real adicional. Arquivos de teste novos e comandos descritos nessa trilha são planejados, não resultados já obtidos.
+
+Cobrir compatibilidade de snapshots/arquivos antigos, contagem e recuperação da mesma run, dois providers na mesma porta, isolamento/cancelamento de processos, sessão Codex correta, cache por modelo/skills, retenção Scrapling, MCP com escopo imposto, corpus maior que o contexto, fatos desfavoráveis, CMS após reload e rollback. Testes de subprocesso controlado não consomem LLM real; ensaios live exigem opt-in e artefatos privados.
+
+A avaliação compara interpretação no mesmo corpus e aquisição real em janela equivalente; são experimentos distintos. Registrar cinco módulos externos nos casos aptos e insuficiência honesta nos casos sem base. A vitrine sintética do CMS não é corpus real de mercado. Não prometer economia ou superioridade do harness antes de medir.
+
 ## Pirâmide
 
 - Unitários: domínio, fórmulas, transições e normalizadores.
