@@ -631,11 +631,21 @@ class CollectMarketEvidenceService:
         run.status = "FAILED"
         if isinstance(exc, ApifyReconciliationRequiredError):
             run.status = "IN_DOUBT"
+            dataset_pending = exc.dataset_result is not None
             run.parameters = {
                 **(run.parameters or {}),
                 "cost_status": "unknown",
-                "observation_status": "execution_or_billing_unconfirmed",
+                "observation_status": "dataset_read_pending" if dataset_pending
+                else "execution_or_billing_unconfirmed",
+                **({"dataset_read_pending": True,
+                    "dataset_read_recovery": "resume_existing_provider_run"}
+                   if dataset_pending else {}),
             }
+            if exc.pagination_diagnostic:
+                failures = list(run.parameters.get("dataset_read_failures") or [])
+                failures.append({**exc.pagination_diagnostic,
+                                 "observed_at": datetime.now(UTC).isoformat()})
+                run.parameters = {**run.parameters, "dataset_read_failures": failures}
         run.error_code = self._error_code(exc)
         run.error_message = self._safe_error(exc)
         run.finished_at = datetime.now(UTC)

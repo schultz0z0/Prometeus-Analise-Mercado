@@ -8,6 +8,8 @@ A [trilha CS-00–CS-06 — Codex CLI + Scrapling](codex-scrapling/README.md) de
 
 Os identificadores CS não renumeram as fases históricas abaixo nem substituem os gates de calibração e produção. Apify permanece nas fontes especializadas; o histórico ENS sintético e os dossiês anteriores devem ser preservados.
 
+Após autorização de implementação em 12/11, CS-00 recebeu correções de retenção/diagnóstico e validação de recuperação. Seu gate permanece parcial porque o mismatch original não foi reproduzido ao vivo. O [relatório CS-00](reports/cs-00-baseline-and-reconciliation.md) prevalece sobre a indicação inicial de planejamento para essa fase; CS-01–CS-06 continuam planejadas.
+
 ## Fases históricas do produto
 
 - [Fase 00 — Validação de premissas e contratos](phase-00-validation.md)

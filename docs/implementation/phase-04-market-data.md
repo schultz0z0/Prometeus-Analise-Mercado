@@ -1,5 +1,9 @@
 # Fase 04 — Dados externos de mercado
 
+## CS-00 — 12/11/2026
+
+Corrigida perda de objetos já baixados quando a paginação de Actor bem-sucedido exige reconciliação; diagnóstico de contagem agora é preservado na tarefa/tentativa. Runs existentes foram relidas sem recompra. A causa da divergência original segue não comprovada; CS-00 permanece parcial. Ver [relatório](reports/cs-00-baseline-and-reconciliation.md).
+
 ## Planejamento de evolução — 12/11/2026
 
 A [trilha Codex CLI + Scrapling](codex-scrapling/README.md) detalha a separação de capability/provider, aquisição web, pesquisa assistida e recuperação compatível. Planejamento não altera os Actors ou o runtime vigente. A reconciliação Google Search é o primeiro gate independente; trocar o crawler não resolve essa falha por si só.

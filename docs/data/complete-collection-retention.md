@@ -4,6 +4,8 @@ Desde 10/11/2026, o escopo solicitado no input do Actor controla a pesquisa; o c
 
 ## Verificação da leitura
 
+Desde 12/11/2026, divergência de paginação e falha HTTP em Actor `SUCCEEDED` também preservam os objetos já recebidos em arquivo não verificado. A tarefa fica `dataset_read_pending`, com recuperação pela mesma run. `dataset_read_failures` mantém offset/limite pedidos, quantidade recebida, total anterior/atual, status HTTP e motivo disponíveis, sem corpo ou segredos; o histórico permanece após recuperação. Erro posterior de JSON/schema também preserva o prefixo válido, sem admitir conteúdo inválido. Ver [relatório CS-00 e limite de causalidade](../implementation/reports/cs-00-baseline-and-reconciliation.md).
+
 O cliente distingue `total_items_source=provider_pagination` (total explicitamente observado no cabeçalho) de `terminal_exhaustion` (paginação esgotada sem total fornecido). Executores que não verificam essa condição usam `unverified`. Uma página curta antes do total declarado, total alterado entre páginas, erro HTTP ou contagem divergente exige reconciliação da mesma run, sem iniciar nova compra. Uma resposta vazia com total positivo nunca comprova dataset vazio. Cancelamento continua sendo verificado em cada leitura.
 
 O archive só marca `retrieval_complete=true` quando a contagem recuperada coincide com o total e a origem da contagem foi verificada. Uma execução ainda ativa pode ter sua leitura momentânea completa e, separadamente, `incomplete_reason`: isso não significa que o Actor terminou a pesquisa. Resultados parciais não são promovidos a sucesso integral.

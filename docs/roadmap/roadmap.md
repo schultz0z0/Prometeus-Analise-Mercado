@@ -17,7 +17,7 @@ O roadmap preserva a visão expandida e reduz risco por ordem de validação.
 
 ## Evolução de execução — Codex CLI + Scrapling (12/11/2026)
 
-Trilha **planejada, ainda não implementada**, complementar às fases 00–09. O [índice CS](../implementation/codex-scrapling/README.md) e o [plano de tarefas](../plans/2026-11-12-codex-cli-scrapling-implementation.md) são as referências de desenvolvimento.
+Trilha complementar às fases 00–09. CS-00 tem implementação parcial de retenção/diagnóstico e gate de causa original pendente; CS-01–CS-06 permanecem planejadas. O [índice CS](../implementation/codex-scrapling/README.md), o [relatório CS-00](../implementation/reports/cs-00-baseline-and-reconciliation.md) e o [plano de tarefas](../plans/2026-11-12-codex-cli-scrapling-implementation.md) são as referências de desenvolvimento.
 
 | Marco | Entrega | Gate |
 |---|---|---|

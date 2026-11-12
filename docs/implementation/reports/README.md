@@ -1,5 +1,7 @@
 # Relatórios de conclusão das fases
 
+- [CS-00 — Baseline e reconciliação — 12/11/2026](cs-00-baseline-and-reconciliation.md) — implementação parcial de retenção/diagnóstico; recuperação verificada, causa exata do mismatch original ainda pendente. Não é aceite final da fase.
+
 - [Retenção integral, leitura e validação do CMS — 11/11/2026](integral-evidence-cms-validation-2026-11-11.md) — integração e canário real de Trends; não homologa suficiência dos cinco pilares externos.
 
 - [Cobertura competitiva e recuperação Apify — 05–06/11/2026](collection-recovery-homologation-2026-11-05.md) — implementação aplicada, testes Windows/Linux e backup validados; dossiê final verificado, dez instituições pesquisadas e dez ofertas em sete instituições; histórico ENS preservado.

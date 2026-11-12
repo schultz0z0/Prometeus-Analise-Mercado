@@ -1,6 +1,8 @@
 # CS-00 — Baseline e reconciliação da coleta
 
-**Status:** planejada. **Dependência:** versão vigente. **Responsável:** backend/coleta. [Índice da trilha](README.md).
+**Status:** implementação parcial, gate pendente. **Dependência:** versão vigente. **Responsável:** backend/coleta. [Índice da trilha](README.md).
+
+Em 12/11, retenção/diagnóstico foram corrigidos com regressões RED/GREEN, e runs existentes foram relidas sem compra. A causa exata do mismatch original não foi reproduzida ao vivo; a resposta antiga não foi conservada. Não avançar como se o gate estivesse concluído. Ver [relatório](../reports/cs-00-baseline-and-reconciliation.md).
 
 ## Objetivo e escopo
 

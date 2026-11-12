@@ -422,6 +422,9 @@ async def collect_monitoring(
                 **attempt.diagnosis,
                 "cause": decision.cause,
                 "action": decision.action,
+                **({"dataset_read_failures": run.parameters["dataset_read_failures"]}
+                   if isinstance(error, ApifyReconciliationRequiredError)
+                   and error.pagination_diagnostic else {}),
                 **({"provider_error_code": error.provider_error_code, "provider_error_message": error.provider_error_message} if hasattr(error, "provider_error_code") and hasattr(error, "provider_error_message") else {}),
             }
             run.parameters = {

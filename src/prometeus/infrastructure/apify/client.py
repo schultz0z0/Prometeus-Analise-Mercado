@@ -78,9 +78,11 @@ class ApifySchemaDriftError(ApifyError):
     def __init__(
         self, message: str, *, run_data: dict[str, Any] | None = None,
         dataset_result: ApifyExecutionResult | None = None,
+        pagination_diagnostic: dict[str, Any] | None = None,
     ) -> None:
         self.run_data = run_data
         self.dataset_result = dataset_result
+        self.pagination_diagnostic = pagination_diagnostic or {}
         super().__init__(message)
 
 
@@ -557,12 +559,8 @@ class ApifyClient:
         reported_total: int | None = None
         page_size = 1000
 
-        def pending_terminal_collection() -> ApifyActorFailedError | ApifyTimeoutError:
-            error = failed_error or timeout_error
-            assert error is not None
-            error.run_data = run_data
-            error.dataset_read_pending = True
-            error.dataset_result = ApifyExecutionResult(
+        def captured_dataset() -> ApifyExecutionResult:
+            return ApifyExecutionResult(
                 run=ApifyRunMetadata(
                     run_id=run_id, dataset_id=dataset_id, status=str(run_data["status"]),
                     actor_id=spec.actor_id, build_number=build_number,
@@ -572,10 +570,21 @@ class ApifyClient:
                 total_items=reported_total if reported_total is not None else len(items),
                 total_items_source="unverified",
             )
+
+        def pending_terminal_collection() -> ApifyActorFailedError | ApifyTimeoutError:
+            error = failed_error or timeout_error
+            assert error is not None
+            error.run_data = run_data
+            error.dataset_read_pending = True
+            error.dataset_result = captured_dataset()
             return error
 
         while True:
             current_limit = min(page_size, reported_total - offset) if reported_total is not None else page_size
+            diagnostic: dict[str, Any] = {
+                "requested_offset": offset, "requested_limit": current_limit,
+                "previous_reported_total": reported_total,
+            }
             try:
                 items_response = await self._get(
                     f"{self.base_url}/datasets/{dataset_id}/items",
@@ -588,28 +597,36 @@ class ApifyClient:
                     headers=self._headers,
                 )
                 items_response.raise_for_status()
+                diagnostic["http_status"] = items_response.status_code
                 page_data = items_response.json()
+                if not isinstance(page_data, list):
+                    raise ValueError("Dataset não retornou uma lista JSON.")
+                if any(not isinstance(item, dict) for item in page_data):
+                    raise ValueError("Dataset contém item que não é um objeto JSON.")
+                # Retain downloaded objects even when the page's count metadata
+                # is inconsistent. They remain unverified, never admitted here.
+                diagnostic["returned_items"] = len(page_data)
+                items.extend(page_data)
+                offset += len(page_data)
                 total_header = items_response.headers.get("X-Apify-Pagination-Total")
                 if total_header is not None:
                     try:
                         page_total = int(total_header)
                     except ValueError as error:
+                        diagnostic["reason"] = "invalid_pagination_total"
                         raise ApifyReconciliationRequiredError(
                             "Contagem de paginação inválida; reconciliar o dataset existente.", run_data=run_data,
                         ) from error
+                    diagnostic["reported_total"] = page_total
                     if page_total < 0 or (reported_total is not None and page_total != reported_total):
+                        diagnostic["reason"] = "dataset_total_changed"
                         raise ApifyReconciliationRequiredError(
                             "Contagem do dataset mudou durante a leitura; reconciliar a mesma run.", run_data=run_data,
                         )
                     reported_total = page_total
-                if not isinstance(page_data, list):
-                    raise ValueError("Dataset não retornou uma lista JSON.")
-                if any(not isinstance(item, dict) for item in page_data):
-                    raise ValueError("Dataset contém item que não é um objeto JSON.")
-                items.extend(page_data)
-                offset += len(page_data)
                 if reported_total is not None:
                     if offset > reported_total or (len(page_data) < current_limit and offset < reported_total):
+                        diagnostic["reason"] = "page_count_mismatch"
                         raise ApifyReconciliationRequiredError(
                             "Dataset retornou página incompleta ou contagem divergente; reconciliar a mesma run.", run_data=run_data,
                         )
@@ -620,6 +637,8 @@ class ApifyClient:
             except ApifyReconciliationRequiredError as exc:
                 if failed_error is not None or timeout_error is not None:
                     raise pending_terminal_collection() from exc
+                exc.dataset_result = captured_dataset()
+                exc.pagination_diagnostic = diagnostic
                 raise
             except (httpx.HTTPError, ValueError, TypeError) as exc:
                 if failed_error is not None or timeout_error is not None:
@@ -628,8 +647,17 @@ class ApifyClient:
                     raise ApifyReconciliationRequiredError(
                         "Leitura do dataset pago interrompida; requer reconciliação da run existente.",
                         run_data=run_data,
+                        dataset_result=captured_dataset(),
+                        pagination_diagnostic={
+                            **diagnostic, "reason": "dataset_http_error",
+                            "http_status": exc.response.status_code
+                            if isinstance(exc, httpx.HTTPStatusError) else None,
+                        },
                     ) from exc
-                raise ApifySchemaDriftError(str(exc), run_data=run_data) from exc
+                raise ApifySchemaDriftError(
+                    str(exc), run_data=run_data, dataset_result=captured_dataset(),
+                    pagination_diagnostic={**diagnostic, "reason": "dataset_schema_error"},
+                ) from exc
 
         total_items = reported_total if reported_total is not None else len(items)
 

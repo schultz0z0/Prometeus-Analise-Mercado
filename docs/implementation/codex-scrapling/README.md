@@ -1,6 +1,6 @@
 # Evolução Codex CLI + Scrapling
 
-**Atualizado:** 12/11/2026. **Estado:** planejamento documentado, implementação pendente. A autorização nesta entrega é documentar e publicar o planejamento no Git; nenhuma instalação ou ativação de runtime decorre deste status.
+**Atualizado:** 12/11/2026. **Estado:** CS-00 em implementação parcial; demais fases planejadas. O usuário autorizou iniciar CS-00 após o planejamento; isso não ativa Codex CLI ou Scrapling.
 
 Esta trilha preserva as fases históricas 00–09 do produto. Seus identificadores **CS-00 a CS-06** representam a substituição progressiva da execução de IA e do crawler, mantendo os 15 checkpoints, os seis módulos de viabilidade e o CMS de nove páginas.
 
@@ -16,7 +16,7 @@ Esta trilha preserva as fases históricas 00–09 do produto. Seus identificador
 
 | Fase | Resultado | Depende de | Status |
 |---|---|---|---|
-| [CS-00 — Baseline e reconciliação](phase-cs-00-baseline.md) | Causa do erro atual reproduzida; dados existentes recuperáveis | Código vigente | Planejada |
+| [CS-00 — Baseline e reconciliação](phase-cs-00-baseline.md) | Causa do erro atual reproduzida; dados existentes recuperáveis | Código vigente | Parcial; causa original pendente |
 | [CS-01 — Contratos e roteamento](phase-cs-01-contracts.md) | Separação entre capability, provider e artefato | CS-00 | Planejada |
 | [CS-02 — Runtime Codex](phase-cs-02-codex-runtime.md) | CLI real com configuração e sessões isoladas | CS-01 | Planejada |
 | [CS-03 — Aquisição Scrapling](phase-cs-03-scrapling.md) | HTTP/browser com retenção e retomada | CS-01 | Planejada |
