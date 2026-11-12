@@ -4,6 +4,8 @@
 
 Em 12/11, retenção/diagnóstico foram corrigidos com regressões RED/GREEN, e runs existentes foram relidas sem compra. A causa exata do mismatch original não foi reproduzida ao vivo; a resposta antiga não foi conservada. Não avançar como se o gate estivesse concluído. Ver [relatório](../reports/cs-00-baseline-and-reconciliation.md).
 
+A correção também foi aplicada ao runtime local com renovação controlada e retomada da mesma análise na etapa 9: checkpoint de coleta, 49 runs e 252 partes validadas preservados. Resta somente a comprovação da causa original para satisfazer integralmente o gate definido; não há autorização implícita para substituir esse critério por sucesso de teste simulado.
+
 ## Objetivo e escopo
 
 Reproduzir a divergência de leitura das buscas Google observada em 11/11 e comprovar a recuperação das mesmas runs. A hipótese de consistência eventual é apenas uma hipótese; comparar parâmetros enviados, headers de paginação, contagens, corpo real, estado terminal e horários antes de escolher a correção.

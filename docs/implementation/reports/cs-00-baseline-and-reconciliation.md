@@ -38,7 +38,17 @@ Resultado focal: **30 aprovados**. Suíte final: **952 aprovados, 5 pulados** no
 
 Baselines antes/depois confirmaram hashes idênticos dos 33 cursos e 66 funis sintéticos ENS e dos 13 dossiês existentes. Artefatos ficam em `var/diagnostics/cs00-*20261112*`, ignorados pelo Git. Não há migração, troca de provider ou edição de dossiês.
 
-O código foi exercitado por processos de diagnóstico separados e testes. Não foi forçado restart do worker ativo; um processo já importado pode manter a versão anterior até renovação controlada. Aplicação a todos os workers depende de janela segura. A correção não recria diagnósticos antigos nem apaga avisos históricos.
+Na primeira entrega, o código foi exercitado por processos separados e testes, sem restart do worker ativo. Após nova autorização para concluir CS-00, foi realizada a renovação controlada descrita abaixo. A correção não recria diagnósticos antigos nem apaga avisos históricos.
+
+### Atualização operacional — 12/11/2026
+
+Antes da renovação, verificou-se que a etapa 8 estava `COMPLETED`, a etapa 9 estava lendo o corpus e nenhuma das 49 tarefas de coleta estava `RUNNING`. Foi salvo um manifesto com hash do checkpoint da etapa 8, identidades/hashes dos arquivos de todas as runs e hashes dos resultados das 252 partes já validadas.
+
+API e worker foram reiniciados com janela de parada de 20 segundos. O mesmo job da análise foi reagendado pelos casos de uso canônicos `schedule_analysis_job_retry` e `publish_analysis_job`, conservando os checkpoints e a análise `RUNNING`. Não foi criada outra análise nem alterado o estado para concluído/cancelado. Uma inferência ainda em voo pode ser repetida; resultados validados não foram descartados.
+
+Após a retomada, a conferência demonstrou checkpoint da etapa 8 idêntico, 49 identidades de runs e hashes dos arquivos preservados, e todas as 252 partes anteriormente validadas mantidas. A leitura progrediu de 25 para 27 estados de leitura registrados; o novo processo de worker ficou saudável e recebeu o mesmo job. A coleta concluída não foi refeita nessa retomada. O baseline pós-ativação voltou a confirmar os 33 cursos, 66 funis sintéticos e 13 dossiês preservados por hash.
+
+Evidências privadas adicionais: `var/diagnostics/cs00-upgrade/before.json` e `var/diagnostics/cs00-activated-20261112.json`. Essa aplicação encerra a pendência de versão carregada no worker; não produz a resposta histórica ausente necessária para provar a causa do mismatch original.
 
 ## Gate
 
@@ -47,6 +57,6 @@ O código foi exercitado por processos de diagnóstico separados e testes. Não 
 | Baseline, preservação e recuperação da mesma run | Verificado |
 | Retenção de parcial, limite e ausência de recompra | Corrigido e testado |
 | Causa exata do mismatch original reproduzida | Pendente |
-| Ativação controlada em todos os workers | Pendente durante execução ativa |
+| Ativação controlada no runtime local | Verificado após renovação e retomada do mesmo job |
 
 Próximo marco permanece CS-00. Esta entrega não deve ser usada para declarar CS-01 ou substituição de runtime concluídos.
